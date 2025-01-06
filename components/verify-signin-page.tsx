@@ -15,10 +15,29 @@ export default function VerifySigninPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (verificationCode.length === 6) {
+    try {
+      if (verificationCode.length !== 6) {
+        setError('Please enter a valid 6-digit verification code');
+        return;
+      }
+
+      // Here you would typically verify the code with your backend
+      const response = await fetch('/api/verify-code', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ verificationCode }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Invalid verification code');
+      }
+
+      // If verification successful, redirect to home
       window.location.href = '/home';
-    } else {
-      setError('Please enter a valid verification code');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Verification failed');
     }
   };
 
@@ -52,38 +71,28 @@ export default function VerifySigninPage() {
                   onChange={(e) => setVerificationCode(e.target.value)}
                   className="mt-1"
                   maxLength={6}
+                  pattern="[0-9]*"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
                   required
                 />
                 {error && <p className="text-sm text-red-500">{error}</p>}
               </div>
 
-              <Link href="/home" className="block mt-6">
-                <Button 
-                  type="button"
-                  className="w-full bg-blue-600 hover:bg-blue-700"
-                >
-                  Continue to Home
-                </Button>
-              </Link>
+              <Button 
+                type="submit"
+                className="w-full bg-blue-600 hover:bg-blue-700 mt-6"
+              >
+                Verify and Continue
+              </Button>
 
-              <div className="mt-6 space-y-4 text-center">
-                <a 
+              <div className="mt-6 text-center">
+                <Link 
                   href="/signin" 
-                  className="text-sm text-gray-600 hover:text-blue-500 block"
+                  className="text-sm text-gray-600 hover:text-blue-500"
                 >
                   Back to Sign In
-                </a>
-                <Link 
-                  href="/" 
-                  className="text-sm text-gray-600 hover:text-blue-500 block"
-                >
-                  Back to Landing Page
                 </Link>
-                <div>
-                  <a href="/home" className="text-sm text-gray-600 hover:text-blue-500">
-                    Go to Home Page
-                  </a>
-                </div>
               </div>
             </form>
           </CardContent>

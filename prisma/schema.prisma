@@ -7,48 +7,189 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String? @db.Text
-  session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
-}
-
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  password      String
-  image         String?
-  accounts      Account[]
-  sessions      Session[]
+  id                String             @id @default(cuid())
+  email             String             @unique
+  password          String
+  name              String?
+  emailVerified     Boolean            @default(false)
+  phoneNumber       String?            @unique
+  dateOfBirth       DateTime?
+  address           String?
+  profileImage      String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  verificationCodes VerificationCode[]
+  accounts          Account[]
+  cards             Card[]
+  transactions      Transaction[]
+  beneficiaries     Beneficiary[]
+  investments       Investment[]
+  savings           SavingsGoal[]
 }
 
-model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
+model VerificationCode {
+  id        String    @id @default(cuid())
+  code      String
+  type      String    @default("EMAIL_VERIFICATION")
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+  used      Boolean   @default(false)
+}
 
-  @@unique([identifier, token])
+model Account {
+  id            String        @id @default(cuid())
+  userId        String
+  user          User          @relation(fields: [userId], references: [id])
+  type          AccountType
+  number        String        @unique
+  balance       Float         @default(0)
+  currency      String        @default("USD")
+  isActive      Boolean       @default(true)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  transactions  Transaction[]
+  cards         Card[]
+}
+
+enum AccountType {
+  SAVINGS
+  CHECKING
+  INVESTMENT
+}
+
+model Card {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  accountId     String
+  account       Account   @relation(fields: [accountId], references: [id])
+  type          CardType
+  number        String    @unique
+  expiryMonth   Int
+  expiryYear    Int
+  cvv           String
+  pin           String
+  isActive      Boolean   @default(true)
+  dailyLimit    Float     @default(1000)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+enum CardType {
+  VIRTUAL
+  PHYSICAL
+  DEBIT
+  CREDIT
+}
+
+model Transaction {
+  id            String            @id @default(cuid())
+  userId        String
+  user          User              @relation(fields: [userId], references: [id])
+  accountId     String
+  account       Account           @relation(fields: [accountId], references: [id])
+  type          TransactionType
+  amount        Float
+  currency      String            @default("USD")
+  description   String?
+  status        TransactionStatus @default(PENDING)
+  reference     String            @unique
+  beneficiaryId String?
+  beneficiary   Beneficiary?      @relation(fields: [beneficiaryId], references: [id])
+  metadata      Json?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  TRANSFER
+  PAYMENT
+  REFUND
+  INVESTMENT
+  SAVINGS
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELLED
+  REFUNDED
+}
+
+model Beneficiary {
+  id            String        @id @default(cuid())
+  userId        String
+  user          User          @relation(fields: [userId], references: [id])
+  name          String
+  accountNumber String
+  bankName      String
+  bankCode      String?
+  email         String?
+  phoneNumber   String?
+  isActive      Boolean       @default(true)
+  transactions  Transaction[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model Investment {
+  id            String            @id @default(cuid())
+  userId        String
+  user          User              @relation(fields: [userId], references: [id])
+  type          InvestmentType
+  amount        Float
+  returns       Float             @default(0)
+  status        InvestmentStatus  @default(ACTIVE)
+  startDate     DateTime          @default(now())
+  endDate       DateTime?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+}
+
+enum InvestmentType {
+  STOCKS
+  BONDS
+  MUTUAL_FUNDS
+  REAL_ESTATE
+  CRYPTO
+}
+
+enum InvestmentStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+model SavingsGoal {
+  id            String          @id @default(cuid())
+  userId        String
+  user          User            @relation(fields: [userId], references: [id])
+  name          String
+  targetAmount  Float
+  currentAmount Float           @default(0)
+  deadline      DateTime?
+  status        SavingsStatus   @default(IN_PROGRESS)
+  autoSave      Boolean         @default(false)
+  autoSaveAmount Float?
+  frequency     SavingsFrequency?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
+enum SavingsStatus {
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum SavingsFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
 }

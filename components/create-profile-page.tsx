@@ -22,7 +22,7 @@ export function CreateProfilePageComponent() {
       // After successful profile creation, redirect to face verification
       router.push('/face-verification')
     } catch (error) {
-      // Handle error
+      console.error(error)
     } finally {
       setIsLoading(false)
     }

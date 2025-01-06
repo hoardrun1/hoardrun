@@ -1,10 +1,14 @@
-import ClientAuthProvider from '../components/client-auth-provider'
 import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
 import './globals.css'
+import ClientAuthProvider from '../components/client-auth-provider'
+import { NavigationProvider } from '@/providers/NavigationProvider'
+
+const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'Hoardrun',
-  description: 'Your application description',
+  description: 'Your digital banking solution',
 }
 
 export default function RootLayout({
@@ -14,9 +18,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
+      <body className={inter.className}>
         <ClientAuthProvider>
-          {children}
+          <NavigationProvider>
+            {children}
+          </NavigationProvider>
         </ClientAuthProvider>
       </body>
     </html>

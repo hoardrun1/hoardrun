@@ -1,237 +1,477 @@
 'use client'
 
-import { useState } from 'react'
-import { Bell, ChevronDown, Send, Download, Plus, ChevronUp, Info, ArrowUpRight, ArrowDownRight, LineChart, DollarSign, Search, Wallet, TrendingUp } from 'lucide-react'
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu"
-import Link from 'next/link'
+import { useEffect, useState, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
+import { useBankAccounts } from '@/hooks/useBankAccounts'
+import { useTransactions } from '@/hooks/useTransactions'
+import { Card } from '../components/ui/card'
+import { Button } from '../components/ui/button'
+import { Skeleton } from '../components/ui/skeleton'
+import { Alert, AlertDescription } from '../components/ui/alert'
+import { Progress } from '../components/ui/progress'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs'
+import { formatCurrency } from '@/lib/banking'
+import { cn } from '@/lib/utils'
+import { motion } from 'framer-motion'
+import { 
+  ArrowUpRight, 
+  ArrowDownLeft, 
+  Plus, 
+  CreditCard, 
+  PiggyBank,
+  TrendingUp,
+  AlertCircle,
+  ChevronRight,
+  Filter,
+  RefreshCcw,
+  Bell,
+  Settings
+} from 'lucide-react'
+import type { TransactionStatus, TransactionType } from '@prisma/client'
+interface TransactionStatusInfo {
+  label: string
+  color: 'green' | 'yellow' | 'red' | 'gray' | 'blue'
+}
 
-export function HomePageComponent() {
-  const [searchQuery, setSearchQuery] = useState('')
-  const [timeframe, setTimeframe] = useState('1D')
+interface Transaction {
+  id: string
+  type: TransactionType
+  amount: number
+  currency: string
+  description?: string
+  status: TransactionStatus
+  createdAt: string
+  beneficiary?: {
+    name: string
+    accountNumber: string
+    bankName: string
+  }
+}
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    console.log('Searching for:', searchQuery)
+interface Account {
+  id: string
+  type: 'SAVINGS' | 'CHECKING' | 'INVESTMENT'
+  number: string
+  balance: number
+  currency: string
+  isActive: boolean
+  _count?: {
+    transactions: number
+  }
+}
+
+export function HomePage() {
+  const router = useRouter()
+  const { user } = useAuth()
+  const [selectedAccountType, setSelectedAccountType] = useState<'SAVINGS' | 'CHECKING' | 'INVESTMENT' | 'ALL'>('ALL')
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  
+  const { 
+    accounts, 
+    isLoading: accountsLoading, 
+    error: accountsError,
+    fetchAccounts, 
+    getTotalBalance,
+    getAccountsByType 
+  } = useBankAccounts()
+  
+  const { 
+    transactions, 
+    isLoading: transactionsLoading,
+    error: transactionsError,
+    fetchTransactionHistory,
+    formatTransactionDate,
+    getTransactionStatus,
+    calculateTotalAmount
+  } = useTransactions()
+
+  const loadInitialData = useCallback(async () => {
+    try {
+      await fetchAccounts()
+    } catch (error) {
+      console.error('Failed to fetch accounts:', error)
+    }
+  }, [fetchAccounts])
+
+  const loadTransactions = useCallback(async (accountId: string) => {
+    try {
+      await fetchTransactionHistory(accountId, 1, 5)
+    } catch (error) {
+      console.error('Failed to fetch transactions:', error)
+    }
+  }, [fetchTransactionHistory])
+
+  useEffect(() => {
+    loadInitialData()
+  }, [loadInitialData])
+
+  useEffect(() => {
+    if (accounts?.[0]?.id) {
+      loadTransactions(accounts[0].id)
+    }
+  }, [accounts, loadTransactions])
+
+  const navigateTo = useCallback((path: string) => {
+    router.push(path)
+  }, [router])
+
+  const getStatusStyles = useCallback((status: TransactionStatusInfo) => {
+    const styles = {
+      green: 'bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300',
+      yellow: 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900 dark:text-yellow-300',
+      red: 'bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-300',
+      gray: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300',
+      blue: 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300',
+    }
+    return styles[status.color]
+  }, [])
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true)
+    try {
+      await Promise.all([
+        fetchAccounts(),
+        accounts[0]?.id && fetchTransactionHistory(accounts[0].id, 1, 5)
+      ])
+    } catch (error) {
+      console.error('Failed to refresh data:', error)
+    } finally {
+      setIsRefreshing(false)
+    }
+  }, [fetchAccounts, fetchTransactionHistory, accounts])
+
+  const filteredAccounts = selectedAccountType === 'ALL' 
+    ? accounts 
+    : getAccountsByType(selectedAccountType)
+
+  const monthlyIncome = calculateTotalAmount('DEPOSIT')
+  const monthlyWithdrawals = calculateTotalAmount('WITHDRAWAL')
+  const monthlyTransfers = calculateTotalAmount('TRANSFER')
+  const monthlyPayments = calculateTotalAmount('PAYMENT')
+  
+  const monthlyExpenses = monthlyWithdrawals + monthlyTransfers + monthlyPayments
+  const savingsProgress = monthlyIncome ? (monthlyIncome - monthlyExpenses) / monthlyIncome * 100 : 0
+
+  if (accountsError || transactionsError) {
+    return (
+      <Alert variant="destructive" className="m-4">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>
+          {accountsError || transactionsError}
+        </AlertDescription>
+      </Alert>
+    )
   }
 
-  const timeframes = ['1H', '1D', '1W', '1M', '1Y', 'ALL']
-  
-  const assets = [
-    { name: 'USD Balance', amount: 12435.23, change: 2.5, icon: DollarSign },
-    { name: 'Investments', amount: 5678.90, change: -1.2, icon: ArrowUpRight },
-    { name: 'Savings', amount: 3421.45, change: 0.8, icon: LineChart },
-  ]
-
-  const recentTransactions = [
-    { type: 'Received', amount: 500, from: 'John Doe', time: '2 hours ago', status: 'completed' },
-    { type: 'Sent', amount: 250, to: 'Alice Smith', time: '5 hours ago', status: 'completed' },
-    { type: 'Investment', amount: 1000, to: 'Stock Fund', time: '1 day ago', status: 'processing' },
-  ]
-
   return (
-    <div className="min-h-screen bg-[#1a1b1f] text-white">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-[#1a1b1f] border-b border-gray-800">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-8">
-              <Link href="/" className="flex items-center space-x-2">
-                <span className="text-xl font-bold bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">Hoardrun</span>
-              </Link>
-              <nav className="flex items-center space-x-6">
-                <Link href="/" className="text-blue-400 font-medium">Overview</Link>
-                <Link href="/finance" className="text-gray-400 hover:text-gray-200">Finance</Link>
-                <Link href="/cards" className="text-gray-400 hover:text-gray-200">Cards</Link>
-                <Link href="/investment" className="text-gray-400 hover:text-gray-200">Investment</Link>
-              </nav>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="sticky top-0 z-10 bg-white dark:bg-gray-900 shadow-sm">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100">
+                Welcome back
+              </h1>
+              <p className="text-sm md:text-base text-gray-600 dark:text-gray-400">
+                {user?.name || 'User'}
+              </p>
             </div>
-
-            <div className="flex items-center space-x-6">
-              <form onSubmit={handleSearch} className="hidden md:flex items-center">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input
-                    type="text"
-                    placeholder="Search..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 w-64 bg-[#2c2d33] border-gray-700 focus:border-blue-500 text-white"
-                  />
-                </div>
-              </form>
-
-              <Button variant="ghost" size="icon">
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative"
+                onClick={() => navigateTo('/notifications')}
+              >
                 <Bell className="h-5 w-5" />
+                <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full" />
               </Button>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex items-center space-x-2">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src="/avatar.png" />
-                      <AvatarFallback>JD</AvatarFallback>
-                    </Avatar>
-                    <ChevronDown className="h-4 w-4 text-gray-400" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 bg-[#2c2d33] border-gray-700">
-                  <a href="/settings">
-                    <DropdownMenuItem className="text-gray-200 hover:bg-gray-700">Profile</DropdownMenuItem>
-                  </a>
-                  <a href="/settings">
-                    <DropdownMenuItem className="text-gray-200 hover:bg-gray-700">Settings</DropdownMenuItem>
-                  </a>
-                  <a href="/signin">
-                    <DropdownMenuItem className="text-gray-200 hover:bg-gray-700">Logout</DropdownMenuItem>
-                  </a>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigateTo('/settings')}
+              >
+                <Settings className="h-5 w-5" />
+              </Button>
             </div>
           </div>
         </div>
-      </header>
+      </div>
 
-      <main className="py-6 px-4">
-        <div className="max-w-7xl mx-auto">
-          {/* Overview Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            {assets.map((asset, index) => (
-              <Card key={index} className="bg-[#2c2d33] border-gray-800">
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm text-gray-400 flex items-center space-x-2">
-                    <asset.icon className="h-4 w-4" />
-                    <span>{asset.name}</span>
-                  </CardTitle>
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                    <Info className="h-4 w-4 text-gray-400" />
-                  </Button>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">${asset.amount.toLocaleString()}</div>
-                  <div className="flex items-center mt-1">
-                    {asset.change >= 0 ? (
-                      <ChevronUp className="h-4 w-4 text-green-500 mr-1" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4 text-red-500 mr-1" />
-                    )}
-                    <span className={`text-sm ${asset.change >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                      {Math.abs(asset.change)}%
-                    </span>
-                    <span className="text-sm text-gray-400 ml-2">24h</span>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          {/* Chart Section */}
-          <Card className="bg-[#2c2d33] border-gray-800 mb-8">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div className="space-y-1">
-                <CardTitle>Portfolio Performance</CardTitle>
-                <div className="text-sm text-gray-400">Total Balance: $21,535.58</div>
+      <div className="container mx-auto px-4 py-6 space-y-6">
+        {/* Balance Card */}
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          <Card className="p-6 bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 text-white overflow-hidden relative">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full transform translate-x-32 -translate-y-32" />
+            <div className="relative z-10">
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <div className="mb-2 text-sm text-blue-100">Total Balance</div>
+                  {accountsLoading ? (
+                    <Skeleton className="h-8 w-32 bg-white/20" />
+                  ) : (
+                    <h2 className="text-3xl font-bold">
+                      {formatCurrency(getTotalBalance())}
+                    </h2>
+                  )}
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleRefresh}
+                  disabled={isRefreshing}
+                  className={cn('text-white hover:text-white/80', isRefreshing && 'animate-spin')}
+                >
+                  <RefreshCcw className="h-5 w-5" />
+                </Button>
               </div>
-              <div className="flex space-x-2">
-                {timeframes.map((tf) => (
-                  <Button
-                    key={tf}
-                    variant={timeframe === tf ? "secondary" : "ghost"}
-                    size="sm"
-                    onClick={() => setTimeframe(tf)}
-                    className={timeframe === tf ? "bg-blue-600 text-white" : "text-gray-400"}
+              
+              <div className="mb-4">
+                <div className="flex justify-between text-sm text-blue-100 mb-1">
+                  <span>Monthly Savings</span>
+                  <span>{savingsProgress > 0 ? '+' : ''}{savingsProgress.toFixed(1)}%</span>
+                </div>
+                <Progress 
+                  value={Math.max(0, Math.min(savingsProgress, 100))} 
+                  className="h-2 bg-white/20" 
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <Button 
+                  className="flex-1 bg-white/10 hover:bg-white/20 text-white border-0"
+                  onClick={() => navigateTo('/send-money')}
+                >
+                  <ArrowUpRight className="w-4 h-4 mr-2" />
+                  Send
+                </Button>
+                <Button 
+                  className="flex-1 bg-white/10 hover:bg-white/20 text-white border-0"
+                  onClick={() => navigateTo('/receive-money')}
+                >
+                  <ArrowDownLeft className="w-4 h-4 mr-2" />
+                  Receive
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </motion.div>
+
+        {/* Quick Actions */}
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+          className="grid grid-cols-2 sm:grid-cols-4 gap-3"
+        >
+          <Button
+            variant="outline"
+            className="flex flex-col items-center p-4 h-auto hover:bg-blue-50 dark:hover:bg-gray-800"
+            onClick={() => navigateTo('/cards')}
+          >
+            <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-gray-800 flex items-center justify-center mb-2">
+              <CreditCard className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+            </div>
+            <span className="text-sm">Cards</span>
+          </Button>
+          <Button
+            variant="outline"
+            className="flex flex-col items-center p-4 h-auto hover:bg-green-50 dark:hover:bg-gray-800"
+            onClick={() => navigateTo('/savings')}
+          >
+            <div className="w-12 h-12 rounded-full bg-green-100 dark:bg-gray-800 flex items-center justify-center mb-2">
+              <PiggyBank className="h-6 w-6 text-green-600 dark:text-green-400" />
+            </div>
+            <span className="text-sm">Savings</span>
+          </Button>
+          <Button
+            variant="outline"
+            className="flex flex-col items-center p-4 h-auto hover:bg-purple-50 dark:hover:bg-gray-800"
+            onClick={() => navigateTo('/investment')}
+          >
+            <div className="w-12 h-12 rounded-full bg-purple-100 dark:bg-gray-800 flex items-center justify-center mb-2">
+              <TrendingUp className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+            </div>
+            <span className="text-sm">Invest</span>
+          </Button>
+          <Button
+            variant="outline"
+            className="flex flex-col items-center p-4 h-auto hover:bg-orange-50 dark:hover:bg-gray-800"
+            onClick={() => navigateTo('/finance')}
+          >
+            <div className="w-12 h-12 rounded-full bg-orange-100 dark:bg-gray-800 flex items-center justify-center mb-2">
+              <Plus className="h-6 w-6 text-orange-600 dark:text-orange-400" />
+            </div>
+            <span className="text-sm">More</span>
+          </Button>
+        </motion.div>
+
+        {/* Account Tabs */}
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.3, delay: 0.2 }}
+        >
+          <Tabs defaultValue="ALL" className="w-full">
+            <TabsList className="w-full justify-start overflow-x-auto flex-nowrap">
+              <TabsTrigger value="ALL" onClick={() => setSelectedAccountType('ALL')}>
+                All Accounts
+              </TabsTrigger>
+              <TabsTrigger value="CHECKING" onClick={() => setSelectedAccountType('CHECKING')}>
+                Checking
+              </TabsTrigger>
+              <TabsTrigger value="SAVINGS" onClick={() => setSelectedAccountType('SAVINGS')}>
+                Savings
+              </TabsTrigger>
+              <TabsTrigger value="INVESTMENT" onClick={() => setSelectedAccountType('INVESTMENT')}>
+                Investment
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value={selectedAccountType} className="mt-4">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {accountsLoading ? (
+                  [...Array(3)].map((_, i) => (
+                    <Skeleton key={i} className="h-24 w-full" />
+                  ))
+                ) : filteredAccounts.map((account: Account) => (
+                  <motion.div
+                    key={account.id}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                   >
-                    {tf}
-                  </Button>
+                    <Card 
+                      className="p-4 cursor-pointer hover:shadow-md transition-all"
+                      onClick={() => navigateTo(`/accounts/${account.id}`)}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="text-sm text-gray-500 dark:text-gray-400">
+                            {account.type}
+                          </div>
+                          <div className="font-medium text-lg">
+                            {formatCurrency(account.balance)}
+                          </div>
+                          <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                            {account._count?.transactions || 0} transactions
+                          </div>
+                        </div>
+                        <ChevronRight className="h-5 w-5 text-gray-400" />
+                      </div>
+                    </Card>
+                  </motion.div>
                 ))}
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[300px] flex items-center justify-center text-gray-500">
-                <LineChart className="h-8 w-8" />
-                <span className="ml-2">Chart visualization would go here</span>
-              </div>
-            </CardContent>
-          </Card>
+            </TabsContent>
+          </Tabs>
+        </motion.div>
 
-          {/* Quick Actions */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <Link href="/send-money">
-              <Button className="bg-blue-600 hover:bg-blue-700 h-20 space-x-2 w-full">
-                <Send className="h-5 w-5" />
-                <span>Send</span>
+        {/* Recent Transactions */}
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.3, delay: 0.3 }}
+          className="pb-20"
+        >
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold dark:text-gray-100">Recent Transactions</h2>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="icon"
+                className="rounded-full"
+                onClick={() => navigateTo('/finance/filters')}
+              >
+                <Filter className="h-4 w-4" />
               </Button>
-            </Link>
-            <a href="/receive-money">
-              <Button className="bg-[#2c2d33] hover:bg-gray-700 h-20 space-x-2 w-full">
-                <Download className="h-5 w-5" />
-                <span>Receive</span>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                className="font-medium"
+                onClick={() => navigateTo('/finance')}
+              >
+                View All
               </Button>
-            </a>
-            <a href="/savings">
-              <Button className="bg-[#2c2d33] hover:bg-gray-700 h-20 space-x-2 w-full">
-                <Wallet className="h-5 w-5" />
-                <span>Savings</span>
-              </Button>
-            </a>
-            <a href="/settings">
-              <Button className="bg-[#2c2d33] hover:bg-gray-700 h-20 space-x-2 w-full">
-                <Plus className="h-5 w-5" />
-                <span>Settings</span>
-              </Button>
-            </a>
+            </div>
           </div>
-
-          {/* Recent Transactions */}
-          <Card className="bg-[#2c2d33] border-gray-800">
-            <CardHeader>
-              <CardTitle>Recent Transactions</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {recentTransactions.map((transaction, index) => (
-                  <a href="/finance" key={index} className="block hover:bg-[#2c2d33] transition-colors duration-200">
-                    <div className="flex items-center justify-between py-3 border-b border-gray-800 last:border-0">
+          
+          {transactionsLoading ? (
+            <div className="space-y-4">
+              {[...Array(3)].map((_, i) => (
+                <Skeleton key={i} className="h-16 w-full" />
+              ))}
+            </div>
+          ) : transactions.length === 0 ? (
+            <Card className="p-8 text-center">
+              <div className="flex flex-col items-center text-gray-500 dark:text-gray-400">
+                <AlertCircle className="h-8 w-8 mb-2" />
+                <p>No recent transactions</p>
+              </div>
+            </Card>
+          ) : (
+            <div className="space-y-3">
+              {transactions.map((transaction: Transaction) => {
+                const status = getTransactionStatus(transaction.status);
+                const statusStyles = getStatusStyles(status);
+                return (
+                  <motion.div
+                    key={transaction.id}
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                  >
+                    <Card
+                      className="flex items-center justify-between p-4 hover:shadow-md transition-all cursor-pointer"
+                      onClick={() => navigateTo(`/finance/transactions/${transaction.id}`)}
+                    >
                       <div className="flex items-center space-x-4">
-                        <div className={`p-2 rounded-full ${
-                          transaction.type === 'Received' ? 'bg-green-500/10' : 
-                          transaction.type === 'Sent' ? 'bg-red-500/10' : 'bg-blue-500/10'
-                        }`}>
-                          {transaction.type === 'Received' ? (
-                            <ArrowDownRight className={`h-5 w-5 text-green-500`} />
-                          ) : transaction.type === 'Sent' ? (
-                            <ArrowUpRight className={`h-5 w-5 text-red-500`} />
+                        <div className={cn('p-2 rounded-full', statusStyles)}>
+                          {transaction.type === 'DEPOSIT' ? (
+                            <ArrowDownLeft className="h-5 w-5" />
                           ) : (
-                            <TrendingUp className={`h-5 w-5 text-blue-500`} />
+                            <ArrowUpRight className="h-5 w-5" />
                           )}
                         </div>
                         <div>
-                          <div className="font-medium">{transaction.type}</div>
-                          <div className="text-sm text-gray-400">
-                            {transaction.from ? `From ${transaction.from}` : `To ${transaction.to}`}
+                          <div className="font-medium dark:text-gray-100">
+                            {transaction.description || transaction.type}
+                            {transaction.beneficiary && (
+                              <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">
+                                • {transaction.beneficiary.name}
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-sm text-gray-500 dark:text-gray-400">
+                            {formatTransactionDate(transaction.createdAt)}
                           </div>
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className={`font-medium ${
-                          transaction.type === 'Received' ? 'text-green-500' : 
-                          transaction.type === 'Sent' ? 'text-red-500' : 'text-white'
-                        }`}>
-                          {transaction.type === 'Received' ? '+' : '-'}${transaction.amount}
+                        <div className={cn(
+                          'font-medium',
+                          transaction.type === 'DEPOSIT' 
+                            ? 'text-green-600 dark:text-green-400' 
+                            : 'text-red-600 dark:text-red-400'
+                        )}>
+                          {transaction.type === 'DEPOSIT' ? '+' : '-'}
+                          {formatCurrency(transaction.amount)}
                         </div>
-                        <div className="text-sm text-gray-400">{transaction.time}</div>
+                        <div className={cn('text-sm px-2 py-1 rounded-full inline-block', statusStyles)}>
+                          {status.label}
+                        </div>
                       </div>
-                    </div>
-                  </a>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </main>
+                    </Card>
+                  </motion.div>
+                )
+              })}
+            </div>
+          )}
+        </motion.div>
+      </div>
     </div>
   )
 }

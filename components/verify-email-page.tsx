@@ -63,23 +63,39 @@ export function VerifyEmailPageComponent() {
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (verificationCode.some(digit => !digit)) {
-      return // Don't submit if code is incomplete
+      return; // Don't submit if code is incomplete
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      // Add your verification logic here
-      
+      // Combine the verification code digits into a single string
+      const codeToSubmit = verificationCode.join('');
+
+      const response = await fetch('/api/verify-code', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ verificationCode: codeToSubmit }), // Send the combined code
+      });
+
+      if (!response.ok) {
+        const errorResponse = await response.json(); // Log the error response
+        console.error('Error response:', errorResponse);
+        throw new Error('Verification failed'); // Handle error appropriately
+      }
+
       // After successful verification, redirect to create profile page
-      router.push('/create-profile')
+      router.push('/create-profile');
     } catch (error) {
-      // Handle error
+      // Handle error (e.g., show an error message)
+      console.error('Error during verification:', error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleResend = () => {
     setIsLoading(true)

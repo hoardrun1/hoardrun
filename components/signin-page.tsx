@@ -28,6 +28,10 @@ export default function SignInPage() {
     setIsLoading(true)
 
     try {
+      if (!email || !password) {
+        throw new Error('Please fill in all fields')
+      }
+
       const response = await fetch('/api/sign-in', {
         method: 'POST',
         headers: {
@@ -57,9 +61,7 @@ export default function SignInPage() {
         email: data.user.email,
       })
       
-      if (response.ok) {
-        <a href="/verify-signin">Continue to Verify Sign In</a>
-      }
+      router.push('/verify-signin')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred during sign in')
       console.error('Sign in error:', err)

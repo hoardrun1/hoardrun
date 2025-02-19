@@ -1,16 +1,25 @@
 'use client'
 
-import { createContext, useContext, useEffect } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { useNavigationStore } from '@/services/navigation'
 import { PageTransition } from '@/components/ui/page-transition'
 import { NavigationProgress } from '@/components/ui/navigation-progress'
+import { useToast } from "@/components/ui/use-toast"
 
 interface NavigationContextType {
   isReady: boolean
+  isLoading: boolean
+  previousPage: string | null
+  currentPage: string
 }
 
-const NavigationContext = createContext<NavigationContextType>({ isReady: false })
+const NavigationContext = createContext<NavigationContextType>({
+  isReady: false,
+  isLoading: false,
+  previousPage: null,
+  currentPage: '/'
+})
 
 export const useNavigationContext = () => useContext(NavigationContext)
 
@@ -20,6 +29,9 @@ interface NavigationProviderProps {
 
 export const NavigationProvider: React.FC<NavigationProviderProps> = ({ children }) => {
   const pathname = usePathname()
+  const { toast } = useToast()
+  const [isLoading, setIsLoading] = useState(false)
+  const [previousPage, setPreviousPage] = useState<string | null>(null)
   const setCurrentPage = useNavigationStore((state) => state.setCurrentPage)
   const pushToStack = useNavigationStore((state) => state.pushToStack)
 
@@ -29,11 +41,49 @@ export const NavigationProvider: React.FC<NavigationProviderProps> = ({ children
     pushToStack(pathname)
   }, [pathname, setCurrentPage, pushToStack])
 
+  // Handle navigation errors
+  useEffect(() => {
+    const handleNavigationError = (event: ErrorEvent) => {
+      console.error('Navigation error:', event.error)
+      toast({
+        title: "Navigation Error",
+        description: "Failed to load the page. Please try again.",
+        variant: "destructive"
+      })
+      setIsLoading(false)
+    }
+
+    window.addEventListener('error', handleNavigationError)
+    return () => window.removeEventListener('error', handleNavigationError)
+  }, [toast])
+
+  // Track page transitions
+  useEffect(() => {
+    setPreviousPage(pathname)
+    setIsLoading(true)
+
+    // Simulate page load
+    const timeout = setTimeout(() => {
+      setIsLoading(false)
+    }, 300)
+
+    return () => clearTimeout(timeout)
+  }, [pathname])
+
+  const contextValue = {
+    isReady: true,
+    isLoading,
+    previousPage,
+    currentPage: pathname
+  }
+
   return (
-    <NavigationContext.Provider value={{ isReady: true }}>
-      <NavigationProgress />
+    <NavigationContext.Provider value={contextValue}>
+      <NavigationProgress isLoading={isLoading} />
       <div className="min-h-screen">
-        <PageTransition>{children}</PageTransition>
+        <PageTransition>
+          {children}
+        </PageTransition>
       </div>
     </NavigationContext.Provider>
   )

@@ -1,64 +1,61 @@
 import { useState, useCallback } from 'react'
-import { AccountType } from '@prisma/client'
+import { useSession } from 'next-auth/react'
 import { useToast } from '@/components/ui/use-toast'
 
-interface Account {
+interface BankAccount {
   id: string
-  type: AccountType
+  type: 'CHECKING' | 'SAVINGS' | 'INVESTMENT'
   number: string
   balance: number
   currency: string
   isActive: boolean
-  cards: any[]
-  _count: {
-    transactions: number
-  }
+  createdAt: string
+  updatedAt: string
 }
 
 interface CreateAccountData {
-  type: AccountType
+  type: BankAccount['type']
   currency?: string
 }
 
 export function useBankAccounts() {
-  const [accounts, setAccounts] = useState<Account[]>([])
+  const { data: session } = useSession()
+  const { toast } = useToast()
+  const [accounts, setAccounts] = useState<BankAccount[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const { toast } = useToast()
 
-  const fetchAccounts = useCallback(async (type?: AccountType) => {
+  const fetchAccounts = useCallback(async () => {
+    if (!session?.user) return
+
+    setIsLoading(true)
+    setError(null)
+
     try {
-      setIsLoading(true)
-      setError(null)
-      const params = new URLSearchParams()
-      if (type) params.append('type', type)
+      const response = await fetch('/api/accounts')
+      if (!response.ok) throw new Error('Failed to fetch accounts')
 
-      const response = await fetch(`/api/accounts?${params.toString()}`)
       const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch accounts')
-      }
-
-      setAccounts(data.accounts)
+      setAccounts(data)
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to fetch accounts'
-      setError(message)
+      setError(err instanceof Error ? err.message : 'An error occurred')
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: message,
+        title: 'Error',
+        description: 'Failed to fetch accounts',
+        variant: 'destructive',
       })
     } finally {
       setIsLoading(false)
     }
-  }, [toast])
+  }, [session, toast])
 
   const createAccount = useCallback(async (data: CreateAccountData) => {
-    try {
-      setIsLoading(true)
-      setError(null)
+    if (!session?.user) return
 
+    setIsLoading(true)
+    setError(null)
+
+    try {
       const response = await fetch('/api/accounts', {
         method: 'POST',
         headers: {
@@ -67,50 +64,94 @@ export function useBankAccounts() {
         body: JSON.stringify(data),
       })
 
-      const result = await response.json()
-
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to create account')
+        const errorData = await response.json()
+        throw new Error(errorData.message || 'Failed to create account')
       }
 
-      setAccounts(prev => [...prev, result.account])
+      const newAccount = await response.json()
+      setAccounts(prev => [newAccount, ...prev])
+
       toast({
-        title: "Success",
-        description: "Account created successfully",
+        title: 'Success',
+        description: 'Account created successfully',
       })
 
-      return result.account
+      return newAccount
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to create account'
-      setError(message)
+      setError(err instanceof Error ? err.message : 'An error occurred')
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: message,
+        title: 'Error',
+        description: err instanceof Error ? err.message : 'Failed to create account',
+        variant: 'destructive',
       })
-      return null
+      throw err
     } finally {
       setIsLoading(false)
     }
-  }, [toast])
+  }, [session, toast])
 
-  const getAccountById = useCallback((accountId: string) => {
-    return accounts.find(account => account.id === accountId)
+  const closeAccount = useCallback(async (id: string) => {
+    if (!session?.user) return
+
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const response = await fetch(`/api/accounts/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ isActive: false }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || 'Failed to close account')
+      }
+
+      setAccounts(prev => prev.map(account => 
+        account.id === id ? { ...account, isActive: false } : account
+      ))
+
+      toast({
+        title: 'Success',
+        description: 'Account closed successfully',
+      })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred')
+      toast({
+        title: 'Error',
+        description: err instanceof Error ? err.message : 'Failed to close account',
+        variant: 'destructive',
+      })
+      throw err
+    } finally {
+      setIsLoading(false)
+    }
+  }, [session, toast])
+
+  const getAccountById = useCallback((id: string) => {
+    return accounts.find(account => account.id === id)
   }, [accounts])
 
-  const getTotalBalance = useCallback((currency: string = 'USD') => {
-    return accounts
-      .filter(account => account.currency === currency)
-      .reduce((total, account) => total + account.balance, 0)
-  }, [accounts])
-
-  const getAccountsByType = useCallback((type: AccountType) => {
+  const getAccountsByType = useCallback((type: BankAccount['type']) => {
     return accounts.filter(account => account.type === type)
   }, [accounts])
 
-  const formatAccountNumber = useCallback((number: string) => {
-    return `**** ${number.slice(-4)}`
-  }, [])
+  const getActiveAccounts = useCallback(() => {
+    return accounts.filter(account => account.isActive)
+  }, [accounts])
+
+  const calculateTotalBalance = useCallback(() => {
+    return accounts.reduce((total, account) => {
+      if (account.isActive) {
+        return total + account.balance
+      }
+      return total
+    }, 0)
+  }, [accounts])
 
   return {
     accounts,
@@ -118,9 +159,10 @@ export function useBankAccounts() {
     error,
     fetchAccounts,
     createAccount,
+    closeAccount,
     getAccountById,
-    getTotalBalance,
     getAccountsByType,
-    formatAccountNumber,
+    getActiveAccounts,
+    calculateTotalBalance,
   }
 } 

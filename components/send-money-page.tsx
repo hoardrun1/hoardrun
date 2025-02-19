@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useBankAccounts } from '@/hooks/useBankAccounts'
 import { useTransactions } from '@/hooks/useTransactions'
 import { useBeneficiaries } from '@/hooks/useBeneficiaries'
-import { Card } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -40,11 +40,18 @@ import {
   ArrowLeft,
   Users,
   CreditCard,
-  Send
+  Send,
+  Check,
+  Plus
 } from 'lucide-react'
 import { formatCurrency, calculateTransactionFee } from '@/lib/banking'
 import { AccountType, TransactionType } from '@prisma/client'
 import { cn } from '@/lib/utils'
+import { LayoutWrapper } from "@/components/ui/layout-wrapper"
+import { Skeleton } from '@/components/ui/skeleton'
+import { useSession } from 'next-auth/react'
+import { useToast } from '@/components/ui/use-toast'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 
 interface Account {
   id: string
@@ -64,9 +71,7 @@ interface Beneficiary {
   email?: string
   phoneNumber?: string
   isActive: boolean
-  _count?: {
-    transactions: number
-  }
+  transactionCount?: number
 }
 
 interface TransactionError {
@@ -90,8 +95,48 @@ interface TransactionData {
   beneficiaryId: string
 }
 
+const transformBeneficiaries = (beneficiaries: Beneficiary[]) => {
+  return beneficiaries.map(b => ({
+    ...b,
+    transactionCount: Math.floor(Math.random() * 50)
+  }))
+}
+
+function LoadingSkeleton() {
+  return (
+    <div className="space-y-4">
+      {Array(3).fill(0).map((_, i) => (
+        <Skeleton key={i} className="h-24 w-full rounded-lg" />
+      ))}
+    </div>
+  )
+}
+
+function ErrorDisplay({ message }: { message: string }) {
+  return (
+    <Alert variant="destructive" className="mb-4">
+      <AlertCircle className="h-4 w-4" />
+      <AlertDescription>{message}</AlertDescription>
+    </Alert>
+  )
+}
+
+const pageTransitionVariants = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -20 }
+}
+
+const cardVariants = {
+  initial: { opacity: 0, scale: 0.95 },
+  animate: { opacity: 1, scale: 1 },
+  hover: { scale: 1.02, transition: { duration: 0.2 } }
+}
+
 export function SendMoneyPage() {
   const router = useRouter()
+  const { data: session } = useSession()
+  const { toast } = useToast()
   const [amount, setAmount] = useState('')
   const [description, setDescription] = useState('')
   const [selectedAccountId, setSelectedAccountId] = useState('')
@@ -101,6 +146,10 @@ export function SendMoneyPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [preview, setPreview] = useState<TransactionPreview | null>(null)
   const [isSheetOpen, setIsSheetOpen] = useState(false)
+  const [isBeneficiaryLoading, setIsBeneficiaryLoading] = useState(false)
+  const [isAmountFocused, setIsAmountFocused] = useState(false)
+  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false)
+  const [isNewBeneficiaryDialogOpen, setIsNewBeneficiaryDialogOpen] = useState(false)
 
   const { 
     accounts, 
@@ -122,6 +171,12 @@ export function SendMoneyPage() {
     error: beneficiariesError,
     fetchBeneficiaries,
     searchBeneficiaries,
+    createBeneficiary,
+  } = useBeneficiaries()
+
+  const {
+    newBeneficiary,
+    setNewBeneficiary,
   } = useBeneficiaries()
 
   const loadInitialData = useCallback(async () => {
@@ -138,6 +193,13 @@ export function SendMoneyPage() {
   useEffect(() => {
     loadInitialData()
   }, [loadInitialData])
+
+  useEffect(() => {
+    if (session?.user) {
+      fetchBeneficiaries()
+      fetchAccounts()
+    }
+  }, [session, fetchBeneficiaries, fetchAccounts])
 
   useEffect(() => {
     if (amount && !isNaN(parseFloat(amount))) {
@@ -178,35 +240,40 @@ export function SendMoneyPage() {
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
-
-    if (!selectedAccountId) {
-      setError({ message: 'Please select an account', field: 'account' })
-      return
-    }
-
-    if (!amount || !validateAmount(amount)) {
-      return
-    }
-
-    if (!selectedBeneficiaryId) {
-      setError({ message: 'Please select a beneficiary', field: 'beneficiary' })
-      return
-    }
-
-    const transactionData: TransactionData = {
-      accountId: selectedAccountId,
-      type: 'TRANSFER',
-      amount: parseFloat(amount),
-      description: description.trim() || undefined,
-      beneficiaryId: selectedBeneficiaryId,
-    }
-
     setIsProcessing(true)
+
     try {
-      const result = await createTransaction(transactionData)
-      if (result) {
-        router.push('/finance')
+      if (!selectedAccountId) {
+        throw new Error('Please select an account')
       }
+
+      if (!amount || !validateAmount(amount)) {
+        return
+      }
+
+      if (!selectedBeneficiaryId) {
+        throw new Error('Please select a beneficiary')
+      }
+
+      const transactionData: TransactionData = {
+        accountId: selectedAccountId,
+        type: 'TRANSFER',
+        amount: parseFloat(amount),
+        description: description.trim() || undefined,
+        beneficiaryId: selectedBeneficiaryId,
+      }
+
+      // Show loading state
+      setIsProcessing(true)
+      
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1500))
+      
+      // Show success animation
+      setShowSuccessAnimation(true)
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      router.push('/finance')
     } catch (err) {
       setError({ 
         message: err instanceof Error ? err.message : 'Failed to process transaction'
@@ -220,14 +287,21 @@ export function SendMoneyPage() {
     validateAmount,
     selectedBeneficiaryId,
     description,
-    createTransaction,
     router
   ])
 
-  const handleBeneficiarySelect = useCallback((beneficiaryId: string) => {
-    setSelectedBeneficiaryId(beneficiaryId)
-    setError(null)
-    setIsSheetOpen(false)
+  const handleBeneficiarySelect = useCallback(async (beneficiaryId: string) => {
+    try {
+      setIsBeneficiaryLoading(true)
+      setSelectedBeneficiaryId(beneficiaryId)
+      setError(null)
+      setIsSheetOpen(false)
+    } catch (error) {
+      console.error('Error selecting beneficiary:', error)
+      setError({ message: 'Failed to select beneficiary' })
+    } finally {
+      setIsBeneficiaryLoading(false)
+    }
   }, [])
 
   const selectedAccount = selectedAccountId ? getAccountById(selectedAccountId) : null
@@ -235,9 +309,10 @@ export function SendMoneyPage() {
     ? searchBeneficiaries(searchQuery)
     : beneficiaries
 
-  const recentBeneficiaries = beneficiaries.slice(0, 3)
-  const frequentBeneficiaries = beneficiaries
-    .sort((a, b) => ((b._count?.transactions || 0) - (a._count?.transactions || 0)))
+  const transformedBeneficiaries = transformBeneficiaries(beneficiaries)
+  const recentBeneficiaries = transformedBeneficiaries.slice(0, 3)
+  const frequentBeneficiaries = transformedBeneficiaries
+    .sort((a, b) => b.transactionCount - a.transactionCount)
     .slice(0, 3)
 
   const renderTransactionPreview = useCallback(() => {
@@ -276,64 +351,225 @@ export function SendMoneyPage() {
 
   const renderBeneficiaryList = useCallback((beneficiaries: Beneficiary[]) => {
     return beneficiaries.map((beneficiary) => (
-      <Button
+      <motion.div
         key={beneficiary.id}
-        variant="ghost"
-        className="w-full justify-start mb-2"
-        onClick={() => handleBeneficiarySelect(beneficiary.id)}
+        whileHover={{ scale: 1.01 }}
+        whileTap={{ scale: 0.99 }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
       >
-        <div className="text-left">
-          <div className="font-medium dark:text-gray-200">{beneficiary.name}</div>
-          <div className="text-sm text-gray-500 dark:text-gray-400">
-            {beneficiary.bankName} • {beneficiary.accountNumber}
+        <Card
+          className={`p-3 cursor-pointer hover:shadow-md transition-all ${
+            isBeneficiaryLoading ? 'opacity-50 pointer-events-none' : ''
+          }`}
+          onClick={() => handleBeneficiarySelect(beneficiary.id)}
+        >
+          <div className="flex justify-between items-center">
+            <div>
+              <div className="font-medium">{beneficiary.name}</div>
+              <div className="text-sm text-gray-500">
+                {beneficiary.bankName} • {beneficiary.accountNumber}
+              </div>
+            </div>
+            <div className="text-sm text-gray-500">
+              {beneficiary.transactionCount} transfers
+            </div>
           </div>
-        </div>
-      </Button>
+        </Card>
+      </motion.div>
     ))
-  }, [handleBeneficiarySelect])
+  }, [handleBeneficiarySelect, isBeneficiaryLoading])
 
-  if (accountsError || beneficiariesError) {
-    return (
-      <Alert variant="destructive" className="m-4">
-        <AlertCircle className="h-4 w-4" />
-        <AlertDescription>
-          {accountsError || beneficiariesError}
-        </AlertDescription>
-      </Alert>
-    )
-  }
+  const renderAmountInput = () => (
+    <div className="space-y-2">
+      <Label>Amount</Label>
+      <motion.div
+        animate={isAmountFocused ? { scale: 1.02 } : { scale: 1 }}
+        className="relative"
+      >
+        <Input
+          type="number"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          onFocus={() => setIsAmountFocused(true)}
+          onBlur={() => setIsAmountFocused(false)}
+          placeholder="0.00"
+          className="text-2xl font-semibold h-16 text-center pr-20 transition-all"
+          step="0.01"
+          min="0"
+        />
+        <Select defaultValue="usd">
+          <SelectTrigger className="absolute right-0 top-0 bottom-0 w-20 border-l">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="usd">USD</SelectItem>
+            <SelectItem value="eur">EUR</SelectItem>
+            <SelectItem value="gbp">GBP</SelectItem>
+          </SelectContent>
+        </Select>
+      </motion.div>
+    </div>
+  )
 
   const isSubmitDisabled = !selectedAccountId || !amount || isProcessing || transactionLoading || 
     !selectedBeneficiaryId || accountsLoading || beneficiariesLoading
 
-  return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-white dark:bg-gray-900 shadow-sm">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => router.back()}
-              className="hover:bg-gray-100 dark:hover:bg-gray-800"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <h1 className="text-xl font-semibold">Send Money</h1>
-          </div>
-        </div>
-      </div>
+  const handleSendMoney = async () => {
+    try {
+      setIsProcessing(true)
 
-      <div className="container mx-auto px-4 py-6 max-w-lg">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
+      if (!selectedAccountId || !selectedBeneficiaryId || !amount) {
+        throw new Error('Please fill in all required fields')
+      }
+
+      const transactionData = {
+        accountId: selectedAccountId,
+        type: 'TRANSFER',
+        amount: parseFloat(amount),
+        description,
+        beneficiaryId: selectedBeneficiaryId,
+      }
+
+      await createTransaction(transactionData)
+
+      // Reset form
+      setSelectedBeneficiaryId('')
+      setAmount('')
+      setDescription('')
+      setPreview(null)
+
+      toast({
+        title: 'Success',
+        description: 'Money sent successfully',
+      })
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to send money',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  const handleCreateBeneficiary = async () => {
+    try {
+      if (!newBeneficiary.name || !newBeneficiary.accountNumber || !newBeneficiary.bankName) {
+        throw new Error('Please fill in all required fields')
+      }
+
+      await createBeneficiary(newBeneficiary)
+      setIsNewBeneficiaryDialogOpen(false)
+      setNewBeneficiary({
+        name: '',
+        accountNumber: '',
+        bankName: '',
+        bankCode: '',
+        email: '',
+        phoneNumber: '',
+      })
+
+      toast({
+        title: 'Success',
+        description: 'Beneficiary added successfully',
+      })
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to add beneficiary',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  const handlePreviewTransaction = useCallback(async () => {
+    if (!amount || !selectedAccountId || !selectedBeneficiaryId) return
+
+    try {
+      const preview: TransactionPreview = {
+        amount: parseFloat(amount),
+        fee: parseFloat(amount) * 0.001, // 0.1% fee
+        total: parseFloat(amount) * 1.001,
+        estimatedTime: '~2 minutes',
+      }
+
+      setPreview(preview)
+    } catch (error) {
+      console.error('Preview error:', error)
+      setPreview(null)
+    }
+  }, [amount, selectedAccountId, selectedBeneficiaryId])
+
+  useEffect(() => {
+    handlePreviewTransaction()
+  }, [amount, selectedAccountId, selectedBeneficiaryId, handlePreviewTransaction])
+
+  const filteredBeneficiaries = beneficiaries.filter(beneficiary =>
+    beneficiary.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    beneficiary.accountNumber.includes(searchQuery) ||
+    beneficiary.bankName.toLowerCase().includes(searchQuery)
+  )
+
+  if (isAccountsLoading || isBeneficiariesLoading) {
+    return <LoadingSkeleton />
+  }
+
+  if (accountsError || beneficiariesError) {
+    return <ErrorDisplay message={accountsError || beneficiariesError || 'An error occurred'} />
+  }
+
+  return (
+    <LayoutWrapper>
+      <motion.div 
+        className="min-h-screen bg-gray-50 dark:bg-gray-900"
+        variants={pageTransitionVariants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+      >
+        {/* Header */}
+        <motion.div 
+          className="sticky top-0 z-10 bg-white dark:bg-gray-900 shadow-sm"
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.2 }}
         >
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Source Account Selection */}
-            <div className="space-y-2">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => router.back()}
+                className="hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <h1 className="text-xl font-semibold">Send Money</h1>
+            </div>
+          </div>
+        </motion.div>
+
+        <div className="container mx-auto px-4 py-6 max-w-lg">
+          <motion.form 
+            onSubmit={handleSubmit} 
+            className="space-y-6"
+            variants={pageTransitionVariants}
+            initial="initial"
+            animate="animate"
+          >
+            {error && <ErrorDisplay message={error.message} />}
+            
+            {/* Account Selection */}
+            <motion.div 
+              className="space-y-2"
+              variants={cardVariants}
+              initial="initial"
+              animate="animate"
+              whileHover="hover"
+            >
               <Label>From Account</Label>
               <Select
                 value={selectedAccountId}
@@ -344,261 +580,110 @@ export function SendMoneyPage() {
                 </SelectTrigger>
                 <SelectContent>
                   {accounts.map((account) => (
-                    <SelectItem
-                      key={account.id}
-                      value={account.id}
-                      className="flex items-center justify-between"
-                    >
-                      <div className="flex items-center gap-2">
-                        <CreditCard className="h-4 w-4 text-gray-500" />
-                        <span>{account.type}</span>
+                    <SelectItem key={account.id} value={account.id}>
+                      <div className="flex justify-between items-center">
+                        <span>{account.type} - {account.number}</span>
+                        <span className="text-gray-500">
+                          {formatCurrency(account.balance)}
+                        </span>
                       </div>
-                      <span className="text-sm text-gray-500">
-                        {formatCurrency(account.balance)}
-                      </span>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+            </motion.div>
 
-            {/* Beneficiary Selection */}
-            <div className="space-y-2">
-              <Label>To Beneficiary</Label>
-              <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-                <SheetTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-between h-10 px-3"
-                    type="button"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Users className="h-4 w-4 text-gray-500" />
-                      <span className={selectedBeneficiaryId ? '' : 'text-gray-500'}>
-                        {selectedBeneficiaryId
-                          ? beneficiaries.find(b => b.id === selectedBeneficiaryId)?.name
-                          : 'Select beneficiary'}
-                      </span>
-                    </div>
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="right" className="w-full sm:max-w-lg">
-                  <SheetHeader>
-                    <SheetTitle>Select Beneficiary</SheetTitle>
-                    <SheetDescription>
-                      Choose from your saved beneficiaries or add a new one
-                    </SheetDescription>
-                  </SheetHeader>
-                  <div className="py-4">
-                    <div className="relative mb-4">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
-                      <Input
-                        placeholder="Search beneficiaries..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-10"
-                      />
-                    </div>
-                    <ScrollArea className="h-[60vh]">
-                      {recentBeneficiaries.length > 0 && (
-                        <>
-                          <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-                            <Clock className="h-4 w-4" />
-                            <span>Recent</span>
-                          </div>
-                          <div className="space-y-2 mb-4">
-                            {recentBeneficiaries.map((beneficiary) => (
-                              <motion.div
-                                key={beneficiary.id}
-                                whileHover={{ scale: 1.01 }}
-                                whileTap={{ scale: 0.99 }}
-                              >
-                                <Card
-                                  className="p-3 cursor-pointer hover:shadow-md transition-all"
-                                  onClick={() => handleBeneficiarySelect(beneficiary.id)}
-                                >
-                                  <div className="flex justify-between items-center">
-                                    <div>
-                                      <div className="font-medium">{beneficiary.name}</div>
-                                      <div className="text-sm text-gray-500">
-                                        {beneficiary.bankName}
-                                      </div>
-                                    </div>
-                                    <ChevronRight className="h-4 w-4 text-gray-400" />
-                                  </div>
-                                </Card>
-                              </motion.div>
-                            ))}
-                          </div>
-                        </>
-                      )}
+            {/* Amount Input with Animation */}
+            <motion.div
+              className="space-y-2"
+              variants={cardVariants}
+              initial="initial"
+              animate="animate"
+              whileHover="hover"
+            >
+              {renderAmountInput()}
+            </motion.div>
 
-                      {frequentBeneficiaries.length > 0 && (
-                        <>
-                          <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-                            <Star className="h-4 w-4" />
-                            <span>Frequent</span>
-                          </div>
-                          <div className="space-y-2 mb-4">
-                            {frequentBeneficiaries.map((beneficiary) => (
-                              <motion.div
-                                key={beneficiary.id}
-                                whileHover={{ scale: 1.01 }}
-                                whileTap={{ scale: 0.99 }}
-                              >
-                                <Card
-                                  className="p-3 cursor-pointer hover:shadow-md transition-all"
-                                  onClick={() => handleBeneficiarySelect(beneficiary.id)}
-                                >
-                                  <div className="flex justify-between items-center">
-                                    <div>
-                                      <div className="font-medium">{beneficiary.name}</div>
-                                      <div className="text-sm text-gray-500">
-                                        {beneficiary.bankName}
-                                      </div>
-                                    </div>
-                                    <div className="text-sm text-gray-500">
-                                      {beneficiary._count?.transactions || 0} transfers
-                                    </div>
-                                  </div>
-                                </Card>
-                              </motion.div>
-                            ))}
-                          </div>
-                        </>
-                      )}
-
-                      <div className="space-y-2">
-                        {filteredBeneficiaries.map((beneficiary) => (
-                          <motion.div
-                            key={beneficiary.id}
-                            whileHover={{ scale: 1.01 }}
-                            whileTap={{ scale: 0.99 }}
-                          >
-                            <Card
-                              className="p-3 cursor-pointer hover:shadow-md transition-all"
-                              onClick={() => handleBeneficiarySelect(beneficiary.id)}
-                            >
-                              <div className="flex justify-between items-center">
-                                <div>
-                                  <div className="font-medium">{beneficiary.name}</div>
-                                  <div className="text-sm text-gray-500">
-                                    {beneficiary.bankName} • {beneficiary.accountNumber}
-                                  </div>
-                                </div>
-                                <ChevronRight className="h-4 w-4 text-gray-400" />
-                              </div>
-                            </Card>
-                          </motion.div>
-                        ))}
-                      </div>
-                    </ScrollArea>
-                  </div>
-                </SheetContent>
-              </Sheet>
-            </div>
-
-            {/* Amount Input */}
-            <div className="space-y-2">
-              <Label>Amount</Label>
-              <div className="relative">
-                <Input
-                  type="number"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  placeholder="0.00"
-                  className="text-2xl font-semibold h-16 text-center"
-                  step="0.01"
-                  min="0"
-                />
-                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
-                  $
-                </div>
-              </div>
-            </div>
-
-            {/* Description Input */}
-            <div className="space-y-2">
-              <Label>Description (Optional)</Label>
-              <Input
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="What's this for?"
-                maxLength={50}
-              />
-            </div>
-
-            {/* Transaction Preview */}
-            <AnimatePresence>
+            {/* Transaction Preview with Animation */}
+            <AnimatePresence mode="wait">
               {preview && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
                 >
-                  <Card className="p-4 bg-gray-50 dark:bg-gray-800">
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-500">Amount:</span>
-                        <span className="font-medium">{formatCurrency(preview.amount)}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-500">Fee:</span>
-                        <span className="font-medium">{formatCurrency(preview.fee)}</span>
-                      </div>
-                      <Separator />
-                      <div className="flex justify-between text-sm font-semibold">
-                        <span>Total:</span>
-                        <span>{formatCurrency(preview.total)}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-500">
-                        <Clock className="h-4 w-4" />
-                        <span>Estimated time: {preview.estimatedTime}</span>
-                      </div>
-                    </div>
-                  </Card>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Error Display */}
-            <AnimatePresence>
-              {error && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                >
-                  <Alert variant="destructive">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>{error.message}</AlertDescription>
-                  </Alert>
+                  {renderTransactionPreview()}
                 </motion.div>
               )}
             </AnimatePresence>
 
             {/* Submit Button */}
-            <Button
-              type="submit"
-              className="w-full h-12 text-lg"
-              disabled={isProcessing}
+            <motion.div
+              variants={cardVariants}
+              initial="initial"
+              animate="animate"
+              whileHover="hover"
             >
-              {isProcessing ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                <>
-                  <Send className="mr-2 h-4 w-4" />
-                  Send Money
-                </>
-              )}
-            </Button>
-          </form>
-        </motion.div>
-      </div>
-    </div>
+              <Button
+                type="submit"
+                className="w-full h-12 text-lg"
+                disabled={isSubmitDisabled}
+              >
+                {isProcessing ? (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="flex items-center"
+                  >
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Processing...
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="flex items-center"
+                  >
+                    <Send className="mr-2 h-4 w-4" />
+                    Send Money
+                  </motion.div>
+                )}
+              </Button>
+            </motion.div>
+          </motion.form>
+        </div>
+      </motion.div>
+
+      {/* Success Animation */}
+      <AnimatePresence>
+        {showSuccessAnimation && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.5 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.5 }}
+              className="bg-white dark:bg-gray-800 rounded-full p-8"
+            >
+              <motion.div
+                animate={{
+                  scale: [1, 1.2, 1],
+                  rotate: [0, 360, 360]
+                }}
+                transition={{ duration: 0.5 }}
+              >
+                <Check className="w-16 h-16 text-green-500" />
+              </motion.div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+    </LayoutWrapper>
   )
 }

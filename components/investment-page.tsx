@@ -1,581 +1,510 @@
 'use client'
 
-import { useState } from 'react'
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
+import { useState, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
-  Bell, 
-  ChevronDown, 
-  Search, 
-  TrendingUp, 
-  DollarSign, 
-  Percent, 
-  ArrowUpRight, 
-  ArrowDownRight, 
-  Settings,
-  ArrowLeft,
-  ChevronRight,
-  PieChart,
-  BarChart,
-  Wallet,
-  Globe,
-  Shield,
-  AlertCircle,
-  Info,
-  Sparkles,
-  Target,
-  Clock,
-  Filter
+  TrendingUp, DollarSign, Percent, ArrowUpRight, 
+  ArrowDownRight, PieChart, BarChart, Wallet,
+  Globe, Shield, AlertCircle, Info, Target,
+  Clock, Filter, Brain, Loader2, RefreshCcw,
+  Building2, Briefcase, ChartBar
 } from 'lucide-react'
-import { useRouter } from 'next/router'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts'
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { useRouter } from 'next/navigation'
+import { useToast } from "@/components/ui/use-toast"
+import { useFinance } from '@/contexts/FinanceContext'
+import { 
+  LineChart, Line, XAxis, YAxis, CartesianGrid, 
+  Tooltip, ResponsiveContainer, AreaChart, Area 
+} from 'recharts'
+import { 
+  Card, CardContent, CardHeader, 
+  CardTitle, CardDescription 
+} from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Slider } from "@/components/ui/slider"
+import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Progress } from "@/components/ui/progress"
-import { useToast } from "@/components/ui/use-toast"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
-const data = [
-  { name: 'Jan', value: 4000, profit: 2400 },
-  { name: 'Feb', value: 3000, profit: 1398 },
-  { name: 'Mar', value: 5000, profit: 3800 },
-  { name: 'Apr', value: 2780, profit: 3908 },
-  { name: 'May', value: 1890, profit: 4800 },
-  { name: 'Jun', value: 2390, profit: 3800 },
-  { name: 'Jul', value: 3490, profit: 4300 },
-]
+interface Investment {
+  id: string
+  name: string
+  return: number
+  risk: 'Low' | 'Moderate' | 'High'
+  description: string
+  minInvestment: number
+  popularity: number
+  volatility: string
+  holdings: string[]
+  performance: Array<{
+    period: string
+    value: number
+  }>
+}
 
-const popularInvestments = [
-  { 
-    name: 'Tech Fund', 
-    return: 12.5, 
-    trend: 'up',
-    description: 'Diversified technology sector fund',
-    risk: 'Moderate',
-    minInvestment: 1000,
-    popularity: 85,
-    volatility: 'Medium',
-    holdings: ['AAPL', 'MSFT', 'GOOGL'],
-    performance: [
-      { period: '1M', value: 2.5 },
-      { period: '3M', value: 8.2 },
-      { period: '1Y', value: 12.5 }
-    ]
-  },
-  { 
-    name: 'Real Estate', 
-    return: 8.2, 
-    trend: 'up',
-    description: 'Commercial real estate portfolio',
-    risk: 'Low',
-    minInvestment: 5000,
-    popularity: 72,
-    volatility: 'Low',
-    holdings: ['Office', 'Retail', 'Industrial'],
-    performance: [
-      { period: '1M', value: 1.2 },
-      { period: '3M', value: 3.8 },
-      { period: '1Y', value: 8.2 }
-    ]
-  },
-  { 
-    name: 'Green Energy', 
-    return: 15.7, 
-    trend: 'up',
-    description: 'Renewable energy investments',
-    risk: 'High',
-    minInvestment: 2000,
-    popularity: 90,
-    volatility: 'High',
-    holdings: ['Solar', 'Wind', 'Hydro'],
-    performance: [
-      { period: '1M', value: 4.2 },
-      { period: '3M', value: 10.5 },
-      { period: '1Y', value: 15.7 }
-    ]
-  },
-  { 
-    name: 'Crypto Blend', 
-    return: -5.3, 
-    trend: 'down',
-    description: 'Diversified cryptocurrency portfolio',
-    risk: 'Very High',
-    minInvestment: 500,
-    popularity: 65,
-    volatility: 'Very High',
-    holdings: ['BTC', 'ETH', 'SOL'],
-    performance: [
-      { period: '1M', value: -2.1 },
-      { period: '3M', value: -4.8 },
-      { period: '1Y', value: -5.3 }
-    ]
-  },
+interface MLPrediction {
+  assetClass: string
+  predictedReturn: number
+  confidence: number
+  timeframe: string
+}
+
+const performanceData = [
+  { month: 'Jan', value: 4000, profit: 2400 },
+  { month: 'Feb', value: 3000, profit: 1398 },
+  { month: 'Mar', value: 5000, profit: 3800 },
+  { month: 'Apr', value: 2780, profit: 3908 },
+  { month: 'May', value: 1890, profit: 4800 },
+  { month: 'Jun', value: 2390, profit: 3800 },
 ]
 
 const investmentCategories = [
-  { name: 'Stocks', icon: BarChart, color: 'blue', count: 45 },
-  { name: 'Crypto', icon: Globe, color: 'purple', count: 12 },
-  { name: 'Real Estate', icon: PieChart, color: 'green', count: 8 },
-  { name: 'ETFs', icon: TrendingUp, color: 'orange', count: 23 },
+  {
+    id: 'private-equity',
+    title: 'Private Equity',
+    icon: Briefcase,
+    return: 18.5,
+    risk: 'High',
+    minInvestment: 50000,
+    description: 'High-growth opportunities in private companies',
+    features: ['Direct ownership', 'High potential returns', 'Long-term growth']
+  },
+  {
+    id: 'real-estate',
+    title: 'Real Estate',
+    icon: Building2,
+    return: 12.3,
+    risk: 'Moderate',
+    minInvestment: 25000,
+    description: 'Stable returns from property investments',
+    features: ['Rental income', 'Property appreciation', 'Tax benefits']
+  },
+  {
+    id: 'bonds',
+    title: 'Fixed Income',
+    icon: Shield,
+    return: 5.8,
+    risk: 'Low',
+    minInvestment: 5000,
+    description: 'Secure fixed-income investments',
+    features: ['Regular interest payments', 'Capital preservation', 'Government backed']
+  },
+  {
+    id: 'etfs',
+    title: 'ETFs',
+    icon: ChartBar,
+    return: 9.8,
+    risk: 'Low',
+    minInvestment: 1000,
+    description: 'Diversified market exposure',
+    features: ['Low fees', 'High liquidity', 'Broad diversification']
+  },
+  {
+    id: 'venture-capital',
+    title: 'Venture Capital',
+    icon: Brain,
+    return: 25.5,
+    risk: 'Very High',
+    minInvestment: 100000,
+    description: 'Innovative startup investments',
+    features: ['Early-stage companies', 'High growth potential', 'Tech focus']
+  },
+  {
+    id: 'crypto',
+    title: 'Cryptocurrency',
+    icon: Globe,
+    return: 32.5,
+    risk: 'Very High',
+    minInvestment: 500,
+    description: 'Digital asset investments',
+    features: ['24/7 trading', 'High volatility', 'Blockchain technology']
+  },
+  {
+    id: 'growth-stocks',
+    title: 'Growth Stocks',
+    icon: TrendingUp,
+    return: 15.5,
+    risk: 'High',
+    minInvestment: 10000,
+    description: 'High-growth public company stocks',
+    features: ['Rapid growth potential', 'Market leadership', 'Innovation focus']
+  },
+  {
+    id: 'dividend-stocks',
+    title: 'Dividend Stocks',
+    icon: Wallet,
+    return: 8.2,
+    risk: 'Moderate',
+    minInvestment: 5000,
+    description: 'Stable dividend-paying stocks',
+    features: ['Regular dividends', 'Stable companies', 'Income generation']
+  },
+  {
+    id: 'municipal-bonds',
+    title: 'Municipal Bonds',
+    icon: Building2,
+    return: 4.5,
+    risk: 'Low',
+    minInvestment: 10000,
+    description: 'Tax-advantaged government bonds',
+    features: ['Tax benefits', 'Government backed', 'Stable returns']
+  },
+  {
+    id: 'commodity-etfs',
+    title: 'Commodity ETFs',
+    icon: BarChart,
+    return: 11.2,
+    risk: 'Moderate',
+    minInvestment: 2000,
+    description: 'Diversified commodity exposure',
+    features: ['Inflation hedge', 'Portfolio diversification', 'Global exposure']
+  },
+  {
+    id: 'tech-startups',
+    title: 'Tech Startups',
+    icon: Brain,
+    return: 28.5,
+    risk: 'Very High',
+    minInvestment: 25000,
+    description: 'Early-stage technology companies',
+    features: ['Innovation focus', 'High growth potential', 'Direct ownership']
+  },
+  {
+    id: 'real-estate-trusts',
+    title: 'REITs',
+    icon: Building2,
+    return: 10.5,
+    risk: 'Moderate',
+    minInvestment: 5000,
+    description: 'Real Estate Investment Trusts',
+    features: ['Property portfolio', 'Regular income', 'Liquidity']
+  }
 ]
 
-export function InvestmentPageComponent() {
-  const router = useRouter()
-  const [selectedInvestment, setSelectedInvestment] = useState<string | null>(null)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState('all')
+interface InvestmentCategory {
+  id: string
+  title: string
+  icon: LucideIcon
+  return: number
+  risk: 'Low' | 'Moderate' | 'High' | 'Very High'
+  minInvestment: number
+  description: string
+  features: string[]
+}
+
+export function InvestmentPage() {
+  const [selectedInvestment, setSelectedInvestment] = useState<Investment | null>(null)
+  const [showInvestModal, setShowInvestModal] = useState(false)
+  const [investmentAmount, setInvestmentAmount] = useState<string>('')
+  const [riskTolerance, setRiskTolerance] = useState(50)
+  const [autoInvest, setAutoInvest] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [sortBy, setSortBy] = useState<'return' | 'risk' | 'popularity'>('return')
+  const [filterRisk, setFilterRisk] = useState<string[]>([])
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [mlPredictions, setMLPredictions] = useState<MLPrediction | null>(null)
+  const [selectedCategory, setSelectedCategory] = useState<InvestmentCategory | null>(null)
+
+  const router = useRouter()
   const { toast } = useToast()
+  const { balance, updateBalance } = useFinance()
 
-  const handleInvestmentSelect = (name: string) => {
-    setSelectedInvestment(selectedInvestment === name ? null : name)
-  }
-
-  const handleInvestNow = async (investment: any) => {
-    setIsLoading(true)
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      toast({
-        title: "Investment Initiated",
-        description: `Your investment in ${investment.name} has been initiated.`,
-        duration: 5000,
-      })
-    } catch (error) {
-      toast({
-        title: "Investment Failed",
-        description: "There was an error processing your investment. Please try again.",
-        variant: "destructive",
-        duration: 5000,
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  // ... rest of your existing functions ...
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Header */}
-      <div className="sticky top-0 z-50 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 backdrop-blur-lg bg-opacity-80">
+      {/* Investment Overview */}
+      <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-8">
         <div className="container mx-auto px-4">
-          <div className="flex h-16 items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => router.back()}
-                className="lg:hidden hover:bg-gray-100 dark:hover:bg-gray-800"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl font-semibold dark:text-white">Investments</h1>
-                <Badge variant="secondary" className="ml-2">Beta</Badge>
-              </div>
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h1 className="text-3xl font-bold">Smart Investments</h1>
+              <p className="text-blue-100">AI-Powered Portfolio Management</p>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="relative hidden md:block">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
-                <Input 
-                  placeholder="Search investments..." 
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-64 pl-9 pr-4 transition-all focus:w-80 focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <Button variant="ghost" size="icon" className="relative hover:bg-gray-100 dark:hover:bg-gray-800">
-                <Bell className="h-5 w-5" />
-                <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full animate-pulse" />
-              </Button>
-              <Button variant="ghost" size="icon" className="hover:bg-gray-100 dark:hover:bg-gray-800">
-                <Settings className="h-5 w-5" />
-              </Button>
-            </div>
+            <Button
+              onClick={() => setShowInvestModal(true)}
+              className="bg-white text-blue-600 hover:bg-blue-50"
+            >
+              <DollarSign className="h-4 w-4 mr-2" />
+              New Investment
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card className="bg-white/10 backdrop-blur border-none text-white">
+              <CardHeader>
+                <CardTitle className="text-lg">Portfolio Value</CardTitle>
+                <div className="text-3xl font-bold">$45,678.90</div>
+                <div className="flex items-center text-green-400">
+                  <ArrowUpRight className="h-4 w-4 mr-1" />
+                  +12.5% YTD
+                </div>
+              </CardHeader>
+            </Card>
+
+            <Card className="bg-white/10 backdrop-blur border-none text-white">
+              <CardHeader>
+                <CardTitle className="text-lg">Total Returns</CardTitle>
+                <div className="text-3xl font-bold">$5,432.10</div>
+                <div className="flex items-center text-green-400">
+                  <ArrowUpRight className="h-4 w-4 mr-1" />
+                  +8.3% MTD
+                </div>
+              </CardHeader>
+            </Card>
+
+            <Card className="bg-white/10 backdrop-blur border-none text-white">
+              <CardHeader>
+                <CardTitle className="text-lg">AI Risk Score</CardTitle>
+                <div className="text-3xl font-bold">85/100</div>
+                <div className="text-blue-100">Optimized Portfolio</div>
+              </CardHeader>
+            </Card>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-6 space-y-6">
-        {/* Investment Overview */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white hover:shadow-lg transition-shadow">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-blue-100 flex items-center gap-2">
-                  Total Investment
-                  <Info className="h-4 w-4 text-blue-200" />
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">$45,231.89</div>
-                <div className="flex items-center mt-1 text-blue-100">
-                  <ArrowUpRight className="h-4 w-4 mr-1" />
-                  <span className="text-sm">+20.1% from last month</span>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.1 }}
-          >
-            <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white hover:shadow-lg transition-shadow">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-green-100 flex items-center gap-2">
-                  Total Return
-                  <Sparkles className="h-4 w-4 text-green-200" />
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">+15.3%</div>
-                <div className="flex items-center mt-1 text-green-100">
-                  <ArrowUpRight className="h-4 w-4 mr-1" />
-                  <span className="text-sm">+4% from last month</span>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.2 }}
-          >
-            <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white hover:shadow-lg transition-shadow">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-purple-100 flex items-center gap-2">
-                  Active Investments
-                  <Target className="h-4 w-4 text-purple-200" />
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">12</div>
-                <div className="flex items-center mt-1 text-purple-100">
-                  <TrendingUp className="h-4 w-4 mr-1" />
-                  <span className="text-sm">2 new this month</span>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.3 }}
-          >
-            <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white hover:shadow-lg transition-shadow">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-orange-100 flex items-center gap-2">
-                  Available to Invest
-                  <Wallet className="h-4 w-4 text-orange-200" />
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">$10,000.00</div>
-                <div className="flex items-center mt-1 text-orange-100">
-                  <Clock className="h-4 w-4 mr-1" />
-                  <span className="text-sm">Ready to grow</span>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        </div>
-
-        {/* Investment Categories */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.4 }}
-          className="grid grid-cols-2 md:grid-cols-4 gap-4"
-        >
-          {investmentCategories.map((category, index) => {
-            const Icon = category.icon
-            return (
-              <motion.div
-                key={category.name}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <Card 
-                  className="cursor-pointer hover:shadow-lg transition-all border-2 border-transparent hover:border-blue-500 dark:hover:border-blue-400"
-                  onClick={() => setSelectedCategory(category.name.toLowerCase())}
-                >
-                  <CardContent className="p-6 flex flex-col items-center text-center">
-                    <div className={`w-12 h-12 rounded-full bg-${category.color}-100 dark:bg-${category.color}-900 flex items-center justify-center mb-3 transition-transform group-hover:scale-110`}>
-                      <Icon className={`h-6 w-6 text-${category.color}-600 dark:text-${category.color}-400`} />
-                    </div>
-                    <h3 className="font-medium mb-1">{category.name}</h3>
-                    <Badge variant="secondary">{category.count} Assets</Badge>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )
-          })}
-        </motion.div>
-
-        {/* Performance Chart */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.5 }}
-        >
-          <Card className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Investment Performance</CardTitle>
-                  <CardDescription>Your portfolio performance over time</CardDescription>
-                </div>
-                <Select defaultValue="6m">
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Select timeframe" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1m">Last Month</SelectItem>
-                    <SelectItem value="3m">Last 3 Months</SelectItem>
-                    <SelectItem value="6m">Last 6 Months</SelectItem>
-                    <SelectItem value="1y">Last Year</SelectItem>
-                    <SelectItem value="all">All Time</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardHeader>
-            <CardContent className="pl-2">
-              <ResponsiveContainer width="100%" height={350}>
-                <AreaChart data={data}>
+      {/* Performance Chart */}
+      <div className="container mx-auto px-4 py-8">
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>Portfolio Performance</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={performanceData}>
                   <defs>
                     <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#6366f1" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
-                    </linearGradient>
-                    <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#22c55e" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#22c55e" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
-                  <XAxis 
-                    dataKey="name" 
-                    stroke="#888888"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <YAxis 
-                    stroke="#888888"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                    tickFormatter={(value) => `$${value}`}
-                  />
-                  <CartesianGrid 
-                    strokeDasharray="3 3"
-                    stroke="#e5e7eb"
-                    vertical={false}
-                  />
-                  <Tooltip 
-                    contentStyle={{
-                      backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                      borderRadius: '8px',
-                      border: 'none',
-                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                    }}
-                  />
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip />
                   <Area 
                     type="monotone" 
                     dataKey="value" 
-                    stroke="#6366f1" 
-                    strokeWidth={2}
+                    stroke="#3B82F6" 
                     fillOpacity={1} 
                     fill="url(#colorValue)" 
-                    name="Investment Value"
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="profit" 
-                    stroke="#22c55e" 
-                    strokeWidth={2}
-                    fillOpacity={1} 
-                    fill="url(#colorProfit)" 
-                    name="Profit"
                   />
                 </AreaChart>
               </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </motion.div>
+            </div>
+          </CardContent>
+        </Card>
 
-        {/* Investment Opportunities */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.6 }}
-        >
-          <Card className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <div className="flex justify-between items-center flex-wrap gap-4">
-                <div>
-                  <CardTitle>Investment Opportunities</CardTitle>
-                  <CardDescription>Explore curated investment options</CardDescription>
+        {/* Investment Categories */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {investmentCategories.map((category) => (
+            <Card 
+              key={category.id}
+              className="hover:shadow-lg transition-shadow cursor-pointer group"
+              onClick={() => {
+                setSelectedInvestment(category)
+                setShowInvestModal(true)
+              }}
+            >
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <category.icon className="h-5 w-5 text-blue-600" />
+                    <CardTitle className="text-lg">{category.title}</CardTitle>
+                  </div>
+                  <div className={`px-2 py-1 rounded text-sm ${
+                    category.risk === 'High' || category.risk === 'Very High'
+                      ? 'bg-red-100 text-red-700'
+                      : category.risk === 'Moderate'
+                      ? 'bg-yellow-100 text-yellow-700'
+                      : 'bg-green-100 text-green-700'
+                  }`}>
+                    {category.risk}
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" className="hidden sm:flex">
-                    <Filter className="h-4 w-4 mr-2" />
-                    Filter
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    View All
-                    <ChevronRight className="h-4 w-4 ml-2" />
-                  </Button>
+                <CardDescription>{category.description}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <div className="text-sm text-gray-500">Expected Return</div>
+                    <div className="text-2xl font-bold text-green-600">
+                      {category.return}%
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-500">Min Investment</div>
+                    <div className="font-medium">
+                      ${category.minInvestment.toLocaleString()}
+                    </div>
+                  </div>
+                  <div className="pt-2 border-t border-gray-100 dark:border-gray-800">
+                    <div className="text-sm text-gray-500 mb-2">Key Features</div>
+                    <ul className="space-y-1">
+                      {category.features.map((feature, index) => (
+                        <li key={index} className="text-sm flex items-center text-gray-600 dark:text-gray-300">
+                          <ArrowUpRight className="h-4 w-4 mr-2 text-green-500" />
+                          {feature}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 md:grid-cols-2">
-                {popularInvestments.map((investment, index) => (
-                  <motion.div
-                    key={investment.name}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <Card 
-                      className={`cursor-pointer hover:shadow-md transition-all border-2 ${
-                        selectedInvestment === investment.name 
-                          ? 'border-blue-500 dark:border-blue-400' 
-                          : 'border-transparent'
-                      }`}
-                      onClick={() => handleInvestmentSelect(investment.name)}
-                    >
-                      <CardContent className="p-6">
-                        <div className="flex justify-between items-start mb-4">
-                          <div>
-                            <div className="flex items-center gap-2 mb-1">
-                              <h3 className="font-semibold">{investment.name}</h3>
-                              <Badge variant={investment.risk === 'Low' ? 'secondary' : investment.risk === 'High' ? 'destructive' : 'default'}>
-                                {investment.risk}
-                              </Badge>
-                            </div>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">{investment.description}</p>
-                          </div>
-                          <div className={`flex items-center ${
-                            investment.trend === 'up' ? 'text-green-500' : 'text-red-500'
-                          }`}>
-                            {investment.trend === 'up' ? (
-                              <ArrowUpRight className="h-5 w-5" />
-                            ) : (
-                              <ArrowDownRight className="h-5 w-5" />
-                            )}
-                            <span className="ml-1 font-semibold">{investment.return}%</span>
-                          </div>
-                        </div>
-
-                        <div className="space-y-4">
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="text-gray-500 dark:text-gray-400">Popularity</span>
-                            <div className="flex items-center gap-2">
-                              <Progress value={investment.popularity} className="w-24" />
-                              <span>{investment.popularity}%</span>
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-4 text-sm">
-                            <div>
-                              <div className="text-gray-500 dark:text-gray-400">Volatility</div>
-                              <div className="font-medium">{investment.volatility}</div>
-                            </div>
-                            <div>
-                              <div className="text-gray-500 dark:text-gray-400">Min Investment</div>
-                              <div className="font-medium">${investment.minInvestment}</div>
-                            </div>
-                          </div>
-
-                          <div className="flex gap-2 overflow-x-auto">
-                            {investment.holdings.map((holding) => (
-                              <Badge key={holding} variant="outline">{holding}</Badge>
-                            ))}
-                          </div>
-
-                          <div className="flex justify-between items-center">
-                            {investment.performance.map((perf) => (
-                              <div key={perf.period} className="text-center">
-                                <div className="text-sm text-gray-500 dark:text-gray-400">{perf.period}</div>
-                                <div className={`font-medium ${
-                                  perf.value >= 0 ? 'text-green-500' : 'text-red-500'
-                                }`}>
-                                  {perf.value > 0 ? '+' : ''}{perf.value}%
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        <AnimatePresence>
-                          {selectedInvestment === investment.name && (
-                            <motion.div
-                              initial={{ opacity: 0, height: 0 }}
-                              animate={{ opacity: 1, height: 'auto' }}
-                              exit={{ opacity: 0, height: 0 }}
-                              className="mt-4 pt-4 border-t"
-                            >
-                              <div className="space-y-4">
-                                <Alert className="bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-900 dark:border-blue-800 dark:text-blue-100">
-                                  <Info className="h-4 w-4" />
-                                  <AlertDescription>
-                                    This investment has shown consistent growth over the past year
-                                  </AlertDescription>
-                                </Alert>
-                                <div className="flex items-center text-sm">
-                                  <Shield className="h-4 w-4 mr-2 text-gray-500" />
-                                  <span>Protected by Investor Insurance</span>
-                                </div>
-                                <div className="flex items-center text-sm">
-                                  <AlertCircle className="h-4 w-4 mr-2 text-gray-500" />
-                                  <span>Past performance does not guarantee future results</span>
-                                </div>
-                                <Button 
-                                  className="w-full bg-blue-600 hover:bg-blue-700"
-                                  onClick={() => handleInvestNow(investment)}
-                                  disabled={isLoading}
-                                >
-                                  {isLoading ? (
-                                    <>
-                                      <motion.div
-                                        animate={{ rotate: 360 }}
-                                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                                        className="mr-2"
-                                      >
-                                        <Clock className="h-4 w-4" />
-                                      </motion.div>
-                                      Processing...
-                                    </>
-                                  ) : (
-                                    <>
-                                      <DollarSign className="h-4 w-4 mr-2" />
-                                      Invest Now
-                                    </>
-                                  )}
-                                </Button>
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
+
+      {/* Investment Modal */}
+      <Dialog open={showInvestModal} onOpenChange={setShowInvestModal}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>New Investment</DialogTitle>
+            <DialogDescription>
+              Available Balance: ${balance?.toLocaleString() ?? '0'}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label>Investment Amount</Label>
+              <div className="relative">
+                <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
+                <Input
+                  type="number"
+                  value={investmentAmount}
+                  onChange={(e) => setInvestmentAmount(e.target.value)}
+                  placeholder="Enter amount"
+                  className="pl-10"
+                  min={0}
+                  max={balance}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Risk Tolerance</Label>
+              <Slider
+                value={[riskTolerance]}
+                onValueChange={(value) => setRiskTolerance(value[0])}
+                max={100}
+                step={1}
+                className="mt-2"
+              />
+              <div className="flex justify-between text-sm text-gray-500 mt-1">
+                <span>Conservative</span>
+                <span>Aggressive</span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Investment Strategy</Label>
+              <Select>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select strategy" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="growth">Growth</SelectItem>
+                  <SelectItem value="value">Value</SelectItem>
+                  <SelectItem value="dividend">Dividend</SelectItem>
+                  <SelectItem value="blend">Blend</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Switch
+                checked={autoInvest}
+                onCheckedChange={setAutoInvest}
+              />
+              <Label>Enable Auto-Invest</Label>
+            </div>
+
+            {autoInvest && (
+              <div className="space-y-2">
+                <Label>Auto-Invest Frequency</Label>
+                <Select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select frequency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="weekly">Weekly</SelectItem>
+                    <SelectItem value="biweekly">Bi-weekly</SelectItem>
+                    <SelectItem value="monthly">Monthly</SelectItem>
+                    <SelectItem value="quarterly">Quarterly</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {mlPredictions && (
+              <Card className="bg-blue-50 dark:bg-blue-900/20">
+                <CardHeader>
+                  <CardTitle className="text-sm flex items-center">
+                    <Brain className="h-4 w-4 mr-2" />
+                    AI Recommendation
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-sm space-y-1">
+                    <div className="flex justify-between">
+                      <span>Predicted Return:</span>
+                      <span className="font-medium text-green-600">
+                        {mlPredictions.predictedReturn}%
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Confidence:</span>
+                      <span className="font-medium">
+                        {mlPredictions.confidence}%
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button
+              onClick={() => setShowInvestModal(false)}
+              variant="outline"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                // Handle investment submission
+                toast({
+                  title: "Investment Successful",
+                  description: `Successfully invested $${investmentAmount}`,
+                })
+                setShowInvestModal(false)
+              }}
+              disabled={isLoading || !investmentAmount || 
+                Number(investmentAmount) <= 0 || 
+                Number(investmentAmount) > (balance ?? 0)}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                'Invest Now'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

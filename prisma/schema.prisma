@@ -167,29 +167,33 @@ enum InvestmentStatus {
 }
 
 model SavingsGoal {
-  id            String          @id @default(cuid())
-  userId        String
-  user          User            @relation(fields: [userId], references: [id])
-  name          String
-  targetAmount  Float
-  currentAmount Float           @default(0)
-  deadline      DateTime?
-  status        SavingsStatus   @default(IN_PROGRESS)
-  autoSave      Boolean         @default(false)
-  autoSaveAmount Float?
-  frequency     SavingsFrequency?
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  id                 String       @id @default(cuid())
+  userId            String
+  name              String
+  targetAmount      Float
+  currentAmount     Float        @default(0)
+  monthlyContribution Float
+  category          String
+  deadline          DateTime
+  isAutoSave        Boolean      @default(true)
+  isCompleted       Boolean      @default(false)
+  progress          Float        @default(0)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  contributions     SavingsContribution[]
+  user              User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
-enum SavingsStatus {
-  IN_PROGRESS
-  COMPLETED
-  CANCELLED
-}
+model SavingsContribution {
+  id                String       @id @default(cuid())
+  goalId            String
+  amount            Float
+  type              String       @default("MANUAL") // MANUAL, AUTO, BONUS
+  description       String?
+  createdAt         DateTime     @default(now())
+  goal              SavingsGoal  @relation(fields: [goalId], references: [id], onDelete: Cascade)
 
-enum SavingsFrequency {
-  DAILY
-  WEEKLY
-  MONTHLY
+  @@index([goalId])
 }

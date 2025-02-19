@@ -33,114 +33,98 @@ export async function generateTransactionReference(): Promise<string> {
 export async function processTransaction(
   userId: string,
   accountId: string,
-  type: TransactionType,
+  type: string,
   amount: number,
   description?: string,
-  beneficiaryId?: string
+  beneficiaryId?: string,
 ) {
-  return await prisma.$transaction(async (prisma) => {
-    // Get account and lock it for update
-    const account = await prisma.account.findUnique({
-      where: { id: accountId },
-    })
+  const account = await prisma.account.findFirst({
+    where: {
+      id: accountId,
+      userId,
+      isActive: true,
+    },
+  })
 
-    if (!account) {
-      throw new Error('Account not found')
-    }
+  if (!account) {
+    throw new Error('Invalid account')
+  }
 
-    // Check if account belongs to user
-    if (account.userId !== userId) {
-      throw new Error('Unauthorized')
-    }
+  if (type !== 'DEPOSIT' && amount > account.balance) {
+    throw new Error('Insufficient funds')
+  }
 
-    // Check if account is active
-    if (!account.isActive) {
-      throw new Error('Account is inactive')
-    }
+  const fee = calculateTransactionFee(amount, type)
+  const totalAmount = amount + fee
 
-    // Generate unique reference
-    const reference = await generateTransactionReference()
-
-    // Calculate new balance based on transaction type
-    let newBalance = account.balance
-    switch (type) {
-      case 'DEPOSIT':
-        newBalance += amount
-        break
-      case 'WITHDRAWAL':
-      case 'TRANSFER':
-      case 'PAYMENT':
-        if (account.balance < amount) {
-          throw new Error('Insufficient funds')
-        }
-        newBalance -= amount
-        break
-      case 'REFUND':
-        newBalance += amount
-        break
-      default:
-        throw new Error('Invalid transaction type')
-    }
-
+  const transaction = await prisma.$transaction(async (tx) => {
     // Create transaction record
-    const transaction = await prisma.transaction.create({
+    const newTransaction = await tx.transaction.create({
       data: {
         userId,
-        accountId,
-        type,
+        type: type as any,
         amount,
         description,
-        reference,
         beneficiaryId,
-        status: TransactionStatus.COMPLETED,
-        currency: account.currency,
+        status: 'COMPLETED',
+        fee,
       },
     })
 
     // Update account balance
-    await prisma.account.update({
+    const updatedAccount = await tx.account.update({
       where: { id: accountId },
-      data: { balance: newBalance },
+      data: {
+        balance: {
+          increment: type === 'DEPOSIT' ? amount : -totalAmount,
+        },
+      },
     })
 
+    // Update beneficiary account if it's a transfer
+    if (type === 'TRANSFER' && beneficiaryId) {
+      await tx.beneficiary.update({
+        where: { id: beneficiaryId },
+        data: {
+          lastTransactionDate: new Date(),
+          transactionCount: {
+            increment: 1,
+          },
+        },
+      })
+    }
+
     return {
-      transaction,
-      newBalance,
+      transaction: newTransaction,
+      newBalance: updatedAccount.balance,
     }
   })
+
+  return transaction
 }
 
-export async function validateTransactionAmount(amount: number): Promise<boolean> {
+export async function validateTransactionAmount(amount: number): Promise<void> {
   if (amount <= 0) {
     throw new Error('Amount must be greater than 0')
   }
+
   if (amount > 1000000) {
-    throw new Error('Amount exceeds maximum limit')
+    throw new Error('Amount exceeds maximum transaction limit')
   }
-  return true
 }
 
-export async function validateBeneficiary(
-  userId: string,
-  beneficiaryId: string
-): Promise<boolean> {
-  const beneficiary = await prisma.beneficiary.findUnique({
-    where: { id: beneficiaryId },
+export async function validateBeneficiary(userId: string, beneficiaryId: string): Promise<void> {
+  const beneficiary = await prisma.beneficiary.findFirst({
+    where: {
+      id: beneficiaryId,
+      userId,
+      isActive: true,
+    },
   })
 
   if (!beneficiary) {
-    throw new Error('Beneficiary not found')
+    throw new Error('Invalid beneficiary')
   }
-
-  if (beneficiary.userId !== userId) {
-    throw new Error('Unauthorized beneficiary')
-  }
-
-  if (!beneficiary.isActive) {
-    throw new Error('Beneficiary is inactive')
-  }
-
-  return true
 }
 
 export async function getAccountBalance(accountId: string): Promise<number> {
@@ -159,11 +143,11 @@ export async function getAccountBalance(accountId: string): Promise<number> {
 export async function getTransactionHistory(
   accountId: string,
   userId: string,
-  page = 1,
-  limit = 10,
-  type?: TransactionType,
+  page: number = 1,
+  limit: number = 10,
+  type?: string,
   startDate?: Date,
-  endDate?: Date
+  endDate?: Date,
 ) {
   const where = {
     accountId,
@@ -200,34 +184,179 @@ export async function getTransactionHistory(
 
   return {
     transactions,
-    total,
-    page,
-    totalPages: Math.ceil(total / limit),
-    hasMore: page * limit < total,
+    pagination: {
+      total,
+      pages: Math.ceil(total / limit),
+      current: page,
+      limit,
+    },
   }
 }
 
-export function formatCurrency(
-  amount: number,
-  currency: string = 'USD',
-  locale: string = 'en-US'
-): string {
-  return new Intl.NumberFormat(locale, {
+export function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency,
+    currency: 'USD',
   }).format(amount)
 }
 
-export function calculateTransactionFee(
-  amount: number,
-  type: TransactionType
+export function calculateTransactionFee(amount: number, type: string): number {
+  const feeRates = {
+    TRANSFER: 0.001, // 0.1%
+    WITHDRAWAL: 0.002, // 0.2%
+    INVESTMENT: 0.0015, // 0.15%
+  }
+
+  const rate = feeRates[type as keyof typeof feeRates] || 0
+  return Math.round((amount * rate) * 100) / 100
+}
+
+export function calculateInterestRate(balance: number): number {
+  // Progressive interest rates based on balance
+  if (balance >= 100000) return 0.03 // 3%
+  if (balance >= 50000) return 0.025 // 2.5%
+  if (balance >= 10000) return 0.02 // 2%
+  return 0.015 // 1.5%
+}
+
+export function calculateMonthlyInterest(balance: number, rate: number): number {
+  return balance * (rate / 12)
+}
+
+export function calculateCompoundInterest(
+  principal: number,
+  rate: number,
+  years: number,
+  compoundingFrequency: number = 12
 ): number {
-  switch (type) {
-    case 'TRANSFER':
-      return Math.min(amount * 0.005, 10) // 0.5% with max $10
-    case 'WITHDRAWAL':
-      return Math.min(amount * 0.01, 5) // 1% with max $5
+  return principal * Math.pow(1 + rate / compoundingFrequency, compoundingFrequency * years)
+}
+
+export function calculateSavingsGoal(
+  targetAmount: number,
+  currentAmount: number,
+  monthlyContribution: number,
+  annualRate: number = 0.02
+): number {
+  const monthlyRate = annualRate / 12
+  const remainingAmount = targetAmount - currentAmount
+  
+  // Calculate number of months needed to reach goal
+  return Math.ceil(
+    Math.log(1 + (remainingAmount * monthlyRate) / monthlyContribution) /
+    Math.log(1 + monthlyRate)
+  )
+}
+
+export function validateAccountNumber(accountNumber: string): boolean {
+  // Basic account number validation (example format: 16 digits)
+  const accountNumberRegex = /^\d{16}$/
+  return accountNumberRegex.test(accountNumber)
+}
+
+export function validateRoutingNumber(routingNumber: string): boolean {
+  // Basic routing number validation (example format: 9 digits)
+  const routingNumberRegex = /^\d{9}$/
+  return routingNumberRegex.test(routingNumber)
+}
+
+export function calculateTransactionLimit(
+  accountType: string,
+  accountAge: number,
+  creditScore?: number
+): number {
+  let baseLimit = 0
+
+  switch (accountType.toUpperCase()) {
+    case 'SAVINGS':
+      baseLimit = 10000
+      break
+    case 'CHECKING':
+      baseLimit = 5000
+      break
+    case 'INVESTMENT':
+      baseLimit = 50000
+      break
     default:
-      return 0
+      baseLimit = 1000
+  }
+
+  // Adjust limit based on account age (in months)
+  const ageMultiplier = Math.min(accountAge / 12, 2) // Cap at 2x after 2 years
+  baseLimit *= (1 + ageMultiplier)
+
+  // Adjust limit based on credit score if available
+  if (creditScore) {
+    const creditMultiplier = creditScore >= 700 ? 1.5 : creditScore >= 650 ? 1.2 : 1
+    baseLimit *= creditMultiplier
+  }
+
+  return Math.round(baseLimit)
+}
+
+export function calculateSavingsProjection(
+  currentAmount: number,
+  monthlyContribution: number,
+  annualInterestRate: number,
+  years: number,
+): number[] {
+  const monthlyRate = annualInterestRate / 12 / 100
+  const months = years * 12
+  const projection: number[] = []
+
+  let balance = currentAmount
+  for (let i = 1; i <= months; i++) {
+    balance = balance * (1 + monthlyRate) + monthlyContribution
+    if (i % 12 === 0) {
+      projection.push(Math.round(balance * 100) / 100)
+    }
+  }
+
+  return projection
+}
+
+export function calculateInvestmentReturns(
+  principal: number,
+  annualReturn: number,
+  years: number,
+  compoundingFrequency: 'monthly' | 'quarterly' | 'annually' = 'annually',
+): number {
+  const frequencyMap = {
+    monthly: 12,
+    quarterly: 4,
+    annually: 1,
+  }
+
+  const n = frequencyMap[compoundingFrequency]
+  const r = annualReturn / 100
+  const t = years
+
+  const amount = principal * Math.pow(1 + r/n, n * t)
+  return Math.round(amount * 100) / 100
+}
+
+export function calculateLoanPayment(
+  principal: number,
+  annualInterestRate: number,
+  years: number,
+): {
+  monthlyPayment: number
+  totalInterest: number
+  totalPayment: number
+} {
+  const monthlyRate = annualInterestRate / 12 / 100
+  const numberOfPayments = years * 12
+
+  const monthlyPayment = 
+    (principal * monthlyRate * Math.pow(1 + monthlyRate, numberOfPayments)) /
+    (Math.pow(1 + monthlyRate, numberOfPayments) - 1)
+
+  const totalPayment = monthlyPayment * numberOfPayments
+  const totalInterest = totalPayment - principal
+
+  return {
+    monthlyPayment: Math.round(monthlyPayment * 100) / 100,
+    totalInterest: Math.round(totalInterest * 100) / 100,
+    totalPayment: Math.round(totalPayment * 100) / 100,
   }
 } 

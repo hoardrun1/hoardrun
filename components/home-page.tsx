@@ -1,477 +1,409 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/contexts/AuthContext'
-import { useBankAccounts } from '@/hooks/useBankAccounts'
-import { useTransactions } from '@/hooks/useTransactions'
-import { Card } from '../components/ui/card'
-import { Button } from '../components/ui/button'
-import { Skeleton } from '../components/ui/skeleton'
-import { Alert, AlertDescription } from '../components/ui/alert'
-import { Progress } from '../components/ui/progress'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs'
-import { formatCurrency } from '@/lib/banking'
-import { cn } from '@/lib/utils'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { 
   ArrowUpRight, 
-  ArrowDownLeft, 
-  Plus, 
-  CreditCard, 
-  PiggyBank,
-  TrendingUp,
-  AlertCircle,
-  ChevronRight,
-  Filter,
+  ArrowDownRight,
   RefreshCcw,
+  Wallet,
   Bell,
-  Settings
+  Settings,
+  Search,
+  ChevronRight,
+  Download,
+  Filter,
+  Plus,
+  Brain,
+  Sparkles,
+  Target,
+  Clock,
+  Loader2,
+  Info
 } from 'lucide-react'
-import type { TransactionStatus, TransactionType } from '@prisma/client'
-interface TransactionStatusInfo {
-  label: string
-  color: 'green' | 'yellow' | 'red' | 'gray' | 'blue'
-}
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Progress } from "@/components/ui/progress"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { useToast } from "@/components/ui/use-toast"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Badge } from "@/components/ui/badge"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { LayoutWrapper } from "@/components/ui/layout-wrapper"
+import { cn } from "@/lib/utils"
+import { useAuth } from '@/contexts/AuthContext'
+import { useNavigationContext } from '@/providers/NavigationProvider'
+import { DepositModal } from './deposit-modal'
+import { useFinance } from '@/contexts/FinanceContext'
 
 interface Transaction {
   id: string
-  type: TransactionType
+  type: 'income' | 'expense'
   amount: number
-  currency: string
-  description?: string
-  status: TransactionStatus
-  createdAt: string
-  beneficiary?: {
-    name: string
-    accountNumber: string
-    bankName: string
+  description: string
+  category: string
+  date: string
+  merchant: string
+  status: {
+    label: string
+    color: 'green' | 'yellow' | 'red' | 'gray' | 'blue'
   }
 }
 
-interface Account {
+interface AIInsight {
   id: string
-  type: 'SAVINGS' | 'CHECKING' | 'INVESTMENT'
-  number: string
-  balance: number
-  currency: string
-  isActive: boolean
-  _count?: {
-    transactions: number
+  title: string
+  description: string
+  type: 'tip' | 'warning' | 'achievement'
+  impact: number
+  confidence: number
+  actions?: {
+    label: string
+    onClick: () => void
+  }[]
+}
+
+interface FinancialSummary {
+  totalBalance: number
+  monthlyIncome: number
+  monthlyExpenses: number
+  savingsRate: number
+  changePercentages: {
+    balance: number
+    income: number
+    expenses: number
+    savings: number
   }
 }
 
-export function HomePage() {
+export function HomePageComponent() {
   const router = useRouter()
+  const { toast } = useToast()
   const { user } = useAuth()
-  const [selectedAccountType, setSelectedAccountType] = useState<'SAVINGS' | 'CHECKING' | 'INVESTMENT' | 'ALL'>('ALL')
-  const [isRefreshing, setIsRefreshing] = useState(false)
+  const { isLoading: isNavigating } = useNavigationContext()
+  const { balance } = useFinance()
   
-  const { 
-    accounts, 
-    isLoading: accountsLoading, 
-    error: accountsError,
-    fetchAccounts, 
-    getTotalBalance,
-    getAccountsByType 
-  } = useBankAccounts()
-  
-  const { 
-    transactions, 
-    isLoading: transactionsLoading,
-    error: transactionsError,
-    fetchTransactionHistory,
-    formatTransactionDate,
-    getTransactionStatus,
-    calculateTotalAmount
-  } = useTransactions()
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([])
+  const [aiInsights, setAIInsights] = useState<AIInsight[]>([])
+  const [financialSummary, setFinancialSummary] = useState<FinancialSummary | null>(null)
+  const [showInsights, setShowInsights] = useState(true)
+  const [refreshKey, setRefreshKey] = useState(0)
+  const [showDepositModal, setShowDepositModal] = useState(false)
 
-  const loadInitialData = useCallback(async () => {
+  // Fetch initial data
+  const fetchData = useCallback(async () => {
     try {
-      await fetchAccounts()
-    } catch (error) {
-      console.error('Failed to fetch accounts:', error)
-    }
-  }, [fetchAccounts])
+      setIsLoading(true)
+      setError(null)
 
-  const loadTransactions = useCallback(async (accountId: string) => {
-    try {
-      await fetchTransactionHistory(accountId, 1, 5)
-    } catch (error) {
-      console.error('Failed to fetch transactions:', error)
-    }
-  }, [fetchTransactionHistory])
-
-  useEffect(() => {
-    loadInitialData()
-  }, [loadInitialData])
-
-  useEffect(() => {
-    if (accounts?.[0]?.id) {
-      loadTransactions(accounts[0].id)
-    }
-  }, [accounts, loadTransactions])
-
-  const navigateTo = useCallback((path: string) => {
-    router.push(path)
-  }, [router])
-
-  const getStatusStyles = useCallback((status: TransactionStatusInfo) => {
-    const styles = {
-      green: 'bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300',
-      yellow: 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900 dark:text-yellow-300',
-      red: 'bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-300',
-      gray: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300',
-      blue: 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300',
-    }
-    return styles[status.color]
-  }, [])
-
-  const handleRefresh = useCallback(async () => {
-    setIsRefreshing(true)
-    try {
-      await Promise.all([
-        fetchAccounts(),
-        accounts[0]?.id && fetchTransactionHistory(accounts[0].id, 1, 5)
+      // Simulate API calls with Promise.all for parallel requests
+      const [transactionsData, insightsData, summaryData] = await Promise.all([
+        fetch('/api/transactions/recent').then(res => res.json()),
+        fetch('/api/ai-insights').then(res => res.json()),
+        fetch('/api/financial-summary').then(res => res.json())
       ])
-    } catch (error) {
-      console.error('Failed to refresh data:', error)
+
+      setRecentTransactions(transactionsData)
+      setAIInsights(insightsData)
+      setFinancialSummary(summaryData)
+    } catch (err) {
+      const errorMessage = 'Failed to load data. Please try again.'
+      setError(errorMessage)
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive"
+      })
     } finally {
-      setIsRefreshing(false)
+      setIsLoading(false)
     }
-  }, [fetchAccounts, fetchTransactionHistory, accounts])
+  }, [toast])
 
-  const filteredAccounts = selectedAccountType === 'ALL' 
-    ? accounts 
-    : getAccountsByType(selectedAccountType)
+  // Refresh data periodically
+  useEffect(() => {
+    fetchData()
+    const interval = setInterval(() => {
+      setRefreshKey(prev => prev + 1)
+    }, 30000) // Refresh every 30 seconds
 
-  const monthlyIncome = calculateTotalAmount('DEPOSIT')
-  const monthlyWithdrawals = calculateTotalAmount('WITHDRAWAL')
-  const monthlyTransfers = calculateTotalAmount('TRANSFER')
-  const monthlyPayments = calculateTotalAmount('PAYMENT')
-  
-  const monthlyExpenses = monthlyWithdrawals + monthlyTransfers + monthlyPayments
-  const savingsProgress = monthlyIncome ? (monthlyIncome - monthlyExpenses) / monthlyIncome * 100 : 0
+    return () => clearInterval(interval)
+  }, [fetchData, refreshKey])
 
-  if (accountsError || transactionsError) {
+  // Filter transactions based on search
+  const filteredTransactions = useMemo(() => {
+    if (!searchQuery) return recentTransactions
+    const query = searchQuery.toLowerCase()
+    return recentTransactions.filter(transaction => 
+      transaction.description.toLowerCase().includes(query) ||
+      transaction.merchant.toLowerCase().includes(query) ||
+      transaction.category.toLowerCase().includes(query)
+    )
+  }, [recentTransactions, searchQuery])
+
+  const handleInsightAction = async (insightId: string, actionIndex: number) => {
+    try {
+      setIsLoading(true)
+      // Implement insight action logic
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      toast({
+        title: "Action Completed",
+        description: "Successfully applied the recommended action.",
+        duration: 3000
+      })
+      
+      // Refresh data after action
+      fetchData()
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to apply action. Please try again.",
+        variant: "destructive"
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  if (error) {
     return (
-      <Alert variant="destructive" className="m-4">
-        <AlertCircle className="h-4 w-4" />
-        <AlertDescription>
-          {accountsError || transactionsError}
-        </AlertDescription>
-      </Alert>
+      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
+        <Alert variant="destructive" className="max-w-md">
+          <AlertDescription>{error}</AlertDescription>
+          <Button 
+            onClick={fetchData}
+            variant="outline"
+            className="mt-4"
+          >
+            <RefreshCcw className="mr-2 h-4 w-4" />
+            Retry
+          </Button>
+        </Alert>
+      </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="sticky top-0 z-10 bg-white dark:bg-gray-900 shadow-sm">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100">
-                Welcome back
+    <LayoutWrapper className="bg-gray-50 dark:bg-gray-900 min-h-screen">
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div className="container mx-auto px-4">
+          <div className="flex h-16 items-center justify-between">
+            <div className="flex items-center gap-4">
+              <h1 className="text-xl font-semibold dark:text-white">
+                Welcome back, {user?.name || 'User'}
               </h1>
-              <p className="text-sm md:text-base text-gray-600 dark:text-gray-400">
-                {user?.name || 'User'}
-              </p>
             </div>
             <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="relative"
-                onClick={() => navigateTo('/notifications')}
-              >
+              <div className="relative hidden md:block">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+                <Input 
+                  placeholder="Search transactions..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-64 pl-9"
+                />
+              </div>
+              <Button variant="ghost" size="icon" className="relative">
                 <Bell className="h-5 w-5" />
-                <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full" />
+                <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full" />
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigateTo('/settings')}
-              >
+              <Button variant="ghost" size="icon">
                 <Settings className="h-5 w-5" />
               </Button>
             </div>
           </div>
         </div>
-      </div>
+      </header>
 
-      <div className="container mx-auto px-4 py-6 space-y-6">
-        {/* Balance Card */}
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.3 }}
-        >
-          <Card className="p-6 bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 text-white overflow-hidden relative">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full transform translate-x-32 -translate-y-32" />
-            <div className="relative z-10">
-              <div className="flex justify-between items-start mb-6">
-                <div>
-                  <div className="mb-2 text-sm text-blue-100">Total Balance</div>
-                  {accountsLoading ? (
-                    <Skeleton className="h-8 w-32 bg-white/20" />
-                  ) : (
-                    <h2 className="text-3xl font-bold">
-                      {formatCurrency(getTotalBalance())}
-                    </h2>
-                  )}
+      <main className="container mx-auto px-4 py-6 space-y-6">
+        {/* AI Insights */}
+        {showInsights && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Card className="border-2 border-blue-500/20">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Brain className="h-5 w-5 text-blue-500" />
+                    <CardTitle>AI Insights</CardTitle>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowInsights(false)}
+                  >
+                    Hide
+                  </Button>
+                </div>
+                <CardDescription>Personalized financial recommendations</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {isLoading ? (
+                  <div className="space-y-4">
+                    {[1, 2, 3].map((i) => (
+                      <Skeleton key={i} className="h-24 w-full" />
+                    ))}
+                  </div>
+                ) : (
+                  <AnimatePresence>
+                    {aiInsights.map((insight, index) => (
+                      <motion.div
+                        key={insight.id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 20 }}
+                        transition={{ delay: index * 0.1 }}
+                      >
+                        <Card className={cn(
+                          "border-l-4",
+                          insight.type === 'warning' ? "border-yellow-500" :
+                          insight.type === 'achievement' ? "border-green-500" :
+                          "border-blue-500"
+                        )}>
+                          <CardContent className="p-4">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <h3 className="font-medium">{insight.title}</h3>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">
+                                  {insight.description}
+                                </p>
+                                <div className="flex items-center gap-4 mt-2">
+                                  <Badge variant="secondary">
+                                    {insight.impact > 0 ? '+' : ''}{insight.impact}% Impact
+                                  </Badge>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs text-gray-500">AI Confidence:</span>
+                                    <Progress value={insight.confidence} className="w-24" />
+                                  </div>
+                                </div>
+                              </div>
+                              {insight.actions && (
+                                <div className="flex gap-2">
+                                  {insight.actions.map((action, actionIndex) => (
+                                    <Button
+                                      key={actionIndex}
+                                      size="sm"
+                                      onClick={() => handleInsightAction(insight.id, actionIndex)}
+                                      disabled={isLoading}
+                                    >
+                                      {action.label}
+                                    </Button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Financial Overview */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <motion.div>
+            <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-blue-100">
+                  Total Balance
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  ${balance.toLocaleString()}
                 </div>
                 <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleRefresh}
-                  disabled={isRefreshing}
-                  className={cn('text-white hover:text-white/80', isRefreshing && 'animate-spin')}
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setShowDepositModal(true)}
+                  className="mt-2"
                 >
-                  <RefreshCcw className="h-5 w-5" />
+                  Deposit
                 </Button>
-              </div>
-              
-              <div className="mb-4">
-                <div className="flex justify-between text-sm text-blue-100 mb-1">
-                  <span>Monthly Savings</span>
-                  <span>{savingsProgress > 0 ? '+' : ''}{savingsProgress.toFixed(1)}%</span>
-                </div>
-                <Progress 
-                  value={Math.max(0, Math.min(savingsProgress, 100))} 
-                  className="h-2 bg-white/20" 
-                />
-              </div>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-              <div className="flex gap-3">
-                <Button 
-                  className="flex-1 bg-white/10 hover:bg-white/20 text-white border-0"
-                  onClick={() => navigateTo('/send-money')}
-                >
-                  <ArrowUpRight className="w-4 h-4 mr-2" />
-                  Send
-                </Button>
-                <Button 
-                  className="flex-1 bg-white/10 hover:bg-white/20 text-white border-0"
-                  onClick={() => navigateTo('/receive-money')}
-                >
-                  <ArrowDownLeft className="w-4 h-4 mr-2" />
-                  Receive
-                </Button>
-              </div>
-            </div>
-          </Card>
-        </motion.div>
-
-        {/* Quick Actions */}
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.3, delay: 0.1 }}
-          className="grid grid-cols-2 sm:grid-cols-4 gap-3"
-        >
-          <Button
-            variant="outline"
-            className="flex flex-col items-center p-4 h-auto hover:bg-blue-50 dark:hover:bg-gray-800"
-            onClick={() => navigateTo('/cards')}
-          >
-            <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-gray-800 flex items-center justify-center mb-2">
-              <CreditCard className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-            </div>
-            <span className="text-sm">Cards</span>
-          </Button>
-          <Button
-            variant="outline"
-            className="flex flex-col items-center p-4 h-auto hover:bg-green-50 dark:hover:bg-gray-800"
-            onClick={() => navigateTo('/savings')}
-          >
-            <div className="w-12 h-12 rounded-full bg-green-100 dark:bg-gray-800 flex items-center justify-center mb-2">
-              <PiggyBank className="h-6 w-6 text-green-600 dark:text-green-400" />
-            </div>
-            <span className="text-sm">Savings</span>
-          </Button>
-          <Button
-            variant="outline"
-            className="flex flex-col items-center p-4 h-auto hover:bg-purple-50 dark:hover:bg-gray-800"
-            onClick={() => navigateTo('/investment')}
-          >
-            <div className="w-12 h-12 rounded-full bg-purple-100 dark:bg-gray-800 flex items-center justify-center mb-2">
-              <TrendingUp className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-            </div>
-            <span className="text-sm">Invest</span>
-          </Button>
-          <Button
-            variant="outline"
-            className="flex flex-col items-center p-4 h-auto hover:bg-orange-50 dark:hover:bg-gray-800"
-            onClick={() => navigateTo('/finance')}
-          >
-            <div className="w-12 h-12 rounded-full bg-orange-100 dark:bg-gray-800 flex items-center justify-center mb-2">
-              <Plus className="h-6 w-6 text-orange-600 dark:text-orange-400" />
-            </div>
-            <span className="text-sm">More</span>
-          </Button>
-        </motion.div>
-
-        {/* Account Tabs */}
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.3, delay: 0.2 }}
-        >
-          <Tabs defaultValue="ALL" className="w-full">
-            <TabsList className="w-full justify-start overflow-x-auto flex-nowrap">
-              <TabsTrigger value="ALL" onClick={() => setSelectedAccountType('ALL')}>
-                All Accounts
-              </TabsTrigger>
-              <TabsTrigger value="CHECKING" onClick={() => setSelectedAccountType('CHECKING')}>
-                Checking
-              </TabsTrigger>
-              <TabsTrigger value="SAVINGS" onClick={() => setSelectedAccountType('SAVINGS')}>
-                Savings
-              </TabsTrigger>
-              <TabsTrigger value="INVESTMENT" onClick={() => setSelectedAccountType('INVESTMENT')}>
-                Investment
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value={selectedAccountType} className="mt-4">
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {accountsLoading ? (
-                  [...Array(3)].map((_, i) => (
-                    <Skeleton key={i} className="h-24 w-full" />
-                  ))
-                ) : filteredAccounts.map((account: Account) => (
-                  <motion.div
-                    key={account.id}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <Card 
-                      className="p-4 cursor-pointer hover:shadow-md transition-all"
-                      onClick={() => navigateTo(`/accounts/${account.id}`)}
-                    >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <div className="text-sm text-gray-500 dark:text-gray-400">
-                            {account.type}
-                          </div>
-                          <div className="font-medium text-lg">
-                            {formatCurrency(account.balance)}
-                          </div>
-                          <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                            {account._count?.transactions || 0} transactions
-                          </div>
-                        </div>
-                        <ChevronRight className="h-5 w-5 text-gray-400" />
-                      </div>
-                    </Card>
-                  </motion.div>
-                ))}
-              </div>
-            </TabsContent>
-          </Tabs>
-        </motion.div>
+          {/* Add other financial cards... */}
+        </div>
 
         {/* Recent Transactions */}
         <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.3, delay: 0.3 }}
-          className="pb-20"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.4 }}
         >
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold dark:text-gray-100">Recent Transactions</h2>
-            <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                size="icon"
-                className="rounded-full"
-                onClick={() => navigateTo('/finance/filters')}
-              >
-                <Filter className="h-4 w-4" />
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm"
-                className="font-medium"
-                onClick={() => navigateTo('/finance')}
-              >
-                View All
-              </Button>
-            </div>
-          </div>
-          
-          {transactionsLoading ? (
-            <div className="space-y-4">
-              {[...Array(3)].map((_, i) => (
-                <Skeleton key={i} className="h-16 w-full" />
-              ))}
-            </div>
-          ) : transactions.length === 0 ? (
-            <Card className="p-8 text-center">
-              <div className="flex flex-col items-center text-gray-500 dark:text-gray-400">
-                <AlertCircle className="h-8 w-8 mb-2" />
-                <p>No recent transactions</p>
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Recent Transactions</CardTitle>
+                  <CardDescription>Your latest financial activities</CardDescription>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm">
+                    <Filter className="h-4 w-4 mr-2" />
+                    Filter
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    <Download className="h-4 w-4 mr-2" />
+                    Export
+                  </Button>
+                  <Button size="sm">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Transaction
+                  </Button>
+                </div>
               </div>
-            </Card>
-          ) : (
-            <div className="space-y-3">
-              {transactions.map((transaction: Transaction) => {
-                const status = getTransactionStatus(transaction.status);
-                const statusStyles = getStatusStyles(status);
-                return (
-                  <motion.div
-                    key={transaction.id}
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.99 }}
-                  >
-                    <Card
-                      className="flex items-center justify-between p-4 hover:shadow-md transition-all cursor-pointer"
-                      onClick={() => navigateTo(`/finance/transactions/${transaction.id}`)}
-                    >
-                      <div className="flex items-center space-x-4">
-                        <div className={cn('p-2 rounded-full', statusStyles)}>
-                          {transaction.type === 'DEPOSIT' ? (
-                            <ArrowDownLeft className="h-5 w-5" />
-                          ) : (
-                            <ArrowUpRight className="h-5 w-5" />
-                          )}
-                        </div>
-                        <div>
-                          <div className="font-medium dark:text-gray-100">
-                            {transaction.description || transaction.type}
-                            {transaction.beneficiary && (
-                              <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">
-                                • {transaction.beneficiary.name}
-                              </span>
-                            )}
-                          </div>
-                          <div className="text-sm text-gray-500 dark:text-gray-400">
-                            {formatTransactionDate(transaction.createdAt)}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className={cn(
-                          'font-medium',
-                          transaction.type === 'DEPOSIT' 
-                            ? 'text-green-600 dark:text-green-400' 
-                            : 'text-red-600 dark:text-red-400'
-                        )}>
-                          {transaction.type === 'DEPOSIT' ? '+' : '-'}
-                          {formatCurrency(transaction.amount)}
-                        </div>
-                        <div className={cn('text-sm px-2 py-1 rounded-full inline-block', statusStyles)}>
-                          {status.label}
-                        </div>
-                      </div>
-                    </Card>
-                  </motion.div>
-                )
-              })}
-            </div>
-          )}
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-[400px]">
+                {isLoading ? (
+                  <div className="space-y-4">
+                    {Array(5).fill(0).map((_, i) => (
+                      <Skeleton key={i} className="h-20 rounded-lg" />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <AnimatePresence>
+                      {filteredTransactions.map((transaction, index) => (
+                        <motion.div
+                          key={transaction.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -20 }}
+                          transition={{ duration: 0.2, delay: index * 0.1 }}
+                        >
+                          {/* Transaction card content */}
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
+                  </div>
+                )}
+              </ScrollArea>
+            </CardContent>
+          </Card>
         </motion.div>
-      </div>
-    </div>
+
+        <DepositModal 
+          open={showDepositModal} 
+          onOpenChange={setShowDepositModal} 
+        />
+      </main>
+    </LayoutWrapper>
   )
 }

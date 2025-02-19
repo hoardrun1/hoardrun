@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
@@ -19,14 +19,21 @@ import {
   Trophy,
   Clock,
   Rocket,
-  Shield
+  Shield,
+  Loader2,
+  Info,
+  Brain,
+  RefreshCcw,
+  AlertCircle,
+  ThumbsUp,
+  ThumbsDown
 } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
 import { Switch } from "@/components/ui/switch"
@@ -34,6 +41,19 @@ import { DatePicker } from "@/components/ui/date-picker"
 import { LayoutWrapper } from "@/components/ui/layout-wrapper"
 import { responsiveStyles as rs } from '@/styles/responsive-utilities'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts'
+import { Badge } from "@/components/ui/badge"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { type LucideIcon } from 'lucide-react'
+import { type DialogProps } from "@radix-ui/react-dialog"
+import { cn } from "@/lib/utils"
+import { useToast } from "@/components/ui/use-toast"
+import { Skeleton } from "@/components/ui/skeleton"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { useFinance } from '@/contexts/FinanceContext'
+import { useSession } from 'next-auth/react'
+import { useSavings } from '@/hooks/useSavings'
+import { formatCurrency } from '@/lib/banking'
+import { format } from 'date-fns'
 
 const savingsData = [
   { date: '2024-01', amount: 2000, target: 2500 },
@@ -103,34 +123,428 @@ const savingsTips = [
   }
 ]
 
+// Add TypeScript interfaces for better type safety
+interface SavingsGoal {
+  id: string
+  name: string
+  currentAmount: number
+  targetAmount: number
+  deadline: string
+  category: string
+  progress: number
+  monthlyContribution: number
+  isAutoSave: boolean
+}
+
+interface SavingsData {
+  date: string
+  amount: number
+  target: number
+}
+
+interface SavingsTip {
+  title: string
+  description: string
+  icon: LucideIcon
+}
+
+// Add new interfaces for AI features
+interface AIRecommendation {
+  type: 'savings' | 'investment'
+  title: string
+  description: string
+  confidence: number
+  potentialReturn?: number
+}
+
+interface SavingsAnalytics {
+  monthlyGrowth: number
+  projectedSavings: number
+  nextMilestone: number
+  recommendedAllocation: {
+    emergency: number
+    investment: number
+    goals: number
+  }
+}
+
+interface NewGoalFormData {
+  name: string
+  targetAmount: string
+  monthlyContribution: string
+  category: string
+  deadline: Date | null
+  isAutoSave: boolean
+  autoInvest: boolean
+  investmentThreshold: string
+}
+
+interface AIGoalRecommendation {
+  id: string
+  name: string
+  targetAmount: number
+  suggestedMonthlyContribution: number
+  reason: string
+  confidence: number
+  category: string
+  timeframe: number
+  riskLevel: 'low' | 'medium' | 'high'
+  expectedReturn: number
+}
+
+interface AIBehaviorInsight {
+  id: string
+  type: 'spending' | 'saving' | 'investment'
+  title: string
+  description: string
+  impact: number
+  suggestedActions: {
+    action: string
+    potentialImpact: number
+  }[]
+  confidence: number
+}
+
 export function SavingsPageComponent() {
   const router = useRouter()
-  const [selectedPeriod, setSelectedPeriod] = useState('month')
-  const [selectedGoal, setSelectedGoal] = useState<string | null>(null)
+  const { toast } = useToast()
+  const { data: session } = useSession()
+  const {
+    savingsGoals,
+    isLoading,
+    error,
+    fetchSavingsGoals,
+    createSavingsGoal,
+    updateSavingsGoal,
+    calculateTotalSavings,
+    calculateProgress,
+  } = useSavings()
+
+  const [analytics, setAnalytics] = useState<SavingsAnalytics | null>(null)
+  const [recommendations, setRecommendations] = useState<AIRecommendation[]>([])
+  const [insights, setInsights] = useState<AIBehaviorInsight[]>([])
+  const [goalRecommendations, setGoalRecommendations] = useState<AIGoalRecommendation[]>([])
+  const [isNewGoalDialogOpen, setIsNewGoalDialogOpen] = useState(false)
+  const [newGoalForm, setNewGoalForm] = useState<NewGoalFormData>({
+    name: '',
+    targetAmount: '',
+    monthlyContribution: '',
+    category: '',
+    deadline: null,
+    isAutoSave: true,
+    autoInvest: false,
+    investmentThreshold: '',
+  })
+
+  useEffect(() => {
+    if (session?.user) {
+      fetchSavingsGoals()
+      fetchAnalytics()
+    }
+  }, [session])
+
+  const fetchAnalytics = async () => {
+    try {
+      const response = await fetch('/api/savings/analytics')
+      if (!response.ok) throw new Error('Failed to fetch analytics')
+
+      const data = await response.json()
+      setAnalytics(data.analytics)
+      setRecommendations(data.recommendations)
+      setInsights(data.insights)
+      setGoalRecommendations(data.goalRecommendations)
+    } catch (error) {
+      console.error('Error fetching analytics:', error)
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch savings analytics',
+        variant: 'destructive',
+      })
+    }
+  }
 
   const calculateTimeLeft = (deadline: string) => {
-    const now = new Date()
-    const deadlineDate = new Date(deadline)
-    const diffTime = Math.abs(deadlineDate.getTime() - now.getTime())
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    return diffDays
+    const timeLeft = new Date(deadline).getTime() - new Date().getTime()
+    const days = Math.ceil(timeLeft / (1000 * 60 * 60 * 24))
+    return days > 0 ? `${days} days left` : 'Deadline passed'
   }
 
   const getProgressColor = (progress: number) => {
-    if (progress >= 75) return 'bg-green-500'
-    if (progress >= 50) return 'bg-blue-500'
-    if (progress >= 25) return 'bg-yellow-500'
-    return 'bg-red-500'
+    if (progress >= 80) return 'bg-green-500'
+    if (progress >= 50) return 'bg-yellow-500'
+    return 'bg-blue-500'
   }
+
+  const renderGoalCard = (goal: SavingsGoal) => (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <Card className="mb-4">
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <CardTitle>{goal.name}</CardTitle>
+            <Button variant="ghost" size="sm" onClick={() => handleInvestNow(goal.id)}>
+              Invest Now
+            </Button>
+          </div>
+          <CardDescription>{goal.category}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex justify-between text-sm">
+              <span>Progress</span>
+              <span>{formatCurrency(goal.currentAmount)} / {formatCurrency(goal.targetAmount)}</span>
+            </div>
+            <Progress value={goal.progress} className={getProgressColor(goal.progress)} />
+            <div className="flex justify-between text-sm text-gray-500">
+              <span>Monthly: {formatCurrency(goal.monthlyContribution)}</span>
+              <span>{calculateTimeLeft(goal.deadline)}</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  )
+
+  const handleInvestNow = async (goalId: string) => {
+    try {
+      // Implementation for investing in a goal
+      toast({
+        title: 'Success',
+        description: 'Investment initiated successfully',
+      })
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to initiate investment',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  const handleCreateGoal = async () => {
+    try {
+      if (!newGoalForm.name || !newGoalForm.targetAmount || !newGoalForm.monthlyContribution) {
+        throw new Error('Please fill in all required fields')
+      }
+
+      const goalData = {
+        name: newGoalForm.name,
+        targetAmount: parseFloat(newGoalForm.targetAmount),
+        monthlyContribution: parseFloat(newGoalForm.monthlyContribution),
+        category: newGoalForm.category || 'General',
+        deadline: newGoalForm.deadline?.toISOString() || new Date(Date.now() + 31536000000).toISOString(),
+        isAutoSave: newGoalForm.isAutoSave,
+      }
+
+      await createSavingsGoal(goalData)
+      setIsNewGoalDialogOpen(false)
+      setNewGoalForm({
+        name: '',
+        targetAmount: '',
+        monthlyContribution: '',
+        category: '',
+        deadline: null,
+        isAutoSave: true,
+        autoInvest: false,
+        investmentThreshold: '',
+      })
+
+      toast({
+        title: 'Success',
+        description: 'Savings goal created successfully',
+      })
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to create savings goal',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  const renderAnalytics = () => {
+    if (!analytics) return null
+
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>Monthly Growth</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{formatCurrency(analytics.monthlyGrowth)}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Projected Savings</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{formatCurrency(analytics.projectedSavings)}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Next Milestone</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{formatCurrency(analytics.nextMilestone)}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Allocation</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span>Emergency</span>
+                <span>{analytics.recommendedAllocation.emergency}%</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Investment</span>
+                <span>{analytics.recommendedAllocation.investment}%</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Goals</span>
+                <span>{analytics.recommendedAllocation.goals}%</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  const renderRecommendations = () => (
+    <div className="space-y-4 mb-8">
+      <h3 className="text-lg font-semibold">AI Recommendations</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {recommendations.map((rec, index) => (
+          <Card key={index}>
+            <CardHeader>
+              <CardTitle className="text-base">{rec.title}</CardTitle>
+              <CardDescription>{rec.description}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex justify-between text-sm">
+                <span>Confidence</span>
+                <span>{rec.confidence}%</span>
+              </div>
+              {rec.potentialReturn && (
+                <div className="flex justify-between text-sm mt-2">
+                  <span>Potential Return</span>
+                  <span>{rec.potentialReturn}%</span>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  )
+
+  const handleFeedback = async (insightId: string, isHelpful: boolean) => {
+    try {
+      // Implementation for submitting insight feedback
+      toast({
+        title: 'Thank you',
+        description: 'Your feedback helps improve our recommendations',
+      })
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to submit feedback',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  const handleCreateRecommendedGoal = async (recommendation: AIGoalRecommendation) => {
+    try {
+      const goalData = {
+        name: recommendation.name,
+        targetAmount: recommendation.targetAmount,
+        monthlyContribution: recommendation.suggestedMonthlyContribution,
+        category: recommendation.category,
+        deadline: new Date(Date.now() + (recommendation.timeframe * 31536000000)).toISOString(),
+        isAutoSave: true,
+      }
+
+      await createSavingsGoal(goalData)
+      toast({
+        title: 'Success',
+        description: 'Recommended goal created successfully',
+      })
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to create recommended goal',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  const renderInsights = () => (
+    <div className="space-y-4 mb-8">
+      <h3 className="text-lg font-semibold">Behavior Insights</h3>
+      {insights.map((insight) => (
+        <Card key={insight.id}>
+          <CardHeader>
+            <CardTitle className="text-base">{insight.title}</CardTitle>
+            <CardDescription>{insight.description}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex justify-between text-sm">
+                <span>Impact</span>
+                <span>{insight.impact}%</span>
+              </div>
+              <div className="space-y-2">
+                {insight.suggestedActions.map((action, index) => (
+                  <div key={index} className="flex justify-between text-sm">
+                    <span>{action.action}</span>
+                    <span>+{action.potentialImpact}%</span>
+                  </div>
+                ))}
+              </div>
+              <div className="flex justify-end space-x-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleFeedback(insight.id, true)}
+                >
+                  <ThumbsUp className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleFeedback(insight.id, false)}
+                >
+                  <ThumbsDown className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  )
 
   return (
     <LayoutWrapper className="bg-gray-50 dark:bg-gray-900 min-h-screen">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+      <header className="sticky top-0 z-50 w-full bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="container mx-auto px-4">
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center gap-4">
               <h1 className="text-xl font-semibold dark:text-white">Savings</h1>
+              <Badge variant="secondary" className="bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-400">
+                {savingsGoals.length} Goals
+              </Badge>
             </div>
             <div className="flex items-center gap-3">
               <Button variant="ghost" size="icon" className="relative">
@@ -146,22 +560,196 @@ export function SavingsPageComponent() {
       </header>
 
       <main className="container mx-auto px-4 py-6 space-y-6">
-        {/* Savings Overview */}
+        {/* AI Recommendations */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <Card className="border-2 border-blue-500/20">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Brain className="h-5 w-5 text-blue-500" />
+                <CardTitle>AI Insights</CardTitle>
+              </div>
+              <CardDescription>Personalized recommendations for your savings</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {isLoading ? (
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="h-24 w-full" />
+                  ))}
+                </div>
+              ) : (
+                <AnimatePresence>
+                  {recommendations.map((rec, index) => (
+                    <motion.div
+                      key={rec.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                      transition={{ delay: index * 0.1 }}
+                    >
+                      <Card className="bg-gray-50 dark:bg-gray-800">
+                        <CardContent className="p-4">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h3 className="font-medium text-blue-600 dark:text-blue-400">
+                                {rec.title}
+                              </h3>
+                              <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                                {rec.description}
+                              </p>
+                              <div className="flex items-center gap-4 mt-2">
+                                <Badge variant="secondary">
+                                  {rec.impact > 0 ? '+' : ''}{rec.impact}% Impact
+                                </Badge>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs text-gray-500">AI Confidence:</span>
+                                  <Progress value={rec.confidence} className="w-24" />
+                                </div>
+                              </div>
+                            </div>
+                            {rec.type === 'investment' && (
+                              <Button
+                                size="sm"
+                                onClick={() => handleInvestNow(rec.id)}
+                                className="bg-blue-500 hover:bg-blue-600"
+                              >
+                                Invest Now
+                              </Button>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* AI Goal Recommendations */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <Card className="border-2 border-purple-500/20">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Brain className="h-5 w-5 text-purple-500" />
+                  <CardTitle>AI-Recommended Goals</CardTitle>
+                </div>
+              </div>
+              <CardDescription>Personalized savings goals based on your profile and behavior</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {goalRecommendations.map((recommendation) => (
+                <motion.div
+                  key={recommendation.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="relative"
+                >
+                  <Card className="border-l-4 border-purple-500">
+                    <CardContent className="p-4">
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h3 className="font-medium text-lg">{recommendation.name}</h3>
+                            <p className="text-sm text-gray-500">{recommendation.reason}</p>
+                          </div>
+                          <Badge variant="outline" className="text-purple-500">
+                            {recommendation.confidence}% Match
+                          </Badge>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div>
+                            <div className="text-gray-500">Target Amount</div>
+                            <div className="font-medium">${recommendation.targetAmount.toLocaleString()}</div>
+                          </div>
+                          <div>
+                            <div className="text-gray-500">Monthly Contribution</div>
+                            <div className="font-medium">${recommendation.suggestedMonthlyContribution.toLocaleString()}</div>
+                          </div>
+                          <div>
+                            <div className="text-gray-500">Timeframe</div>
+                            <div className="font-medium">{recommendation.timeframe} years</div>
+                          </div>
+                          <div>
+                            <div className="text-gray-500">Expected Return</div>
+                            <div className="font-medium">{recommendation.expectedReturn}%</div>
+                          </div>
+                        </div>
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleFeedback(recommendation.id, false)}
+                            className="text-gray-500"
+                          >
+                            Dismiss
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() => handleCreateRecommendedGoal(recommendation)}
+                            className="bg-purple-500 hover:bg-purple-600 text-white"
+                          >
+                            Create Goal
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Behavior Insights */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.2 }}
+        >
+          <Card className="border-2 border-blue-500/20">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-blue-500" />
+                <CardTitle>Behavior Insights</CardTitle>
+              </div>
+              <CardDescription>AI-powered analysis of your saving and spending patterns</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {renderInsights()}
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Savings Overview with AI Analytics */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+            <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white hover:shadow-lg transition-all duration-300">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-blue-100">Total Savings</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">$24,000.00</div>
+                <div className="text-2xl font-bold">${(24000).toLocaleString()}</div>
                 <div className="flex items-center mt-1 text-blue-100">
                   <ArrowUpRight className="h-4 w-4 mr-1" />
-                  <span className="text-sm">+15.3% from last month</span>
+                  <span className="text-sm">+{analytics?.monthlyGrowth}% from last month</span>
+                </div>
+                <div className="mt-2 text-xs text-blue-100">
+                  Next milestone: ${analytics?.nextMilestone.toLocaleString()}
                 </div>
               </CardContent>
             </Card>
@@ -298,126 +886,84 @@ export function SavingsPageComponent() {
         >
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-2xl font-semibold dark:text-white">Savings Goals</h2>
-            <Dialog>
+            <Dialog open={isNewGoalDialogOpen} onOpenChange={setIsNewGoalDialogOpen}>
               <DialogTrigger asChild>
                 <Button>
                   <Plus className="h-4 w-4 mr-2" />
                   New Goal
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
                   <DialogTitle>Create New Savings Goal</DialogTitle>
+                  <DialogDescription>
+                    Set up a new savings goal with regular contributions
+                  </DialogDescription>
                 </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid gap-2">
-                    <Label>Goal Name</Label>
-                    <Input placeholder="Enter goal name" />
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="name">Goal Name</Label>
+                    <Input
+                      id="name"
+                      value={newGoalForm.name}
+                      onChange={(e) => setNewGoalForm(prev => ({ ...prev, name: e.target.value }))}
+                    />
                   </div>
-                  <div className="grid gap-2">
-                    <Label>Target Amount</Label>
-                    <Input type="number" placeholder="Enter target amount" />
+                  <div>
+                    <Label htmlFor="targetAmount">Target Amount</Label>
+                    <Input
+                      id="targetAmount"
+                      type="number"
+                      value={newGoalForm.targetAmount}
+                      onChange={(e) => setNewGoalForm(prev => ({ ...prev, targetAmount: e.target.value }))}
+                    />
                   </div>
-                  <div className="grid gap-2">
-                    <Label>Monthly Contribution</Label>
-                    <Input type="number" placeholder="Enter monthly contribution" />
+                  <div>
+                    <Label htmlFor="monthlyContribution">Monthly Contribution</Label>
+                    <Input
+                      id="monthlyContribution"
+                      type="number"
+                      value={newGoalForm.monthlyContribution}
+                      onChange={(e) => setNewGoalForm(prev => ({ ...prev, monthlyContribution: e.target.value }))}
+                    />
                   </div>
-                  <div className="grid gap-2">
-                    <Label>Category</Label>
-                    <Select>
+                  <div>
+                    <Label htmlFor="category">Category</Label>
+                    <Select
+                      value={newGoalForm.category}
+                      onValueChange={(value) => setNewGoalForm(prev => ({ ...prev, category: value }))}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="emergency">Emergency</SelectItem>
-                        <SelectItem value="travel">Travel</SelectItem>
-                        <SelectItem value="vehicle">Vehicle</SelectItem>
-                        <SelectItem value="education">Education</SelectItem>
-                        <SelectItem value="home">Home</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
+                        <SelectItem value="Emergency">Emergency Fund</SelectItem>
+                        <SelectItem value="Retirement">Retirement</SelectItem>
+                        <SelectItem value="Education">Education</SelectItem>
+                        <SelectItem value="Travel">Travel</SelectItem>
+                        <SelectItem value="Home">Home</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="grid gap-2">
-                    <Label>Target Date</Label>
-                    <DatePicker />
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="autoSave"
+                      checked={newGoalForm.isAutoSave}
+                      onCheckedChange={(checked) => setNewGoalForm(prev => ({ ...prev, isAutoSave: checked }))}
+                    />
+                    <Label htmlFor="autoSave">Enable Auto-Save</Label>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Switch id="auto-save" />
-                    <Label htmlFor="auto-save">Enable Auto-Save</Label>
-                  </div>
+                  <Button onClick={handleCreateGoal} className="w-full">
+                    Create Goal
+                  </Button>
                 </div>
-                <DialogFooter>
-                  <Button type="submit">Create Goal</Button>
-                </DialogFooter>
               </DialogContent>
             </Dialog>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {savingsGoals.map((goal) => (
-              <motion.div
-                key={goal.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-                className="group"
-              >
-                <Card className="h-full transition-all duration-300 hover:shadow-lg">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle>{goal.name}</CardTitle>
-                      {goal.isAutoSave && (
-                        <div className="flex items-center gap-1 text-xs font-medium text-blue-600 dark:text-blue-400">
-                          <Clock className="h-3 w-3" />
-                          Auto-Save
-                        </div>
-                      )}
-                    </div>
-                    <CardDescription>{goal.category}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm text-gray-500 dark:text-gray-400">Progress</span>
-                          <span className="text-sm font-medium">{goal.progress}%</span>
-                        </div>
-                        <div className="h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                          <div 
-                            className={`h-full ${getProgressColor(goal.progress)} transition-all duration-500`}
-                            style={{ width: `${goal.progress}%` }}
-                          />
-                        </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <div className="text-gray-500 dark:text-gray-400">Current</div>
-                          <div className="font-medium dark:text-white">${goal.currentAmount.toLocaleString()}</div>
-                        </div>
-                        <div>
-                          <div className="text-gray-500 dark:text-gray-400">Target</div>
-                          <div className="font-medium dark:text-white">${goal.targetAmount.toLocaleString()}</div>
-                        </div>
-                        <div>
-                          <div className="text-gray-500 dark:text-gray-400">Monthly</div>
-                          <div className="font-medium dark:text-white">${goal.monthlyContribution}</div>
-                        </div>
-                        <div>
-                          <div className="text-gray-500 dark:text-gray-400">Days Left</div>
-                          <div className="font-medium dark:text-white">{calculateTimeLeft(goal.deadline)}</div>
-                        </div>
-                      </div>
-
-                      <div className="pt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <Button className="w-full">Manage Goal</Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
+            {savingsGoals.map((goal) => renderGoalCard(goal))}
           </div>
         </motion.div>
 
@@ -440,7 +986,7 @@ export function SavingsPageComponent() {
                 {savingsTips.map((tip, index) => {
                   const Icon = tip.icon
                   return (
-                    <Card key={index} className="bg-gray-50 dark:bg-gray-800 border-0">
+                    <Card key={index} className="bg-gray-50 dark:bg-gray-800 border-0 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
                       <CardContent className="pt-6">
                         <div className="flex flex-col items-center text-center">
                           <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center mb-4">

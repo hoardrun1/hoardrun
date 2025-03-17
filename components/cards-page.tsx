@@ -10,6 +10,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { LayoutWrapper } from "@/components/ui/layout-wrapper"
 import { responsiveStyles as rs } from '@/styles/responsive-utilities'
+import { toast } from "@/components/ui/use-toast"
+import { MastercardClient } from '@/lib/mastercard-client'
+import { COUNTRY_CODES, type CountryCode } from '@/lib/constants/country-codes';
 
 interface CardData {
   id: string
@@ -19,6 +22,8 @@ interface CardData {
   cardholderName: string
   isLocked: boolean
   isContactless: boolean
+  network: 'mastercard' | 'visa'
+  status: 'active' | 'inactive' | 'blocked'
 }
 
 export function CardsPageComponent() {
@@ -63,6 +68,38 @@ export function CardsPageComponent() {
       card.id === cardId ? { ...card, isContactless: !card.isContactless } : card
     ))
   }
+
+  const handleIssueVirtualCard = async () => {
+    try {
+      const user = await fetch('/api/user/profile').then(res => res.json());
+      const country = (user.country as CountryCode) || process.env.NEXT_PUBLIC_MASTERCARD_COUNTRY;
+
+      if (!(country in COUNTRY_CODES)) {
+        throw new Error('Invalid country configuration');
+      }
+
+      const mastercardClient = new MastercardClient({
+        apiKey: process.env.NEXT_PUBLIC_MASTERCARD_API_KEY!,
+        partnerId: process.env.NEXT_PUBLIC_MASTERCARD_PARTNER_ID!,
+        environment: process.env.NODE_ENV === 'production' ? 'production' : 'sandbox',
+        certificatePath: process.env.MASTERCARD_CERT_PATH!,
+        privateKeyPath: process.env.MASTERCARD_PRIVATE_KEY_PATH!,
+        clientId: process.env.MASTERCARD_CLIENT_ID!,
+        orgName: process.env.MASTERCARD_ORG_NAME!,
+        country: country,
+        certPassword: process.env.MASTERCARD_CERT_PASSWORD!,
+      });
+
+      // Implement virtual card issuance
+      // Add to cards state
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to issue virtual card",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <LayoutWrapper className="bg-gray-50 dark:bg-gray-900 min-h-screen">
@@ -118,6 +155,27 @@ export function CardsPageComponent() {
                         </div>
                       </CardContent>
                     </Card>
+                  </div>
+                </DialogContent>
+              </Dialog>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Issue Virtual Card
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Issue Virtual Card</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <Button 
+                      onClick={handleIssueVirtualCard}
+                      className="w-full"
+                    >
+                      Confirm
+                    </Button>
                   </div>
                 </DialogContent>
               </Dialog>
@@ -290,3 +348,6 @@ export function CardsPageComponent() {
     </LayoutWrapper>
   )
 }
+
+
+

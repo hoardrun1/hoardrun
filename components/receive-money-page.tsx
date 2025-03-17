@@ -30,6 +30,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { LayoutWrapper } from "@/components/ui/layout-wrapper"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { formatCurrency } from '@/lib/banking'
+import { MomoClient } from '@/lib/momo-client'
+import { MastercardClient } from '@/lib/mastercard-client'
+import { useSession } from 'next-auth/react'
+import { useToast } from '@/components/ui/use-toast'
+import { Loader2 } from 'lucide-react'
+import { VisaClient } from '@/lib/visa-client'
 
 const banks = ['GCB Bank', 'Ecobank', 'Fidelity Bank', 'Zenith Bank', 'Stanbic Bank']
 const mobileWallets = ['MTN Mobile Money', 'Vodafone Cash', 'AirtelTigo Money']
@@ -71,6 +77,14 @@ export function ReceiveMoneyPageComponent() {
   const [phoneNumber, setPhoneNumber] = useState('')
   const [copied, setCopied] = useState(false)
   const [qrVisible, setQrVisible] = useState(false)
+  const { data: session } = useSession()
+  const [momoPhone, setMomoPhone] = useState('')
+  const [isGeneratingLink, setIsGeneratingLink] = useState(false)
+  const [isGeneratingCardLink, setIsGeneratingCardLink] = useState(false)
+  const [paymentLink, setPaymentLink] = useState('')
+  const { toast } = useToast()
+  const [isProcessingVisa, setIsProcessingVisa] = useState(false)
+  const [visaCardNumber, setVisaCardNumber] = useState('')
 
   const handleCopyAddress = () => {
     navigator.clipboard.writeText(walletAddress)
@@ -87,6 +101,152 @@ export function ReceiveMoneyPageComponent() {
       })
     }
   }
+
+  const handleGeneratePaymentLink = async () => {
+    if (!amount || !momoPhone) {
+      toast({
+        title: "Error",
+        description: "Please enter amount and phone number",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsGeneratingLink(true)
+    try {
+      const response = await fetch('/api/payments/momo/receive', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: parseFloat(amount),
+          phone: momoPhone,
+          userId: session?.user?.id,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to generate payment link')
+      }
+
+      const data = await response.json()
+      
+      toast({
+        title: "Success",
+        description: "Payment link generated and sent to the phone number",
+      })
+
+      // Clear form
+      setAmount('')
+      setMomoPhone('')
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to generate payment link",
+        variant: "destructive",
+      })
+    } finally {
+      setIsGeneratingLink(false)
+    }
+  }
+
+  const handleGenerateCardPaymentLink = async () => {
+    if (!amount) {
+      toast({
+        title: "Error",
+        description: "Please enter amount",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsGeneratingCardLink(true);
+    try {
+      const response = await fetch('/api/payments/mastercard/link', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: parseFloat(amount),
+          currency: 'EUR',
+          description: 'Payment request'
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate payment link');
+      }
+
+      const { paymentUrl } = await response.json();
+      setPaymentLink(paymentUrl);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to generate payment link",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingCardLink(false);
+    }
+  };
+
+  const handleVisaDeposit = async () => {
+    if (!amount || !visaCardNumber) {
+      toast({
+        title: "Error",
+        description: "Please enter amount and card number",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsProcessingVisa(true);
+    try {
+      const visaClient = new VisaClient({
+        apiKey: 'U2CB9EXCQOX9FPUT6DUS2106HUAHml5g_sDhH1Ql_oOq0D0xQ',
+        environment: 'sandbox'
+      });
+
+      const response = await visaClient.initiateDeposit({
+        amount: parseFloat(amount),
+        currency: 'EUR',
+        cardNumber: visaCardNumber,
+        description: 'Visa deposit'
+      });
+
+      // Update user's balance
+      await fetch('/api/user/balance/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: parseFloat(amount),
+          type: 'DEPOSIT',
+          provider: 'VISA'
+        }),
+      });
+
+      toast({
+        title: "Success",
+        description: "Deposit successful",
+      });
+
+      // Reset form
+      setAmount('');
+      setVisaCardNumber('');
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Deposit failed",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessingVisa(false);
+    }
+  };
 
   return (
     <LayoutWrapper className="bg-gray-50 dark:bg-gray-900 min-h-screen">
@@ -368,11 +528,37 @@ export function ReceiveMoneyPageComponent() {
                     <div className="space-y-2">
                       <Label>Phone Number</Label>
                       <Input
-                        value={phoneNumber}
-                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        type="tel"
+                        value={momoPhone}
+                        onChange={(e) => setMomoPhone(e.target.value)}
                         placeholder="Enter your phone number"
                       />
                     </div>
+
+                    <div className="space-y-2">
+                      <Label>Amount</Label>
+                      <Input
+                        type="number"
+                        value={amount}
+                        onChange={(e) => setAmount(e.target.value)}
+                        placeholder="Enter amount"
+                      />
+                    </div>
+
+                    <Button
+                      className="w-full"
+                      onClick={handleGeneratePaymentLink}
+                      disabled={isGeneratingLink}
+                    >
+                      {isGeneratingLink ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Generating Link...
+                        </>
+                      ) : (
+                        'Generate Payment Link'
+                      )}
+                    </Button>
 
                     <Alert>
                       <Clock className="h-4 w-4" />
@@ -386,6 +572,86 @@ export function ReceiveMoneyPageComponent() {
             </CardContent>
           </Card>
         </motion.div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Receive Card Payment</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <Input
+                type="number"
+                placeholder="Amount"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+              />
+              <Button 
+                onClick={handleGenerateCardPaymentLink}
+                disabled={isGeneratingCardLink}
+                className="w-full"
+              >
+                {isGeneratingCardLink && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Generate Payment Link
+              </Button>
+              {paymentLink && (
+                <div className="mt-4">
+                  <Label>Payment Link</Label>
+                  <div className="flex items-center gap-2">
+                    <Input value={paymentLink} readOnly />
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        navigator.clipboard.writeText(paymentLink);
+                        toast({
+                          title: "Copied",
+                          description: "Payment link copied to clipboard",
+                        });
+                      }}
+                    >
+                      Copy
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="mt-4">
+          <CardHeader>
+            <CardTitle>Deposit via Visa</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <Input
+                type="text"
+                placeholder="Amount"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+              />
+              <Input
+                type="text"
+                placeholder="Card Number"
+                value={visaCardNumber}
+                onChange={(e) => setVisaCardNumber(e.target.value)}
+              />
+              <Button 
+                onClick={handleVisaDeposit}
+                disabled={isProcessingVisa}
+                className="w-full"
+              >
+                {isProcessingVisa ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  'Deposit with Visa'
+                )}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Action Button */}
         <motion.div
@@ -404,3 +670,12 @@ export function ReceiveMoneyPageComponent() {
     </LayoutWrapper>
   )
 }
+
+
+
+
+
+
+
+
+

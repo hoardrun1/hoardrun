@@ -1,5 +1,6 @@
 import api from '@/lib/api-client'
 import { cache } from '@/lib/cache'
+import { alphaVantageAPI } from '@/lib/alpha-vantage-client'
 
 export interface Investment {
   id: string
@@ -198,6 +199,30 @@ class InvestmentService {
       ])
     } catch (error) {
       console.error('Cache invalidation error:', error)
+    }
+  }
+
+  async getMarketAnalysis(symbol: string) {
+    try {
+      const [quote, overview] = await Promise.all([
+        alphaVantageAPI.getStockQuote(symbol),
+        alphaVantageAPI.getCompanyOverview(symbol),
+      ]);
+
+      return {
+        currentPrice: quote.price,
+        priceChange: quote.change,
+        priceChangePercent: quote.changePercent,
+        volume: quote.volume,
+        companyName: overview.Name,
+        industry: overview.Industry,
+        peRatio: parseFloat(overview.PERatio),
+        marketCap: parseInt(overview.MarketCapitalization),
+        dividendYield: parseFloat(overview.DividendYield),
+      };
+    } catch (error) {
+      console.error('Market analysis error:', error);
+      throw error;
     }
   }
 }

@@ -7,6 +7,9 @@ import { createHash, randomBytes, timingSafeEqual } from 'crypto'
 import { z } from 'zod'
 import geoip from 'geoip-lite'
 import UAParser from 'ua-parser-js'
+import { prisma } from './prisma'
+import { cache } from './cache'
+import { AppError, errorCodes } from './error-handling'
 
 // Interfaces
 interface SecurityConfig {
@@ -341,4 +344,73 @@ class SecurityService {
 
 // Export singleton instance
 export const securityService = new SecurityService()
-export default securityService 
+export default securityService
+
+export class EnhancedSecurityService {
+  private readonly DEVICE_TRUST_DURATION = 30 * 24 * 60 * 60; // 30 days
+  private readonly MAX_LOGIN_ATTEMPTS = 5;
+  private readonly LOCKOUT_DURATION = 15 * 60; // 15 minutes
+
+  async validateLoginAttempt(email: string, ip: string, deviceId: string) {
+    const key = `login_attempts:${email}:${ip}`;
+    const attempts = await cache.get(key) || 0;
+
+    if (attempts >= this.MAX_LOGIN_ATTEMPTS) {
+      throw new AppError(
+        errorCodes.RATE_LIMIT_EXCEEDED,
+        'Account temporarily locked. Please try again later.',
+        429
+      );
+    }
+
+    await cache.incr(key);
+    await cache.expire(key, this.LOCKOUT_DURATION);
+
+    // Check for suspicious activity
+    const isSuspicious = await this.detectSuspiciousActivity({
+      email,
+      ip,
+      deviceId,
+    });
+
+    if (isSuspicious) {
+      await this.requireAdditionalVerification(email);
+    }
+  }
+
+  private async detectSuspiciousActivity({ 
+    email, 
+    ip, 
+    deviceId 
+  }: {
+    email: string;
+    ip: string;
+    deviceId: string;
+  }) {
+    const recentLogins = await prisma.loginHistory.findMany({
+      where: {
+        email,
+        createdAt: {
+          gte: new Date(Date.now() - 24 * 60 * 60 * 1000), // Last 24 hours
+        },
+      },
+    });
+
+    // Check for multiple IPs
+    const uniqueIPs = new Set(recentLogins.map(login => login.ip));
+    if (uniqueIPs.size > 3) return true;
+
+    // Check for geographical anomalies
+    const geoData = await this.getGeoLocation(ip);
+    const unusualLocation = await this.isUnusualLocation(email, geoData);
+    if (unusualLocation) return true;
+
+    return false;
+  }
+
+  async generateMFAToken(userId: string): Promise<string> {
+    const token = randomBytes(32).toString('hex');
+    await cache.set(`mfa:${userId}:${token}`, '1', 'EX', 300); // 5 minutes expiry
+    return token;
+  }
+}

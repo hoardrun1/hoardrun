@@ -26,7 +26,14 @@ import {
   RefreshCcw,
   AlertCircle,
   ThumbsUp,
-  ThumbsDown
+  ThumbsDown,
+  Wallet,
+  Gem,
+  Zap,
+  BarChart3,
+  Coins,
+  TrendingDown,
+  Gift
 } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -54,6 +61,10 @@ import { useSession } from 'next-auth/react'
 import { useSavings } from '@/hooks/useSavings'
 import { formatCurrency } from '@/lib/banking'
 import { format } from 'date-fns'
+import { CircularProgressbar, buildStyles } from 'react-circular-progressbar'
+import 'react-circular-progressbar/dist/styles.css'
+import { Confetti } from '@/components/ui/confetti'
+import { HeatMap } from '@/components/ui/heat-map'
 
 const savingsData = [
   { date: '2024-01', amount: 2000, target: 2500 },

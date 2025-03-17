@@ -1,0 +1,5 @@
+router.post('/support/ticket', supportController.createTicket)
+router.get('/support/tickets', supportController.getTickets)
+router.get('/support/faq', supportController.getFAQ)
+router.post('/support/chat', supportController.initiateChat)
+router.post('/support/feedback', supportController.submitFeedback)

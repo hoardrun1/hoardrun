@@ -1,14 +1,24 @@
-import axios from 'axios'
-import { toast } from '@/components/ui/use-toast'
+import axios from 'axios';
+import { toast } from '@/components/ui/use-toast';
+import { AppError, ErrorCode } from './error-handling';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-})
+});
+
+// Error response type
+interface ErrorResponse {
+  error: {
+    code: string;
+    message: string;
+    data?: any;
+  };
+}
 
 // Add request interceptor for auth
 api.interceptors.request.use((config) => {
@@ -23,13 +33,20 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    const message = error.response?.data?.message || 'An error occurred'
-    toast({
-      title: 'Error',
-      description: message,
-      variant: 'destructive',
-    })
-    return Promise.reject(error)
+    const errorData = error.response?.data?.error;
+    
+    // Ensure we have proper error data
+    const errorMessage = errorData?.message || 'An unexpected error occurred';
+    const errorCode = errorData?.code || ErrorCode.INTERNAL_ERROR;
+    const status = error.response?.status || 500;
+    
+    // Throw typed error
+    throw new AppError(
+      errorCode,
+      errorMessage,
+      status,
+      errorData?.data
+    );
   }
 )
 
@@ -168,4 +185,4 @@ interface UpdateCardData {
   limit?: number
 }
 
-export default api 
+export { api };

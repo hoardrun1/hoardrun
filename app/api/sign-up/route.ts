@@ -3,129 +3,104 @@ import { z } from 'zod'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 import { sendVerificationEmail } from '@/lib/email'
+import { generateToken } from '@/lib/jwt'
 
 const signUpSchema = z.object({
   email: z.string().email('Invalid email format'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
   name: z.string()
     .min(2, 'Name must be at least 2 characters')
-    .max(50, 'Name must not exceed 50 characters')
-    .optional(),
+    .max(50, 'Name must not exceed 50 characters'),
+  deviceInfo: z.object({
+    deviceId: z.string(),
+    userAgent: z.string(),
+    ip: z.string().optional(),
+    components: z.record(z.any())
+  })
 })
 
 export async function POST(request: Request) {
   try {
-    console.log('Starting sign-up process')
     const body = await request.json()
-    console.log('Received sign-up request for email:', body.email)
+    console.log('Received signup request:', body) // Debug log
 
-    const { email, password, name } = signUpSchema.parse(body)
+    const validation = signUpSchema.safeParse(body)
+    
+    if (!validation.success) {
+      console.log('Validation errors:', validation.error.errors) // Debug log
+      return new NextResponse(
+        JSON.stringify({ 
+          error: 'Invalid input data',
+          details: validation.error.errors 
+        }),
+        { 
+          status: 400,
+          headers: { 'Content-Type': 'application/json' }
+        }
+      )
+    }
+
+    const { email, password, name, deviceInfo } = validation.data
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
-      where: { email: email.toLowerCase() },
-      select: { id: true }
+      where: { email }
     })
 
     if (existingUser) {
-      console.log('User already exists:', email)
       return new NextResponse(
-        JSON.stringify({ error: 'Email already registered' }),
-        { status: 409 }
+        JSON.stringify({ error: 'User already exists' }),
+        { 
+          status: 400,
+          headers: { 'Content-Type': 'application/json' }
+        }
       )
     }
 
     // Hash password
-    const hashedPassword = await bcrypt.hash(password, 12)
+    const hashedPassword = await bcrypt.hash(password, 10)
 
-    // Create new user
+    // Create user
     const user = await prisma.user.create({
       data: {
-        email: email.toLowerCase(),
+        email,
         password: hashedPassword,
-        name,
-      },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-      },
+        name
+      }
     })
 
-    console.log('User created successfully:', user.email)
+    // Generate verification code and send email
+    const verificationCode = await sendVerificationEmail(email, user.id)
 
-    // Generate verification code
-    const verificationCode = Array.from(crypto.getRandomValues(new Uint8Array(6)))
-      .map(byte => byte % 10)
-      .join('')
+    // Generate temporary token
+    const token = await generateToken({
+      userId: user.id,
+      type: 'TEMPORARY'
+    }, '1h')
 
-    // Create verification record
-    await prisma.verificationCode.create({
-      data: {
-        code: verificationCode,
-        userId: user.id,
-        type: 'EMAIL_VERIFICATION',
-        expiresAt: new Date(Date.now() + 30 * 60 * 1000), // 30 minutes
-        used: false,
-      },
-    })
-
-    console.log('Verification code created:', verificationCode)
-
-    // Send verification email
-    let emailSent = false
-    try {
-      emailSent = await sendVerificationEmail(email, verificationCode)
-    } catch (error) {
-      console.error('Failed to send verification email:', error)
-    }
-
-    // Return success response with appropriate message
     return new NextResponse(
       JSON.stringify({
-        message: emailSent 
-          ? 'Account created successfully. Please check your email for verification.'
-          : 'Account created successfully. Please contact support for verification.',
-        user: {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-        },
-        verificationCode: process.env.NODE_ENV === 'development' ? verificationCode : undefined,
+        message: 'Account created successfully. Please check your email for verification.',
+        userId: user.id,
+        token,
+        verificationCode: process.env.NODE_ENV === 'development' ? verificationCode : undefined
       }),
-      {
+      { 
         status: 201,
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' }
       }
     )
   } catch (error) {
-    console.error('Sign-up error:', error)
-    
-    if (error instanceof z.ZodError) {
-      return new NextResponse(
-        JSON.stringify({ 
-          error: 'Invalid input data', 
-          details: error.errors 
-        }),
-        { status: 400 }
-      )
-    }
-
-    if (error.code === 'P2002') {
-      return new NextResponse(
-        JSON.stringify({ error: 'Email already registered' }),
-        { status: 409 }
-      )
-    }
-
+    console.error('Sign-up error:', error) // Debug log
     return new NextResponse(
       JSON.stringify({ 
         error: 'Internal server error',
         details: process.env.NODE_ENV === 'development' ? error.message : undefined
       }),
-      { status: 500 }
+      { 
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      }
     )
   }
 } 

@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import { cache } from './cache'
+import { RateLimiterMemory } from 'rate-limiter-flexible'
 
 interface RateLimitOptions {
   windowMs: number
@@ -118,4 +119,24 @@ export const sensitiveRateLimit = rateLimit({
 })
 
 // Export default rate limiter instance
-export default rateLimit 
+export default rateLimit
+
+// Payment-specific rate limiter
+export const paymentRateLimiter = new RateLimiterMemory({
+  points: parseInt(process.env.PAYMENT_RATE_LIMIT || '10'), // requests
+  duration: 60 * 60, // per hour
+});
+
+// Card validation rate limiter
+export const cardValidationRateLimiter = new RateLimiterMemory({
+  points: 5, // requests
+  duration: 60, // per minute
+});
+
+export async function enforcePaymentRateLimit(userId: string): Promise<void> {
+  try {
+    await paymentRateLimiter.consume(`payment:${userId}`);
+  } catch (error) {
+    throw new Error('Payment rate limit exceeded. Please try again later.');
+  }
+}

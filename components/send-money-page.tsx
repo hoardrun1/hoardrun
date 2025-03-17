@@ -52,6 +52,9 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useSession } from 'next-auth/react'
 import { useToast } from '@/components/ui/use-toast'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { MomoClient } from '@/lib/momo-client';
+import { MastercardClient } from '@/lib/mastercard-client';
+import { VisaClient } from '@/lib/visa-client';
 
 interface Account {
   id: string
@@ -93,6 +96,12 @@ interface TransactionData {
   amount: number
   description?: string
   beneficiaryId: string
+}
+
+interface MomoTransferData {
+  phone: string
+  amount: number
+  description?: string
 }
 
 const transformBeneficiaries = (beneficiaries: Beneficiary[]) => {
@@ -150,6 +159,15 @@ export function SendMoneyPage() {
   const [isAmountFocused, setIsAmountFocused] = useState(false)
   const [showSuccessAnimation, setShowSuccessAnimation] = useState(false)
   const [isNewBeneficiaryDialogOpen, setIsNewBeneficiaryDialogOpen] = useState(false)
+  const [isMomoTransfer, setIsMomoTransfer] = useState(false)
+  const [momoPhone, setMomoPhone] = useState('')
+  const [cardNumber, setCardNumber] = useState('')
+  const [cardExpiry, setCardExpiry] = useState('')
+  const [cardCvv, setCardCvv] = useState('')
+  const [isProcessingCard, setIsProcessingCard] = useState(false)
+  const [showVisaDeposit, setShowVisaDeposit] = useState(false)
+  const [visaCardNumber, setVisaCardNumber] = useState('')
+  const [isProcessingVisa, setIsProcessingVisa] = useState(false)
 
   const { 
     accounts, 
@@ -251,29 +269,56 @@ export function SendMoneyPage() {
         return
       }
 
-      if (!selectedBeneficiaryId) {
-        throw new Error('Please select a beneficiary')
-      }
+      if (isMomoTransfer) {
+        if (!momoPhone) {
+          throw new Error('Please enter a phone number')
+        }
 
-      const transactionData: TransactionData = {
-        accountId: selectedAccountId,
-        type: 'TRANSFER',
-        amount: parseFloat(amount),
-        description: description.trim() || undefined,
-        beneficiaryId: selectedBeneficiaryId,
-      }
+        const momoClient = new MomoClient({
+          baseUrl: process.env.NEXT_PUBLIC_MOMO_API_URL!,
+          subscriptionKey: process.env.NEXT_PUBLIC_MOMO_SUBSCRIPTION_KEY!,
+          targetEnvironment: process.env.NEXT_PUBLIC_MOMO_ENVIRONMENT!,
+          apiKey: process.env.NEXT_PUBLIC_MOMO_API_KEY!,
+          callbackUrl: `${process.env.NEXT_PUBLIC_API_URL}/api/payments/momo/callback`,
+        })
 
-      // Show loading state
-      setIsProcessing(true)
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      
-      // Show success animation
-      setShowSuccessAnimation(true)
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      router.push('/finance')
+        const referenceId = await momoClient.requestToPay(
+          parseFloat(amount),
+          'EUR',
+          momoPhone,
+          description || 'Money transfer'
+        )
+
+        // Show success animation
+        setShowSuccessAnimation(true)
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
+        router.push('/finance')
+      } else {
+        if (!selectedBeneficiaryId) {
+          throw new Error('Please select a beneficiary')
+        }
+
+        const transactionData: TransactionData = {
+          accountId: selectedAccountId,
+          type: 'TRANSFER',
+          amount: parseFloat(amount),
+          description: description.trim() || undefined,
+          beneficiaryId: selectedBeneficiaryId,
+        }
+
+        // Show loading state
+        setIsProcessing(true)
+        
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 1500))
+        
+        // Show success animation
+        setShowSuccessAnimation(true)
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
+        router.push('/finance')
+      }
     } catch (err) {
       setError({ 
         message: err instanceof Error ? err.message : 'Failed to process transaction'
@@ -287,7 +332,9 @@ export function SendMoneyPage() {
     validateAmount,
     selectedBeneficiaryId,
     description,
-    router
+    router,
+    isMomoTransfer,
+    momoPhone
   ])
 
   const handleBeneficiarySelect = useCallback(async (beneficiaryId: string) => {
@@ -521,10 +568,102 @@ export function SendMoneyPage() {
     return <ErrorDisplay message={accountsError || beneficiariesError || 'An error occurred'} />
   }
 
+  const handleCardPayment = async () => {
+    setIsProcessingCard(true);
+    try {
+      const response = await fetch('/api/payments/mastercard', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: parseFloat(amount),
+          currency: 'EUR',
+          cardNumber: cardNumber,
+          description: description || 'Card transfer'
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Payment failed');
+      }
+
+      const result = await response.json();
+      
+      // Show success animation
+      setShowSuccessAnimation(true);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      router.push('/finance');
+    } catch (err) {
+      setError({ 
+        message: err instanceof Error ? err.message : 'Card payment failed'
+      });
+    } finally {
+      setIsProcessingCard(false);
+    }
+  };
+
+  const handleVisaDeposit = async () => {
+    if (!amount || !visaCardNumber) {
+      toast({
+        title: "Error",
+        description: "Please enter amount and card number",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsProcessingVisa(true);
+    try {
+      const visaClient = new VisaClient({
+        apiKey: 'U2CB9EXCQOX9FPUT6DUS2106HUAHml5g_sDhH1Ql_oOq0D0xQ',
+        environment: 'sandbox'
+      });
+
+      await visaClient.initiateDeposit({
+        amount: parseFloat(amount),
+        currency: 'EUR',
+        cardNumber: visaCardNumber,
+        description: 'Visa deposit'
+      });
+
+      await fetch('/api/user/balance/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: parseFloat(amount),
+          type: 'DEPOSIT',
+          provider: 'VISA'
+        }),
+      });
+
+      toast({
+        title: "Success",
+        description: "Deposit successful",
+      });
+
+      // Reset form
+      setAmount('');
+      setVisaCardNumber('');
+      setShowVisaDeposit(false);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Deposit failed",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessingVisa(false);
+    }
+  };
+
   return (
     <LayoutWrapper>
       <motion.div 
-        className="min-h-screen bg-gray-50 dark:bg-gray-900"
+        className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800"
         variants={pageTransitionVariants}
         initial="initial"
         animate="animate"
@@ -592,6 +731,60 @@ export function SendMoneyPage() {
                 </SelectContent>
               </Select>
             </motion.div>
+
+            {/* Transfer Type Selection */}
+            <motion.div 
+              className="space-y-2"
+              variants={cardVariants}
+              initial="initial"
+              animate="animate"
+              whileHover="hover"
+            >
+              <Label>Transfer Type</Label>
+              <Select
+                value={isMomoTransfer ? 'momo' : 'bank'}
+                onValueChange={(value) => setIsMomoTransfer(value === 'momo')}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select transfer type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="bank">Bank Transfer</SelectItem>
+                  <SelectItem value="momo">MTN Mobile Money</SelectItem>
+                </SelectContent>
+              </Select>
+            </motion.div>
+
+            {isMomoTransfer ? (
+              <div className="space-y-2">
+                <Label>Phone Number</Label>
+                <Input
+                  type="tel"
+                  value={momoPhone}
+                  onChange={(e) => setMomoPhone(e.target.value)}
+                  placeholder="Enter recipient's phone number"
+                />
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Label>To Beneficiary</Label>
+                <Select
+                  value={selectedBeneficiaryId}
+                  onValueChange={setSelectedBeneficiaryId}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select beneficiary" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {filteredBeneficiaries.map((beneficiary) => (
+                      <SelectItem key={beneficiary.id} value={beneficiary.id}>
+                        {beneficiary.name} - {beneficiary.bankName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             {/* Amount Input with Animation */}
             <motion.div
@@ -684,6 +877,89 @@ export function SendMoneyPage() {
         )}
       </AnimatePresence>
 
+      <Card>
+        <CardHeader>
+          <CardTitle>Pay with Card</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <Input
+              placeholder="Card Number"
+              value={cardNumber}
+              onChange={(e) => setCardNumber(e.target.value)}
+            />
+            <div className="grid grid-cols-2 gap-4">
+              <Input
+                placeholder="MM/YY"
+                value={cardExpiry}
+                onChange={(e) => setCardExpiry(e.target.value)}
+              />
+              <Input
+                placeholder="CVV"
+                type="password"
+                value={cardCvv}
+                onChange={(e) => setCardCvv(e.target.value)}
+              />
+            </div>
+            <Button 
+              onClick={handleCardPayment}
+              disabled={isProcessingCard}
+              className="w-full"
+            >
+              {isProcessingCard && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Pay with Card
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Button
+        variant="outline"
+        onClick={() => setShowVisaDeposit(true)}
+        className="mt-4"
+      >
+        Deposit with Visa
+      </Button>
+
+      <Dialog open={showVisaDeposit} onOpenChange={setShowVisaDeposit}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Deposit via Visa</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Input
+              type="text"
+              placeholder="Amount"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+            />
+            <Input
+              type="text"
+              placeholder="Card Number"
+              value={visaCardNumber}
+              onChange={(e) => setVisaCardNumber(e.target.value)}
+            />
+            <Button 
+              onClick={handleVisaDeposit}
+              disabled={isProcessingVisa}
+              className="w-full"
+            >
+              {isProcessingVisa ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                'Deposit'
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </LayoutWrapper>
   )
 }
+
+
+
+

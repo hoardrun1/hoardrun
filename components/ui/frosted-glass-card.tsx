@@ -9,7 +9,7 @@ interface FrostedGlassCardProps {
   className?: string
 }
 
-export function FrostedGlassCard({ children, className }: FrostedGlassCardProps) {
+const FrostedGlassCard = ({ children, className }: FrostedGlassCardProps) => {
   const { theme } = useTheme()
 
   return (
@@ -18,14 +18,16 @@ export function FrostedGlassCard({ children, className }: FrostedGlassCardProps)
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
       className={cn(
-        'backdrop-blur-lg rounded-2xl shadow-xl',
+        'backdrop-blur-sm rounded-2xl shadow-lg',
         theme === 'dark'
-          ? 'bg-gray-900/40 border border-gray-800'
-          : 'bg-white/70 border border-gray-200',
+          ? 'bg-black/90 border border-white/10'
+          : 'bg-white/90 border border-black/5',
         className
       )}
     >
       {children}
     </motion.div>
   )
-} 
+}
+
+export default FrostedGlassCard

@@ -1,17 +1,17 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
-import { getToken } from 'next-auth/jwt'
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { navigation } from '@/lib/navigation';
 
-export async function middleware(request: NextRequest) {
-  const token = await getToken({ req: request })
-  const isAuthPage = request.nextUrl.pathname.startsWith('/signin') || 
-                     request.nextUrl.pathname.startsWith('/signup')
+const publicRoutes = ['/signin', '/signup'];
+const protectedRoutes = ['home', 'dashboard', 'create-profile', 'verify-email'];
 
-  if (isAuthPage) {
-    if (token) {
-      return NextResponse.redirect(new URL('/home', request.url))
-    }
-    return NextResponse.next()
+export function middleware(request: NextRequest) {
+  const path = request.nextUrl.pathname;
+  const routeName = path.split('/')[1];
+
+  // Allow public routes
+  if (publicRoutes.includes(path)) {
+    return NextResponse.next();
   }
 
   // Protect these routes
@@ -27,7 +27,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(redirectUrl)
   }
 
-  return NextResponse.next()
+  return NextResponse.next();
 }
 
 export const config = {

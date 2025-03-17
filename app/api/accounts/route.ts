@@ -2,20 +2,24 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { authOptions } from '@/lib/auth-config'
 import { generateAccountNumber } from '@/lib/banking'
 
+// Define account types as a constant for better maintainability
+const ACCOUNT_TYPES = ['SAVINGS', 'CHECKING', 'INVESTMENT'] as const
+type AccountType = typeof ACCOUNT_TYPES[number]
+
 const createAccountSchema = z.object({
-  type: z.enum(['SAVINGS', 'CHECKING', 'INVESTMENT']),
-  currency: z.string().default('USD'),
+  type: z.enum(ACCOUNT_TYPES),
+  currency: z.string().min(3).max(3).default('USD'),
 })
 
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
-      return new NextResponse(
-        JSON.stringify({ error: 'Unauthorized' }),
+      return NextResponse.json(
+        { error: 'Unauthorized' },
         { status: 401 }
       )
     }
@@ -23,44 +27,36 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { type, currency } = createAccountSchema.parse(body)
 
-    // Generate unique account number
     const accountNumber = await generateAccountNumber()
 
-    // Create new account
     const account = await prisma.account.create({
       data: {
         userId: session.user.id,
         type,
         number: accountNumber,
         currency,
+        isActive: true, // Set default value
       },
       include: {
         cards: true,
       },
     })
 
-    return new NextResponse(
-      JSON.stringify({
-        message: 'Account created successfully',
-        account,
-      }),
-      {
-        status: 201,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    )
+    return NextResponse.json({
+      message: 'Account created successfully',
+      account,
+    }, { status: 201 })
+
   } catch (error) {
     console.error('Account creation error:', error)
     if (error instanceof z.ZodError) {
-      return new NextResponse(
-        JSON.stringify({ error: 'Invalid input data', details: error.errors }),
+      return NextResponse.json(
+        { error: 'Invalid input data', details: error.errors },
         { status: 400 }
       )
     }
-    return new NextResponse(
-      JSON.stringify({ error: 'Internal server error' }),
+    return NextResponse.json(
+      { error: 'Internal server error' },
       { status: 500 }
     )
   }
@@ -70,25 +66,32 @@ export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
-      return new NextResponse(
-        JSON.stringify({ error: 'Unauthorized' }),
+      return NextResponse.json(
+        { error: 'Unauthorized' },
         { status: 401 }
       )
     }
 
-    // Get query parameters
     const { searchParams } = new URL(request.url)
-    const type = searchParams.get('type')
-    const isActive = searchParams.get('isActive') === 'true'
+    const type = searchParams.get('type') as AccountType | null
+    const isActiveParam = searchParams.get('isActive')
+    const isActive = isActiveParam === 'true' ? true : 
+                    isActiveParam === 'false' ? false : null
 
-    // Build where clause
+    // Validate type if provided
+    if (type && !ACCOUNT_TYPES.includes(type)) {
+      return NextResponse.json(
+        { error: 'Invalid account type' },
+        { status: 400 }
+      )
+    }
+
     const where = {
-      userId: session.user.id,
-      ...(type && { type: type as 'SAVINGS' | 'CHECKING' | 'INVESTMENT' }),
+      userId: session.user?.id ?? '',
+      ...(type && { type }),
       ...(isActive !== null && { isActive }),
     }
 
-    // Get user's accounts
     const accounts = await prisma.account.findMany({
       where,
       include: {
@@ -104,19 +107,12 @@ export async function GET(request: Request) {
       },
     })
 
-    return new NextResponse(
-      JSON.stringify({ accounts }),
-      {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    )
+    return NextResponse.json({ accounts })
+
   } catch (error) {
     console.error('Get accounts error:', error)
-    return new NextResponse(
-      JSON.stringify({ error: 'Internal server error' }),
+    return NextResponse.json(
+      { error: 'Internal server error' },
       { status: 500 }
     )
   }

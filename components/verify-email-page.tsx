@@ -16,114 +16,82 @@ export function VerifyEmailPageComponent() {
   const [email, setEmail] = useState<string>('')
 
   useEffect(() => {
-    // Get email from session storage
+    // Check if we have the necessary data in session storage
     const storedEmail = sessionStorage.getItem('verificationEmail')
-    if (storedEmail) {
-      setEmail(storedEmail)
-    } else {
-      // Redirect to signup if no email found
+    const userId = sessionStorage.getItem('userId')
+    const tempToken = sessionStorage.getItem('tempToken')
+
+    if (!storedEmail || !userId || !tempToken) {
+      // If any required data is missing, redirect to signup
+      toast({
+        title: "Error",
+        description: "Please sign up first",
+        variant: "destructive"
+      })
       router.push('/auth')
+      return
     }
+
+    setEmail(storedEmail)
   }, [router])
 
-  useEffect(() => {
-    // Focus first input on mount
-    if (inputRefs.current[0]) {
-      inputRefs.current[0].focus()
-    }
-  }, [])
-
-  const handleInput = (index: number, value: string) => {
-    if (value.length > 1) {
-      value = value[0]
-    }
-
-    const newCode = [...verificationCode]
-    newCode[index] = value
-    setVerificationCode(newCode)
-
-    // Move to next input if value is entered
-    if (value && index < 5) {
-      inputRefs.current[index + 1]?.focus()
-    }
-  }
-
-  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Backspace' && !verificationCode[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus()
-    }
-  }
-
-  const handlePaste = (e: React.ClipboardEvent) => {
-    e.preventDefault()
-    const pastedData = e.clipboardData.getData('text').slice(0, 6)
-    const newCode = [...verificationCode]
-    
-    for (let i = 0; i < pastedData.length; i++) {
-      if (/[0-9]/.test(pastedData[i])) {
-        newCode[i] = pastedData[i]
-      }
-    }
-    
-    setVerificationCode(newCode)
-    
-    // Focus the next empty input or the last input
-    const nextEmptyIndex = newCode.findIndex(digit => !digit)
-    if (nextEmptyIndex !== -1) {
-      inputRefs.current[nextEmptyIndex]?.focus()
-    } else {
-      inputRefs.current[5]?.focus()
-    }
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
     if (verificationCode.some(digit => !digit)) {
       toast({
         title: "Error",
         description: "Please enter all digits of the verification code",
         variant: "destructive"
-      });
-      return;
+      })
+      return
     }
 
-    setIsLoading(true);
+    setIsLoading(true)
     try {
-      const codeToSubmit = verificationCode.join('');
-      const response = await fetch('/api/verify-code', {
+      const userId = sessionStorage.getItem('userId')
+      const tempToken = sessionStorage.getItem('tempToken')
+      const codeToSubmit = verificationCode.join('')
+      
+      const response = await fetch('/api/verify-email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${tempToken}`
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
+          userId,
           verificationCode: codeToSubmit,
-          email // Include email for verification
+          email
         }),
-      });
+      })
 
-      const data = await response.json();
+      const data = await response.json()
       if (!response.ok) {
-        throw new Error(data.message || 'Verification failed');
+        throw new Error(data.message || 'Verification failed')
       }
 
       toast({
         title: "Success",
         description: "Email verified successfully!",
-      });
+      })
 
-      // Clear verification email from session after successful verification
-      sessionStorage.removeItem('verificationEmail');
-      router.push('/create-profile');
+      // Clear verification data from session storage
+      sessionStorage.removeItem('verificationEmail')
+      sessionStorage.removeItem('userId')
+      sessionStorage.removeItem('tempToken')
+
+      // Redirect to create profile page
+      router.push('/create-profile')
     } catch (error) {
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : 'Verification failed',
         variant: "destructive"
-      });
+      })
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const handleResend = async () => {
     if (!email || isLoading) return

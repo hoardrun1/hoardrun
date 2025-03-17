@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { authOptions } from '@/lib/auth-config'
 import { prisma } from '@/lib/prisma'
+import { Prisma } from '@prisma/client'
 
 const createBeneficiarySchema = z.object({
   name: z.string().min(2),
@@ -97,15 +98,15 @@ export async function GET(request: Request) {
     const limit = parseInt(searchParams.get('limit') || '10')
 
     // Build where clause
-    const where = {
+    const where: Prisma.BeneficiaryWhereInput = {
       userId: session.user.id,
       ...(isActive !== null && { isActive }),
       ...(search && {
         OR: [
-          { name: { contains: search, mode: 'insensitive' } },
+          { name: { contains: search, mode: 'insensitive' as const } },
           { accountNumber: { contains: search } },
-          { bankName: { contains: search, mode: 'insensitive' } },
-          { email: { contains: search, mode: 'insensitive' } },
+          { bankName: { contains: search, mode: 'insensitive' as const } },
+          { email: { contains: search, mode: 'insensitive' as const } },
         ],
       }),
     }
@@ -158,7 +159,9 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json()
-    const { id, ...data } = createBeneficiarySchema.partial().parse(body)
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+    const data = createBeneficiarySchema.partial().parse(body)
 
     if (!id) {
       return new NextResponse(

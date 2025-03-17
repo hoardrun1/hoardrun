@@ -30,26 +30,41 @@ export function useTransactions() {
   const [error, setError] = useState<string | null>(null)
 
   const fetchTransactions = useCallback(async () => {
-    if (!session?.user) return
+    if (!session?.user) {
+      throw new AppError(
+        ErrorCode.UNAUTHORIZED,
+        'Authentication required',
+        401
+      );
+    }
 
-    setIsLoading(true)
-    setError(null)
+    setIsLoading(true);
+    setError(null);
 
     try {
-      const response = await fetch('/api/transactions')
-      if (!response.ok) throw new Error('Failed to fetch transactions')
+      const response = await fetch('/api/transactions');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new AppError(
+          errorData.code || ErrorCode.INTERNAL_ERROR,
+          errorData.message || 'Failed to fetch transactions',
+          response.status
+        );
+      }
 
-      const data = await response.json()
-      setTransactions(data)
+      const data = await response.json();
+      setTransactions(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
+      const message = err instanceof AppError ? err.message : 'An error occurred';
+      setError(message);
       toast({
         title: 'Error',
-        description: 'Failed to fetch transactions',
+        description: message,
         variant: 'destructive',
-      })
+      });
+      throw err;
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }, [session, toast])
 

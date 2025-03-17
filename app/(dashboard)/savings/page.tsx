@@ -20,9 +20,20 @@ import { motion } from 'framer-motion'
 import { formatCurrency } from '@/lib/banking'
 import { PiggyBank, Target, Clock, TrendingUp, AlertCircle, Plus, ChevronRight } from 'lucide-react'
 
+interface SavingsAnalytics {
+  totalSavings: number;
+  monthlyGrowth: number;
+  nextMilestone: number;
+  projectedSavings: number;
+  insights?: Array<{
+    title: string;
+    description: string;
+  }>;
+}
+
 export default function SavingsPage() {
   const { data: session } = useSession()
-  const { toast } = useToast()
+  const { addToast: toast } = useToast()
   const {
     savingsGoals,
     isLoading,
@@ -32,9 +43,16 @@ export default function SavingsPage() {
     updateSavingsGoal,
   } = useSavings()
 
-  const [analytics, setAnalytics] = useState(null)
+  const [analytics, setAnalytics] = useState<SavingsAnalytics | null>(null)
   const [isNewGoalDialogOpen, setIsNewGoalDialogOpen] = useState(false)
-  const [newGoalForm, setNewGoalForm] = useState({
+  const [newGoalForm, setNewGoalForm] = useState<{
+    name: string;
+    targetAmount: string;
+    monthlyContribution: string;
+    category: string;
+    deadline: Date | null;
+    isAutoSave: boolean;
+  }>({
     name: '',
     targetAmount: '',
     monthlyContribution: '',
@@ -77,7 +95,9 @@ export default function SavingsPage() {
         targetAmount: parseFloat(newGoalForm.targetAmount),
         monthlyContribution: parseFloat(newGoalForm.monthlyContribution),
         category: newGoalForm.category || 'General',
-        deadline: newGoalForm.deadline?.toISOString() || new Date(Date.now() + 31536000000).toISOString(),
+        deadline: (newGoalForm.deadline instanceof Date) 
+          ? newGoalForm.deadline.toISOString() 
+          : new Date(Date.now() + 31536000000).toISOString(),
         isAutoSave: newGoalForm.isAutoSave,
       }
 
@@ -165,7 +185,9 @@ export default function SavingsPage() {
             <CardTitle>Next Milestone</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(analytics.nextMilestone)}</div>
+            <div className="text-2xl font-bold">
+              {analytics?.nextMilestone ? formatCurrency(analytics.nextMilestone) : formatCurrency(0)}
+            </div>
           </CardContent>
         </Card>
         <Card>

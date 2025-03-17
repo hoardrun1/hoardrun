@@ -104,12 +104,28 @@ export async function processTransaction(
 }
 
 export async function validateTransactionAmount(amount: number): Promise<void> {
+  if (typeof amount !== 'number' || isNaN(amount)) {
+    throw new AppError(
+      ErrorCode.VALIDATION_ERROR,
+      'Invalid amount format',
+      400
+    );
+  }
+
   if (amount <= 0) {
-    throw new Error('Amount must be greater than 0')
+    throw new AppError(
+      ErrorCode.INVALID_AMOUNT,
+      'Amount must be greater than 0',
+      400
+    );
   }
 
   if (amount > 1000000) {
-    throw new Error('Amount exceeds maximum transaction limit')
+    throw new AppError(
+      ErrorCode.INVALID_AMOUNT,
+      'Amount exceeds maximum transaction limit',
+      400
+    );
   }
 }
 

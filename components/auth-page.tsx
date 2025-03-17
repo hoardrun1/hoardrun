@@ -104,6 +104,8 @@ export default function AuthPage() {
       setIsLoading(true)
       setError(null)
 
+      if (!validateForm()) return
+
       // Create account
       const response = await fetch('/api/sign-up', {
         method: 'POST',
@@ -111,22 +113,27 @@ export default function AuthPage() {
         body: JSON.stringify({
           name: formData.name.trim(),
           email: formData.email.toLowerCase().trim(),
-          password: formData.password
+          password: formData.password,
+          deviceInfo: {
+            userAgent: window.navigator.userAgent,
+            deviceId: await getDeviceId(), // You'll need to implement this
+            ip: '', // Will be set by server
+            components: {} // Add device fingerprinting if needed
+          }
         })
       })
 
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.message || 'Failed to create account')
+        throw new Error(data.error || 'Failed to create account')
       }
 
-      // Send verification email
-      await EmailVerificationService.sendVerificationEmail(formData.email)
-      
-      // Store email in session for verification page
+      // Store verification data
       sessionStorage.setItem('verificationEmail', formData.email)
-      
+      sessionStorage.setItem('userId', data.userId)
+      sessionStorage.setItem('tempToken', data.token)
+
       toast({
         title: "Account Created",
         description: "Please check your email for the verification code.",
@@ -140,6 +147,36 @@ export default function AuthPage() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const validateForm = (): boolean => {
+    if (!formData.name.trim()) {
+      setError('Name is required')
+      return false
+    }
+
+    if (!EmailVerificationService.validateEmailFormat(formData.email)) {
+      setError('Please enter a valid email address')
+      return false
+    }
+
+    if (!isEmailAvailable) {
+      setError('Email is already in use')
+      return false
+    }
+
+    const passwordValidation = PasswordValidationService.validatePassword(formData.password)
+    if (!passwordValidation.isValid) {
+      setError(`Password requirements: ${passwordValidation.failedRequirements.join(', ')}`)
+      return false
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match')
+      return false
+    }
+
+    return true
   }
 
   const handleSignIn = async (e: React.FormEvent) => {

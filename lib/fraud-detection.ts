@@ -128,30 +128,48 @@ export class FraudDetectionService {
   private async checkTransactionAmounts(
     context: TransactionContext
   ): Promise<{ triggers: string[]; riskScore: number }> {
-    const triggers: string[] = []
-    let riskScore = 0
+    try {
+      const triggers: string[] = [];
+      let riskScore = 0;
 
-    // Check single transaction amount
-    if (context.amount > this.config.maxSingleTransactionAmount) {
-      triggers.push('HIGH_SINGLE_TRANSACTION_AMOUNT')
-      riskScore += 30
+      // Validate input
+      if (!context.userId || !context.amount) {
+        throw new AppError(
+          ErrorCode.VALIDATION_ERROR,
+          'Invalid transaction context',
+          400
+        );
+      }
+
+      // Check single transaction amount
+      if (context.amount > this.config.maxSingleTransactionAmount) {
+        triggers.push('HIGH_SINGLE_TRANSACTION_AMOUNT')
+        riskScore += 30
+      }
+
+      // Check daily transaction total
+      const dailyTotal = await this.getDailyTransactionTotal(context.userId)
+      if (dailyTotal + context.amount > this.config.maxDailyTransactionAmount) {
+        triggers.push('DAILY_AMOUNT_EXCEEDED')
+        riskScore += 25
+      }
+
+      // Check daily transaction count
+      const dailyCount = await this.getDailyTransactionCount(context.userId)
+      if (dailyCount >= this.config.maxDailyTransactionCount) {
+        triggers.push('DAILY_COUNT_EXCEEDED')
+        riskScore += 20
+      }
+
+      return { triggers, riskScore };
+    } catch (error) {
+      if (error instanceof AppError) throw error;
+      throw new AppError(
+        ErrorCode.INTERNAL_ERROR,
+        'Fraud check failed',
+        500
+      );
     }
-
-    // Check daily transaction total
-    const dailyTotal = await this.getDailyTransactionTotal(context.userId)
-    if (dailyTotal + context.amount > this.config.maxDailyTransactionAmount) {
-      triggers.push('DAILY_AMOUNT_EXCEEDED')
-      riskScore += 25
-    }
-
-    // Check daily transaction count
-    const dailyCount = await this.getDailyTransactionCount(context.userId)
-    if (dailyCount >= this.config.maxDailyTransactionCount) {
-      triggers.push('DAILY_COUNT_EXCEEDED')
-      riskScore += 20
-    }
-
-    return { triggers, riskScore }
   }
 
   private async checkTransactionVelocity(

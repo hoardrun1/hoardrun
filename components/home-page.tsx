@@ -37,6 +37,9 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useNavigationContext } from '@/providers/NavigationProvider'
 import { DepositModal } from './deposit-modal'
 import { useFinance } from '@/contexts/FinanceContext'
+import { navigation } from '@/lib/navigation'
+import { useEffect } from 'react'
+import { useSession } from 'next-auth/react'
 
 interface Transaction {
   id: string
@@ -94,6 +97,57 @@ export function HomePageComponent() {
   const [showInsights, setShowInsights] = useState(true)
   const [refreshKey, setRefreshKey] = useState(0)
   const [showDepositModal, setShowDepositModal] = useState(false)
+
+  useEffect(() => {
+    const checkUserAccess = async () => {
+      try {
+        const response = await fetch('/api/user/status', {
+          headers: {
+            'Authorization': `Bearer ${sessionStorage.getItem('token')}`
+          }
+        });
+
+        const data = await response.json();
+        
+        if (!data.emailVerified) {
+          navigation.connect('home', 'verify-email');
+          router.push('/verify-email');
+          return;
+        }
+
+        if (!data.profileComplete) {
+          navigation.connect('home', 'create-profile');
+          router.push('/create-profile');
+          return;
+        }
+
+        // Check if we have a valid navigation flow
+        if (!navigation.isValidTransition('create-profile', 'home') && 
+            !navigation.isValidTransition('dashboard', 'home')) {
+          router.push('/signin');
+          return;
+        }
+
+        setIsLoading(false);
+        fetchData(); // Your existing data fetching function
+      } catch (error) {
+        setError('Failed to verify user access');
+        toast({
+          title: "Error",
+          description: "Failed to load home page",
+          variant: "destructive"
+        });
+      }
+    };
+
+    checkUserAccess();
+  }, [router, toast]);
+
+  // Add navigation methods for internal routing
+  const handleNavigateToSection = (section: string) => {
+    navigation.connect('home', section);
+    router.push(`/${section}`);
+  };
 
   // Fetch initial data
   const fetchData = useCallback(async () => {
@@ -176,7 +230,10 @@ export function HomePageComponent() {
         <Alert variant="destructive" className="max-w-md">
           <AlertDescription>{error}</AlertDescription>
           <Button 
-            onClick={fetchData}
+            onClick={() => {
+              setError(null);
+              fetchData();
+            }}
             variant="outline"
             className="mt-4"
           >
@@ -185,7 +242,7 @@ export function HomePageComponent() {
           </Button>
         </Alert>
       </div>
-    )
+    );
   }
 
   return (
@@ -407,3 +464,8 @@ export function HomePageComponent() {
     </LayoutWrapper>
   )
 }
+
+
+
+
+

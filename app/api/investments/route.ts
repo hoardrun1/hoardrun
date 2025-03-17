@@ -1,11 +1,11 @@
+import { useServerSession } from '@/hooks/useServerSession'
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth/next'
 import { prisma } from '@/lib/prisma'
-import { authOptions } from '../auth/[...nextauth]/route'
 import { z } from 'zod'
+import { getTypedSession } from '@/lib/auth'
 
 const investmentSchema = z.object({
-  type: z.enum(['STOCKS', 'BONDS', 'REAL_ESTATE', 'CRYPTO', 'ETF', 'MUTUAL_FUND']),
+  type: z.enum(['STOCKS', 'BONDS', 'REAL_ESTATE', 'CRYPTO']),
   amount: z.number().positive(),
   risk: z.enum(['LOW', 'MODERATE', 'HIGH', 'VERY_HIGH']),
   description: z.string().optional(),
@@ -13,12 +13,8 @@ const investmentSchema = z.object({
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions)
-
-    if (!session?.user?.id) {
-      return new NextResponse('Unauthorized', { status: 401 })
-    }
-
+    const session = await useServerSession()
+    
     const investments = await prisma.investment.findMany({
       where: {
         userId: session.user.id,
@@ -31,6 +27,9 @@ export async function GET() {
 
     return NextResponse.json(investments)
   } catch (error) {
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return new NextResponse('Unauthorized', { status: 401 })
+    }
     console.error('GET /api/investments error:', error)
     return new NextResponse('Internal Error', { status: 500 })
   }
@@ -38,7 +37,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getTypedSession()
 
     if (!session?.user?.id) {
       return new NextResponse('Unauthorized', { status: 401 })
@@ -47,15 +46,15 @@ export async function POST(req: Request) {
     const body = await req.json()
     const validatedData = investmentSchema.parse(body)
 
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id }
-    })
+    const account = await prisma.account.findFirst({
+      where: { 
+        userId: session.user.id,
+        isActive: true,
+        type: 'INVESTMENT'
+      }
+    });
 
-    if (!user) {
-      return new NextResponse('User not found', { status: 404 })
-    }
-
-    if (validatedData.amount > user.balance) {
+    if (!account || validatedData.amount > account.balance) {
       return new NextResponse('Insufficient funds', { status: 400 })
     }
 
@@ -69,10 +68,12 @@ export async function POST(req: Request) {
       })
 
       // Update user balance
-      await tx.user.update({
-        where: { id: session.user.id },
+      await tx.account.update({
+        where: { id: account.id },
         data: {
-          balance: user.balance - validatedData.amount
+          balance: {
+            decrement: validatedData.amount
+          }
         }
       })
 
@@ -80,11 +81,12 @@ export async function POST(req: Request) {
       await tx.transaction.create({
         data: {
           userId: session.user.id,
+          accountId: account.id,  // Add the account ID
           type: 'INVESTMENT',
           amount: validatedData.amount,
           description: `Investment in ${validatedData.type}`,
-          category: 'INVESTMENT',
-          status: 'COMPLETED'
+          status: 'COMPLETED',
+          reference: `INV-${Date.now()}`,  // Add a unique reference
         }
       })
 
@@ -104,7 +106,7 @@ export async function POST(req: Request) {
 
 export async function PATCH(req: Request) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getTypedSession()
 
     if (!session?.user?.id) {
       return new NextResponse('Unauthorized', { status: 401 })
@@ -141,24 +143,44 @@ export async function PATCH(req: Request) {
         })
 
         // Return funds to user balance with potential returns
-        if (completed.return) {
+        if (completed.returns) {
+          const account = await tx.account.findFirst({
+            where: {
+              userId: session.user.id,
+              type: 'INVESTMENT',
+              isActive: true
+            }
+          });
+
+          if (!account) {
+            throw new Error('Investment account not found');
+          }
+
           await tx.user.update({
             where: { id: session.user.id },
             data: {
-              balance: {
-                increment: completed.amount + completed.return
+              accounts: {
+                update: {
+                  where: { id: account.id },
+                  data: {
+                    balance: {
+                      increment: completed.amount + completed.returns
+                    }
+                  }
+                }
               }
             }
-          })
+          });
 
           await tx.transaction.create({
             data: {
               userId: session.user.id,
+              accountId: account.id,
               type: 'INVESTMENT',
-              amount: completed.amount + completed.return,
+              amount: completed.amount + completed.returns,
               description: `Investment return from ${completed.type}`,
-              category: 'INVESTMENT_RETURN',
-              status: 'COMPLETED'
+              status: 'COMPLETED',
+              reference: `INV-RET-${Date.now()}` // Added reference field
             }
           })
         }

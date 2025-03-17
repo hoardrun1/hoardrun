@@ -249,6 +249,14 @@ export const getDashboardData = async (req: Request, res: Response) => {
   }
 }
 
+const invalidateUserCache = async (userId: string) => {
+  await Promise.all([
+    cache.delPattern(`dashboard:${userId}:*`),
+    cache.delPattern(`transactions:${userId}:*`),
+    cache.delPattern(`accounts:${userId}:*`)
+  ]);
+};
+
 export const executeQuickAction = async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id
@@ -295,8 +303,8 @@ export const executeQuickAction = async (req: Request, res: Response) => {
         throw new APIError(400, 'Invalid action type', 'INVALID_ACTION')
     }
 
-    // Invalidate dashboard cache
-    await cache.delPattern(`dashboard:${userId}:*`)
+    // Invalidate all relevant user cache
+    await invalidateUserCache(userId)
 
     res.json({
       message: 'Quick action executed successfully',

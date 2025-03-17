@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { TrendingUp, TrendingDown, AlertCircle, ChevronRight, BarChart2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { type Investment } from '@/services/investment-service'
+import { ResponsiveContainer, Area, AreaChart } from 'recharts'
 
 interface InvestmentCardProps {
   investment: Investment

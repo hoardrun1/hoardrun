@@ -1,211 +1,284 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { EyeIcon, EyeOffIcon, MailIcon, Loader2 } from 'lucide-react'
-import Link from 'next/link'
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { useToast } from "@/components/ui/use-toast"
-import { AnimatedGradientBackground } from "@/components/ui/animated-gradient-background"
-import { FrostedGlassCard } from "@/components/ui/frosted-glass-card"
-import { EmailVerificationService } from '@/services/email-verification'
-import { RateLimiter } from '@/lib/rate-limiter'
-import { useAuth } from '@/contexts/AuthContext'
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
+import { z } from 'zod';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Separator } from "@/components/ui/separator";
+import { 
+  FingerprintIcon, 
+  ShieldCheck, 
+  Loader2, 
+  Eye, 
+  EyeOff, 
+  QrCode,
+  Smartphone,
+  Mail,
+  Lock
+} from 'lucide-react';
+import { useToast } from "@/components/ui/use-toast";
+import Link from 'next/link';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import Image from 'next/image';
 
-export default function SignInPage() {
-  const router = useRouter()
-  const { toast } = useToast()
-  const { login } = useAuth()
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [isOnline, setIsOnline] = useState(true)
-  const [lockoutUntil, setLockoutUntil] = useState<Date | null>(null)
+const loginSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+});
 
-  // Check online status
-  useEffect(() => {
-    setIsOnline(navigator.onLine)
-    const handleOnline = () => setIsOnline(true)
-    const handleOffline = () => setIsOnline(false)
-    window.addEventListener('online', handleOnline)
-    window.addEventListener('offline', handleOffline)
-    return () => {
-      window.removeEventListener('online', handleOnline)
-      window.removeEventListener('offline', handleOffline)
-    }
-  }, [])
+export function SignInPage() {
+  const [formData, setFormData] = useState({ 
+    email: '', 
+    password: '', 
+    rememberMe: false 
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [activeTab, setActiveTab] = useState('email');
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const router = useRouter();
+  const { toast } = useToast();
 
-  // Check for lockout
-  useEffect(() => {
-    const lockedUntil = localStorage.getItem('lockoutUntil')
-    if (lockedUntil) {
-      const lockoutTime = new Date(lockedUntil)
-      if (lockoutTime > new Date()) {
-        setLockoutUntil(lockoutTime)
+  const handleSocialLogin = async (provider: 'google' | 'apple') => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`/api/auth/${provider}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message);
+
+      if (data.requiresVerification) {
+        router.push('/verify-signin');
       } else {
-        localStorage.removeItem('lockoutUntil')
-        RateLimiter.resetLimit(email)
+        router.push('/dashboard');
       }
+    } catch (error) {
+      toast({
+        title: "Login Failed",
+        description: error instanceof Error ? error.message : "Failed to login",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
-  }, [email])
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (isLoading || !isOnline || lockoutUntil) return
+    e.preventDefault();
+    setIsLoading(true);
 
     try {
-      // Validate inputs
-      if (!email || !password) {
-        throw new Error('Please fill in all fields')
-      }
-
-      if (!EmailVerificationService.validateEmailFormat(email)) {
-        throw new Error('Please enter a valid email address')
-      }
-
-      setIsLoading(true)
-      setError(null)
-
-      // Check rate limiting
-      if (!RateLimiter.checkLimit(email)) {
-        const lockoutTime = new Date(Date.now() + 15 * 60 * 1000)
-        setLockoutUntil(lockoutTime)
-        localStorage.setItem('lockoutUntil', lockoutTime.toISOString())
-        throw new Error('Too many attempts. Please try again later.')
-      }
-
-      const response = await fetch('/api/sign-in', {
+      const response = await fetch('/api/auth/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ 
-          email: email.trim().toLowerCase(),
-          password 
-        }),
-      })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
 
-      const data = await response.json()
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message);
 
-      if (!response.ok) {
-        throw new Error(data.message || 'Authentication failed')
+      // Store necessary data for verification
+      if (data.requiresVerification) {
+        sessionStorage.setItem('auth_email', formData.email);
+        sessionStorage.setItem('temp_token', data.tempToken);
+        router.push('/verify-signin');
+      } else {
+        router.push('/dashboard');
       }
-
-      // Clear lockout on successful login
-      RateLimiter.resetLimit(email)
-      localStorage.removeItem('lockoutUntil')
-
-      await login(data.token, data.user)
-      
+    } catch (error) {
       toast({
-        title: "Success",
-        description: "Signed in successfully!",
-        duration: 3000
-      })
-
-      router.push('/verify-signin')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
-      console.error('Sign in error:', err)
+        title: "Error",
+        description: error instanceof Error ? error.message : "Invalid credentials",
+        variant: "destructive",
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
-    <AnimatedGradientBackground>
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <FrostedGlassCard className="w-full max-w-md p-8">
+    <div className="min-h-screen bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-900 via-black to-blue-900">
+      <div className="container mx-auto px-4 py-8 min-h-screen flex flex-col items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-md bg-black/40 backdrop-blur-xl rounded-2xl p-8 shadow-xl border border-white/10"
+        >
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold">Welcome Back</h1>
-            <p className="text-gray-500 dark:text-gray-400">Sign in to your account</p>
+            <motion.h1 
+              className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-white bg-clip-text text-transparent"
+              initial={{ scale: 0.95 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 0.5 }}
+            >
+              Welcome Back
+            </motion.h1>
+            <p className="mt-2 text-blue-200">Sign in to access your account</p>
           </div>
 
-          {error && (
-            <Alert variant="destructive" className="mb-6">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <div className="relative">
-                <MailIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  className="pl-10"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={isLoading}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  className="pr-10"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={isLoading}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-                >
-                  {showPassword ? (
-                    <EyeOffIcon className="h-5 w-5" />
-                  ) : (
-                    <EyeIcon className="h-5 w-5" />
-                  )}
-                </button>
-              </div>
-            </div>
+          <div className="space-y-4 mb-6">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full bg-white/5 hover:bg-white/10 text-white border-white/20 flex items-center justify-center gap-2"
+              onClick={() => handleSocialLogin('google')}
+              disabled={isLoading}
+            >
+              <Image
+                src="/google.svg"
+                alt="Google"
+                width={20}
+                height={20}
+                className="mr-2"
+              />
+              Continue with Google
+            </Button>
 
             <Button
-              type="submit"
-              className="w-full"
-              disabled={isLoading || !isOnline || !!lockoutUntil}
+              type="button"
+              variant="outline"
+              className="w-full bg-white/5 hover:bg-white/10 text-white border-white/20 flex items-center justify-center gap-2"
+              onClick={() => handleSocialLogin('apple')}
+              disabled={isLoading}
             >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Signing in...
-                </>
-              ) : (
-                "Sign in"
-              )}
+              <Image
+                src="/apple.svg"
+                alt="Apple"
+                width={20}
+                height={20}
+                className="mr-2"
+              />
+              Continue with Apple
             </Button>
-          </form>
 
-          <div className="mt-6 text-center text-sm">
-            <Link href="/forgot-password" className="text-blue-600 hover:text-blue-500">
-              Forgot your password?
-            </Link>
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-white/10" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-black/40 px-2 text-gray-400">Or continue with</span>
+              </div>
+            </div>
           </div>
 
-          <div className="mt-6 text-center text-sm">
-            Don't have an account?{' '}
-            <Link href="/signup" className="text-blue-600 hover:text-blue-500">
-              Sign up
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <TabsList className="grid grid-cols-3 gap-4 bg-white/5 p-1 rounded-lg">
+              <TabsTrigger value="email" className="text-white data-[state=active]:bg-blue-600">
+                <Mail className="w-4 h-4 mr-2" />
+                Email
+              </TabsTrigger>
+              <TabsTrigger value="qr" className="text-white data-[state=active]:bg-blue-600">
+                <QrCode className="w-4 h-4 mr-2" />
+                QR Code
+              </TabsTrigger>
+              <TabsTrigger value="mobile" className="text-white data-[state=active]:bg-blue-600">
+                <Smartphone className="w-4 h-4 mr-2" />
+                Mobile
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="email">
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="space-y-4">
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5" />
+                    <Input
+                      type="email"
+                      placeholder="Email"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-gray-400"
+                    />
+                  </div>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5" />
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Password"
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-gray-400"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+                    >
+                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Checkbox id="remember" className="border-white/20" />
+                    <label htmlFor="remember" className="ml-2 text-sm text-gray-300">
+                      Remember me
+                    </label>
+                  </div>
+                  <Link href="/forgot-password" className="text-sm text-blue-400 hover:text-blue-300">
+                    Forgot password?
+                  </Link>
+                </div>
+
+                <Button
+                  type="submit"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Signing in...
+                    </>
+                  ) : (
+                    "Sign in"
+                  )}
+                </Button>
+              </form>
+            </TabsContent>
+
+            <TabsContent value="qr">
+              <div className="text-center py-8">
+                <div className="bg-white p-4 rounded-lg inline-block mb-4">
+                  <QrCode className="w-32 h-32 text-blue-600" />
+                </div>
+                <p className="text-gray-300">Scan with mobile app to sign in</p>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="mobile">
+              <div className="space-y-4">
+                <Input
+                  type="tel"
+                  placeholder="Phone number"
+                  className="bg-white/5 border-white/10 text-white placeholder:text-gray-400"
+                />
+                <Button
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  Send Code
+                </Button>
+              </div>
+            </TabsContent>
+          </Tabs>
+
+          <div className="mt-6 text-center text-sm text-gray-300">
+            <span>New to Hoardrun?</span>{' '}
+            <Link href="/signup" className="text-blue-400 hover:text-blue-300 font-medium">
+              Create an account
             </Link>
           </div>
-        </FrostedGlassCard>
+        </motion.div>
       </div>
-    </AnimatedGradientBackground>
-  )
+    </div>
+  );
 }
+
+export default SignInPage;

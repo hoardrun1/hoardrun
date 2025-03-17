@@ -16,6 +16,8 @@ import {
 } from "@/components/ui/tooltip"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { navigation } from '@/lib/navigation'
+import { useToast } from '@/components/ui/use-toast'
 
 export function CreateProfilePageComponent() {
   const [isLoading, setIsLoading] = useState(false)
@@ -38,6 +40,19 @@ export function CreateProfilePageComponent() {
   const [errors, setErrors] = useState<Record<string, string>>({})
   
   const router = useRouter()
+  const { toast } = useToast()
+
+  useEffect(() => {
+    if (!navigation.isValidTransition('verify-email', 'create-profile')) {
+      router.push('/verify-email')
+      return
+    }
+
+    const userData = navigation.getData('create-profile')
+    if (!userData?.userId) {
+      router.push('/verify-email')
+    }
+  }, [router])
 
   const interests = [
     'Technology', 'Finance', 'Sports', 'Art', 'Music', 
@@ -112,6 +127,49 @@ export function CreateProfilePageComponent() {
       router.push('/face-verification')
     } catch (error) {
       console.error(error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoading(true)
+
+    try {
+      const response = await fetch('/api/user/profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...formData,
+          userId: sessionStorage.getItem('userId')
+        }),
+      })
+
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.message)
+
+      // Connect to both dashboard and home page
+      navigation.connect('create-profile', 'dashboard', {
+        userId: sessionStorage.getItem('userId'),
+        profileComplete: true
+      })
+
+      navigation.connect('create-profile', 'home', {
+        userId: sessionStorage.getItem('userId'),
+        profileComplete: true
+      })
+
+      // Clear navigation flow after successful completion
+      navigation.clearFlow()
+      
+      router.push('/home')
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Profile creation failed",
+        variant: "destructive"
+      })
     } finally {
       setIsLoading(false)
     }

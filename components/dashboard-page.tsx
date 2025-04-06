@@ -11,14 +11,19 @@ export function DashboardPage() {
   useEffect(() => {
     const checkUserStatus = async () => {
       try {
+        // Get token from sessionStorage
+        const token = sessionStorage.getItem('token');
+
+        // If there's no token, we'll still try to fetch the status
+        // The API will return mock data for now
         const response = await fetch('/api/user/status', {
           headers: {
-            'Authorization': `Bearer ${sessionStorage.getItem('token')}`
+            'Authorization': token ? `Bearer ${token}` : ''
           }
         });
 
         const data = await response.json();
-        
+
         if (!data.emailVerified) {
           navigation.connect('dashboard', 'verify-email');
           router.push('/verify-email');
@@ -50,6 +55,35 @@ export function DashboardPage() {
   }
 
   return (
-    // Your dashboard JSX
+    <div>
+      <header className="bg-white shadow">
+        <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+        </div>
+      </header>
+      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        {/* Dashboard content */}
+        <div className="px-4 py-6 sm:px-0">
+          <div className="border-4 border-dashed border-gray-200 rounded-lg h-96 p-4 flex flex-col items-center justify-center">
+            <h2 className="text-2xl font-semibold mb-4">Welcome to Your Dashboard</h2>
+            <p className="text-gray-600 mb-6">Your account has been successfully verified.</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-3xl">
+              <div className="bg-white p-4 rounded-lg shadow">
+                <h3 className="font-medium mb-2">Account Balance</h3>
+                <p className="text-2xl font-bold">$0.00</p>
+              </div>
+              <div className="bg-white p-4 rounded-lg shadow">
+                <h3 className="font-medium mb-2">Investments</h3>
+                <p className="text-2xl font-bold">$0.00</p>
+              </div>
+              <div className="bg-white p-4 rounded-lg shadow">
+                <h3 className="font-medium mb-2">Savings</h3>
+                <p className="text-2xl font-bold">$0.00</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

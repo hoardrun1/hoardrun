@@ -28,32 +28,35 @@ model User {
   savings           SavingsGoal[]
   kycDocuments      KycDocument[]
   notifications     Notification[]
+  AuditLog          AuditLog[]
+  Session           Session[]
+  TransactionLog    TransactionLog[]
 }
 
 model VerificationCode {
-  id        String    @id @default(cuid())
+  id        String   @id @default(cuid())
   code      String
-  type      String    @default("EMAIL_VERIFICATION")
+  type      String   @default("EMAIL_VERIFICATION")
   userId    String
-  user      User      @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
   expiresAt DateTime
-  createdAt DateTime  @default(now())
-  used      Boolean   @default(false)
+  createdAt DateTime @default(now())
+  used      Boolean  @default(false)
 }
 
 model Account {
-  id            String        @id @default(cuid())
-  userId        String
-  user          User          @relation(fields: [userId], references: [id])
-  type          AccountType
-  number        String        @unique
-  balance       Float         @default(0)
-  currency      String        @default("USD")
-  isActive      Boolean       @default(true)
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  transactions  Transaction[]
-  cards         Card[]
+  id           String        @id @default(cuid())
+  userId       String
+  user         User          @relation(fields: [userId], references: [id])
+  type         AccountType
+  number       String        @unique
+  balance      Float         @default(0)
+  currency     String        @default("USD")
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  transactions Transaction[]
+  cards        Card[]
 }
 
 enum AccountType {
@@ -63,21 +66,21 @@ enum AccountType {
 }
 
 model Card {
-  id            String    @id @default(cuid())
-  userId        String
-  user          User      @relation(fields: [userId], references: [id])
-  accountId     String
-  account       Account   @relation(fields: [accountId], references: [id])
-  type          CardType
-  number        String    @unique
-  expiryMonth   Int
-  expiryYear    Int
-  cvv           String
-  pin           String
-  isActive      Boolean   @default(true)
-  dailyLimit    Float     @default(1000)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  accountId   String
+  account     Account  @relation(fields: [accountId], references: [id])
+  type        CardType
+  number      String   @unique
+  expiryMonth Int
+  expiryYear  Int
+  cvv         String
+  pin         String
+  isActive    Boolean  @default(true)
+  dailyLimit  Float    @default(1000)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 enum CardType {
@@ -87,22 +90,40 @@ enum CardType {
   CREDIT
 }
 
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  TRANSFER
+  PAYMENT
+  REFUND
+  FEE
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
 model Transaction {
-  id              String      @id @default(cuid())
-  userId          String
-  user            User        @relation(fields: [userId], references: [id])
-  type            TransactionType
-  amount          Float
-  description     String?
-  category        String?
-  merchant        String?
-  status          TransactionStatus @default(PENDING)
-  beneficiaryId   String?
-  beneficiary     Beneficiary?      @relation(fields: [beneficiaryId], references: [id])
-  investmentId    String?
-  investment      Investment?       @relation(fields: [investmentId], references: [id])
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  id            String            @id @default(cuid())
+  userId        String
+  user          User              @relation(fields: [userId], references: [id])
+  type          TransactionType
+  amount        Float
+  description   String?
+  category      String?
+  merchant      String?
+  status        TransactionStatus @default(PENDING)
+  beneficiaryId String?
+  beneficiary   Beneficiary?      @relation(fields: [beneficiaryId], references: [id])
+  investmentId  String?
+  investment    Investment?       @relation(fields: [investmentId], references: [id])
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  Account       Account?          @relation(fields: [accountId], references: [id])
+  accountId     String?
 }
 
 model Beneficiary {
@@ -121,51 +142,72 @@ model Beneficiary {
   updatedAt     DateTime      @updatedAt
 }
 
+enum InvestmentType {
+  STOCK
+  BOND
+  MUTUAL_FUND
+  ETF
+  REAL_ESTATE
+  CRYPTO
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum InvestmentStatus {
+  ACTIVE
+  CLOSED
+  PENDING
+}
+
 model Investment {
-  id              String        @id @default(cuid())
-  userId          String
-  user            User          @relation(fields: [userId], references: [id])
-  type            InvestmentType
-  amount          Float
-  return          Float?
-  risk            RiskLevel
-  description     String?
-  status          InvestmentStatus  @default(ACTIVE)
-  startDate       DateTime      @default(now())
-  endDate         DateTime?
-  transactions    Transaction[]
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  performance     Json[]
+  id           String           @id @default(cuid())
+  userId       String
+  user         User             @relation(fields: [userId], references: [id])
+  type         InvestmentType
+  amount       Float
+  return       Float?
+  risk         RiskLevel
+  description  String?
+  status       InvestmentStatus @default(ACTIVE)
+  startDate    DateTime         @default(now())
+  endDate      DateTime?
+  transactions Transaction[]
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  performance  Json[]
 }
 
 model SavingsGoal {
-  id              String   @id @default(cuid())
-  userId          String
-  name            String
-  targetAmount    Float
-  currentAmount   Float    @default(0)
-  deadline        DateTime
-  category        String
-  description     String?
-  isAutoSave      Boolean  @default(false)
-  autoSaveAmount  Float?
-  riskLevel       String   @default("LOW")
-  status          String   @default("ACTIVE")
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  user            User     @relation(fields: [userId], references: [id])
-  contributions   SavingsContribution[]
+  id             String                @id @default(cuid())
+  userId         String
+  name           String
+  targetAmount   Float
+  currentAmount  Float                 @default(0)
+  deadline       DateTime
+  category       String
+  description    String?
+  isAutoSave     Boolean               @default(false)
+  autoSaveAmount Float?
+  riskLevel      String                @default("LOW")
+  status         String                @default("ACTIVE")
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+  user           User                  @relation(fields: [userId], references: [id])
+  contributions  SavingsContribution[]
 }
 
 model SavingsContribution {
-  id                String       @id @default(cuid())
-  goalId            String
-  amount            Float
-  type              String       @default("MANUAL") // MANUAL, AUTO, BONUS
-  description       String?
-  createdAt         DateTime     @default(now())
-  goal              SavingsGoal  @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  id          String      @id @default(cuid())
+  goalId      String
+  amount      Float
+  type        String      @default("MANUAL") // MANUAL, AUTO, BONUS
+  description String?
+  createdAt   DateTime    @default(now())
+  goal        SavingsGoal @relation(fields: [goalId], references: [id], onDelete: Cascade)
 
   @@index([goalId])
 }
@@ -241,7 +283,7 @@ model Notification {
 
 model CertificateCheck {
   id              String   @id @default(cuid())
-  certificateId   String   // CN from the certificate
+  certificateId   String // CN from the certificate
   checkDate       DateTime @default(now())
   daysUntilExpiry Int
   isValid         Boolean
@@ -259,12 +301,9 @@ model TransactionLog {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user      User     @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
   @@index([userId])
   @@index([createdAt])
   @@index([status])
 }
-
-
-

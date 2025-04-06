@@ -5,11 +5,11 @@ import { useRouter } from 'next/navigation'
 import { navigation } from '@/lib/navigation'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { 
-  EyeIcon, 
-  EyeOffIcon, 
-  MailIcon, 
-  UserIcon, 
+import {
+  EyeIcon,
+  EyeOffIcon,
+  MailIcon,
+  UserIcon,
   Loader2,
   ArrowRight,
 } from 'lucide-react'
@@ -21,34 +21,95 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useToast } from "@/components/ui/use-toast"
 import { Separator } from "@/components/ui/separator"
+import ApiTestSimple from "@/components/api-test-simple"
 
 export function SignupPage() {
   const router = useRouter();
-  const { toast } = useToast();
+  const { addToast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+  });
 
-  const handleSignup = async (e: React.FormEvent) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
+
+    // Validation
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match");
+      setIsLoading(false);
+      return;
+    }
 
     try {
+      console.log('Submitting signup form:', {
+        name: formData.name,
+        email: formData.email,
+        password: '********' // Don't log actual password
+      });
+
+      // First, test if the API endpoint is working with a simple GET request
+      console.log('Testing API endpoint with GET request...');
+      const testResponse = await fetch('/api/auth/signup');
+      const testData = await testResponse.text();
+      console.log('GET test response:', testData);
+
+      // Now try the actual POST request
+      console.log('Sending POST request...');
       const response = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email,
-          password
+          name: formData.name,
+          email: formData.email,
+          password: formData.password
         })
       });
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message);
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
+      // Get the response as text first for debugging
+      const responseText = await response.text();
+      console.log('Response text:', responseText);
+
+      // Try to parse the response as JSON
+      let data;
+      try {
+        data = JSON.parse(responseText);
+        console.log('Parsed JSON data:', data);
+      } catch (parseError) {
+        console.error('Failed to parse response as JSON:', parseError);
+        throw new Error('Server returned invalid JSON');
+      }
+
+      // Show success message
+      addToast({
+        title: "Success",
+        description: "Account created successfully. Please check your email."
+      });
 
       // Connect to check email page
-      navigation.connect('signup', 'check-email', { email });
+      navigation.connect('signup', 'check-email', { email: formData.email });
       router.push('/check-email');
     } catch (error) {
-      toast({
+      setError(error instanceof Error ? error.message : "Signup failed");
+      addToast({
         title: "Error",
         description: error instanceof Error ? error.message : "Signup failed",
         variant: "destructive"
@@ -241,10 +302,17 @@ export function SignupPage() {
               </Link>
             </p>
           </div>
+
+          {/* API Test Component for Debugging */}
+          <div className="mt-8 p-4 border border-gray-200 rounded-md">
+            <h3 className="text-lg font-semibold mb-2">API Test Tool</h3>
+            <p className="text-sm text-gray-500 mb-4">Use this to test if the API endpoints are working</p>
+            <ApiTestSimple />
+          </div>
         </motion.div>
       </div>
     </div>
   )
 }
 
-export default SignUpPage
+export default SignupPage

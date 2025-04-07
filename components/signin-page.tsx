@@ -8,12 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
-import { 
-  FingerprintIcon, 
-  ShieldCheck, 
-  Loader2, 
-  Eye, 
-  EyeOff, 
+import {
+  FingerprintIcon,
+  ShieldCheck,
+  Loader2,
+  Eye,
+  EyeOff,
   QrCode,
   Smartphone,
   Mail,
@@ -30,10 +30,10 @@ const loginSchema = z.object({
 });
 
 export function SignInPage() {
-  const [formData, setFormData] = useState({ 
-    email: '', 
-    password: '', 
-    rememberMe: false 
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    rememberMe: false
   });
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -41,6 +41,52 @@ export function SignInPage() {
   const [biometricAvailable, setBiometricAvailable] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
+
+  useEffect(() => {
+    // Check if biometric authentication is available
+    const checkBiometricAvailability = async () => {
+      try {
+        // This is a simplified check - in a real app, you'd use the Web Authentication API
+        const available = 'PublicKeyCredential' in window;
+        setBiometricAvailable(available);
+      } catch (error) {
+        console.error('Error checking biometric availability:', error);
+        setBiometricAvailable(false);
+      }
+    };
+
+    checkBiometricAvailability();
+
+    // Check for verification success in URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const verified = urlParams.get('verified');
+    const email = urlParams.get('email');
+    const error = urlParams.get('error');
+
+    if (verified === 'true' && email) {
+      toast({
+        title: "Email Verified",
+        description: "Your email has been verified successfully. You can now sign in.",
+        duration: 5000
+      });
+
+      // Pre-fill the email field
+      setFormData(prev => ({ ...prev, email }));
+    } else if (error === 'verification_failed') {
+      toast({
+        title: "Verification Failed",
+        description: "There was a problem verifying your email. Please try again.",
+        variant: "destructive",
+        duration: 5000
+      });
+    }
+
+    // Clean up URL parameters
+    if (verified || error) {
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+    }
+  }, [toast]);
 
   const handleSocialLogin = async (provider: 'google' | 'apple') => {
     setIsLoading(true);
@@ -111,7 +157,7 @@ export function SignInPage() {
           className="w-full max-w-md bg-black/40 backdrop-blur-xl rounded-2xl p-8 shadow-xl border border-white/10"
         >
           <div className="text-center mb-8">
-            <motion.h1 
+            <motion.h1
               className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-white bg-clip-text text-transparent"
               initial={{ scale: 0.95 }}
               animate={{ scale: 1 }}

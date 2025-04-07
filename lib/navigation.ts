@@ -6,6 +6,8 @@ export class NavigationFlow {
     // Authentication & Onboarding Flow
     'landing->signup',
     'landing->signin',
+    'signup->check-email',
+    'check-email->verify-email',
     'signup->verify-email',
     'verify-email->create-profile',
     'create-profile->kyc-verification',
@@ -13,7 +15,7 @@ export class NavigationFlow {
     'identity-check->document-upload',
     'document-upload->face-verification',
     'face-verification->home',
-    
+
     // Main Navigation Flow
     'home->dashboard',
     'dashboard->home',
@@ -23,7 +25,7 @@ export class NavigationFlow {
     'investments->home',
     'home->savings',
     'savings->home',
-    
+
     // Money Movement Flow
     'home->send-money',
     'send-money->beneficiary-selection',
@@ -31,13 +33,13 @@ export class NavigationFlow {
     'amount-entry->transfer-confirmation',
     'transfer-confirmation->transfer-success',
     'transfer-success->home',
-    
+
     // Investment Flow
     'investments->market-analysis',
     'market-analysis->stock-details',
     'stock-details->buy-sell-confirmation',
     'buy-sell-confirmation->portfolio',
-    
+
     // Card Management Flow
     'cards->card-activation',
     'card-activation->set-pin',
@@ -45,7 +47,7 @@ export class NavigationFlow {
     'cards->freeze-card',
     'cards->card-limits',
     'cards->virtual-card',
-    
+
     // Settings & Profile Flow
     'home->settings',
     'settings->profile',
@@ -55,13 +57,13 @@ export class NavigationFlow {
     'security->change-password',
     'security->two-factor',
     'security->biometric',
-    
+
     // Support Flow
     'home->support',
     'support->chat',
     'support->ticket-creation',
     'support->faq',
-    
+
     // Financial Planning Flow
     'home->financial-goals',
     'financial-goals->goal-creation',
@@ -69,18 +71,18 @@ export class NavigationFlow {
     'home->budgeting',
     'budgeting->expense-tracking',
     'budgeting->category-management',
-    
+
     // Notification & Alerts Flow
     'any->notifications',
     'notifications->transaction-details',
     'notifications->security-alerts',
-    
+
     // Account Management Flow
     'home->accounts',
     'accounts->account-details',
     'accounts->statements',
     'accounts->linked-accounts',
-    
+
     // Emergency Flow
     'any->block-card',
     'any->fraud-report',
@@ -104,7 +106,7 @@ export class NavigationFlow {
 
   connect(from: string, to: string, data?: any) {
     const flowKey = `${from}->${to}`;
-    
+
     // Allow emergency routes from any screen
     if (from === 'any' && this.flowStates.get(flowKey)) {
       return true;
@@ -125,7 +127,7 @@ export class NavigationFlow {
 
   isValidTransition(from: string, to: string): boolean {
     const flowKey = `${from}->${to}`;
-    
+
     // Allow emergency routes from any screen
     if (from === 'any' && this.flowStates.get(`any->${to}`)) {
       return true;
@@ -141,7 +143,7 @@ export class NavigationFlow {
   clearFlow() {
     this.flowStates.clear();
     this.userData.clear();
-    
+
     // Reinitialize emergency routes
     this.flowStates.set('any->block-card', true);
     this.flowStates.set('any->fraud-report', true);

@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PiggyBank, Target, Clock, Plus } from 'lucide-react';
+import { PiggyBank, Target, Plus } from 'lucide-react';
 import { Progress } from "@/components/ui/progress";
 import { useRouter } from 'next/navigation';
 import { navigation } from '@/lib/navigation';
@@ -36,7 +36,10 @@ export function SavingsPreview() {
   const router = useRouter();
 
   const handleNavigateToSavings = () => {
+    // Connect the navigation flow
     navigation.connect('home', 'savings');
+
+    // Use the dashboard route to avoid conflicts
     router.push('/savings');
   };
 
@@ -53,9 +56,9 @@ export function SavingsPreview() {
     <Card className="bg-gray-800 border-0 shadow-lg">
       <CardHeader className="flex flex-row items-center justify-between pb-2 pt-6">
         <CardTitle className="text-xl text-white">Savings Goals</CardTitle>
-        <Button 
-          variant="ghost" 
-          size="sm" 
+        <Button
+          variant="ghost"
+          size="sm"
           className="text-blue-400 hover:text-blue-300"
           onClick={handleNavigateToSavings}
         >
@@ -94,8 +97,8 @@ export function SavingsPreview() {
               </div>
             </motion.div>
           ))}
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             className="w-full mt-4 border-dashed border-gray-600 text-gray-300 hover:text-white hover:bg-gray-700"
             onClick={handleNavigateToSavings}
           >

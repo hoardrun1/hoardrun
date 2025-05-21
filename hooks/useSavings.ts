@@ -1,6 +1,10 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useToast } from '@/components/ui/use-toast'
+import { mockSavingsGoals } from '@/lib/mock-data/savings'
+
+// Check if we're in development mode
+const isDev = process.env.NODE_ENV === 'development'
 
 interface SavingsGoal {
   id: string
@@ -50,6 +54,17 @@ export function useSavings() {
     setError(null)
 
     try {
+      if (isDev) {
+        // Use mock data in development
+        console.log('Using mock savings data in development mode');
+        setTimeout(() => {
+          setSavingsGoals(mockSavingsGoals);
+          setIsLoading(false);
+        }, 500); // Simulate network delay
+        return;
+      }
+
+      // In production, fetch from API
       const response = await fetch('/api/savings')
       if (!response.ok) throw new Error('Failed to fetch savings goals')
 
@@ -74,6 +89,40 @@ export function useSavings() {
     setError(null)
 
     try {
+      if (isDev) {
+        // Create mock goal in development
+        console.log('Creating mock savings goal in development mode', data);
+
+        // Simulate network delay
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        const newGoal: SavingsGoal = {
+          id: `mock-${Date.now()}`,
+          name: data.name,
+          targetAmount: data.targetAmount,
+          currentAmount: 0,
+          monthlyContribution: data.monthlyContribution,
+          category: data.category,
+          deadline: data.deadline,
+          isAutoSave: data.isAutoSave,
+          isCompleted: false,
+          progress: 0,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          daysLeft: 365 // Default to 1 year
+        };
+
+        setSavingsGoals(prev => [newGoal, ...prev]);
+
+        toast({
+          title: 'Success',
+          description: 'Savings goal created successfully',
+        });
+
+        return newGoal;
+      }
+
+      // In production, use the API
       const response = await fetch('/api/savings', {
         method: 'POST',
         headers: {
@@ -130,7 +179,7 @@ export function useSavings() {
       }
 
       const updatedGoal = await response.json()
-      setSavingsGoals(prev => prev.map(goal => 
+      setSavingsGoals(prev => prev.map(goal =>
         goal.id === updatedGoal.id ? updatedGoal : goal
       ))
 
@@ -209,7 +258,7 @@ export function useSavings() {
       }
 
       const updatedGoal = await response.json()
-      setSavingsGoals(prev => prev.map(goal => 
+      setSavingsGoals(prev => prev.map(goal =>
         goal.id === updatedGoal.id ? updatedGoal : goal
       ))
 
@@ -272,4 +321,4 @@ export function useSavings() {
     getCompletedGoals,
     getGoalById,
   }
-} 
+}

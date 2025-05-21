@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
-import { useSavings } from '@/hooks/useSavings'
 import { useToast } from '@/components/ui/use-toast'
+import { useSavingsData } from '@/hooks/useSavingsData'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -33,17 +33,17 @@ interface SavingsAnalytics {
 
 export default function SavingsPage() {
   const { data: session } = useSession()
-  const { addToast: toast } = useToast()
+  const { toast } = useToast()
   const {
     savingsGoals,
+    analytics,
     isLoading,
     error,
     fetchSavingsGoals,
-    createSavingsGoal,
-    updateSavingsGoal,
-  } = useSavings()
+    fetchAnalytics,
+    addSavingsGoal
+  } = useSavingsData()
 
-  const [analytics, setAnalytics] = useState<SavingsAnalytics | null>(null)
   const [isNewGoalDialogOpen, setIsNewGoalDialogOpen] = useState(false)
   const [newGoalForm, setNewGoalForm] = useState<{
     name: string;
@@ -66,23 +66,7 @@ export default function SavingsPage() {
       fetchSavingsGoals()
       fetchAnalytics()
     }
-  }, [session])
-
-  const fetchAnalytics = async () => {
-    try {
-      const response = await fetch('/api/savings/analytics')
-      if (!response.ok) throw new Error('Failed to fetch analytics')
-      const data = await response.json()
-      setAnalytics(data.analytics)
-    } catch (error) {
-      console.error('Error fetching analytics:', error)
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch savings analytics',
-        variant: 'destructive',
-      })
-    }
-  }
+  }, [session, fetchSavingsGoals, fetchAnalytics])
 
   const handleCreateGoal = async () => {
     try {
@@ -95,13 +79,13 @@ export default function SavingsPage() {
         targetAmount: parseFloat(newGoalForm.targetAmount),
         monthlyContribution: parseFloat(newGoalForm.monthlyContribution),
         category: newGoalForm.category || 'General',
-        deadline: (newGoalForm.deadline instanceof Date) 
-          ? newGoalForm.deadline.toISOString() 
+        deadline: (newGoalForm.deadline instanceof Date)
+          ? newGoalForm.deadline.toISOString()
           : new Date(Date.now() + 31536000000).toISOString(),
         isAutoSave: newGoalForm.isAutoSave,
       }
 
-      await createSavingsGoal(goalData)
+      await addSavingsGoal(goalData)
       setIsNewGoalDialogOpen(false)
       setNewGoalForm({
         name: '',
@@ -110,11 +94,6 @@ export default function SavingsPage() {
         category: '',
         deadline: null,
         isAutoSave: true,
-      })
-
-      toast({
-        title: 'Success',
-        description: 'Savings goal created successfully',
       })
     } catch (error) {
       toast({
@@ -344,4 +323,4 @@ export default function SavingsPage() {
       </Tabs>
     </div>
   )
-} 
+}

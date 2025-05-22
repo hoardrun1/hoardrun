@@ -15,14 +15,15 @@ export class NavigationFlow {
     'identity-check->document-upload',
     'document-upload->face-verification',
     'face-verification->home',
+    'signin->home',
 
     // Main Navigation Flow
     'home->dashboard',
     'dashboard->home',
     'home->cards',
     'cards->home',
-    'home->investments',
-    'investments->home',
+    'home->investment',
+    'investment->home',
     'home->savings',
     'savings->home',
 
@@ -35,7 +36,7 @@ export class NavigationFlow {
     'transfer-success->home',
 
     // Investment Flow
-    'investments->market-analysis',
+    'investment->market-analysis',
     'market-analysis->stock-details',
     'stock-details->buy-sell-confirmation',
     'buy-sell-confirmation->portfolio',

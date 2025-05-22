@@ -102,7 +102,7 @@ export function SignInPage() {
       if (data.requiresVerification) {
         router.push('/verify-signin');
       } else {
-        router.push('/dashboard');
+        router.push('/home');
       }
     } catch (error) {
       toast({
@@ -135,7 +135,7 @@ export function SignInPage() {
         sessionStorage.setItem('temp_token', data.tempToken);
         router.push('/verify-signin');
       } else {
-        router.push('/dashboard');
+        router.push('/home');
       }
     } catch (error) {
       toast({

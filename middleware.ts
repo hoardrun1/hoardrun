@@ -14,10 +14,20 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Check if we should bypass auth in development mode
+  const bypassAuth = process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true';
+  if (bypassAuth && process.env.NODE_ENV === 'development') {
+    console.log('Auth bypass enabled in development mode');
+    return NextResponse.next();
+  }
+
+  // Get the token from cookies
+  const token = request.cookies.get('auth-token')?.value;
+
   // Protect these routes
-  const protectedPaths = ['/home', '/finance', '/cards', '/investment', '/settings', 
+  const protectedPaths = ['/home', '/finance', '/cards', '/investment', '/settings',
                          '/send-money', '/receive-money', '/savings']
-  const isProtectedPath = protectedPaths.some(path => 
+  const isProtectedPath = protectedPaths.some(path =>
     request.nextUrl.pathname.startsWith(path)
   )
 

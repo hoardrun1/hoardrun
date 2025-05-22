@@ -1,8 +1,14 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
-import { prisma } from '@/lib/prisma'
 import { authOptions } from '../auth/[...nextauth]/route'
 import { z } from 'zod'
+
+// Import prisma only on the server side
+let prisma;
+if (typeof window === 'undefined') {
+  const { prisma: prismaClient } = require('@/lib/prisma');
+  prisma = prismaClient;
+}
 
 const savingsGoalSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -103,4 +109,4 @@ export async function PATCH(req: Request) {
     console.error('PATCH /api/savings error:', error)
     return new NextResponse('Internal Error', { status: 500 })
   }
-} 
+}

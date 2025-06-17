@@ -2,8 +2,8 @@
 
 import { useState, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { 
-  TrendingUp, DollarSign, Percent, ArrowUpRight, 
+import {
+  TrendingUp, DollarSign, Percent, ArrowUpRight,
   ArrowDownRight, PieChart, BarChart, Wallet,
   Globe, Shield, AlertCircle, Info, Target,
   Clock, Filter, Brain, Loader2, RefreshCcw,
@@ -13,13 +13,13 @@ import {
 import { useRouter } from 'next/navigation'
 import { useToast } from "@/components/ui/use-toast"
 import { useFinance } from '@/contexts/FinanceContext'
-import { 
-  LineChart, Line, XAxis, YAxis, CartesianGrid, 
-  Tooltip, ResponsiveContainer, AreaChart, Area 
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid,
+  Tooltip, ResponsiveContainer, AreaChart, Area
 } from 'recharts'
-import { 
-  Card, CardContent, CardHeader, 
-  CardTitle, CardDescription 
+import {
+  Card, CardContent, CardHeader,
+  CardTitle, CardDescription
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -34,6 +34,8 @@ import { useMarketData } from '@/hooks/useMarketData';
 import { useSession } from 'next-auth/react';
 import { MarketQuote } from '@/types/market';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Sidebar } from '@/components/ui/sidebar';
+import { LayoutWrapper } from '@/components/ui/layout-wrapper';
 import { z } from "zod"
 
 interface Investment {
@@ -382,7 +384,7 @@ export function InvestmentPage() {
   const handleStockSearch = useCallback(async (symbol: string) => {
     try {
       const quote = await fetchStockQuote(symbol)
-      
+
       if (quote) {
         setMarketData(quote)
       }
@@ -438,10 +440,11 @@ export function InvestmentPage() {
 
   // Enhance investment modal with validation
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <LayoutWrapper className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <Sidebar />
       {/* Investment Overview */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-8">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-4 ml-16">
           <div className="flex justify-between items-center mb-6">
             <div>
               <h1 className="text-3xl font-bold">Smart Investments</h1>
@@ -545,12 +548,12 @@ export function InvestmentPage() {
                   <XAxis dataKey="month" />
                   <YAxis />
                   <Tooltip />
-                  <Area 
-                    type="monotone" 
-                    dataKey="value" 
-                    stroke="#3B82F6" 
-                    fillOpacity={1} 
-                    fill="url(#colorValue)" 
+                  <Area
+                    type="monotone"
+                    dataKey="value"
+                    stroke="#3B82F6"
+                    fillOpacity={1}
+                    fill="url(#colorValue)"
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -561,7 +564,7 @@ export function InvestmentPage() {
         {/* Investment Categories */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {investmentCategories.map((category) => (
-            <Card 
+            <Card
               key={category.id}
               className="hover:shadow-lg transition-shadow cursor-pointer group"
               onClick={() => {
@@ -955,8 +958,8 @@ export function InvestmentPage() {
                 })
                 setShowInvestModal(false)
               }}
-              disabled={isLoading || !investmentAmount || 
-                Number(investmentAmount) <= 0 || 
+              disabled={isLoading || !investmentAmount ||
+                Number(investmentAmount) <= 0 ||
                 Number(investmentAmount) > (balance ?? 0)}
             >
               {isLoading ? (
@@ -1006,6 +1009,6 @@ export function InvestmentPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </LayoutWrapper>
   )
 }

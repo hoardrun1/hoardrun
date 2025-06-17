@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { LayoutWrapper } from "@/components/ui/layout-wrapper"
+import { Sidebar } from "@/components/ui/sidebar"
 import { responsiveStyles as rs } from '@/styles/responsive-utilities'
 import { toast } from "@/components/ui/use-toast"
 import { MastercardClient } from '@/lib/mastercard-client'
@@ -51,7 +52,7 @@ export function CardsPageComponent() {
   const [showCardDetails, setShowCardDetails] = useState<Record<string, boolean>>({})
 
   const toggleCardLock = (cardId: string) => {
-    setCards(cards.map(card => 
+    setCards(cards.map(card =>
       card.id === cardId ? { ...card, isLocked: !card.isLocked } : card
     ))
   }
@@ -64,7 +65,7 @@ export function CardsPageComponent() {
   }
 
   const toggleContactless = (cardId: string) => {
-    setCards(cards.map(card => 
+    setCards(cards.map(card =>
       card.id === cardId ? { ...card, isContactless: !card.isContactless } : card
     ))
   }
@@ -103,20 +104,23 @@ export function CardsPageComponent() {
 
   return (
     <LayoutWrapper className="bg-gray-50 dark:bg-gray-900 min-h-screen">
+      {/* Sidebar */}
+      <Sidebar />
+
       {/* Header */}
-      <header className={`sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 ${rs.padding}`}>
+      <header className={`sticky top-0 z-30 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 ${rs.padding}`}>
         <div className={rs.container}>
           <div className={`${rs.flexBetween} py-4`}>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 ml-16">
               <h1 className={`${rs.heading2} dark:text-white`}>Cards</h1>
               <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300 rounded-full">
                 {cards.length} Active
               </span>
             </div>
             <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 className="text-sm hidden sm:inline-flex dark:border-gray-700 dark:text-gray-300"
               >
                 <Settings className="h-4 w-4 mr-2" />
@@ -170,7 +174,7 @@ export function CardsPageComponent() {
                     <DialogTitle>Issue Virtual Card</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4">
-                    <Button 
+                    <Button
                       onClick={handleIssueVirtualCard}
                       className="w-full"
                     >
@@ -262,7 +266,7 @@ export function CardsPageComponent() {
                           </Button>
                         </div>
                       </div>
-                      
+
                       <AnimatePresence>
                         {showCardDetails[card.id] && (
                           <motion.div
@@ -315,11 +319,11 @@ export function CardsPageComponent() {
             ].map((item, index) => (
               item.href ? (
                 <Link key={index} href={item.href}>
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     className={`w-full flex flex-col items-center py-1 sm:py-2 h-auto ${
-                      item.active 
-                        ? 'text-blue-600 dark:text-blue-400' 
+                      item.active
+                        ? 'text-blue-600 dark:text-blue-400'
                         : 'text-gray-500 dark:text-gray-400'
                     }`}
                   >
@@ -328,12 +332,12 @@ export function CardsPageComponent() {
                   </Button>
                 </Link>
               ) : (
-                <Button 
+                <Button
                   key={index}
-                  variant="ghost" 
+                  variant="ghost"
                   className={`w-full flex flex-col items-center py-1 sm:py-2 h-auto ${
-                    item.active 
-                      ? 'text-blue-600 dark:text-blue-400' 
+                    item.active
+                      ? 'text-blue-600 dark:text-blue-400'
                       : 'text-gray-500 dark:text-gray-400'
                   }`}
                 >

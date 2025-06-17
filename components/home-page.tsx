@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import {
   ArrowUpRight,
   ArrowDownRight,
@@ -27,14 +27,14 @@ import {
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Progress } from "@/components/ui/progress"
+
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { useToast } from "@/components/ui/use-toast"
+// import { useToast } from "@/components/ui/use-toast"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
-import { ScrollArea } from "@/components/ui/scroll-area"
+
 import { LayoutWrapper } from "@/components/ui/layout-wrapper"
-import { cn } from "@/lib/utils"
+
 import { useAuth } from '@/contexts/AuthContext'
 import { useNavigationContext } from '@/providers/NavigationProvider'
 import { DepositModal } from './deposit-modal'
@@ -44,6 +44,9 @@ import { useSession } from 'next-auth/react'
 import { FeatureNavigation } from './home/feature-navigation'
 import { SavingsPreview } from './home/savings-preview'
 import { InvestmentPreview } from './home/investment-preview'
+import { Sidebar } from './ui/sidebar'
+import { Notifications } from './ui/notifications'
+import { Settings as SettingsPanel } from './ui/settings'
 
 interface Transaction {
   id: string
@@ -63,9 +66,11 @@ interface AIInsight {
   id: string
   title: string
   description: string
-  type: 'tip' | 'warning' | 'achievement'
-  impact: number
-  confidence: number
+  type?: 'tip' | 'warning' | 'achievement'
+  category?: string
+  priority?: string
+  impact?: number
+  confidence?: number
   actions?: {
     label: string
     onClick: () => void
@@ -87,9 +92,9 @@ interface FinancialSummary {
 
 export function HomePageComponent() {
   const router = useRouter()
-  const { toast } = useToast()
+  // const { toast } = useToast()
   const { user } = useAuth()
-  const { isLoading: isNavigating } = useNavigationContext()
+  useNavigationContext()
   // Try to use the finance context, but provide a fallback if it's not available
   let balance = 0;
   try {
@@ -106,10 +111,12 @@ export function HomePageComponent() {
   const [searchQuery, setSearchQuery] = useState('')
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([])
   const [aiInsights, setAIInsights] = useState<AIInsight[]>([])
-  const [financialSummary, setFinancialSummary] = useState<FinancialSummary | null>(null)
-  const [showInsights, setShowInsights] = useState(true)
+  const [, setFinancialSummary] = useState<FinancialSummary | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
   const [showDepositModal, setShowDepositModal] = useState(false)
+  const [showNotifications, setShowNotifications] = useState(false)
+  const [notificationCount, setNotificationCount] = useState(3)
+  const [showSettings, setShowSettings] = useState(false)
 
   useEffect(() => {
     const checkUserAccess = async () => {
@@ -164,22 +171,18 @@ export function HomePageComponent() {
         fetchData(); // Your existing data fetching function
       } catch (error) {
         setError('Failed to verify user access');
-        toast({
-          title: "Error",
-          description: "Failed to load home page",
-          variant: "destructive"
-        });
+        // toast({
+        //   title: "Error",
+        //   description: "Failed to load home page",
+        //   variant: "destructive"
+        // });
       }
     };
 
     checkUserAccess();
-  }, [router, toast]);
+  }, [router]);
 
-  // Add navigation methods for internal routing
-  const handleNavigateToSection = (section: string) => {
-    navigation.connect('home', section);
-    router.push(`/${section}`);
-  };
+
 
   // Fetch initial data
   const fetchData = useCallback(async () => {
@@ -194,10 +197,10 @@ export function HomePageComponent() {
         console.log('Using mock data in development mode');
 
         // Mock transactions data
-        const mockTransactions = [
-          { id: '1', amount: 120.50, description: 'Grocery Shopping', merchant: 'Whole Foods', category: 'Food', date: new Date().toISOString(), type: 'expense' },
-          { id: '2', amount: 45.00, description: 'Movie Tickets', merchant: 'AMC Theaters', category: 'Entertainment', date: new Date().toISOString(), type: 'expense' },
-          { id: '3', amount: 1000.00, description: 'Salary Deposit', merchant: 'Employer Inc.', category: 'Income', date: new Date().toISOString(), type: 'income' },
+        const mockTransactions: Transaction[] = [
+          { id: '1', amount: 120.50, description: 'Grocery Shopping', merchant: 'Whole Foods', category: 'Food', date: new Date().toISOString(), type: 'expense' as const, status: { label: 'Completed', color: 'green' as const } },
+          { id: '2', amount: 45.00, description: 'Movie Tickets', merchant: 'AMC Theaters', category: 'Entertainment', date: new Date().toISOString(), type: 'expense' as const, status: { label: 'Completed', color: 'green' as const } },
+          { id: '3', amount: 1000.00, description: 'Salary Deposit', merchant: 'Employer Inc.', category: 'Income', date: new Date().toISOString(), type: 'income' as const, status: { label: 'Completed', color: 'green' as const } },
         ];
 
         // Mock AI insights
@@ -207,13 +210,17 @@ export function HomePageComponent() {
         ];
 
         // Mock financial summary
-        const mockSummary = {
+        const mockSummary: FinancialSummary = {
           totalBalance: 5250.75,
-          income: 3000.00,
-          expenses: 1200.25,
-          savings: 800.50,
-          investmentValue: 2000.00,
-          investmentGrowth: 5.2,
+          monthlyIncome: 3000.00,
+          monthlyExpenses: 1200.25,
+          savingsRate: 26.7,
+          changePercentages: {
+            balance: 2.5,
+            income: 8.2,
+            expenses: -3.1,
+            savings: 12.5,
+          },
         };
 
         setRecentTransactions(mockTransactions);
@@ -237,10 +244,10 @@ export function HomePageComponent() {
       } catch (apiError) {
         console.error('API error:', apiError);
         // Fallback to mock data if API calls fail
-        const mockTransactions = [
-          { id: '1', amount: 120.50, description: 'Grocery Shopping', merchant: 'Whole Foods', category: 'Food', date: new Date().toISOString(), type: 'expense' },
-          { id: '2', amount: 45.00, description: 'Movie Tickets', merchant: 'AMC Theaters', category: 'Entertainment', date: new Date().toISOString(), type: 'expense' },
-          { id: '3', amount: 1000.00, description: 'Salary Deposit', merchant: 'Employer Inc.', category: 'Income', date: new Date().toISOString(), type: 'income' },
+        const mockTransactions: Transaction[] = [
+          { id: '1', amount: 120.50, description: 'Grocery Shopping', merchant: 'Whole Foods', category: 'Food', date: new Date().toISOString(), type: 'expense' as const, status: { label: 'Completed', color: 'green' as const } },
+          { id: '2', amount: 45.00, description: 'Movie Tickets', merchant: 'AMC Theaters', category: 'Entertainment', date: new Date().toISOString(), type: 'expense' as const, status: { label: 'Completed', color: 'green' as const } },
+          { id: '3', amount: 1000.00, description: 'Salary Deposit', merchant: 'Employer Inc.', category: 'Income', date: new Date().toISOString(), type: 'income' as const, status: { label: 'Completed', color: 'green' as const } },
         ];
 
         const mockInsights = [
@@ -248,13 +255,17 @@ export function HomePageComponent() {
           { id: '2', title: 'Saving Opportunity', description: 'You could save $200 by reducing entertainment expenses.', category: 'saving', priority: 'high' },
         ];
 
-        const mockSummary = {
+        const mockSummary: FinancialSummary = {
           totalBalance: 5250.75,
-          income: 3000.00,
-          expenses: 1200.25,
-          savings: 800.50,
-          investmentValue: 2000.00,
-          investmentGrowth: 5.2,
+          monthlyIncome: 3000.00,
+          monthlyExpenses: 1200.25,
+          savingsRate: 26.7,
+          changePercentages: {
+            balance: 2.5,
+            income: 8.2,
+            expenses: -3.1,
+            savings: 12.5,
+          },
         };
 
         setRecentTransactions(mockTransactions);
@@ -264,15 +275,15 @@ export function HomePageComponent() {
     } catch (err) {
       const errorMessage = 'Failed to load data. Please try again.'
       setError(errorMessage)
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive"
-      })
+      // toast({
+      //   title: "Error",
+      //   description: errorMessage,
+      //   variant: "destructive"
+      // })
     } finally {
       setIsLoading(false)
     }
-  }, [toast])
+  }, [])
 
   // Refresh data periodically
   useEffect(() => {
@@ -295,30 +306,7 @@ export function HomePageComponent() {
     )
   }, [recentTransactions, searchQuery])
 
-  const handleInsightAction = async (insightId: string, actionIndex: number) => {
-    try {
-      setIsLoading(true)
-      // Implement insight action logic
-      await new Promise(resolve => setTimeout(resolve, 1000))
 
-      toast({
-        title: "Action Completed",
-        description: "Successfully applied the recommended action.",
-        duration: 3000
-      })
-
-      // Refresh data after action
-      fetchData()
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to apply action. Please try again.",
-        variant: "destructive"
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   if (error) {
     return (
@@ -343,14 +331,30 @@ export function HomePageComponent() {
 
   return (
     <LayoutWrapper className="bg-gray-50 dark:bg-gray-900 min-h-screen">
+      {/* Sidebar */}
+      <Sidebar />
+
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <div className="container mx-auto px-4">
+      <header className="sticky top-0 z-30 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
+        <div className="container mx-auto px-4 lg:px-6">
           <div className="flex h-16 items-center justify-between">
-            <div className="flex items-center gap-4">
-              <h1 className="text-xl font-semibold dark:text-white">
-                Welcome back, {user?.name || 'User'}
-              </h1>
+            <div className="flex items-center gap-4 ml-16">
+              <div className="flex items-center gap-3">
+                <Wallet className="h-8 w-8 text-blue-600" />
+                <div>
+                  <h1 className="text-xl font-bold dark:text-white">
+                    Welcome back, {user?.name || 'User'}
+                  </h1>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {new Date().toLocaleDateString('en-US', {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </p>
+                </div>
+              </div>
             </div>
             <div className="flex items-center gap-3">
               <div className="relative hidden md:block">
@@ -359,14 +363,27 @@ export function HomePageComponent() {
                   placeholder="Search transactions..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-64 pl-9"
+                  className="w-64 pl-9 bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600"
                 />
               </div>
-              <Button variant="ghost" size="icon" className="relative">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative"
+                onClick={() => setShowNotifications(true)}
+              >
                 <Bell className="h-5 w-5" />
-                <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full" />
+                {notificationCount > 0 && (
+                  <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                    {notificationCount > 9 ? '9+' : notificationCount}
+                  </span>
+                )}
               </Button>
-              <Button variant="ghost" size="icon">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowSettings(true)}
+              >
                 <Settings className="h-5 w-5" />
               </Button>
             </div>
@@ -374,175 +391,251 @@ export function HomePageComponent() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6 space-y-6">
-        {/* AI Insights */}
-        {showInsights && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <Card className="border-2 border-blue-500/20">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Brain className="h-5 w-5 text-blue-500" />
-                    <CardTitle>AI Insights</CardTitle>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowInsights(false)}
-                  >
-                    Hide
-                  </Button>
-                </div>
-                <CardDescription>Personalized financial recommendations</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {isLoading ? (
-                  <div className="space-y-4">
-                    {[1, 2, 3].map((i) => (
-                      <Skeleton key={i} className="h-24 w-full" />
-                    ))}
-                  </div>
-                ) : (
-                  <AnimatePresence>
-                    {aiInsights.map((insight, index) => (
-                      <motion.div
-                        key={insight.id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: 20 }}
-                        transition={{ delay: index * 0.1 }}
-                      >
-                        <Card className={cn(
-                          "border-l-4",
-                          insight.type === 'warning' ? "border-yellow-500" :
-                          insight.type === 'achievement' ? "border-green-500" :
-                          "border-blue-500"
-                        )}>
-                          <CardContent className="p-4">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <h3 className="font-medium">{insight.title}</h3>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">
-                                  {insight.description}
-                                </p>
-                                <div className="flex items-center gap-4 mt-2">
-                                  <Badge variant="secondary">
-                                    {insight.impact > 0 ? '+' : ''}{insight.impact}% Impact
-                                  </Badge>
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-xs text-gray-500">AI Confidence:</span>
-                                    <Progress value={insight.confidence} className="w-24" />
-                                  </div>
-                                </div>
-                              </div>
-                              {insight.actions && (
-                                <div className="flex gap-2">
-                                  {insight.actions.map((action, actionIndex) => (
-                                    <Button
-                                      key={actionIndex}
-                                      size="sm"
-                                      onClick={() => handleInsightAction(insight.id, actionIndex)}
-                                      disabled={isLoading}
-                                    >
-                                      {action.label}
-                                    </Button>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                )}
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-
-        {/* Financial Overview */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <motion.div>
-            <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-blue-100">
-                  Total Balance
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  ${balance.toLocaleString()}
-                </div>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setShowDepositModal(true)}
-                  className="mt-2"
-                >
-                  Deposit
-                </Button>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          {/* Add other financial cards... */}
-        </div>
-
-        {/* Feature Navigation */}
+      <main className="container mx-auto px-4 lg:px-6 py-6 max-w-7xl ml-16">
+        {/* Quick Actions Bar */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.3 }}
+          transition={{ duration: 0.3 }}
+          className="mb-8"
         >
-          <FeatureNavigation />
+          <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-800">
+            <CardContent className="p-6">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="bg-blue-100 dark:bg-blue-900 p-3 rounded-full">
+                    <Sparkles className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                      Quick Actions
+                    </h2>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                      Manage your finances with one click
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  <Button
+                    onClick={() => setShowDepositModal(true)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Money
+                  </Button>
+                  <Button variant="outline" className="border-blue-200 text-blue-700 hover:bg-blue-50">
+                    <ArrowUpRight className="h-4 w-4 mr-2" />
+                    Transfer
+                  </Button>
+                  <Button variant="outline" className="border-green-200 text-green-700 hover:bg-green-50">
+                    <Target className="h-4 w-4 mr-2" />
+                    Set Goal
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </motion.div>
 
-        {/* Savings and Investment Previews */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.4 }}
-          >
-            <SavingsPreview />
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.5 }}
-          >
-            <InvestmentPreview />
-          </motion.div>
+        {/* Financial Overview Cards */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+          className="mb-8"
+        >
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            {/* Total Balance Card */}
+            <Card className="bg-gradient-to-br from-blue-600 to-blue-700 text-white border-0 shadow-lg">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-blue-100 text-sm font-medium">Total Balance</p>
+                    <p className="text-3xl font-bold mt-2">${balance.toLocaleString()}</p>
+                    <div className="flex items-center mt-2">
+                      <ArrowUpRight className="h-4 w-4 text-green-300 mr-1" />
+                      <span className="text-green-300 text-sm">+2.5% from last month</span>
+                    </div>
+                  </div>
+                  <div className="bg-blue-500/30 p-3 rounded-full">
+                    <Wallet className="h-6 w-6 text-white" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Monthly Income Card */}
+            <Card className="bg-gradient-to-br from-green-600 to-green-700 text-white border-0 shadow-lg">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-green-100 text-sm font-medium">Monthly Income</p>
+                    <p className="text-3xl font-bold mt-2">$3,200</p>
+                    <div className="flex items-center mt-2">
+                      <ArrowUpRight className="h-4 w-4 text-green-300 mr-1" />
+                      <span className="text-green-300 text-sm">+8.2% this month</span>
+                    </div>
+                  </div>
+                  <div className="bg-green-500/30 p-3 rounded-full">
+                    <TrendingUp className="h-6 w-6 text-white" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Monthly Expenses Card */}
+            <Card className="bg-gradient-to-br from-orange-600 to-red-600 text-white border-0 shadow-lg">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-orange-100 text-sm font-medium">Monthly Expenses</p>
+                    <p className="text-3xl font-bold mt-2">$1,850</p>
+                    <div className="flex items-center mt-2">
+                      <ArrowDownRight className="h-4 w-4 text-red-300 mr-1" />
+                      <span className="text-red-300 text-sm">-3.1% this month</span>
+                    </div>
+                  </div>
+                  <div className="bg-orange-500/30 p-3 rounded-full">
+                    <ArrowDownRight className="h-6 w-6 text-white" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Savings Goal Card */}
+            <Card className="bg-gradient-to-br from-purple-600 to-purple-700 text-white border-0 shadow-lg">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-purple-100 text-sm font-medium">Savings Progress</p>
+                    <p className="text-3xl font-bold mt-2">75%</p>
+                    <div className="flex items-center mt-2">
+                      <Target className="h-4 w-4 text-purple-300 mr-1" />
+                      <span className="text-purple-300 text-sm">$7,500 of $10,000</span>
+                    </div>
+                  </div>
+                  <div className="bg-purple-500/30 p-3 rounded-full">
+                    <PiggyBank className="h-6 w-6 text-white" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </motion.div>
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+          {/* Left Column - Savings and Investment Previews */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Savings and Investment Previews */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.2 }}
+              >
+                <SavingsPreview />
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.3 }}
+              >
+                <InvestmentPreview />
+              </motion.div>
+            </div>
+
+            {/* Feature Navigation */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.4 }}
+            >
+              <FeatureNavigation />
+            </motion.div>
+          </div>
+
+          {/* Right Column - AI Insights */}
+          <div className="space-y-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.5 }}
+            >
+              <Card className="border-2 border-blue-500/20 bg-gradient-to-br from-blue-50/50 to-indigo-50/50 dark:from-blue-900/10 dark:to-indigo-900/10">
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <Brain className="h-5 w-5 text-blue-500" />
+                    <CardTitle className="text-lg">AI Insights</CardTitle>
+                  </div>
+                  <CardDescription>Personalized financial recommendations</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {isLoading ? (
+                    <div className="space-y-4">
+                      {[1, 2, 3].map((i) => (
+                        <Skeleton key={i} className="h-20 w-full" />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {aiInsights.slice(0, 3).map((insight) => (
+                        <div
+                          key={insight.id}
+                          className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm"
+                        >
+                          <h3 className="font-medium text-gray-900 dark:text-white mb-1">
+                            {insight.title}
+                          </h3>
+                          <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                            {insight.description}
+                          </p>
+                          <div className="flex items-center justify-between">
+                            <Badge variant="secondary" className="text-xs">
+                              {insight.priority || 'medium'}
+                            </Badge>
+                            <Button size="sm" variant="outline" className="text-xs">
+                              Learn More
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                      <Button variant="outline" className="w-full">
+                        <Brain className="h-4 w-4 mr-2" />
+                        View All Insights
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </motion.div>
+          </div>
         </div>
 
         {/* Recent Transactions */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.4 }}
+          transition={{ duration: 0.3, delay: 0.6 }}
+          className="mb-8"
         >
-          <Card>
+          <Card className="shadow-lg">
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
-                  <CardTitle>Recent Transactions</CardTitle>
+                  <CardTitle className="text-xl">Recent Transactions</CardTitle>
                   <CardDescription>Your latest financial activities</CardDescription>
                 </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm">
+                <div className="flex flex-wrap gap-2">
+                  <Button variant="outline" size="sm" className="text-xs">
                     <Filter className="h-4 w-4 mr-2" />
                     Filter
                   </Button>
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" className="text-xs">
                     <Download className="h-4 w-4 mr-2" />
                     Export
                   </Button>
-                  <Button size="sm">
+                  <Button size="sm" className="text-xs">
                     <Plus className="h-4 w-4 mr-2" />
                     Add Transaction
                   </Button>
@@ -550,31 +643,75 @@ export function HomePageComponent() {
               </div>
             </CardHeader>
             <CardContent>
-              <ScrollArea className="h-[400px]">
-                {isLoading ? (
-                  <div className="space-y-4">
-                    {Array(5).fill(0).map((_, i) => (
-                      <Skeleton key={i} className="h-20 rounded-lg" />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <AnimatePresence>
-                      {filteredTransactions.map((transaction, index) => (
-                        <motion.div
-                          key={transaction.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -20 }}
-                          transition={{ duration: 0.2, delay: index * 0.1 }}
-                        >
-                          {/* Transaction card content */}
-                        </motion.div>
-                      ))}
-                    </AnimatePresence>
-                  </div>
-                )}
-              </ScrollArea>
+              {isLoading ? (
+                <div className="space-y-4">
+                  {Array(5).fill(0).map((_, i) => (
+                    <Skeleton key={i} className="h-16 rounded-lg" />
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {filteredTransactions.slice(0, 5).map((transaction, index) => (
+                    <motion.div
+                      key={transaction.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.2, delay: index * 0.05 }}
+                      className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className={`p-2 rounded-full ${
+                          transaction.type === 'income'
+                            ? 'bg-green-100 dark:bg-green-900'
+                            : 'bg-red-100 dark:bg-red-900'
+                        }`}>
+                          {transaction.type === 'income' ? (
+                            <ArrowUpRight className={`h-4 w-4 ${
+                              transaction.type === 'income'
+                                ? 'text-green-600 dark:text-green-400'
+                                : 'text-red-600 dark:text-red-400'
+                            }`} />
+                          ) : (
+                            <ArrowDownRight className="h-4 w-4 text-red-600 dark:text-red-400" />
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white">
+                            {transaction.description}
+                          </p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            {transaction.merchant} • {transaction.category}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className={`font-semibold ${
+                          transaction.type === 'income'
+                            ? 'text-green-600 dark:text-green-400'
+                            : 'text-red-600 dark:text-red-400'
+                        }`}>
+                          {transaction.type === 'income' ? '+' : '-'}${transaction.amount.toFixed(2)}
+                        </p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          {new Date(transaction.date).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </motion.div>
+                  ))}
+                  {filteredTransactions.length === 0 && (
+                    <div className="text-center py-8">
+                      <p className="text-gray-500 dark:text-gray-400">No transactions found</p>
+                    </div>
+                  )}
+                  {filteredTransactions.length > 5 && (
+                    <div className="text-center pt-4">
+                      <Button variant="outline" className="w-full">
+                        View All Transactions
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
         </motion.div>
@@ -584,6 +721,19 @@ export function HomePageComponent() {
           onOpenChange={setShowDepositModal}
         />
       </main>
+
+      {/* Notifications Panel */}
+      <Notifications
+        isOpen={showNotifications}
+        onClose={() => setShowNotifications(false)}
+        onMarkAllRead={() => setNotificationCount(0)}
+      />
+
+      {/* Settings Panel */}
+      <SettingsPanel
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
+      />
     </LayoutWrapper>
   )
 }

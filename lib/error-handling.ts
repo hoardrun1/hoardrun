@@ -1,5 +1,31 @@
 import { logger } from './logger';
 
+// Error codes enum
+export enum ErrorCode {
+  PAYMENT_FAILED = 'PAYMENT_FAILED',
+  INSUFFICIENT_FUNDS = 'INSUFFICIENT_FUNDS',
+  INVALID_AMOUNT = 'INVALID_AMOUNT',
+  ACCOUNT_NOT_FOUND = 'ACCOUNT_NOT_FOUND',
+  UNAUTHORIZED = 'UNAUTHORIZED',
+  VALIDATION_ERROR = 'VALIDATION_ERROR',
+  INTERNAL_ERROR = 'INTERNAL_ERROR',
+  NETWORK_ERROR = 'NETWORK_ERROR',
+  TIMEOUT_ERROR = 'TIMEOUT_ERROR',
+}
+
+// Generic application error class
+export class AppError extends Error {
+  constructor(
+    message: string,
+    public readonly code: ErrorCode,
+    public readonly statusCode: number = 400,
+    public readonly details?: any
+  ) {
+    super(message);
+    this.name = 'AppError';
+  }
+}
+
 export class PaymentError extends Error {
   constructor(
     message: string,

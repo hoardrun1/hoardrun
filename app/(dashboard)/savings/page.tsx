@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useToast } from '@/components/ui/use-toast'
-import { useSavingsData } from '@/hooks/useSavingsData'
+import { useSavings } from '@/hooks/useSavings'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -36,13 +36,21 @@ export default function SavingsPage() {
   const { toast } = useToast()
   const {
     savingsGoals,
-    analytics,
     isLoading,
     error,
     fetchSavingsGoals,
-    fetchAnalytics,
-    addSavingsGoal
-  } = useSavingsData()
+    createSavingsGoal,
+    calculateTotalSavings,
+    calculateProgress
+  } = useSavings()
+
+  const [analytics, setAnalytics] = useState<SavingsAnalytics>({
+    totalSavings: 0,
+    monthlyGrowth: 0,
+    nextMilestone: 0,
+    projectedSavings: 0,
+    insights: []
+  })
 
   const [isNewGoalDialogOpen, setIsNewGoalDialogOpen] = useState(false)
   const [newGoalForm, setNewGoalForm] = useState<{
@@ -64,9 +72,31 @@ export default function SavingsPage() {
   useEffect(() => {
     if (session?.user) {
       fetchSavingsGoals()
-      fetchAnalytics()
     }
-  }, [session, fetchSavingsGoals, fetchAnalytics])
+  }, [session, fetchSavingsGoals])
+
+  // Calculate analytics when savings goals change
+  useEffect(() => {
+    if (savingsGoals.length > 0) {
+      const totalSavings = calculateTotalSavings()
+      const monthlyGrowth = savingsGoals.reduce((sum, goal) => sum + goal.monthlyContribution, 0)
+      const nextMilestone = Math.min(...savingsGoals.map(goal => goal.targetAmount - goal.currentAmount).filter(diff => diff > 0)) || 0
+      const projectedSavings = totalSavings + (monthlyGrowth * 12)
+
+      setAnalytics({
+        totalSavings,
+        monthlyGrowth,
+        nextMilestone,
+        projectedSavings,
+        insights: [
+          {
+            title: 'Savings Progress',
+            description: `You're on track to save $${monthlyGrowth.toLocaleString()} per month`
+          }
+        ]
+      })
+    }
+  }, [savingsGoals, calculateTotalSavings])
 
   const handleCreateGoal = async () => {
     try {

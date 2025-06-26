@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Toast } from './use-toast'
+import { useToast } from './use-toast'
 
 interface ToastProps extends Toast {
   onClose: () => void

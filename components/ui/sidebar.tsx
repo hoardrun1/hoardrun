@@ -33,6 +33,7 @@ import { navigation } from '@/lib/navigation';
 
 interface SidebarProps {
   className?: string;
+  onAddMoney?: () => void;
 }
 
 // Create a simple context for sidebar state if needed
@@ -75,7 +76,7 @@ const menuItems: MenuItem[] = [
   { id: 'contact', label: 'Contact Us', icon: Phone, href: '/contact', category: 'support' },
 ];
 
-export function Sidebar({ className }: SidebarProps) {
+export function Sidebar({ className, onAddMoney }: SidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const router = useRouter();
@@ -291,7 +292,14 @@ export function Sidebar({ className }: SidebarProps) {
                   <Button
                     size="sm"
                     className="bg-blue-600 hover:bg-blue-700 text-white"
-                    onClick={() => handleNavigation({ id: 'add-money', label: 'Add Money', icon: Plus, href: '/deposit', category: 'financial' })}
+                    onClick={() => {
+                      if (onAddMoney) {
+                        onAddMoney();
+                      } else {
+                        // Fallback to navigation if no callback provided
+                        handleNavigation({ id: 'add-money', label: 'Add Money', icon: Plus, href: '/home', category: 'financial' });
+                      }
+                    }}
                   >
                     <Plus className="h-4 w-4 mr-2" />
                     Add Money

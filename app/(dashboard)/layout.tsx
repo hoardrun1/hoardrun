@@ -3,6 +3,9 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { FinanceProvider } from '@/contexts/FinanceContext';
+import { MockFinanceProvider } from '@/contexts/MockFinanceContext';
+import { Toaster } from '@/components/ui/toast';
 
 export default function DashboardLayout({
   children,
@@ -27,9 +30,29 @@ export default function DashboardLayout({
     );
   }
 
+  // Use the mock provider in development mode
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  const bypassAuth = process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true';
+
+  // If we're in development mode and bypassing auth, use the mock provider
+  if (isDevelopment && bypassAuth) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <MockFinanceProvider>
+          {children}
+        </MockFinanceProvider>
+        <Toaster />
+      </div>
+    );
+  }
+
+  // Otherwise, use the real provider
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {children}
+      <FinanceProvider>
+        {children}
+      </FinanceProvider>
+      <Toaster />
     </div>
   );
 }

@@ -1,84 +1,47 @@
-import winston from 'winston'
-import { format } from 'winston'
-const { combine, timestamp, printf, colorize, errors } = format
-
-// Custom log levels
-const levels = {
-  error: 0,
-  warn: 1,
-  info: 2,
-  http: 3,
-  debug: 4,
+// Client-safe logger that works in both browser and Node.js environments
+interface Logger {
+  error: (message: string | object, meta?: any) => void;
+  warn: (message: string | object, meta?: any) => void;
+  info: (message: string | object, meta?: any) => void;
+  debug: (message: string | object, meta?: any) => void;
+  http: (message: string) => void;
+  defaultMeta?: any;
 }
 
-// Level colors
-const colors = {
-  error: 'red',
-  warn: 'yellow',
-  info: 'green',
-  http: 'magenta',
-  debug: 'white',
-}
+// Check if we're in a browser environment
+const isBrowser = typeof window !== 'undefined';
 
-// Add colors to Winston
-winston.addColors(colors)
+// Create a browser-compatible logger
+const createLogger = (): Logger => {
+  const formatMessage = (level: string, message: string | object, meta?: any) => {
+    const timestamp = new Date().toISOString();
+    const messageStr = typeof message === 'string' ? message : JSON.stringify(message);
+    const metaStr = meta ? ` ${JSON.stringify(meta)}` : '';
+    return `${timestamp} [${level.toUpperCase()}]: ${messageStr}${metaStr}`;
+  };
 
-// Custom format for development
-const developmentFormat = printf(({ level, message, timestamp, stack, ...metadata }) => {
-  let msg = `${timestamp} [${level}]: ${message}`
-  
-  // Add metadata if present
-  if (Object.keys(metadata).length > 0) {
-    msg += ` ${JSON.stringify(metadata)}`
-  }
-  
-  // Add stack trace for errors
-  if (stack) {
-    msg += `\n${stack}`
-  }
-  
-  return msg
-})
+  const logger: Logger = {
+    error: (message: string | object, meta?: any) => {
+      console.error(formatMessage('error', message, meta));
+    },
+    warn: (message: string | object, meta?: any) => {
+      console.warn(formatMessage('warn', message, meta));
+    },
+    info: (message: string | object, meta?: any) => {
+      console.info(formatMessage('info', message, meta));
+    },
+    debug: (message: string | object, meta?: any) => {
+      console.debug(formatMessage('debug', message, meta));
+    },
+    http: (message: string) => {
+      console.log(formatMessage('http', message));
+    },
+  };
 
-// Custom format for production
-const productionFormat = printf(({ level, message, timestamp, ...metadata }) => {
-  return JSON.stringify({
-    timestamp,
-    level,
-    message,
-    ...metadata,
-  })
-})
+  return logger;
+};
 
-// Create the logger
-export const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL || 'info',
-  levels,
-  format: combine(
-    errors({ stack: true }),
-    timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-    process.env.NODE_ENV === 'production'
-      ? productionFormat
-      : combine(colorize({ all: true }), developmentFormat)
-  ),
-  transports: [
-    // Write all logs to console
-    new winston.transports.Console(),
-    
-    // Write all errors to error.log
-    new winston.transports.File({
-      filename: 'logs/error.log',
-      level: 'error',
-      format: combine(timestamp(), format.json()),
-    }),
-    
-    // Write all logs to combined.log
-    new winston.transports.File({
-      filename: 'logs/combined.log',
-      format: combine(timestamp(), format.json()),
-    }),
-  ],
-})
+export const logger = createLogger();
 
 // Create a stream object for Morgan HTTP logger
 export const stream = {
@@ -87,22 +50,11 @@ export const stream = {
   },
 }
 
-// Add request context middleware
+// Add request context middleware (no-op in browser)
 export const addRequestContext = (req: any, _res: any, next: () => void) => {
-  const requestId = req.headers['x-request-id'] || Math.random().toString(36).substring(7)
-  const context = {
-    requestId,
-    method: req.method,
-    path: req.path,
-    ip: req.ip,
+  if (typeof next === 'function') {
+    next()
   }
-  
-  logger.defaultMeta = {
-    ...logger.defaultMeta,
-    ...context,
-  }
-  
-  next()
 }
 
 // Security event logging
@@ -113,20 +65,24 @@ export const logSecurityEvent = (event: {
   userId?: string
   metadata?: Record<string, any>
 }) => {
-  const logLevel = {
-    low: 'info',
-    medium: 'warn',
-    high: 'error',
-    critical: 'error',
-  }[event.severity]
+  const logLevel = event.severity === 'low' ? 'info' :
+                   event.severity === 'medium' ? 'warn' : 'error';
 
-  logger[logLevel]({
+  const logData = {
     message: event.message,
     event_type: event.type,
     severity: event.severity,
     user_id: event.userId,
     ...event.metadata,
-  })
+  };
+
+  if (logLevel === 'info') {
+    logger.info(logData);
+  } else if (logLevel === 'warn') {
+    logger.warn(logData);
+  } else {
+    logger.error(logData);
+  }
 }
 
 // Performance logging
@@ -135,20 +91,20 @@ export const logPerformance = (
   durationMs: number,
   metadata?: Record<string, any>
 ) => {
-  const threshold = process.env.PERFORMANCE_THRESHOLD_MS || 1000
+  const threshold = 1000; // Default threshold
+
+  const logData = {
+    message: durationMs > threshold
+      ? `Slow operation detected: ${operation}`
+      : `Performance measurement: ${operation}`,
+    duration_ms: durationMs,
+    ...metadata,
+  };
 
   if (durationMs > threshold) {
-    logger.warn({
-      message: `Slow operation detected: ${operation}`,
-      duration_ms: durationMs,
-      ...metadata,
-    })
+    logger.warn(logData);
   } else {
-    logger.debug({
-      message: `Performance measurement: ${operation}`,
-      duration_ms: durationMs,
-      ...metadata,
-    })
+    logger.debug(logData);
   }
 }
 
@@ -175,4 +131,4 @@ export const logAudit = (
   })
 }
 
-export default logger 
+export default logger

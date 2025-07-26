@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, usePathname } from 'next/navigation';
 import {
@@ -79,6 +79,7 @@ const menuItems: MenuItem[] = [
 export function Sidebar({ className, onAddMoney }: SidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const sidebarRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useAuth();
@@ -132,6 +133,25 @@ export function Sidebar({ className, onAddMoney }: SidebarProps) {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen]);
+
+  // Click outside to close sidebar
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isOpen && sidebarRef.current && !sidebarRef.current.contains(event.target as Node)) {
+        // Don't close if clicking on the hamburger button
+        const hamburgerButton = document.querySelector('[title="Close sidebar"], [title="Open sidebar"]');
+        if (hamburgerButton && hamburgerButton.contains(event.target as Node)) {
+          return;
+        }
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
   }, [isOpen]);
 
   const handleNavigation = (item: MenuItem) => {
@@ -236,7 +256,7 @@ export function Sidebar({ className, onAddMoney }: SidebarProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setIsOpen(false)}
-            className="fixed inset-0 bg-black/50 z-[50] md:hidden"
+            className="fixed inset-0 bg-black/30 z-[50]"
           />
         )}
       </AnimatePresence>
@@ -245,6 +265,7 @@ export function Sidebar({ className, onAddMoney }: SidebarProps) {
       <AnimatePresence>
         {isOpen && (
           <motion.div
+            ref={sidebarRef}
             initial={{ x: isMobile ? -312 : -320 }}
             animate={{ x: 0 }}
             exit={{ x: isMobile ? -312 : -320 }}

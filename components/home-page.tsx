@@ -27,9 +27,13 @@ import {
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import { useToast } from "@/components/ui/use-toast"
 
 import { Alert, AlertDescription } from "@/components/ui/alert"
-// import { useToast } from "@/components/ui/use-toast"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
 
@@ -92,7 +96,7 @@ interface FinancialSummary {
 
 export function HomePageComponent() {
   const router = useRouter()
-  // const { toast } = useToast()
+  const { toast } = useToast()
   const { user } = useAuth()
   useNavigationContext()
   // Try to use the finance context, but provide a fallback if it's not available
@@ -117,6 +121,14 @@ export function HomePageComponent() {
   const [showNotifications, setShowNotifications] = useState(false)
   const [notificationCount, setNotificationCount] = useState(3)
   const [showSettings, setShowSettings] = useState(false)
+
+  // Transfer modal state
+  const [isTransferModalOpen, setIsTransferModalOpen] = useState(false)
+  const [transferAmount, setTransferAmount] = useState('')
+  const [transferRecipient, setTransferRecipient] = useState('')
+  const [transferMethod, setTransferMethod] = useState('bank')
+  const [transferNote, setTransferNote] = useState('')
+  const [isProcessingTransfer, setIsProcessingTransfer] = useState(false)
 
   useEffect(() => {
     const checkUserAccess = async () => {
@@ -185,6 +197,51 @@ export function HomePageComponent() {
 
 
   // Fetch initial data
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(amount)
+  }
+
+  const handleTransfer = async () => {
+    console.log('handleTransfer called!', { transferAmount, transferRecipient, transferMethod, transferNote });
+    if (!transferAmount || !transferRecipient) {
+      console.log('Validation failed: missing required fields');
+      // For now, just log the error since toast might not be working
+      console.error('Please fill in all required fields');
+      return;
+    }
+
+    const amount = parseFloat(transferAmount);
+    if (isNaN(amount) || amount <= 0) {
+      console.error('Please enter a valid amount');
+      return;
+    }
+
+    setIsProcessingTransfer(true);
+    try {
+      // Mock transfer processing - replace with actual API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      console.log(`Transfer Successful: Successfully sent ${formatCurrency(amount)} to ${transferRecipient}`);
+
+      // Reset form
+      setTransferAmount('');
+      setTransferRecipient('');
+      setTransferNote('');
+      setIsTransferModalOpen(false);
+
+      // Refresh financial data
+      setRefreshKey(prev => prev + 1);
+
+    } catch (error) {
+      console.error('Transfer Failed: There was an error processing your transfer. Please try again.');
+    } finally {
+      setIsProcessingTransfer(false);
+    }
+  };
+
   const fetchData = useCallback(async () => {
     try {
       setIsLoading(true)
@@ -332,7 +389,7 @@ export function HomePageComponent() {
   return (
     <LayoutWrapper className="bg-gray-50 dark:bg-gray-900 min-h-screen">
       {/* Sidebar */}
-      <Sidebar />
+      <Sidebar onAddMoney={() => setShowDepositModal(true)} />
 
       {/* Header */}
       <header className="sticky top-0 z-30 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
@@ -423,7 +480,14 @@ export function HomePageComponent() {
                     <Plus className="h-4 w-4 mr-2" />
                     Add Money
                   </Button>
-                  <Button variant="outline" className="border-blue-200 text-blue-700 hover:bg-blue-50">
+                  <Button
+                    variant="outline"
+                    className="border-blue-200 text-blue-700 hover:bg-blue-50"
+                    onClick={() => {
+                      console.log('Transfer button clicked!');
+                      setIsTransferModalOpen(true);
+                    }}
+                  >
                     <ArrowUpRight className="h-4 w-4 mr-2" />
                     Transfer
                   </Button>
@@ -720,6 +784,124 @@ export function HomePageComponent() {
           open={showDepositModal}
           onOpenChange={setShowDepositModal}
         />
+
+        {/* Transfer Modal */}
+        <Dialog open={isTransferModalOpen} onOpenChange={(open) => {
+          console.log('Transfer modal state changing from', isTransferModalOpen, 'to:', open);
+          setIsTransferModalOpen(open);
+        }}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Send Money</DialogTitle>
+              <DialogDescription>
+                Transfer money quickly and securely
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="transfer-method">Transfer Method</Label>
+                <Select value={transferMethod} onValueChange={setTransferMethod}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select transfer method" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="bank">Bank Transfer</SelectItem>
+                    <SelectItem value="card">Card Transfer</SelectItem>
+                    <SelectItem value="mobile">Mobile Money</SelectItem>
+                    <SelectItem value="email">Email Transfer</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="transfer-amount">Amount</Label>
+                <Input
+                  id="transfer-amount"
+                  type="number"
+                  placeholder="0.00"
+                  value={transferAmount}
+                  onChange={(e) => setTransferAmount(e.target.value)}
+                  className="text-lg font-semibold"
+                  step="0.01"
+                  min="0"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="transfer-recipient">
+                  {transferMethod === 'bank' ? 'Account Number' :
+                   transferMethod === 'card' ? 'Card Number' :
+                   transferMethod === 'mobile' ? 'Phone Number' : 'Email or Phone'}
+                </Label>
+                <Input
+                  id="transfer-recipient"
+                  placeholder={
+                    transferMethod === 'bank' ? 'Enter account number' :
+                    transferMethod === 'card' ? 'Enter card number' :
+                    transferMethod === 'mobile' ? 'Enter phone number' : 'Enter email or phone'
+                  }
+                  value={transferRecipient}
+                  onChange={(e) => setTransferRecipient(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="transfer-note">Note (Optional)</Label>
+                <Textarea
+                  id="transfer-note"
+                  placeholder="What's this transfer for?"
+                  value={transferNote}
+                  onChange={(e) => setTransferNote(e.target.value)}
+                  rows={2}
+                />
+              </div>
+
+              {transferAmount && (
+                <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg space-y-1">
+                  <div className="flex justify-between text-sm">
+                    <span>Amount:</span>
+                    <span>{formatCurrency(parseFloat(transferAmount) || 0)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>Fee:</span>
+                    <span>{formatCurrency(2.50)}</span>
+                  </div>
+                  <div className="flex justify-between font-semibold">
+                    <span>Total:</span>
+                    <span>{formatCurrency((parseFloat(transferAmount) || 0) + 2.50)}</span>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-2 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsTransferModalOpen(false)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleTransfer}
+                  disabled={isProcessingTransfer || !transferAmount || !transferRecipient}
+                  className="flex-1"
+                >
+                  {isProcessingTransfer ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4 mr-2" />
+                      Send Money
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </main>
 
       {/* Notifications Panel */}

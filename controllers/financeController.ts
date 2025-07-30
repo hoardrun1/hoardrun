@@ -400,7 +400,7 @@ export const getBudgetAnalytics = async (req: Request, res: Response) => {
 // Helper functions
 const calculateDateRange = (params: z.infer<typeof dateRangeSchema>) => {
   const endDate = new Date()
-  let startDate = new Date()
+  const startDate = new Date()
 
   if (params.startDate && params.endDate) {
     return {

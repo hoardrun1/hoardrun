@@ -29,13 +29,11 @@
     "@radix-ui/react-slot": "^1.1.0",
     "@radix-ui/react-switch": "^1.1.1",
     "@radix-ui/react-tabs": "^1.1.1",
-    "@react-navigation/native": "^7.0.3",
-    "@react-navigation/native-stack": "^7.1.0",
     "bcryptjs": "^2.4.3",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "crypto-js": "^4.2.0",
-    "face-api.js": "^0.22.2",
+    "face-api.js": "^0.20.0",
     "form-data": "^4.0.2",
     "framer-motion": "^11.13.1",
     "ioredis": "^5.5.0",
@@ -43,7 +41,6 @@
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.454.0",
     "mailgun.js": "^12.0.1",
-    "module-name": "^0.0.1-security",
     "next": "^14.2.16",
     "next-auth": "^4.24.10",
     "next-themes": "^0.4.4",
@@ -52,9 +49,6 @@
     "react": "^18",
     "react-dom": "^18",
     "react-icons": "^5.3.0",
-    "react-native-safe-area-context": "^4.14.0",
-    "react-native-screens": "^4.2.0",
-    "react-router-dom": "^6.28.0",
     "recharts": "^2.15.1",
     "redis": "^4.7.0",
     "sonner": "^1.0.0",
@@ -71,11 +65,14 @@
     "@types/nodemailer": "^6.4.17",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18",
-    "eslint": "^8",
+    "eslint": "^8.57.1",
     "eslint-config-next": "14.2.16",
     "postcss": "^8",
     "prisma": "^5.22.0",
     "tailwindcss": "^3.4.15",
     "typescript": "^5"
+  },
+  "overrides": {
+    "node-fetch": "^3.3.2"
   }
 }

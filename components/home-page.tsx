@@ -11,18 +11,16 @@ import {
   Bell,
   Settings,
   Search,
-  ChevronRight,
   Download,
   Filter,
   Plus,
   Brain,
   Sparkles,
   Target,
-  Clock,
   Loader2,
-  Info,
   PiggyBank,
-  TrendingUp
+  TrendingUp,
+  Send
 } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -96,7 +94,6 @@ interface FinancialSummary {
 
 export function HomePageComponent() {
   const router = useRouter()
-  const { toast } = useToast()
   const { user } = useAuth()
   useNavigationContext()
   // Try to use the finance context, but provide a fallback if it's not available

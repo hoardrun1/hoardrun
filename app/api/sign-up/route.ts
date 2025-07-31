@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
-import { sendVerificationEmail } from '@/lib/email'
+import { sendVerificationEmail } from '@/lib/mailgun-service' // Fixed import
 import { generateToken } from '@/lib/jwt'
 
 const signUpSchema = z.object({
@@ -11,12 +11,13 @@ const signUpSchema = z.object({
   name: z.string()
     .min(2, 'Name must be at least 2 characters')
     .max(50, 'Name must not exceed 50 characters'),
+  // Made deviceInfo optional since frontend isn't sending it
   deviceInfo: z.object({
-    deviceId: z.string(),
-    userAgent: z.string(),
+    deviceId: z.string().optional(),
+    userAgent: z.string().optional(),
     ip: z.string().optional(),
-    components: z.record(z.any())
-  })
+    components: z.record(z.any()).optional()
+  }).optional()
 })
 
 export async function POST(request: Request) {
@@ -103,4 +104,4 @@ export async function POST(request: Request) {
       }
     )
   }
-} 
+}

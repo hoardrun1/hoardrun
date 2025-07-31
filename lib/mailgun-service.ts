@@ -1,27 +1,36 @@
-import formData from 'form-data';
-import Mailgun from 'mailgun.js';
-import { devEmailService } from './dev-email';
+import formData from "form-data"
+import Mailgun from "mailgun.js"
+import { devEmailService } from "./dev-email"
 
-// Initialize Mailgun
-const mailgun = new Mailgun(formData);
-const mg = mailgun.client({
-  username: 'api',
-  key: process.env.MAILGUN_API_KEY || '',
-});
+// Initialize Mailgun only if we have the required environment variables
+const mailgun = new Mailgun(formData)
+
+// Log the Mailgun API key to check if it's loaded
+console.log("MAILGUN_API_KEY:", process.env.MAILGUN_API_KEY ? "***** (loaded)" : "NOT LOADED")
+
+// Only initialize the client if we have the API key
+let mg: any = null
+if (process.env.MAILGUN_API_KEY && process.env.MAILGUN_API_KEY.trim() !== "") {
+  mg = mailgun.client({
+    username: "api",
+    key: process.env.MAILGUN_API_KEY,
+  })
+}
 
 // Use the specific sandbox domain from your C# example
-const domain = process.env.MAILGUN_DOMAIN || 'sandbox17bdad0471cf4e8a90689b5205641894.mailgun.org';
-const from = process.env.MAILGUN_FROM || 'Mailgun Sandbox <postmaster@sandbox17bdad0471cf4e8a90689b5205641894.mailgun.org>';
+const domain = process.env.MAILGUN_DOMAIN || "sandbox17bdad0471cf4e8a90689b5205641894.mailgun.org"
+const from =
+  process.env.MAILGUN_FROM || "Mailgun Sandbox <postmaster@sandbox17bdad0471cf4e8a90689b5205641894.mailgun.org>"
 
 /**
  * Send an email using Mailgun
  */
 export async function sendEmail(to: string, subject: string, html: string, text?: string) {
   try {
-    // Check if we have the required configuration
-    if (!process.env.MAILGUN_API_KEY || !process.env.MAILGUN_DOMAIN) {
-      console.warn('Mailgun configuration missing, falling back to development email service');
-      return devEmailService.sendEmail(to, subject, html);
+    // Check if we have the required configuration and initialized client
+    if (!mg || !process.env.MAILGUN_API_KEY || !process.env.MAILGUN_DOMAIN) {
+      console.warn("Mailgun configuration missing or incomplete, falling back to development email service")
+      return devEmailService.sendEmail(to, subject, html)
     }
 
     // Send the email using Mailgun
@@ -30,17 +39,17 @@ export async function sendEmail(to: string, subject: string, html: string, text?
       to,
       subject,
       html,
-      text: text || '',
-    });
+      text: text || "",
+    })
 
-    console.log('Email sent via Mailgun:', result.id);
-    return result.id;
+    console.log("Email sent via Mailgun:", result.id)
+    return result.id
   } catch (error) {
-    console.error('Error sending email via Mailgun:', error);
+    console.error("Error sending email via Mailgun:", error)
 
     // Fall back to development email service
-    console.log('Falling back to development email service');
-    return devEmailService.sendEmail(to, subject, html);
+    console.log("Falling back to development email service")
+    return devEmailService.sendEmail(to, subject, html)
   }
 }
 
@@ -49,10 +58,10 @@ export async function sendEmail(to: string, subject: string, html: string, text?
  */
 export async function sendVerificationEmail(email: string, userId: string): Promise<string> {
   // Generate a 6-digit verification code
-  const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+  const verificationCode = Math.floor(100000 + Math.random() * 900000).toString()
 
   // Create verification link
-  const verificationLink = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/auth/verify-link?code=${verificationCode}&userId=${userId}`;
+  const verificationLink = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/auth/verify-link?code=${verificationCode}&userId=${userId}`
 
   // Email content
   const html = `
@@ -73,7 +82,7 @@ export async function sendVerificationEmail(email: string, userId: string): Prom
         If you didn't sign up for this account, you can safely ignore this email.
       </p>
     </div>
-  `;
+  `
 
   const text = `
     Verify Your Email
@@ -85,12 +94,12 @@ export async function sendVerificationEmail(email: string, userId: string): Prom
     Or verify by visiting this link: ${verificationLink}
 
     If you didn't sign up for this account, you can safely ignore this email.
-  `;
+  `
 
   // Send the email
-  await sendEmail(email, 'Verify Your Email Address', html, text);
+  await sendEmail(email, "Verify Your Email Address", html, text)
 
-  return verificationCode;
+  return verificationCode
 }
 
 /**
@@ -98,7 +107,7 @@ export async function sendVerificationEmail(email: string, userId: string): Prom
  */
 export async function sendPasswordResetEmail(email: string, resetCode: string): Promise<string> {
   // Create reset link
-  const resetLink = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/reset-password?code=${resetCode}`;
+  const resetLink = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/reset-password?code=${resetCode}`
 
   // Email content
   const html = `
@@ -116,7 +125,7 @@ export async function sendPasswordResetEmail(email: string, resetCode: string): 
         <a href="${resetLink}" style="background-color: #4a6cf7; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">Reset Password</a>
       </div>
     </div>
-  `;
+  `
 
   const text = `
     Reset Your Password
@@ -126,10 +135,10 @@ export async function sendPasswordResetEmail(email: string, resetCode: string): 
     Your password reset code: ${resetCode}
 
     Or reset your password by visiting this link: ${resetLink}
-  `;
+  `
 
   // Send the email
-  await sendEmail(email, 'Reset Your Password', html, text);
+  await sendEmail(email, "Reset Your Password", html, text)
 
-  return resetCode;
+  return resetCode
 }

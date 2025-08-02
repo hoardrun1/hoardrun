@@ -1,416 +1,224 @@
-import { Request } from 'express'
-import Redis from 'ioredis'
-import { logger, logSecurityEvent } from '@/lib/logger'
-import { APIError } from '@/middleware/error-handler'
-import { RateLimiter } from '@/lib/rate-limiter'
+// lib/security.ts - Minimal version without external dependencies
 import { createHash, randomBytes, timingSafeEqual } from 'crypto'
-import { z } from 'zod'
-import geoip from 'geoip-lite'
-import UAParser from 'ua-parser-js'
 import { prisma } from './prisma'
 import { cache } from './cache'
-import { AppError, errorCodes } from './error-handling'
 
-// Interfaces
-interface SecurityConfig {
-  maxLoginAttempts: number
-  lockoutDuration: number
-  passwordExpiryDays: number
-  sessionDuration: number
-  requireMFA: boolean
-  ipWhitelist: string[]
-  suspiciousIPs: string[]
-  deviceTrustDuration: number
-}
-
+// Simple device info interface
 interface DeviceInfo {
-  id: string
+  fingerprint: string
   userAgent: string
-  ip: string
-  location?: {
-    country: string
-    region: string
-    city: string
-  }
-  lastSeen: Date
-  isTrusted: boolean
-  trustExpiry?: Date
+  timestamp: string
+  components?: Record<string, any>
 }
 
-interface SecurityEvent {
-  type: string
-  userId: string
+// Simplified suspicious activity detection
+export async function detectSuspiciousActivity({
+  user,
+  deviceInfo,
+  clientIp
+}: {
+  user: any
   deviceInfo: DeviceInfo
-  metadata?: Record<string, any>
-  severity: 'low' | 'medium' | 'high' | 'critical'
-}
-
-// Default configuration
-const DEFAULT_CONFIG: SecurityConfig = {
-  maxLoginAttempts: 5,
-  lockoutDuration: 15 * 60, // 15 minutes
-  passwordExpiryDays: 90,
-  sessionDuration: 24 * 60 * 60, // 24 hours
-  requireMFA: true,
-  ipWhitelist: [],
-  suspiciousIPs: [],
-  deviceTrustDuration: 30 * 24 * 60 * 60, // 30 days
-}
-
-class SecurityService {
-  private redis: Redis
-  private config: SecurityConfig
-
-  constructor(config: Partial<SecurityConfig> = {}) {
-    this.config = { ...DEFAULT_CONFIG, ...config }
-    this.redis = new Redis(process.env.REDIS_URL)
-  }
-
-  // Request validation
-  async validateRequest(req: Request): Promise<boolean> {
-    try {
-      // Check IP whitelist
-      if (this.config.ipWhitelist.length > 0 && !this.config.ipWhitelist.includes(req.ip)) {
-        this.logSecurityEvent({
-          type: 'IP_BLOCKED',
-          userId: req.user?.id,
-          deviceInfo: await this.getDeviceInfo(req),
-          severity: 'medium',
-          metadata: { ip: req.ip },
-        })
-        return false
-      }
-
-      // Check suspicious IPs
-      if (this.config.suspiciousIPs.includes(req.ip)) {
-        this.logSecurityEvent({
-          type: 'SUSPICIOUS_IP_DETECTED',
-          userId: req.user?.id,
-          deviceInfo: await this.getDeviceInfo(req),
-          severity: 'high',
-          metadata: { ip: req.ip },
-        })
-        return false
-      }
-
-      // Rate limiting check
-      const rateLimitKey = `rate-limit:${req.ip}:${req.path}`
-      if (!await RateLimiter.checkLimit(rateLimitKey, 100)) {
-        this.logSecurityEvent({
-          type: 'RATE_LIMIT_EXCEEDED',
-          userId: req.user?.id,
-          deviceInfo: await this.getDeviceInfo(req),
-          severity: 'medium',
-          metadata: { path: req.path },
-        })
-        return false
-      }
-
-      return true
-    } catch (error) {
-      logger.error('Error validating request:', error)
-      return false
-    }
-  }
-
-  // Session validation
-  async validateSession(req: Request): Promise<boolean> {
-    try {
-      const sessionId = req.headers['x-session-id'] as string
-      if (!sessionId) return false
-
-      const session = await this.redis.get(`session:${sessionId}`)
-      if (!session) return false
-
-      const sessionData = JSON.parse(session)
-      if (Date.now() > sessionData.expiresAt) {
-        await this.redis.del(`session:${sessionId}`)
-        return false
-      }
-
-      return true
-    } catch (error) {
-      logger.error('Error validating session:', error)
-      return false
-    }
-  }
-
-  // Login attempt management
-  async checkLoginAttempts(userId: string): Promise<boolean> {
-    try {
-      const key = `login-attempts:${userId}`
-      const attempts = await this.redis.get(key)
-      
-      if (!attempts) return true
-
-      const attemptsCount = parseInt(attempts)
-      if (attemptsCount >= this.config.maxLoginAttempts) {
-        this.logSecurityEvent({
-          type: 'ACCOUNT_LOCKED',
-          userId,
-          deviceInfo: null,
-          severity: 'high',
-          metadata: { attempts: attemptsCount },
-        })
-        return false
-      }
-
-      return true
-    } catch (error) {
-      logger.error('Error checking login attempts:', error)
-      return true
-    }
-  }
-
-  // Password validation
-  async validatePasswordAge(userId: string, passwordUpdatedAt: Date): Promise<boolean> {
-    const ageInDays = (Date.now() - passwordUpdatedAt.getTime()) / (1000 * 60 * 60 * 24)
-    return ageInDays <= this.config.passwordExpiryDays
-  }
-
-  // MFA validation
-  async validateMFA(userId: string, code: string): Promise<boolean> {
-    try {
-      const storedCode = await this.redis.get(`mfa:${userId}`)
-      if (!storedCode) return false
-
-      // Use timing-safe comparison to prevent timing attacks
-      return timingSafeEqual(
-        Buffer.from(code),
-        Buffer.from(storedCode)
-      )
-    } catch (error) {
-      logger.error('Error validating MFA:', error)
-      return false
-    }
-  }
-
-  // Device trust management
-  async isDeviceTrusted(deviceId: string): Promise<boolean> {
-    try {
-      const device = await this.redis.get(`device:${deviceId}`)
-      if (!device) return false
-
-      const deviceData = JSON.parse(device) as DeviceInfo
-      return deviceData.isTrusted && 
-             deviceData.trustExpiry && 
-             new Date(deviceData.trustExpiry) > new Date()
-    } catch (error) {
-      logger.error('Error checking device trust:', error)
-      return false
-    }
-  }
-
-  // Trust a device
-  async trustDevice(userId: string, deviceInfo: Partial<DeviceInfo>): Promise<void> {
-    try {
-      const device: DeviceInfo = {
-        id: deviceInfo.id || randomBytes(16).toString('hex'),
-        userAgent: deviceInfo.userAgent || '',
-        ip: deviceInfo.ip || '',
-        location: deviceInfo.location,
-        lastSeen: new Date(),
-        isTrusted: true,
-        trustExpiry: new Date(Date.now() + this.config.deviceTrustDuration * 1000),
-      }
-
-      await this.redis.set(
-        `device:${device.id}`,
-        JSON.stringify(device),
-        'EX',
-        this.config.deviceTrustDuration
-      )
-
-      this.logSecurityEvent({
-        type: 'DEVICE_TRUSTED',
-        userId,
-        deviceInfo: device,
-        severity: 'low',
-      })
-    } catch (error) {
-      logger.error('Error trusting device:', error)
-    }
-  }
-
-  // Create a new session
-  async createSession(userId: string, deviceInfo: DeviceInfo): Promise<string> {
-    try {
-      const sessionId = randomBytes(32).toString('hex')
-      const session = {
-        userId,
-        deviceInfo,
-        createdAt: Date.now(),
-        expiresAt: Date.now() + this.config.sessionDuration * 1000,
-      }
-
-      await this.redis.set(
-        `session:${sessionId}`,
-        JSON.stringify(session),
-        'EX',
-        this.config.sessionDuration
-      )
-
-      return sessionId
-    } catch (error) {
-      logger.error('Error creating session:', error)
-      throw new APIError(500, 'Failed to create session')
-    }
-  }
-
-  // Get device information from request
-  private async getDeviceInfo(req: Request): Promise<DeviceInfo> {
-    const ua = new UAParser(req.headers['user-agent'])
-    const geo = geoip.lookup(req.ip)
-
-    return {
-      id: req.headers['x-device-id'] as string || randomBytes(16).toString('hex'),
-      userAgent: req.headers['user-agent'] || '',
-      ip: req.ip,
-      location: geo ? {
-        country: geo.country,
-        region: geo.region,
-        city: geo.city,
-      } : undefined,
-      lastSeen: new Date(),
-      isTrusted: false,
-    }
-  }
-
-  // Log security event
-  private logSecurityEvent(event: SecurityEvent): void {
-    logSecurityEvent({
-      type: event.type,
-      severity: event.severity,
-      message: `Security event: ${event.type}`,
-      userId: event.userId,
-      metadata: {
-        ...event.metadata,
-        deviceInfo: event.deviceInfo,
-      },
-    })
-  }
-
-  // Reset login attempts
-  async resetLoginAttempts(userId: string): Promise<void> {
-    await this.redis.del(`login-attempts:${userId}`)
-  }
-
-  // Increment login attempts
-  async incrementLoginAttempts(userId: string): Promise<number> {
-    const key = `login-attempts:${userId}`
-    const attempts = await this.redis.incr(key)
-    await this.redis.expire(key, this.config.lockoutDuration)
-    return attempts
-  }
-
-  // Check for suspicious activity
-  async checkSuspiciousActivity(userId: string, deviceInfo: DeviceInfo): Promise<boolean> {
-    try {
-      const key = `user-locations:${userId}`
-      const locations = await this.redis.get(key)
-      
-      if (!locations) {
-        await this.redis.set(key, JSON.stringify([deviceInfo.location]))
-        return false
-      }
-
-      const knownLocations = JSON.parse(locations)
-      if (!deviceInfo.location) return false
-
-      // Check if location is known
-      const isKnownLocation = knownLocations.some((loc: any) => 
-        loc.country === deviceInfo.location.country &&
-        loc.region === deviceInfo.location.region
-      )
-
-      if (!isKnownLocation) {
-        this.logSecurityEvent({
-          type: 'NEW_LOGIN_LOCATION',
-          userId,
-          deviceInfo,
-          severity: 'medium',
-          metadata: { location: deviceInfo.location },
-        })
-        return true
-      }
-
-      return false
-    } catch (error) {
-      logger.error('Error checking suspicious activity:', error)
-      return false
-    }
-  }
-}
-
-// Export singleton instance
-export const securityService = new SecurityService()
-export default securityService
-
-export class EnhancedSecurityService {
-  private readonly DEVICE_TRUST_DURATION = 30 * 24 * 60 * 60; // 30 days
-  private readonly MAX_LOGIN_ATTEMPTS = 5;
-  private readonly LOCKOUT_DURATION = 15 * 60; // 15 minutes
-
-  async validateLoginAttempt(email: string, ip: string, deviceId: string) {
-    const key = `login_attempts:${email}:${ip}`;
-    const attempts = await cache.get(key) || 0;
-
-    if (attempts >= this.MAX_LOGIN_ATTEMPTS) {
-      throw new AppError(
-        errorCodes.RATE_LIMIT_EXCEEDED,
-        'Account temporarily locked. Please try again later.',
-        429
-      );
-    }
-
-    await cache.incr(key);
-    await cache.expire(key, this.LOCKOUT_DURATION);
-
-    // Check for suspicious activity
-    const isSuspicious = await this.detectSuspiciousActivity({
-      email,
-      ip,
-      deviceId,
-    });
-
-    if (isSuspicious) {
-      await this.requireAdditionalVerification(email);
-    }
-  }
-
-  private async detectSuspiciousActivity({ 
-    email, 
-    ip, 
-    deviceId 
-  }: {
-    email: string;
-    ip: string;
-    deviceId: string;
-  }) {
-    const recentLogins = await prisma.loginHistory.findMany({
+  clientIp: string
+}): Promise<boolean> {
+  try {
+    // Get recent login attempts for this user
+    const recentLogins = await prisma.loginAttempt.findMany({
       where: {
-        email,
-        createdAt: {
+        userId: user.id,
+        timestamp: {
           gte: new Date(Date.now() - 24 * 60 * 60 * 1000), // Last 24 hours
         },
       },
-    });
+      orderBy: {
+        timestamp: 'desc'
+      },
+      take: 10
+    })
 
-    // Check for multiple IPs
-    const uniqueIPs = new Set(recentLogins.map(login => login.ip));
-    if (uniqueIPs.size > 3) return true;
+    // Check for multiple different IPs in short time
+    const uniqueIPs = new Set(recentLogins.map(login => login.ipAddress))
+    if (uniqueIPs.size > 3) {
+      console.log('Suspicious: Multiple IPs detected for user', user.email)
+      return true
+    }
 
-    // Check for geographical anomalies
-    const geoData = await this.getGeoLocation(ip);
-    const unusualLocation = await this.isUnusualLocation(email, geoData);
-    if (unusualLocation) return true;
+    // Check for rapid login attempts
+    if (recentLogins.length >= 5) {
+      const oldestRecentLogin = recentLogins[recentLogins.length - 1]
+      const newestLogin = recentLogins[0]
+      const timeDiff = newestLogin.timestamp.getTime() - oldestRecentLogin.timestamp.getTime()
+      
+      if (timeDiff < 10 * 60 * 1000) { // Less than 10 minutes for 5+ attempts
+        console.log('Suspicious: Rapid login attempts detected for user', user.email)
+        return true
+      }
+    }
 
-    return false;
+    // Check for new device (not in known devices)
+    const knownDevice = user.devices?.find((device: any) => 
+      device.fingerprint === deviceInfo.fingerprint
+    )
+    
+    if (!knownDevice && recentLogins.length > 0) {
+      console.log('Suspicious: New device detected for user', user.email)
+      return true
+    }
+
+    return false
+  } catch (error) {
+    console.error('Error detecting suspicious activity:', error)
+    // Return false on error to not block legitimate users
+    return false
+  }
+}
+
+// Simple rate limiting helper
+export class SimpleRateLimiter {
+  private static instance: SimpleRateLimiter
+  private attempts = new Map<string, { count: number; resetTime: number }>()
+
+  static getInstance(): SimpleRateLimiter {
+    if (!SimpleRateLimiter.instance) {
+      SimpleRateLimiter.instance = new SimpleRateLimiter()
+    }
+    return SimpleRateLimiter.instance
   }
 
-  async generateMFAToken(userId: string): Promise<string> {
-    const token = randomBytes(32).toString('hex');
-    await cache.set(`mfa:${userId}:${token}`, '1', 'EX', 300); // 5 minutes expiry
-    return token;
+  checkLimit(key: string, maxAttempts: number, windowMs: number = 15 * 60 * 1000): boolean {
+    const now = Date.now()
+    const attempt = this.attempts.get(key)
+
+    if (!attempt || now > attempt.resetTime) {
+      // Reset or create new entry
+      this.attempts.set(key, { count: 0, resetTime: now + windowMs })
+      return true
+    }
+
+    return attempt.count < maxAttempts
   }
+
+  async increment(key: string, windowMs: number = 15 * 60 * 1000): Promise<number> {
+    const now = Date.now()
+    const attempt = this.attempts.get(key)
+
+    if (!attempt || now > attempt.resetTime) {
+      this.attempts.set(key, { count: 1, resetTime: now + windowMs })
+      return 1
+    }
+
+    attempt.count++
+    return attempt.count
+  }
+
+  resetLimit(key: string): void {
+    this.attempts.delete(key)
+  }
+}
+
+// Export the rate limiter instance
+export const RateLimiter = SimpleRateLimiter.getInstance()
+
+// MFA helpers
+export async function validateMFA(userId: string, code: string): Promise<boolean> {
+  try {
+    // Get the stored 2FA code from database
+    const storedCode = await prisma.twoFactorCode.findFirst({
+      where: {
+        userId,
+        expiresAt: {
+          gt: new Date()
+        }
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    })
+
+    if (!storedCode) {
+      return false
+    }
+
+    // Use timing-safe comparison
+    const isValid = timingSafeEqual(
+      Buffer.from(code),
+      Buffer.from(storedCode.code)
+    )
+
+    if (isValid) {
+      // Delete the used code
+      await prisma.twoFactorCode.delete({
+        where: { id: storedCode.id }
+      })
+    }
+
+    return isValid
+  } catch (error) {
+    console.error('Error validating MFA:', error)
+    return false
+  }
+}
+
+export function generateTwoFactorCode(): string {
+  return Math.floor(100000 + Math.random() * 900000).toString()
+}
+
+// Session helpers
+export async function createSecureSession(userId: string, deviceInfo: DeviceInfo): Promise<string> {
+  const sessionId = randomBytes(32).toString('hex')
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
+
+  try {
+    await cache.set(
+      `session:${sessionId}`,
+      JSON.stringify({
+        userId,
+        deviceInfo,
+        createdAt: Date.now(),
+        expiresAt: expiresAt.getTime()
+      }),
+      'EX',
+      24 * 60 * 60 // 24 hours in seconds
+    )
+  } catch (error) {
+    console.error('Error creating session in cache:', error)
+  }
+
+  return sessionId
+}
+
+export async function validateSession(sessionId: string): Promise<any> {
+  try {
+    const sessionData = await cache.get(`session:${sessionId}`)
+    if (!sessionData) return null
+
+    const session = JSON.parse(sessionData.toString())
+    if (Date.now() > session.expiresAt) {
+      await cache.del(`session:${sessionId}`)
+      return null
+    }
+
+    return session
+  } catch (error) {
+    console.error('Error validating session:', error)
+    return null
+  }
+}
+
+// Security logging
+export function logSecurityEvent(event: {
+  type: string
+  userId?: string
+  severity: 'low' | 'medium' | 'high' | 'critical'
+  metadata?: any
+}) {
+  console.log(`[SECURITY ${event.severity.toUpperCase()}]`, {
+    type: event.type,
+    userId: event.userId,
+    timestamp: new Date().toISOString(),
+    metadata: event.metadata
+  })
+
+  // In production, you might want to send this to a logging service
+  // or store in a security events table
 }

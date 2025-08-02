@@ -22,6 +22,34 @@ const loginSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters"),
 })
 
+// Function to generate device fingerprint
+const generateDeviceFingerprint = () => {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  if (ctx) {
+    ctx.textBaseline = 'top';
+    ctx.font = '14px Arial';
+    ctx.fillText('Device fingerprint', 2, 2);
+  }
+  
+  const fingerprint = {
+    userAgent: navigator.userAgent,
+    language: navigator.language,
+    platform: navigator.platform,
+    screenResolution: `${screen.width}x${screen.height}`,
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    canvas: canvas.toDataURL(),
+    timestamp: new Date().toISOString()
+  };
+  
+  return {
+    fingerprint: btoa(JSON.stringify(fingerprint)),
+    userAgent: navigator.userAgent,
+    timestamp: new Date().toISOString(),
+    components: fingerprint
+  };
+};
+
 export function SignInPage() {
   const [formData, setFormData] = useState({
     email: "",
@@ -33,7 +61,7 @@ export function SignInPage() {
   const [activeTab, setActiveTab] = useState("email")
   const [biometricAvailable, setBiometricAvailable] = useState(false)
   const router = useRouter()
-  const { toast } = useToast()
+  const { addToast } = useToast()
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -58,7 +86,7 @@ export function SignInPage() {
     const errorParam = urlParams.get("error")
 
     if (verified === "true" && email) {
-      toast({
+      addToast({
         title: "Email Verified",
         description: "Your email has been verified successfully. You can now sign in.",
         duration: 5000,
@@ -67,7 +95,7 @@ export function SignInPage() {
       // Pre-fill the email field
       setFormData((prev) => ({ ...prev, email }))
     } else if (errorParam === "verification_failed") {
-      toast({
+      addToast({
         title: "Verification Failed",
         description: "There was a problem verifying your email. Please try again.",
         variant: "destructive",
@@ -80,13 +108,13 @@ export function SignInPage() {
       const newUrl = window.location.pathname
       window.history.replaceState({}, document.title, newUrl)
     }
-  }, [toast])
+  }, [addToast])
 
   const handleSocialLogin = async (provider: "google" | "apple") => {
     setIsLoading(true)
     setError(null)
     try {
-      const response = await fetch(`/api/auth/${provider}`, {
+      const response = await fetch(`/api/custom-auth/${provider}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       })
@@ -101,7 +129,7 @@ export function SignInPage() {
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to login with social provider")
-      toast({
+      addToast({
         title: "Login Failed",
         description: err instanceof Error ? err.message : "Failed to login",
         variant: "destructive",
@@ -117,16 +145,62 @@ export function SignInPage() {
     setError(null)
 
     try {
+      // Basic validation first
+      if (!formData.email || !formData.password) {
+        throw new Error("Email and password are required")
+      }
+      
+      if (formData.password.length < 8) {
+        throw new Error("Password must be at least 8 characters")
+      }
+
+      // Validate with Zod
       loginSchema.parse(formData)
 
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+      // Generate device fingerprint
+      const deviceInfo = generateDeviceFingerprint()
+
+      console.log('Sending login request with:', {
+        email: formData.email,
+        password: '***hidden***',
+        deviceInfo: {
+          fingerprint: deviceInfo.fingerprint.substring(0, 20) + '...',
+          userAgent: deviceInfo.userAgent.substring(0, 50) + '...',
+          timestamp: deviceInfo.timestamp
+        },
+        rememberMe: formData.rememberMe
       })
 
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.message)
+      const response = await fetch("/api/custom-auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          deviceInfo,
+          rememberMe: formData.rememberMe
+        }),
+      })
+
+      console.log('Response status:', response.status)
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()))
+
+      // Get response text for debugging
+      const responseText = await response.text()
+      console.log('Response text:', responseText)
+
+      let data
+      try {
+        data = JSON.parse(responseText)
+        console.log('Parsed response data:', data)
+      } catch (parseError) {
+        console.error('Failed to parse response as JSON:', parseError)
+        throw new Error(`Server returned invalid JSON: ${responseText}`)
+      }
+
+      if (!response.ok) {
+        throw new Error(data.error || data.message || `HTTP ${response.status}`)
+      }
 
       // Store necessary data for verification
       if (data.requiresVerification) {
@@ -134,17 +208,27 @@ export function SignInPage() {
         sessionStorage.setItem("temp_token", data.tempToken)
         router.push("/verify-signin")
       } else {
+        // Show success message
+        addToast({
+          title: "Success",
+          description: "Signed in successfully!",
+        })
         router.push("/home")
       }
     } catch (err) {
+      console.error('Login error:', err)
+      
+      let errorMessage = "Login failed"
       if (err instanceof z.ZodError) {
-        setError(err.errors[0].message)
-      } else {
-        setError(err instanceof Error ? err.message : "Invalid credentials")
+        errorMessage = err.errors[0].message
+      } else if (err instanceof Error) {
+        errorMessage = err.message
       }
-      toast({
+      
+      setError(errorMessage)
+      addToast({
         title: "Error",
-        description: err instanceof Error ? err.message : "Invalid credentials",
+        description: errorMessage,
         variant: "destructive",
       })
     } finally {
@@ -250,6 +334,7 @@ export function SignInPage() {
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       className="pl-10 h-12 bg-white border-gray-300 text-black focus:border-black"
                       disabled={isLoading}
+                      required
                     />
                   </div>
                 </div>
@@ -263,6 +348,8 @@ export function SignInPage() {
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                       className="pl-10 h-12 bg-white border-gray-300 text-black focus:border-black"
                       disabled={isLoading}
+                      required
+                      minLength={8}
                     />
                     <button
                       type="button"

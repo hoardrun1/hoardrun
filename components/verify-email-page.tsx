@@ -1,191 +1,236 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Loader2 } from 'lucide-react'
-import { toast } from "@/components/ui/use-toast"
-import { EmailVerificationService } from "@/services/email-verification"
+import { navigation } from '@/lib/navigation'
+import { useToast } from '@/components/ui/use-toast'
+import { Button } from '@/components/ui/button'
+import { Loader2, Mail, CheckCircle } from 'lucide-react'
+import Link from 'next/link'
 
-export function VerifyEmailPageComponent() {
-  const [isLoading, setIsLoading] = useState(false)
-  const [verificationCode, setVerificationCode] = useState(['', '', '', '', '', ''])
-  const inputRefs = useRef<(HTMLInputElement | null)[]>([])
-  const router = useRouter()
-  const [email, setEmail] = useState<string>('')
+export function CheckEmailPage() {
+  const router = useRouter();
+  const { addToast } = useToast();
+  const [email, setEmail] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // Check if we have the necessary data in session storage
-    const storedEmail = sessionStorage.getItem('verificationEmail')
-    const userId = sessionStorage.getItem('userId')
-    const tempToken = sessionStorage.getItem('tempToken')
-
-    if (!storedEmail || !userId || !tempToken) {
-      // If any required data is missing, redirect to signup
-      toast({
-        title: "Error",
-        description: "Please sign up first",
-        variant: "destructive"
-      })
-      router.push('/auth')
-      return
+    if (!navigation.isValidTransition('signup', 'check-email')) {
+      router.push('/signup');
+      return;
     }
 
-    setEmail(storedEmail)
-  }, [router])
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (verificationCode.some(digit => !digit)) {
-      toast({
-        title: "Error",
-        description: "Please enter all digits of the verification code",
-        variant: "destructive"
-      })
-      return
+    const data = navigation.getData('check-email');
+    if (!data?.email) {
+      router.push('/signup');
+      return;
     }
 
-    setIsLoading(true)
+    setEmail(data.email);
+  }, [router]);
+
+  const handleResendEmail = async () => {
+    if (!email) return;
+
+    setIsLoading(true);
     try {
-      const userId = sessionStorage.getItem('userId')
-      const tempToken = sessionStorage.getItem('tempToken')
-      const codeToSubmit = verificationCode.join('')
-      
-      const response = await fetch('/api/verify-email', {
+      const response = await fetch('/api/auth/resend-verification', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${tempToken}`
-        },
-        body: JSON.stringify({
-          userId,
-          verificationCode: codeToSubmit,
-          email
-        }),
-      })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
 
-      const data = await response.json()
-      if (!response.ok) {
-        throw new Error(data.message || 'Verification failed')
-      }
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message);
 
-      toast({
+      addToast({
         title: "Success",
-        description: "Email verified successfully!",
-      })
-
-      // Clear verification data from session storage
-      sessionStorage.removeItem('verificationEmail')
-      sessionStorage.removeItem('userId')
-      sessionStorage.removeItem('tempToken')
-
-      // Redirect to create profile page
-      router.push('/create-profile')
+        description: "Verification email has been resent"
+      });
     } catch (error) {
-      toast({
+      addToast({
         title: "Error",
-        description: error instanceof Error ? error.message : 'Verification failed',
+        description: error instanceof Error ? error.message : "Failed to resend verification email",
         variant: "destructive"
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
-  const handleResend = async () => {
-    if (!email || isLoading) return
-
-    setIsLoading(true)
+  const handleVerificationComplete = async (token: string) => {
     try {
-      await EmailVerificationService.sendVerificationEmail(email)
-      toast({
-        title: "Verification Code Sent",
-        description: "Please check your email for the new code.",
-        duration: 5000
-      })
+      const response = await fetch('/api/auth/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token })
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message);
+
+      navigation.connect('check-email', 'verify-email');
+      router.push('/verify-email');
     } catch (error) {
-      console.error('Error sending verification email:', error)
-      toast({
+      addToast({
         title: "Error",
-        description: "Failed to send verification code. Please try again.",
+        description: "Verification failed",
         variant: "destructive"
-      })
-    } finally {
-      setIsLoading(false)
-      // Reset verification code
-      setVerificationCode(['', '', '', '', '', ''])
-      // Focus first input
-      inputRefs.current[0]?.focus()
+      });
     }
-  }
+  };
 
   return (
-    <div className="container flex min-h-screen w-screen flex-col items-center justify-center">
-      <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
-        <div className="flex flex-col space-y-2 text-center">
-          <h1 className="text-2xl font-semibold tracking-tight">Email Verification</h1>
-          <p className="text-sm text-muted-foreground">
-            Please enter the 6-digit verification code sent to{' '}
-            <span className="font-medium">{email}</span>
-          </p>
-        </div>
+    <div className="min-h-screen bg-black relative overflow-hidden">
+      {/* Geometric background pattern */}
+      <div className="absolute inset-0 opacity-5">
+        <div className="absolute top-0 left-0 w-96 h-96 border border-white/20 rounded-full -translate-x-48 -translate-y-48"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 border border-white/20 rounded-full translate-x-48 translate-y-48"></div>
+        <div className="absolute top-1/2 left-1/2 w-64 h-64 border border-white/10 rounded-full -translate-x-32 -translate-y-32"></div>
+      </div>
 
-        <form onSubmit={handleSubmit}>
-          <div className="grid gap-4">
-            <div className="flex justify-between gap-2">
-              {verificationCode.map((digit, index) => (
-                <Input
-                  key={index}
-                  ref={el => { inputRefs.current[index] = el; }}
-                  type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  maxLength={1}
-                  className="w-12 h-12 text-center text-lg"
-                  value={digit}
-                  onChange={(e) => handleInput(index, e.target.value)}
-                  onKeyDown={(e) => handleKeyDown(index, e)}
-                  onPaste={handlePaste}
-                  disabled={isLoading}
-                  required
-                />
-              ))}
+      {/* Gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-br from-gray-900/50 via-black to-gray-900/50"></div>
+
+      <div className="relative z-10 min-h-screen flex items-center justify-center px-4 py-12">
+        <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-12 items-center">
+          
+          {/* Left side - Decorative content */}
+          <div className="text-white space-y-8 hidden lg:block">
+            <div className="space-y-6">
+              <h2 className="text-5xl font-bold leading-tight">
+                Almost
+                <span className="block text-gray-400">There</span>
+              </h2>
+              <p className="text-xl text-gray-300 leading-relaxed">
+                Just one more step to unlock your account and join thousands of users who trust our platform.
+              </p>
             </div>
-            <Button 
-              type="submit" 
-              disabled={isLoading || verificationCode.some(digit => !digit)}
-              className="w-full bg-blue-600 hover:bg-blue-700"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Verifying...
-                </>
-              ) : (
-                "Continue"
-              )}
-            </Button>
+            
+            {/* Feature highlights */}
+            <div className="space-y-4">
+              <div className="flex items-start space-x-4">
+                <div className="w-2 h-2 bg-white rounded-full mt-3 flex-shrink-0"></div>
+                <div>
+                  <h3 className="text-lg font-semibold mb-1">Secure Verification</h3>
+                  <p className="text-gray-400">Advanced email verification keeps your account safe</p>
+                </div>
+              </div>
+              <div className="flex items-start space-x-4">
+                <div className="w-2 h-2 bg-white rounded-full mt-3 flex-shrink-0"></div>
+                <div>
+                  <h3 className="text-lg font-semibold mb-1">Instant Access</h3>
+                  <p className="text-gray-400">Verify once and enjoy seamless access to all features</p>
+                </div>
+              </div>
+              <div className="flex items-start space-x-4">
+                <div className="w-2 h-2 bg-white rounded-full mt-3 flex-shrink-0"></div>
+                <div>
+                  <h3 className="text-lg font-semibold mb-1">Privacy First</h3>
+                  <p className="text-gray-400">Your email is protected and never shared</p>
+                </div>
+              </div>
+            </div>
           </div>
-        </form>
 
-        <div className="text-center">
-          <p className="text-sm text-muted-foreground">
-            Didn&apos;t receive any mail?{" "}
-            <button
-              onClick={handleResend}
-              className="text-blue-600 hover:text-blue-700 font-medium"
-              disabled={isLoading}
-            >
-              Resend
-            </button>
-          </p>
-          <p className="text-sm text-muted-foreground">
-            If you are ready to create a profile, you can go to the 
-            <a href="/create-profile" className="text-blue-600 hover:text-blue-700 font-medium"> Create Profile Page</a>.
-          </p>
+          {/* Right side - Main content */}
+          <div className="w-full">
+            <div className="bg-white rounded-2xl shadow-2xl p-8 lg:p-12 border border-gray-100">
+              <div className="text-center">
+                {/* Icon */}
+                <div className="mx-auto w-20 h-20 bg-black rounded-full flex items-center justify-center mb-6 shadow-lg">
+                  <Mail className="h-10 w-10 text-white" />
+                </div>
+
+                {/* Header */}
+                <h1 className="text-3xl lg:text-4xl font-bold text-black mb-3">
+                  Check your email
+                </h1>
+                <p className="text-gray-600 text-lg mb-8 leading-relaxed">
+                  We've sent a verification link to{' '}
+                  <span className="font-semibold text-black">{email}</span>
+                </p>
+
+                {/* Content sections */}
+                <div className="space-y-6">
+                  {/* Primary instruction */}
+                  <div className="bg-gray-50 p-6 rounded-xl border border-gray-200">
+                    <div className="flex items-start">
+                      <CheckCircle className="h-6 w-6 text-black mr-3 flex-shrink-0 mt-1" />
+                      <div className="text-left">
+                        <h3 className="font-semibold text-black mb-2">Verify Your Account</h3>
+                        <p className="text-gray-700">
+                          Click the verification link in your email to activate your account and get started.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Email instructions */}
+                  <div className="bg-gray-50 border-2 border-gray-200 p-6 rounded-xl">
+                    <h3 className="font-bold text-black mb-3 text-left">Can't find the email?</h3>
+                    <div className="text-left space-y-2 text-gray-700">
+                      <p>• Check your spam or junk folder</p>
+                      <p>• Make sure you entered the correct email address</p>
+                      <p>• Wait a few minutes for the email to arrive</p>
+                    </div>
+                  </div>
+
+                  {/* Development mode instructions */}
+                  {process.env.NODE_ENV === 'development' && (
+                    <div className="bg-black text-white p-6 rounded-xl border-2 border-gray-800">
+                      <h3 className="font-bold mb-3 text-left">Development Mode</h3>
+                      <p className="text-gray-300 mb-3 text-left">
+                        If the real email fails to send, you can view the backup development email:
+                      </p>
+                      <Link
+                        href={`/dev/emails?email=${encodeURIComponent(email)}`}
+                        className="text-white hover:text-gray-300 underline block mb-2 text-left"
+                        target="_blank"
+                      >
+                        View Development Emails →
+                      </Link>
+                      <p className="text-gray-400 text-sm text-left">
+                        This message only appears in development mode.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  <div className="space-y-4 pt-4">
+                    <Button
+                      onClick={handleResendEmail}
+                      className="w-full bg-black hover:bg-gray-800 text-white py-3 text-lg font-semibold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                          Resending...
+                        </>
+                      ) : (
+                        "Resend verification email"
+                      )}
+                    </Button>
+
+                    <div className="text-center text-gray-500 pt-2">
+                      <p>
+                        Already verified?{' '}
+                        <Link 
+                          href="/signin" 
+                          className="text-black hover:text-gray-700 font-semibold underline transition-colors"
+                        >
+                          Sign in
+                        </Link>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-  )
+  );
 }

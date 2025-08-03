@@ -5,3 +5,4 @@ import { authOptions as baseAuthOptions } from '@/app/api/auth/[...nextauth]/rou
 export const getTypedSession = async () => {
   return getServerSession(baseAuthOptions as AuthOptions)
 }
+

@@ -364,7 +364,7 @@ export function HomePageComponent() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="flex items-center justify-center min-h-screen bg-white dark:bg-black">
         <Alert variant="destructive" className="max-w-md">
           <AlertDescription>{error}</AlertDescription>
           <Button
@@ -384,22 +384,22 @@ export function HomePageComponent() {
   }
 
   return (
-    <LayoutWrapper className="bg-gray-50 dark:bg-gray-900 min-h-screen">
+    <LayoutWrapper className="bg-white dark:bg-black min-h-screen">
       {/* Sidebar */}
       <Sidebar onAddMoney={() => setShowDepositModal(true)} />
 
       {/* Header */}
-      <header className="sticky top-0 z-30 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
+      <header className="sticky top-0 z-30 bg-white dark:bg-black border-b border-gray-200 dark:border-gray-800 shadow-sm">
         <div className="container mx-auto px-4 lg:px-6">
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center gap-4 ml-16">
               <div className="flex items-center gap-3">
-                <Wallet className="h-8 w-8 text-blue-600" />
+                <Wallet className="h-8 w-8 text-black dark:text-white" />
                 <div>
-                  <h1 className="text-xl font-bold dark:text-white">
+                  <h1 className="text-xl font-bold text-black dark:text-white">
                     Welcome back, {user?.name || 'User'}
                   </h1>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
                     {new Date().toLocaleDateString('en-US', {
                       weekday: 'long',
                       year: 'numeric',
@@ -417,7 +417,7 @@ export function HomePageComponent() {
                   placeholder="Search transactions..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-64 pl-9 bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600"
+                  className="w-64 pl-9 bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700"
                 />
               </div>
               <Button
@@ -428,7 +428,7 @@ export function HomePageComponent() {
               >
                 <Bell className="h-5 w-5" />
                 {notificationCount > 0 && (
-                  <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 h-5 w-5 bg-black dark:bg-white text-white dark:text-black text-xs rounded-full flex items-center justify-center">
                     {notificationCount > 9 ? '9+' : notificationCount}
                   </span>
                 )}
@@ -453,18 +453,18 @@ export function HomePageComponent() {
           transition={{ duration: 0.3 }}
           className="mb-8"
         >
-          <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-800">
+          <Card className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 border-gray-200 dark:border-gray-700">
             <CardContent className="p-6">
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
-                  <div className="bg-blue-100 dark:bg-blue-900 p-3 rounded-full">
-                    <Sparkles className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                  <div className="bg-gray-100 dark:bg-gray-800 p-3 rounded-full">
+                    <Sparkles className="h-6 w-6 text-black dark:text-white" />
                   </div>
                   <div>
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    <h2 className="text-lg font-semibold text-black dark:text-white">
                       Quick Actions
                     </h2>
-                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
                       Manage your finances with one click
                     </p>
                   </div>
@@ -472,14 +472,14 @@ export function HomePageComponent() {
                 <div className="flex flex-wrap gap-3">
                   <Button
                     onClick={() => setShowDepositModal(true)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                    className="bg-black hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-200 text-white dark:text-black"
                   >
                     <Plus className="h-4 w-4 mr-2" />
                     Add Money
                   </Button>
                   <Button
                     variant="outline"
-                    className="border-blue-200 text-blue-700 hover:bg-blue-50"
+                    className="border-gray-300 dark:border-gray-600 text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
                     onClick={() => {
                       console.log('Transfer button clicked!');
                       setIsTransferModalOpen(true);
@@ -488,7 +488,7 @@ export function HomePageComponent() {
                     <ArrowUpRight className="h-4 w-4 mr-2" />
                     Transfer
                   </Button>
-                  <Button variant="outline" className="border-green-200 text-green-700 hover:bg-green-50">
+                  <Button variant="outline" className="border-gray-300 dark:border-gray-600 text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800">
                     <Target className="h-4 w-4 mr-2" />
                     Set Goal
                   </Button>
@@ -507,76 +507,76 @@ export function HomePageComponent() {
         >
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {/* Total Balance Card */}
-            <Card className="bg-gradient-to-br from-blue-600 to-blue-700 text-white border-0 shadow-lg">
+            <Card className="bg-gradient-to-br from-black to-gray-800 dark:from-white dark:to-gray-200 text-white dark:text-black border-0 shadow-lg">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-blue-100 text-sm font-medium">Total Balance</p>
+                    <p className="text-gray-300 dark:text-gray-600 text-sm font-medium">Total Balance</p>
                     <p className="text-3xl font-bold mt-2">${balance.toLocaleString()}</p>
                     <div className="flex items-center mt-2">
-                      <ArrowUpRight className="h-4 w-4 text-green-300 mr-1" />
-                      <span className="text-green-300 text-sm">+2.5% from last month</span>
+                      <ArrowUpRight className="h-4 w-4 text-gray-400 dark:text-gray-500 mr-1" />
+                      <span className="text-gray-400 dark:text-gray-500 text-sm">+2.5% from last month</span>
                     </div>
                   </div>
-                  <div className="bg-blue-500/30 p-3 rounded-full">
-                    <Wallet className="h-6 w-6 text-white" />
+                  <div className="bg-gray-700 dark:bg-gray-300 p-3 rounded-full">
+                    <Wallet className="h-6 w-6 text-white dark:text-black" />
                   </div>
                 </div>
               </CardContent>
             </Card>
 
             {/* Monthly Income Card */}
-            <Card className="bg-gradient-to-br from-green-600 to-green-700 text-white border-0 shadow-lg">
+            <Card className="bg-gradient-to-br from-gray-800 to-gray-900 dark:from-gray-200 dark:to-gray-300 text-white dark:text-black border-0 shadow-lg">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-green-100 text-sm font-medium">Monthly Income</p>
+                    <p className="text-gray-300 dark:text-gray-600 text-sm font-medium">Monthly Income</p>
                     <p className="text-3xl font-bold mt-2">$3,200</p>
                     <div className="flex items-center mt-2">
-                      <ArrowUpRight className="h-4 w-4 text-green-300 mr-1" />
-                      <span className="text-green-300 text-sm">+8.2% this month</span>
+                      <ArrowUpRight className="h-4 w-4 text-gray-400 dark:text-gray-500 mr-1" />
+                      <span className="text-gray-400 dark:text-gray-500 text-sm">+8.2% this month</span>
                     </div>
                   </div>
-                  <div className="bg-green-500/30 p-3 rounded-full">
-                    <TrendingUp className="h-6 w-6 text-white" />
+                  <div className="bg-gray-700 dark:bg-gray-300 p-3 rounded-full">
+                    <TrendingUp className="h-6 w-6 text-white dark:text-black" />
                   </div>
                 </div>
               </CardContent>
             </Card>
 
             {/* Monthly Expenses Card */}
-            <Card className="bg-gradient-to-br from-orange-600 to-red-600 text-white border-0 shadow-lg">
+            <Card className="bg-gradient-to-br from-gray-700 to-gray-800 dark:from-gray-300 dark:to-gray-400 text-white dark:text-black border-0 shadow-lg">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-orange-100 text-sm font-medium">Monthly Expenses</p>
+                    <p className="text-gray-300 dark:text-gray-600 text-sm font-medium">Monthly Expenses</p>
                     <p className="text-3xl font-bold mt-2">$1,850</p>
                     <div className="flex items-center mt-2">
-                      <ArrowDownRight className="h-4 w-4 text-red-300 mr-1" />
-                      <span className="text-red-300 text-sm">-3.1% this month</span>
+                      <ArrowDownRight className="h-4 w-4 text-gray-400 dark:text-gray-500 mr-1" />
+                      <span className="text-gray-400 dark:text-gray-500 text-sm">-3.1% this month</span>
                     </div>
                   </div>
-                  <div className="bg-orange-500/30 p-3 rounded-full">
-                    <ArrowDownRight className="h-6 w-6 text-white" />
+                  <div className="bg-gray-600 dark:bg-gray-200 p-3 rounded-full">
+                    <ArrowDownRight className="h-6 w-6 text-white dark:text-black" />
                   </div>
                 </div>
               </CardContent>
             </Card>
 
             {/* Savings Goal Card */}
-            <Card className="bg-gradient-to-br from-purple-600 to-purple-700 text-white border-0 shadow-lg">
+            <Card className="bg-gradient-to-br from-gray-600 to-gray-700 dark:from-gray-400 dark:to-gray-500 text-white dark:text-black border-0 shadow-lg">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-purple-100 text-sm font-medium">Savings Progress</p>
+                    <p className="text-gray-300 dark:text-gray-600 text-sm font-medium">Savings Progress</p>
                     <p className="text-3xl font-bold mt-2">75%</p>
                     <div className="flex items-center mt-2">
-                      <Target className="h-4 w-4 text-purple-300 mr-1" />
-                      <span className="text-purple-300 text-sm">$7,500 of $10,000</span>
+                      <Target className="h-4 w-4 text-gray-400 dark:text-gray-500 mr-1" />
+                      <span className="text-gray-400 dark:text-gray-500 text-sm">$7,500 of $10,000</span>
                     </div>
                   </div>
-                  <div className="bg-purple-500/30 p-3 rounded-full">
-                    <PiggyBank className="h-6 w-6 text-white" />
+                  <div className="bg-gray-500 dark:bg-gray-200 p-3 rounded-full">
+                    <PiggyBank className="h-6 w-6 text-white dark:text-black" />
                   </div>
                 </div>
               </CardContent>
@@ -623,10 +623,10 @@ export function HomePageComponent() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: 0.5 }}
             >
-              <Card className="border-2 border-blue-500/20 bg-gradient-to-br from-blue-50/50 to-indigo-50/50 dark:from-blue-900/10 dark:to-indigo-900/10">
+              <Card className="border-2 border-gray-300 dark:border-gray-700 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
                 <CardHeader>
                   <div className="flex items-center gap-2">
-                    <Brain className="h-5 w-5 text-blue-500" />
+                    <Brain className="h-5 w-5 text-black dark:text-white" />
                     <CardTitle className="text-lg">AI Insights</CardTitle>
                   </div>
                   <CardDescription>Personalized financial recommendations</CardDescription>
@@ -643,25 +643,25 @@ export function HomePageComponent() {
                       {aiInsights.slice(0, 3).map((insight) => (
                         <div
                           key={insight.id}
-                          className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm"
+                          className="bg-white dark:bg-black p-4 rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm"
                         >
-                          <h3 className="font-medium text-gray-900 dark:text-white mb-1">
+                          <h3 className="font-medium text-black dark:text-white mb-1">
                             {insight.title}
                           </h3>
-                          <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
                             {insight.description}
                           </p>
                           <div className="flex items-center justify-between">
-                            <Badge variant="secondary" className="text-xs">
+                            <Badge variant="secondary" className="text-xs bg-gray-100 dark:bg-gray-800 text-black dark:text-white">
                               {insight.priority || 'medium'}
                             </Badge>
-                            <Button size="sm" variant="outline" className="text-xs">
+                            <Button size="sm" variant="outline" className="text-xs border-gray-300 dark:border-gray-600">
                               Learn More
                             </Button>
                           </div>
                         </div>
                       ))}
-                      <Button variant="outline" className="w-full">
+                      <Button variant="outline" className="w-full border-gray-300 dark:border-gray-600">
                         <Brain className="h-4 w-4 mr-2" />
                         View All Insights
                       </Button>
@@ -688,15 +688,15 @@ export function HomePageComponent() {
                   <CardDescription>Your latest financial activities</CardDescription>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <Button variant="outline" size="sm" className="text-xs">
+                  <Button variant="outline" size="sm" className="text-xs border-gray-300 dark:border-gray-600">
                     <Filter className="h-4 w-4 mr-2" />
                     Filter
                   </Button>
-                  <Button variant="outline" size="sm" className="text-xs">
+                  <Button variant="outline" size="sm" className="text-xs border-gray-300 dark:border-gray-600">
                     <Download className="h-4 w-4 mr-2" />
                     Export
                   </Button>
-                  <Button size="sm" className="text-xs">
+                  <Button size="sm" className="text-xs bg-black hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-200 text-white dark:text-black">
                     <Plus className="h-4 w-4 mr-2" />
                     Add Transaction
                   </Button>
@@ -718,42 +718,34 @@ export function HomePageComponent() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.2, delay: index * 0.05 }}
-                      className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                      className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                     >
                       <div className="flex items-center gap-4">
                         <div className={`p-2 rounded-full ${
                           transaction.type === 'income'
-                            ? 'bg-green-100 dark:bg-green-900'
-                            : 'bg-red-100 dark:bg-red-900'
+                            ? 'bg-gray-200 dark:bg-gray-700'
+                            : 'bg-gray-300 dark:bg-gray-600'
                         }`}>
                           {transaction.type === 'income' ? (
-                            <ArrowUpRight className={`h-4 w-4 ${
-                              transaction.type === 'income'
-                                ? 'text-green-600 dark:text-green-400'
-                                : 'text-red-600 dark:text-red-400'
-                            }`} />
+                            <ArrowUpRight className="h-4 w-4 text-black dark:text-white" />
                           ) : (
-                            <ArrowDownRight className="h-4 w-4 text-red-600 dark:text-red-400" />
+                            <ArrowDownRight className="h-4 w-4 text-black dark:text-white" />
                           )}
                         </div>
                         <div>
-                          <p className="font-medium text-gray-900 dark:text-white">
+                          <p className="font-medium text-black dark:text-white">
                             {transaction.description}
                           </p>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
                             {transaction.merchant} • {transaction.category}
                           </p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className={`font-semibold ${
-                          transaction.type === 'income'
-                            ? 'text-green-600 dark:text-green-400'
-                            : 'text-red-600 dark:text-red-400'
-                        }`}>
+                        <p className="font-semibold text-black dark:text-white">
                           {transaction.type === 'income' ? '+' : '-'}${transaction.amount.toFixed(2)}
                         </p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
                           {new Date(transaction.date).toLocaleDateString()}
                         </p>
                       </div>
@@ -766,7 +758,7 @@ export function HomePageComponent() {
                   )}
                   {filteredTransactions.length > 5 && (
                     <div className="text-center pt-4">
-                      <Button variant="outline" className="w-full">
+                      <Button variant="outline" className="w-full border-gray-300 dark:border-gray-600">
                         View All Transactions
                       </Button>
                     </div>
@@ -787,21 +779,21 @@ export function HomePageComponent() {
           console.log('Transfer modal state changing from', isTransferModalOpen, 'to:', open);
           setIsTransferModalOpen(open);
         }}>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-md bg-white dark:bg-black border-gray-200 dark:border-gray-800">
             <DialogHeader>
-              <DialogTitle>Send Money</DialogTitle>
-              <DialogDescription>
+              <DialogTitle className="text-black dark:text-white">Send Money</DialogTitle>
+              <DialogDescription className="text-gray-600 dark:text-gray-400">
                 Transfer money quickly and securely
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="transfer-method">Transfer Method</Label>
+                <Label htmlFor="transfer-method" className="text-black dark:text-white">Transfer Method</Label>
                 <Select value={transferMethod} onValueChange={setTransferMethod}>
-                  <SelectTrigger>
+                  <SelectTrigger className="border-gray-300 dark:border-gray-600 bg-white dark:bg-black">
                     <SelectValue placeholder="Select transfer method" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white dark:bg-black border-gray-300 dark:border-gray-600">
                     <SelectItem value="bank">Bank Transfer</SelectItem>
                     <SelectItem value="card">Card Transfer</SelectItem>
                     <SelectItem value="mobile">Mobile Money</SelectItem>
@@ -811,21 +803,21 @@ export function HomePageComponent() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="transfer-amount">Amount</Label>
+                <Label htmlFor="transfer-amount" className="text-black dark:text-white">Amount</Label>
                 <Input
                   id="transfer-amount"
                   type="number"
                   placeholder="0.00"
                   value={transferAmount}
                   onChange={(e) => setTransferAmount(e.target.value)}
-                  className="text-lg font-semibold"
+                  className="text-lg font-semibold border-gray-300 dark:border-gray-600 bg-white dark:bg-black"
                   step="0.01"
                   min="0"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="transfer-recipient">
+                <Label htmlFor="transfer-recipient" className="text-black dark:text-white">
                   {transferMethod === 'bank' ? 'Account Number' :
                    transferMethod === 'card' ? 'Card Number' :
                    transferMethod === 'mobile' ? 'Phone Number' : 'Email or Phone'}
@@ -839,33 +831,35 @@ export function HomePageComponent() {
                   }
                   value={transferRecipient}
                   onChange={(e) => setTransferRecipient(e.target.value)}
+                  className="border-gray-300 dark:border-gray-600 bg-white dark:bg-black"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="transfer-note">Note (Optional)</Label>
+                <Label htmlFor="transfer-note" className="text-black dark:text-white">Note (Optional)</Label>
                 <Textarea
                   id="transfer-note"
                   placeholder="What's this transfer for?"
                   value={transferNote}
                   onChange={(e) => setTransferNote(e.target.value)}
                   rows={2}
+                  className="border-gray-300 dark:border-gray-600 bg-white dark:bg-black"
                 />
               </div>
 
               {transferAmount && (
-                <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg space-y-1">
+                <div className="bg-gray-100 dark:bg-gray-900 p-3 rounded-lg space-y-1">
                   <div className="flex justify-between text-sm">
-                    <span>Amount:</span>
-                    <span>{formatCurrency(parseFloat(transferAmount) || 0)}</span>
+                    <span className="text-gray-600 dark:text-gray-400">Amount:</span>
+                    <span className="text-black dark:text-white">{formatCurrency(parseFloat(transferAmount) || 0)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span>Fee:</span>
-                    <span>{formatCurrency(2.50)}</span>
+                    <span className="text-gray-600 dark:text-gray-400">Fee:</span>
+                    <span className="text-black dark:text-white">{formatCurrency(2.50)}</span>
                   </div>
                   <div className="flex justify-between font-semibold">
-                    <span>Total:</span>
-                    <span>{formatCurrency((parseFloat(transferAmount) || 0) + 2.50)}</span>
+                    <span className="text-black dark:text-white">Total:</span>
+                    <span className="text-black dark:text-white">{formatCurrency((parseFloat(transferAmount) || 0) + 2.50)}</span>
                   </div>
                 </div>
               )}
@@ -874,14 +868,14 @@ export function HomePageComponent() {
                 <Button
                   variant="outline"
                   onClick={() => setIsTransferModalOpen(false)}
-                  className="flex-1"
+                  className="flex-1 border-gray-300 dark:border-gray-600"
                 >
                   Cancel
                 </Button>
                 <Button
                   onClick={handleTransfer}
                   disabled={isProcessingTransfer || !transferAmount || !transferRecipient}
-                  className="flex-1"
+                  className="flex-1 bg-black hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-200 text-white dark:text-black"
                 >
                   {isProcessingTransfer ? (
                     <>
@@ -916,8 +910,3 @@ export function HomePageComponent() {
     </LayoutWrapper>
   )
 }
-
-
-
-
-

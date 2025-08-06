@@ -46,7 +46,9 @@ import { useSession } from 'next-auth/react'
 import { FeatureNavigation } from './home/feature-navigation'
 import { SavingsPreview } from './home/savings-preview'
 import { InvestmentPreview } from './home/investment-preview'
-import { Sidebar } from './ui/sidebar'
+import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sidebar-layout'
+import { SidebarContent } from '@/components/ui/sidebar-content'
+import { SidebarToggle } from '@/components/ui/sidebar-toggle'
 import { Notifications } from './ui/notifications'
 import { Settings as SettingsPanel } from './ui/settings'
 
@@ -370,9 +372,12 @@ export function HomePageComponent() {
   }
 
   return (
-    <LayoutWrapper className="bg-white dark:bg-black min-h-screen">
-      {/* Sidebar */}
-      <Sidebar onAddMoney={() => setShowDepositModal(true)} />
+    <SidebarProvider>
+      <ResponsiveSidebarLayout
+        sidebar={<SidebarContent onAddMoney={() => setShowDepositModal(true)} />}
+      >
+        <SidebarToggle />
+        <LayoutWrapper className="bg-white min-h-screen">
 
       {/* Header */}
       <header className="sticky top-0 z-30 bg-white dark:bg-black border-b border-gray-200 dark:border-gray-800 shadow-sm">
@@ -893,6 +898,8 @@ export function HomePageComponent() {
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
       />
-    </LayoutWrapper>
+        </LayoutWrapper>
+      </ResponsiveSidebarLayout>
+    </SidebarProvider>
   )
 }

@@ -19,8 +19,8 @@ export function SidebarToggle({ className = '' }: SidebarToggleProps) {
       onClick={toggle}
       className={`fixed left-5 top-6 z-[60] w-11 h-11 rounded-2xl border-2 backdrop-blur-xl transition-all duration-500 shadow-2xl ${
         isOpen
-          ? 'bg-white/95 border-gray-200 hover:bg-white text-black shadow-black/20'
-          : 'bg-black/90 border-gray-800 hover:bg-black text-white shadow-black/40'
+          ? 'bg-white border-black hover:bg-white text-black shadow-black/20'
+          : 'bg-black border-white hover:bg-black text-white shadow-white/20'
       } ${className}`}
       title={isOpen ? "Close sidebar" : "Open sidebar"}
     >

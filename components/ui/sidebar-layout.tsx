@@ -46,7 +46,7 @@ export function SidebarLayout({ children, sidebar, className = '' }: SidebarLayo
   const { isOpen } = useSidebar()
 
   return (
-    <div className={`flex min-h-screen bg-gray-50 dark:bg-gray-900 ${className}`}>
+    <div className={`flex min-h-screen bg-white ${className}`}>
       {/* Sidebar Container */}
       <div className="relative">
         {/* Sidebar */}
@@ -110,7 +110,7 @@ export function ResponsiveSidebarLayout({ children, sidebar, className = '' }: S
   const { isOpen } = useSidebar()
 
   return (
-    <div className={`flex min-h-screen bg-gray-50 dark:bg-gray-900 ${className}`}>
+    <div className={`flex min-h-screen bg-white ${className}`}>
       {/* Sidebar Container */}
       <div className="relative">
         {/* Desktop Sidebar */}

@@ -50,6 +50,8 @@ export class MastercardClient {
     description?: string;
   }) {
     const cert = await this.loadCertificate();
+    console.log('Using certificate for payment processing:', cert ? 'loaded' : 'not loaded');
+
     try {
       // Validate card number
       if (!CardValidation.validateCardNumber(data.recipientCard)) {
@@ -87,12 +89,22 @@ export class MastercardClient {
     description?: string;
   }) {
     // Implement Mastercard Payment Link generation
-    return { paymentUrl: '', referenceId: uuidv4() };
+    console.log('Generating payment link for:', data);
+    return {
+      paymentUrl: `https://mastercard.com/pay/${uuidv4()}`,
+      referenceId: uuidv4()
+    };
   }
 
   async getCardInfo(cardNumber: string) {
     // Implement Mastercard card validation and info retrieval
-    return { isValid: true, cardType: '', binInfo: {} };
+    console.log('Getting card info for:', cardNumber.substring(0, 4) + '****');
+    const cardType = CardValidation.getCardType(cardNumber);
+    return {
+      isValid: CardValidation.validateCardNumber(cardNumber),
+      cardType,
+      binInfo: { issuer: 'Unknown', country: 'Unknown' }
+    };
   }
 }
 

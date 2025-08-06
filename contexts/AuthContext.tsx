@@ -29,6 +29,31 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Check if auth bypass is enabled
+    const bypassAuth = process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true';
+
+    if (bypassAuth) {
+      console.log('Auth bypass enabled - providing mock user data');
+      const mockUser: User = {
+        id: 'mock-user-id',
+        email: 'user@example.com',
+        name: 'Demo User'
+      };
+      const mockToken = 'mock-auth-token';
+
+      setUser(mockUser);
+      setToken(mockToken);
+
+      // Store mock data in storage for consistency
+      localStorage.setItem('auth_token', mockToken);
+      localStorage.setItem('auth_user', JSON.stringify(mockUser));
+      sessionStorage.setItem('token', mockToken);
+      sessionStorage.setItem('user', JSON.stringify(mockUser));
+
+      setIsLoading(false);
+      return;
+    }
+
     // Check for stored auth data on mount
     const storedToken = localStorage.getItem('auth_token');
     const storedUser = localStorage.getItem('auth_user');

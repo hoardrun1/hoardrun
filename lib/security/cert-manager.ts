@@ -3,6 +3,7 @@ import path from 'path';
 import { execSync } from 'child_process';
 import { MomoLogger } from '../logger/momo-logger';
 import { sendAlert } from '../notifications';
+import { prisma } from '../prisma';
 
 interface CertificateInfo {
   subject: {

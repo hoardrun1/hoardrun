@@ -277,32 +277,36 @@ export function InvestmentPage() {
   const { addToast, toast } = useToast()
 
   // Try to use the finance context, but provide a fallback if it's not available
-  let balance = 0;
-  let depositFunds = async (amount: number) => {
-    console.warn('Finance context not available, using mock deposit function');
-    toast({ title: "Deposit", description: `Mock deposit of $${amount}` });
-  };
-  let withdrawFunds = async (amount: number) => {
-    console.warn('Finance context not available, using mock withdraw function');
-    toast({ title: "Withdraw", description: `Mock withdraw of $${amount}` });
-  };
-
+  let financeContext;
   try {
-    const financeContext = useFinance();
-    balance = financeContext.balance;
-    depositFunds = financeContext.depositFunds;
-    withdrawFunds = financeContext.withdrawFunds;
+    financeContext = useFinance();
   } catch (error) {
     console.warn('Finance context not available, using default values');
-    // Use default values defined above
-    balance = 25000; // Default investment balance
+    financeContext = null;
   }
+
+  const balance = financeContext?.balance || 25000; // Default investment balance
+  const depositFunds = financeContext?.depositFunds || (async (amount: number) => {
+    console.warn('Finance context not available, using mock deposit function');
+    toast({ title: "Deposit", description: `Mock deposit of $${amount}` });
+  });
+  const withdrawFunds = financeContext?.withdrawFunds || (async (amount: number) => {
+    console.warn('Finance context not available, using mock withdraw function');
+    toast({ title: "Withdraw", description: `Mock withdraw of $${amount}` });
+  });
 
   const { data: session, status } = useSession()
   const { fetchStockQuote, isLoading: marketDataLoading } = useMarketData()
 
   // Redirect if not authenticated
   useEffect(() => {
+    // Check if we should bypass auth in development mode
+    const bypassAuth = process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true';
+    if (bypassAuth && process.env.NODE_ENV === 'development') {
+      console.log('Auth bypass enabled in development mode for investment page');
+      return;
+    }
+
     if (status === 'unauthenticated') {
       router.push('/signin')
     }
@@ -310,6 +314,18 @@ export function InvestmentPage() {
 
   // Security check simulation
   useEffect(() => {
+    // Check if we should bypass auth in development mode
+    const bypassAuth = process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true';
+    if (bypassAuth && process.env.NODE_ENV === 'development') {
+      // In development mode, automatically set security checks to true
+      setSecurityChecks({
+        isEmailVerified: true,
+        isIdentityVerified: true,
+        isInvestorVerified: true,
+      });
+      return;
+    }
+
     if (session?.user) {
       // Simulate security checks
       setTimeout(() => {
@@ -355,6 +371,23 @@ export function InvestmentPage() {
       return false
     }
   }
+
+  const handleStockSearch = useCallback(async (symbol: string) => {
+    try {
+      const quote = await fetchStockQuote(symbol)
+
+      if (quote) {
+        setMarketData(quote)
+      }
+    } catch (error) {
+      console.error('Error fetching market data:', error)
+      addToast({
+        title: "Error",
+        description: "Failed to fetch market data. Please try again later.",
+        variant: "destructive",
+      })
+    }
+  }, [fetchStockQuote, addToast])
 
   // Show security verification first
   if (!securityChecks.isEmailVerified || !securityChecks.isIdentityVerified || !securityChecks.isInvestorVerified) {
@@ -402,23 +435,6 @@ export function InvestmentPage() {
       </div>
     )
   }
-
-  const handleStockSearch = useCallback(async (symbol: string) => {
-    try {
-      const quote = await fetchStockQuote(symbol)
-
-      if (quote) {
-        setMarketData(quote)
-      }
-    } catch (error) {
-      console.error('Error fetching market data:', error)
-      addToast({
-        title: "Error",
-        description: "Failed to fetch market data. Please try again later.",
-        variant: "destructive",
-      })
-    }
-  }, [fetchStockQuote, addToast])
 
   // Example startup data
   const startups: Startup[] = [

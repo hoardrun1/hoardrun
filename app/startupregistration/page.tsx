@@ -84,6 +84,13 @@ export default function StartupRegistration() {
 
   // Redirect if not authenticated
   useEffect(() => {
+    // Check if we should bypass auth in development mode
+    const bypassAuth = process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true';
+    if (bypassAuth && process.env.NODE_ENV === 'development') {
+      console.log('Auth bypass enabled in development mode for startup registration');
+      return;
+    }
+
     if (status === 'unauthenticated') {
       router.push('/signin')
     }
@@ -91,6 +98,18 @@ export default function StartupRegistration() {
 
   // Security check simulation
   useEffect(() => {
+    // Check if we should bypass auth in development mode
+    const bypassAuth = process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true';
+    if (bypassAuth && process.env.NODE_ENV === 'development') {
+      // In development mode, automatically set security checks to true
+      setSecurityChecks({
+        isEmailVerified: true,
+        isIdentityVerified: true,
+        isCompanyVerified: true,
+      });
+      return;
+    }
+
     if (session?.user) {
       // Simulate security checks
       setTimeout(() => {

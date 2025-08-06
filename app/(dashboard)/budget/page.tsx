@@ -32,14 +32,14 @@ import { isAuthBypassEnabled } from '@/lib/auth-bypass'
 
 // Mock data for budget categories
 const budgetCategories = [
-  { id: 'housing', name: 'Housing', icon: Home, color: '#8884d8', budgeted: 2000, spent: 1850, percentage: 92.5 },
-  { id: 'food', name: 'Food & Dining', icon: Utensils, color: '#82ca9d', budgeted: 800, spent: 720, percentage: 90 },
-  { id: 'transportation', name: 'Transportation', icon: Car, color: '#ffc658', budgeted: 500, spent: 380, percentage: 76 },
-  { id: 'entertainment', name: 'Entertainment', icon: Gamepad2, color: '#ff7300', budgeted: 300, spent: 420, percentage: 140 },
-  { id: 'shopping', name: 'Shopping', icon: ShoppingCart, color: '#00ff88', budgeted: 400, spent: 350, percentage: 87.5 },
-  { id: 'healthcare', name: 'Healthcare', icon: Heart, color: '#ff0080', budgeted: 200, spent: 150, percentage: 75 },
-  { id: 'education', name: 'Education', icon: GraduationCap, color: '#8000ff', budgeted: 150, spent: 100, percentage: 66.7 },
-  { id: 'travel', name: 'Travel', icon: Plane, color: '#ff8000', budgeted: 250, spent: 0, percentage: 0 }
+  { id: 'housing', name: 'Housing', icon: Home, color: '#000000', budgeted: 2000, spent: 1850, percentage: 92.5 },
+  { id: 'food', name: 'Food & Dining', icon: Utensils, color: '#333333', budgeted: 800, spent: 720, percentage: 90 },
+  { id: 'transportation', name: 'Transportation', icon: Car, color: '#666666', budgeted: 500, spent: 380, percentage: 76 },
+  { id: 'entertainment', name: 'Entertainment', icon: Gamepad2, color: '#999999', budgeted: 300, spent: 420, percentage: 140 },
+  { id: 'shopping', name: 'Shopping', icon: ShoppingCart, color: '#CCCCCC', budgeted: 400, spent: 350, percentage: 87.5 },
+  { id: 'healthcare', name: 'Healthcare', icon: Heart, color: '#FFFFFF', budgeted: 200, spent: 150, percentage: 75 },
+  { id: 'education', name: 'Education', icon: GraduationCap, color: '#444444', budgeted: 150, spent: 100, percentage: 66.7 },
+  { id: 'travel', name: 'Travel', icon: Plane, color: '#777777', budgeted: 250, spent: 0, percentage: 0 }
 ]
 
 // Monthly spending trend data
@@ -100,15 +100,15 @@ export default function BudgetPage() {
         sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
       >
         <SidebarToggle />
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+        <div className="min-h-screen bg-white p-6">
           <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-3xl font-bold text-black">
               Budget Tracker
             </h1>
-            <p className="text-gray-500 dark:text-gray-400 mt-1">
+            <p className="text-black/60 mt-1">
               Track your spending and manage your budget
             </p>
           </div>
@@ -181,7 +181,7 @@ export default function BudgetPage() {
               <PiggyBank className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className={`text-2xl font-bold ${remainingBudget >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <div className={`text-2xl font-bold ${remainingBudget >= 0 ? 'text-black' : 'text-black'}`}>
                 ${Math.abs(remainingBudget).toLocaleString()}
               </div>
               <p className="text-xs text-muted-foreground">
@@ -196,7 +196,7 @@ export default function BudgetPage() {
               <AlertTriangle className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-orange-600">
+              <div className="text-2xl font-bold text-black">
                 {overBudgetCategories.length}
               </div>
               <p className="text-xs text-muted-foreground">Categories over budget</p>
@@ -271,8 +271,8 @@ export default function BudgetPage() {
                       <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
                       <YAxis />
                       <Tooltip />
-                      <Bar dataKey="budgeted" fill="#8884d8" name="Budgeted" />
-                      <Bar dataKey="spent" fill="#82ca9d" name="Spent" />
+                      <Bar dataKey="budgeted" fill="#000000" name="Budgeted" />
+                      <Bar dataKey="spent" fill="#666666" name="Spent" />
                     </BarChart>
                   </ResponsiveContainer>
                 </CardContent>
@@ -337,8 +337,8 @@ export default function BudgetPage() {
                     <XAxis dataKey="month" />
                     <YAxis />
                     <Tooltip />
-                    <Line type="monotone" dataKey="budgeted" stroke="#8884d8" name="Budgeted" />
-                    <Line type="monotone" dataKey="spent" stroke="#82ca9d" name="Actual Spent" />
+                    <Line type="monotone" dataKey="budgeted" stroke="#000000" name="Budgeted" />
+                    <Line type="monotone" dataKey="spent" stroke="#666666" name="Actual Spent" />
                   </LineChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -353,28 +353,28 @@ export default function BudgetPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-start space-x-3">
-                    <TrendingUp className="h-5 w-5 text-green-500 mt-0.5" />
+                    <TrendingUp className="h-5 w-5 text-black mt-0.5" />
                     <div>
                       <p className="font-medium">Great job on Transportation!</p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm text-black/60">
                         You're 24% under budget this month
                       </p>
                     </div>
                   </div>
                   <div className="flex items-start space-x-3">
-                    <TrendingDown className="h-5 w-5 text-red-500 mt-0.5" />
+                    <TrendingDown className="h-5 w-5 text-black mt-0.5" />
                     <div>
                       <p className="font-medium">Watch your Entertainment spending</p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm text-black/60">
                         You're 40% over budget in this category
                       </p>
                     </div>
                   </div>
                   <div className="flex items-start space-x-3">
-                    <Target className="h-5 w-5 text-blue-500 mt-0.5" />
+                    <Target className="h-5 w-5 text-black mt-0.5" />
                     <div>
                       <p className="font-medium">On track overall</p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm text-black/60">
                         You're within 5% of your total monthly budget
                       </p>
                     </div>
@@ -387,19 +387,19 @@ export default function BudgetPage() {
                   <CardTitle>Recommendations</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                    <p className="font-medium text-blue-900 dark:text-blue-100">
+                  <div className="p-3 bg-black/5 rounded-lg border border-black/10">
+                    <p className="font-medium text-black">
                       Consider reallocating budget
                     </p>
-                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                    <p className="text-sm text-black/60">
                       Move $100 from Transportation to Entertainment to better match your spending patterns
                     </p>
                   </div>
-                  <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                    <p className="font-medium text-green-900 dark:text-green-100">
+                  <div className="p-3 bg-black/5 rounded-lg border border-black/10">
+                    <p className="font-medium text-black">
                       Save more this month
                     </p>
-                    <p className="text-sm text-green-700 dark:text-green-300">
+                    <p className="text-sm text-black/60">
                       You have $630 remaining. Consider moving it to savings or investments
                     </p>
                   </div>

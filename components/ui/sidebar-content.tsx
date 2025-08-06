@@ -22,7 +22,8 @@ import {
   Phone,
   ChevronRight,
   Plus,
-  Calculator
+  Calculator,
+  Layout
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -46,7 +47,8 @@ interface MenuItem {
 
 const menuSections = {
   main: [
-    { id: 'overview', label: 'Overview', icon: Home, href: '/overview', description: 'Dashboard home' },
+    { id: 'home', label: 'Home', icon: Layout, href: '/home', description: 'Main dashboard' },
+    { id: 'overview', label: 'Overview', icon: BarChart3, href: '/overview', description: 'Financial overview' },
     { id: 'budget', label: 'Budget', icon: Calculator, href: '/budget', description: 'Track spending' },
     { id: 'savings', label: 'Savings', icon: PiggyBank, href: '/savings', description: 'Goals & plans' },
     { id: 'investment', label: 'Investment', icon: TrendingUp, href: '/investment', description: 'Grow wealth' },
@@ -77,7 +79,8 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
   const sidebarRef = useRef<HTMLDivElement>(null)
 
   const isActiveRoute = (href: string) => {
-    if (href === '/overview') return pathname === '/overview' || pathname === '/'
+    if (href === '/home') return pathname === '/home' || pathname === '/'
+    if (href === '/overview') return pathname === '/overview'
     return pathname.startsWith(href)
   }
 
@@ -98,7 +101,7 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
 
   const renderMenuSection = (title: string, items: MenuItem[]) => (
     <div className="mb-8">
-      <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4 px-2">
+      <h3 className="text-xs font-bold text-white/40 uppercase tracking-wider mb-4 px-2">
         {title}
       </h3>
       <div className="space-y-1">
@@ -109,7 +112,7 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
             className={`w-full flex items-center gap-4 p-3 rounded-xl transition-all duration-300 group relative overflow-hidden ${
               isActiveRoute(item.href)
                 ? 'bg-white text-black shadow-lg'
-                : 'text-gray-300 hover:bg-gray-800/50 hover:text-white'
+                : 'text-white/70 hover:bg-white/10 hover:text-white'
             }`}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
@@ -124,12 +127,12 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
             )}
             
             <div className={`p-2 rounded-xl transition-all duration-300 ${
-              isActiveRoute(item.href) 
-                ? 'bg-black shadow-lg' 
-                : 'bg-gray-800/50 group-hover:bg-gray-700/70'
+              isActiveRoute(item.href)
+                ? 'bg-black shadow-lg'
+                : 'bg-white/10 group-hover:bg-white/20'
             }`}>
               <item.icon className={`h-5 w-5 transition-colors duration-300 ${
-                isActiveRoute(item.href) ? 'text-white' : 'text-gray-300 group-hover:text-white'
+                isActiveRoute(item.href) ? 'text-white' : 'text-white/70 group-hover:text-white'
               }`} />
             </div>
             
@@ -141,11 +144,11 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
                   {item.label}
                 </span>
                 {item.badge && (
-                  <Badge 
+                  <Badge
                     className={`ml-2 text-[10px] font-bold px-2 py-0.5 transition-colors duration-300 ${
                       isActiveRoute(item.href)
                         ? 'bg-black text-white'
-                        : 'bg-gray-700 text-gray-300 group-hover:bg-gray-600 group-hover:text-white'
+                        : 'bg-white/20 text-white/70 group-hover:bg-white/30 group-hover:text-white'
                     }`}
                   >
                     {item.badge}
@@ -154,9 +157,9 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
               </div>
               {item.description && (
                 <p className={`text-xs mt-1 transition-colors duration-300 ${
-                  isActiveRoute(item.href) 
-                    ? 'text-gray-600' 
-                    : 'text-gray-500 group-hover:text-gray-300'
+                  isActiveRoute(item.href)
+                    ? 'text-black/60'
+                    : 'text-white/50 group-hover:text-white/70'
                 }`}>
                   {item.description}
                 </p>
@@ -171,7 +174,7 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
               transition={{ duration: 0.3 }}
             >
               <ChevronRight className={`h-4 w-4 transition-colors duration-300 ${
-                isActiveRoute(item.href) ? 'text-black' : 'text-gray-500 group-hover:text-gray-300'
+                isActiveRoute(item.href) ? 'text-black' : 'text-white/50 group-hover:text-white/70'
               }`} />
             </motion.div>
           </motion.button>
@@ -183,49 +186,42 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
   return (
     <div
       ref={sidebarRef}
-      className="h-full w-full bg-black border-r border-gray-800/50 overflow-hidden"
-      style={{
-        background: 'linear-gradient(180deg, #000000 0%, #0f0f0f 100%)'
-      }}
+      className="h-full w-full bg-black border-r border-white/20 overflow-hidden"
     >
-      {/* Glass overlay for premium effect */}
-      <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />
-      
       {/* Scrollable content */}
-      <div className="h-full overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
+      <div className="h-full overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-white/30 scrollbar-track-transparent">
         {/* Header */}
-        <div className="pt-8 px-6 pb-8 border-b border-gray-800/30 relative">
+        <div className="pt-8 px-6 pb-8 border-b border-white/20 relative">
           {/* Brand Identity */}
           <div className="flex items-center gap-4 mb-6">
             <div className="relative">
-              <div className="bg-white p-3 rounded-2xl shadow-2xl shadow-white/10">
+              <div className="bg-white p-3 rounded-2xl shadow-2xl">
                 <Wallet className="h-7 w-7 text-black" />
               </div>
-              <div className="absolute -inset-1 bg-gradient-to-r from-white/20 to-white/10 rounded-2xl -z-10 blur-lg"></div>
             </div>
             <div>
               <h1 className="text-2xl font-black text-white tracking-tight">HoardRun</h1>
-              <p className="text-sm text-gray-400 font-medium">Premium Banking</p>
+              <p className="text-sm text-white/60 font-medium">Premium Banking</p>
             </div>
           </div>
 
           {/* User Profile */}
-          <motion.div 
-            className="flex items-center gap-4 p-4 bg-gradient-to-r from-white/[0.08] to-white/[0.04] rounded-2xl border border-white/10 backdrop-blur-xl"
+          <motion.div
+            className="flex items-center gap-4 p-4 bg-white/10 rounded-2xl border border-white/20"
             whileHover={{ scale: 1.02 }}
             transition={{ duration: 0.2 }}
           >
             <div className="relative">
-              <div className="w-12 h-12 bg-gradient-to-br from-white to-gray-200 rounded-2xl flex items-center justify-center shadow-xl">
-                <User className="h-6 w-6 text-gray-700" />
+              <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-xl">
+                <User className="h-6 w-6 text-black" />
               </div>
-              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-black"></div>
+              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-white rounded-full border-2 border-black"></div>
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-bold text-white text-sm truncate">
                 {user?.name || 'Demo User'}
               </p>
-              <p className="text-xs text-gray-400 truncate">
+              <p className="text-xs text-white/60 truncate">
                 {user?.email || 'user@example.com'}
               </p>
             </div>
@@ -233,10 +229,10 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
         </div>
 
         {/* Quick Action */}
-        <div className="px-6 py-6 border-b border-gray-800/30">
+        <div className="px-6 py-6 border-b border-white/20">
           <Button
             onClick={onAddMoney}
-            className="w-full bg-gradient-to-r from-white to-gray-100 text-black font-bold py-4 rounded-2xl shadow-2xl hover:shadow-white/20 transition-all duration-300 hover:scale-105"
+            className="w-full bg-white text-black font-bold py-4 rounded-2xl shadow-2xl hover:bg-white/90 transition-all duration-300 hover:scale-105"
           >
             <Plus className="h-5 w-5 mr-2" />
             Add Money
@@ -252,11 +248,11 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
         </div>
 
         {/* Logout */}
-        <div className="px-6 py-6 border-t border-gray-800/30">
+        <div className="px-6 py-6 border-t border-white/20">
           <Button
             onClick={handleLogout}
             variant="ghost"
-            className="w-full justify-start text-gray-400 hover:text-white hover:bg-gray-800/50 rounded-xl p-3"
+            className="w-full justify-start text-white/60 hover:text-white hover:bg-white/10 rounded-xl p-3"
           >
             <LogOut className="h-5 w-5 mr-3" />
             Sign Out

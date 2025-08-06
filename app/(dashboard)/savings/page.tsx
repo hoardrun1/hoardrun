@@ -222,15 +222,15 @@ export default function SavingsPage() {
         sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
       >
         <SidebarToggle />
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+        <div className="min-h-screen bg-white p-6">
           <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-3xl font-bold text-black">
               Savings Goals
             </h1>
-            <p className="text-gray-500 dark:text-gray-400 mt-1">
+            <p className="text-black/60 mt-1">
               Track and manage your savings goals
             </p>
           </div>

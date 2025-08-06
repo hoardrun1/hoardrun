@@ -338,7 +338,7 @@ export default function OverviewPage() {
         sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
       >
         <SidebarToggle />
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 p-6">
+        <div className="min-h-screen bg-white p-6">
           <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -346,8 +346,8 @@ export default function OverviewPage() {
             <h1 className="text-4xl font-bold bg-gradient-to-r from-black to-gray-700 bg-clip-text text-transparent">
               Financial Overview
             </h1>
-            <p className="text-gray-600 mt-2 text-lg">
-              Welcome back, {user?.firstName || 'User'}! Here's your financial snapshot.
+            <p className="text-black/60 mt-2 text-lg">
+              Welcome back, {user?.name || 'User'}! Here's your financial snapshot.
             </p>
           </div>
           <Button 

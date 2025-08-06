@@ -179,8 +179,8 @@ export function Sidebar({ className, onAddMoney }: SidebarProps) {
     const items = menuItems.filter(item => item.category === category);
 
     return (
-      <div className="mb-6">
-        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-3">
+      <div className="mb-8">
+        <h3 className="text-[11px] font-bold text-gray-500 uppercase tracking-[0.1em] mb-4 px-4 select-none">
           {title}
         </h3>
         <div className="space-y-1">
@@ -188,37 +188,74 @@ export function Sidebar({ className, onAddMoney }: SidebarProps) {
             <motion.button
               key={item.id}
               onClick={() => handleNavigation(item)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all duration-200 group ${
+              className={`w-full flex items-center gap-4 px-4 py-3 text-left transition-all duration-300 group relative overflow-hidden ${
                 isActiveRoute(item.href)
-                  ? 'bg-blue-600 text-white shadow-lg'
-                  : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                  ? 'text-black bg-white/95 backdrop-blur-sm shadow-lg shadow-black/10'
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
               }`}
-              whileHover={{ x: 4 }}
-              whileTap={{ scale: 0.98 }}
+              whileHover={{ x: 2 }}
+              whileTap={{ scale: 0.995 }}
             >
-              <item.icon className={`h-5 w-5 flex-shrink-0 ${
-                isActiveRoute(item.href) ? 'text-white' : 'text-gray-400 group-hover:text-white'
-              }`} />
+              {/* Active indicator line */}
+              {isActiveRoute(item.href) && (
+                <motion.div
+                  layoutId="activeIndicator"
+                  className="absolute left-0 top-0 w-1 h-full bg-black"
+                  transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                />
+              )}
+              
+              <div className={`p-2 rounded-xl transition-all duration-300 ${
+                isActiveRoute(item.href) 
+                  ? 'bg-black shadow-lg' 
+                  : 'bg-gray-800/50 group-hover:bg-gray-700/70'
+              }`}>
+                <item.icon className={`h-5 w-5 transition-colors duration-300 ${
+                  isActiveRoute(item.href) ? 'text-white' : 'text-gray-300 group-hover:text-white'
+                }`} />
+              </div>
+              
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
-                  <span className="font-medium truncate">{item.label}</span>
+                  <span className={`font-semibold text-sm transition-colors duration-300 ${
+                    isActiveRoute(item.href) ? 'text-black' : 'group-hover:text-white'
+                  }`}>
+                    {item.label}
+                  </span>
                   {item.badge && (
-                    <Badge variant="secondary" className="ml-2 text-xs">
+                    <Badge 
+                      className={`ml-2 text-[10px] font-bold px-2 py-0.5 transition-colors duration-300 ${
+                        isActiveRoute(item.href)
+                          ? 'bg-black text-white'
+                          : 'bg-gray-700 text-gray-300 group-hover:bg-gray-600 group-hover:text-white'
+                      }`}
+                    >
                       {item.badge}
                     </Badge>
                   )}
                 </div>
                 {item.description && (
-                  <p className={`text-xs mt-0.5 truncate ${
-                    isActiveRoute(item.href) ? 'text-blue-100' : 'text-gray-500 group-hover:text-gray-300'
+                  <p className={`text-xs mt-1 transition-colors duration-300 ${
+                    isActiveRoute(item.href) 
+                      ? 'text-gray-600' 
+                      : 'text-gray-500 group-hover:text-gray-300'
                   }`}>
                     {item.description}
                   </p>
                 )}
               </div>
-              <ChevronRight className={`h-4 w-4 flex-shrink-0 transition-transform ${
-                isActiveRoute(item.href) ? 'text-white' : 'text-gray-500 group-hover:text-gray-300'
-              }`} />
+              
+              <motion.div
+                animate={{ 
+                  x: isActiveRoute(item.href) ? 0 : -4,
+                  opacity: isActiveRoute(item.href) ? 1 : 0.5
+                }}
+                transition={{ duration: 0.3 }}
+              >
+                <ChevronRight className={`h-4 w-4 transition-colors duration-300 ${
+                  isActiveRoute(item.href) ? 'text-black' : 'text-gray-500 group-hover:text-gray-300'
+                }`} />
+              </motion.div>
             </motion.button>
           ))}
         </div>
@@ -228,27 +265,27 @@ export function Sidebar({ className, onAddMoney }: SidebarProps) {
 
   return (
     <>
-      {/* Hamburger Menu Button - Dynamic Position */}
+      {/* Hamburger Menu Button - Ultra Modern */}
       <Button
         variant="ghost"
         size="icon"
         onClick={() => setIsOpen(!isOpen)}
-        className={`fixed left-4 z-[60] shadow-lg transition-all duration-300 ${
+        className={`fixed left-5 z-[60] w-11 h-11 rounded-2xl border-2 backdrop-blur-xl transition-all duration-500 shadow-2xl ${
           isOpen
-            ? 'top-6 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700'
-            : 'top-12 bg-blue-600 border border-blue-500 hover:bg-blue-700 text-white'
+            ? 'top-6 bg-white/95 border-gray-200 hover:bg-white text-black shadow-black/20'
+            : 'top-12 bg-black/90 border-gray-800 hover:bg-black text-white shadow-black/40'
         }`}
         title={isOpen ? "Close sidebar" : "Open sidebar"}
       >
         <motion.div
-          animate={{ rotate: isOpen ? 90 : 0 }}
-          transition={{ duration: 0.3, ease: "easeInOut" }}
+          animate={{ rotate: isOpen ? 180 : 0 }}
+          transition={{ duration: 0.4, ease: [0.23, 1, 0.320, 1] }}
         >
-          <Menu className="h-5 w-5" />
+          {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </motion.div>
       </Button>
 
-      {/* Overlay */}
+      {/* Overlay - Premium blur effect */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -256,105 +293,133 @@ export function Sidebar({ className, onAddMoney }: SidebarProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setIsOpen(false)}
-            className="fixed inset-0 bg-black/30 z-[50]"
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[50]"
           />
         )}
       </AnimatePresence>
 
-      {/* Sidebar */}
+      {/* Sidebar - Ultra Premium Design */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
             ref={sidebarRef}
-            initial={{ x: isMobile ? -312 : -320 }}
-            animate={{ x: 0 }}
-            exit={{ x: isMobile ? -312 : -320 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed left-0 top-0 h-full w-[312px] md:w-80 bg-gray-900 border-r border-gray-700 z-[55] overflow-y-auto"
+            initial={{ x: isMobile ? -340 : -360, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: isMobile ? -340 : -360, opacity: 0 }}
+            transition={{ 
+              type: 'spring', 
+              damping: 30, 
+              stiffness: 300,
+              opacity: { duration: 0.2 }
+            }}
+            className="fixed left-0 top-0 h-full w-[340px] md:w-[360px] bg-black border-r border-gray-800/50 z-[55] overflow-hidden"
+            style={{
+              background: 'linear-gradient(180deg, #000000 0%, #0f0f0f 100%)'
+            }}
           >
-            {/* Header */}
-            <div className="pt-16 px-6 pb-6 border-b border-gray-700 relative">
-              {/* Hamburger Menu Area Indicator */}
-              <div className="absolute top-6 left-4 w-10 h-10 border border-gray-600 rounded-lg opacity-30"></div>
+            {/* Glass overlay for premium effect */}
+            <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />
+            
+            {/* Scrollable content */}
+            <div className="h-full overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
+              {/* Header - Ultra Premium */}
+              <div className="pt-20 px-6 pb-8 border-b border-gray-800/30 relative">
+                {/* Hamburger Menu Area Indicator - Subtle */}
+                <div className="absolute top-6 left-5 w-11 h-11 border border-gray-800/30 rounded-2xl opacity-20"></div>
 
-              <div className="flex items-center gap-3 mb-4">
-                <div className="bg-blue-600 p-2 rounded-lg">
-                  <Wallet className="h-6 w-6 text-white" />
+                {/* Brand Identity */}
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="relative">
+                    <div className="bg-white p-3 rounded-2xl shadow-2xl shadow-white/10">
+                      <Wallet className="h-7 w-7 text-black" />
+                    </div>
+                    <div className="absolute -inset-1 bg-gradient-to-r from-white/20 to-white/10 rounded-2xl -z-10 blur-lg"></div>
+                  </div>
+                  <div>
+                    <h1 className="text-2xl font-black text-white tracking-tight">HoardRun</h1>
+                    <p className="text-sm text-gray-400 font-medium">Premium Banking</p>
+                  </div>
                 </div>
-                <div>
-                  <h1 className="text-xl font-bold text-white">HoardRun</h1>
-                  <p className="text-sm text-gray-400">Digital Banking</p>
-                </div>
-              </div>
 
-              {/* User Info */}
-              <div className="flex items-center gap-3 p-3 bg-gray-800 rounded-lg">
-                <div className="bg-blue-500 w-10 h-10 rounded-full flex items-center justify-center">
-                  <span className="text-white font-semibold">
-                    {user?.name?.charAt(0) || 'U'}
-                  </span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-white font-medium truncate">
-                    {user?.name || 'User'}
-                  </p>
-                  <p className="text-gray-400 text-sm truncate">
-                    {user?.email || 'user@example.com'}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Menu Content */}
-            <div className="px-4 py-4">
-              {/* Quick Actions */}
-              <div className="mb-6">
-                <div className="grid grid-cols-2 gap-2">
-                  <Button
-                    size="sm"
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
-                    onClick={() => {
-                      if (onAddMoney) {
-                        onAddMoney();
-                      } else {
-                        // Fallback to navigation if no callback provided
-                        handleNavigation({ id: 'add-money', label: 'Add Money', icon: Plus, href: '/home', category: 'financial' });
-                      }
-                    }}
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Money
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="border-gray-600 text-gray-300 hover:bg-gray-700"
-                    onClick={() => handleNavigation({ id: 'transfer', label: 'Transfer', icon: ArrowUpRight, href: '/transfer', category: 'financial' })}
-                  >
-                    <ArrowUpRight className="h-4 w-4 mr-2" />
-                    Transfer
-                  </Button>
-                </div>
-              </div>
-
-              <Separator className="bg-gray-700 mb-6" />
-
-              {/* Menu Sections */}
-              {renderMenuSection('main', 'Main')}
-              {renderMenuSection('financial', 'Financial')}
-              {renderMenuSection('account', 'Account')}
-              {renderMenuSection('support', 'Support')}
-
-              {/* Logout */}
-              <div className="mt-6 pt-6 border-t border-gray-700">
-                <Button
-                  variant="ghost"
-                  onClick={handleLogout}
-                  className="w-full justify-start text-gray-300 hover:text-white hover:bg-red-600/20"
+                {/* User Profile - Elegant */}
+                <motion.div 
+                  className="flex items-center gap-4 p-4 bg-gradient-to-r from-white/[0.08] to-white/[0.04] rounded-2xl border border-white/10 backdrop-blur-xl"
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ duration: 0.2 }}
                 >
-                  <LogOut className="h-5 w-5 mr-3" />
-                  Sign Out
-                </Button>
+                  <div className="relative">
+                    <div className="bg-white w-12 h-12 rounded-2xl flex items-center justify-center shadow-xl">
+                      <span className="text-black font-bold text-lg">
+                        {user?.name?.charAt(0) || 'U'}
+                      </span>
+                    </div>
+                    <div className="absolute -inset-1 bg-gradient-to-r from-white/30 to-white/10 rounded-2xl -z-10 blur-md"></div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white font-bold text-base truncate">
+                      {user?.name || 'User'}
+                    </p>
+                    <p className="text-gray-400 text-sm truncate font-medium">
+                      {user?.email || 'user@example.com'}
+                    </p>
+                  </div>
+                </motion.div>
+              </div>
+
+              {/* Menu Content */}
+              <div className="px-2 py-6">
+                {/* Quick Actions - Modern Design */}
+                <div className="mb-8 px-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <Button
+                      size="sm"
+                      className="bg-white text-black hover:bg-gray-100 font-bold py-3 px-4 rounded-xl shadow-xl transition-all duration-300 hover:shadow-2xl hover:scale-105"
+                      onClick={() => {
+                        if (onAddMoney) {
+                          onAddMoney();
+                        } else {
+                          handleNavigation({ id: 'add-money', label: 'Add Money', icon: Plus, href: '/home', category: 'financial' });
+                        }
+                      }}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Money
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="bg-gray-800/80 text-white hover:bg-gray-700 font-bold py-3 px-4 rounded-xl border border-gray-700 backdrop-blur-sm transition-all duration-300 hover:scale-105"
+                      onClick={() => handleNavigation({ id: 'transfer', label: 'Transfer', icon: ArrowUpRight, href: '/transfer', category: 'financial' })}
+                    >
+                      <ArrowUpRight className="h-4 w-4 mr-2" />
+                      Transfer
+                    </Button>
+                  </div>
+                </div>
+
+                <Separator className="bg-gray-800/50 mx-4 mb-8" />
+
+                {/* Menu Sections */}
+                {renderMenuSection('main', 'Dashboard')}
+                {renderMenuSection('financial', 'Financial Tools')}
+                {renderMenuSection('account', 'Account Management')}
+                {renderMenuSection('support', 'Support & Help')}
+
+                {/* Logout - Professional */}
+                <div className="mt-8 pt-8 px-4 border-t border-gray-800/30">
+                  <Button
+                    variant="ghost"
+                    onClick={handleLogout}
+                    className="w-full justify-start text-gray-400 hover:text-red-400 hover:bg-red-500/10 font-semibold py-3 px-4 rounded-xl transition-all duration-300 group"
+                  >
+                    <div className="p-2 rounded-xl bg-gray-800/50 group-hover:bg-red-500/20 transition-colors duration-300 mr-3">
+                      <LogOut className="h-4 w-4" />
+                    </div>
+                    Sign Out
+                  </Button>
+                </div>
+
+                {/* Bottom Spacing */}
+                <div className="h-6"></div>
               </div>
             </div>
           </motion.div>

@@ -16,8 +16,9 @@ export default function StockQuote() {
   const [quote, setQuote] = useState<MarketQuote | null>(null);
   const { fetchStockQuote, isLoading, error } = useMarketData();
 
-  // Handle unauthenticated state
-  if (status === 'unauthenticated') {
+  // Handle unauthenticated state (unless bypass is enabled)
+  const bypassAuth = process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true';
+  if (!bypassAuth && status === 'unauthenticated') {
     return (
       <Alert variant="destructive">
         <AlertDescription>

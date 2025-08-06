@@ -19,6 +19,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { motion } from 'framer-motion'
 import { formatCurrency } from '@/lib/banking'
 import { PiggyBank, Target, Clock, TrendingUp, AlertCircle, Plus, ChevronRight } from 'lucide-react'
+import { Sidebar } from '@/components/ui/sidebar'
+import { DepositModal } from '@/components/deposit-modal'
 
 interface SavingsAnalytics {
   totalSavings: number;
@@ -53,6 +55,7 @@ export default function SavingsPage() {
   })
 
   const [isNewGoalDialogOpen, setIsNewGoalDialogOpen] = useState(false)
+  const [isDepositModalOpen, setIsDepositModalOpen] = useState(false)
   const [newGoalForm, setNewGoalForm] = useState<{
     name: string;
     targetAmount: string;
@@ -212,16 +215,25 @@ export default function SavingsPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Savings</h1>
-        <Dialog open={isNewGoalDialogOpen} onOpenChange={setIsNewGoalDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              New Goal
-            </Button>
-          </DialogTrigger>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              Savings Goals
+            </h1>
+            <p className="text-gray-500 dark:text-gray-400 mt-1">
+              Track and manage your savings goals
+            </p>
+          </div>
+          <Dialog open={isNewGoalDialogOpen} onOpenChange={setIsNewGoalDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                New Goal
+              </Button>
+            </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Create New Savings Goal</DialogTitle>
@@ -351,6 +363,16 @@ export default function SavingsPage() {
           </Card>
         </TabsContent>
       </Tabs>
+      </div>
+
+      {/* Sidebar */}
+      <Sidebar onAddMoney={() => setIsDepositModalOpen(true)} />
+
+      {/* Deposit Modal */}
+      <DepositModal
+        open={isDepositModalOpen}
+        onOpenChange={setIsDepositModalOpen}
+      />
     </div>
   )
 }

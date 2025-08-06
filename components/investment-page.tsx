@@ -36,6 +36,7 @@ import { MarketQuote } from '@/types/market';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Sidebar } from '@/components/ui/sidebar';
 import { LayoutWrapper } from '@/components/ui/layout-wrapper';
+import { DepositModal } from '@/components/deposit-modal';
 import { z } from "zod"
 
 interface Investment {
@@ -272,6 +273,7 @@ export function InvestmentPage() {
     isIdentityVerified: false,
     isInvestorVerified: false,
   })
+  const [isDepositModalOpen, setIsDepositModalOpen] = useState(false)
 
   const router = useRouter()
   const { addToast, toast } = useToast()
@@ -301,9 +303,10 @@ export function InvestmentPage() {
   const { data: session, status } = useSession()
   const { fetchStockQuote, isLoading: marketDataLoading } = useMarketData()
 
-  // Redirect if not authenticated
+  // Redirect if not authenticated (unless bypass is enabled)
   useEffect(() => {
-    if (status === 'unauthenticated') {
+    const bypassAuth = process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true';
+    if (!bypassAuth && status === 'unauthenticated') {
       router.push('/signin')
     }
   }, [status, router])
@@ -1031,6 +1034,15 @@ export function InvestmentPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Sidebar */}
+      <Sidebar onAddMoney={() => setIsDepositModalOpen(true)} />
+
+      {/* Deposit Modal */}
+      <DepositModal
+        open={isDepositModalOpen}
+        onOpenChange={setIsDepositModalOpen}
+      />
     </LayoutWrapper>
   )
 }

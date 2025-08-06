@@ -3,8 +3,8 @@ import { useSession } from 'next-auth/react'
 import { useToast } from '@/components/ui/use-toast'
 import { mockSavingsGoals } from '@/lib/mock-data/savings'
 
-// Check if we're in development mode
-const isDev = process.env.NODE_ENV === 'development'
+// Check if auth bypass is enabled
+const bypassAuth = process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true'
 
 interface SavingsGoal {
   id: string
@@ -48,15 +48,15 @@ export function useSavings() {
   const [error, setError] = useState<string | null>(null)
 
   const fetchSavingsGoals = useCallback(async () => {
-    if (!session?.user) return
+    if (!bypassAuth && !session?.user) return
 
     setIsLoading(true)
     setError(null)
 
     try {
-      if (isDev) {
-        // Use mock data in development
-        console.log('Using mock savings data in development mode');
+      if (bypassAuth) {
+        // Use mock data when bypass is enabled
+        console.log('Using mock savings data with auth bypass enabled');
         setTimeout(() => {
           setSavingsGoals(mockSavingsGoals);
           setIsLoading(false);

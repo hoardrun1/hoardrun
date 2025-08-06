@@ -19,7 +19,9 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { motion } from 'framer-motion'
 import { formatCurrency } from '@/lib/banking'
 import { PiggyBank, Target, Clock, TrendingUp, AlertCircle, Plus, ChevronRight } from 'lucide-react'
-import { Sidebar } from '@/components/ui/sidebar'
+import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sidebar-layout'
+import { SidebarContent } from '@/components/ui/sidebar-content'
+import { SidebarToggle } from '@/components/ui/sidebar-toggle'
 import { DepositModal } from '@/components/deposit-modal'
 
 interface SavingsAnalytics {
@@ -215,8 +217,13 @@ export default function SavingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <SidebarProvider>
+      <ResponsiveSidebarLayout
+        sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
+      >
+        <SidebarToggle />
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+          <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -363,16 +370,15 @@ export default function SavingsPage() {
           </Card>
         </TabsContent>
       </Tabs>
-      </div>
+          </div>
+        </div>
 
-      {/* Sidebar */}
-      <Sidebar onAddMoney={() => setIsDepositModalOpen(true)} />
-
-      {/* Deposit Modal */}
-      <DepositModal
-        open={isDepositModalOpen}
-        onOpenChange={setIsDepositModalOpen}
-      />
-    </div>
+        {/* Deposit Modal */}
+        <DepositModal
+          open={isDepositModalOpen}
+          onOpenChange={setIsDepositModalOpen}
+        />
+      </ResponsiveSidebarLayout>
+    </SidebarProvider>
   )
 }

@@ -26,9 +26,13 @@ const nextConfig = {
         events: false,
         child_process: false,
         os: false,
+        net: false,
+        tls: false,
+        dns: false,
         winston: false,
         'winston-daily-rotate-file': false,
         'file-stream-rotator': false,
+        nodemailer: false,
       };
     }
     return config;

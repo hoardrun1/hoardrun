@@ -39,7 +39,7 @@ export function useBeneficiaries() {
     totalPages: 1,
     hasMore: false,
   })
-  const { toast } = useToast()
+  const { addToast } = useToast()
 
   const fetchBeneficiaries = useCallback(async (
     page: number = 1,
@@ -76,7 +76,7 @@ export function useBeneficiaries() {
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to fetch beneficiaries'
       setError(message)
-      toast({
+      addToast({
         variant: "destructive",
         title: "Error",
         description: message,
@@ -85,7 +85,7 @@ export function useBeneficiaries() {
     } finally {
       setIsLoading(false)
     }
-  }, [toast])
+  }, [addToast])
 
   const addBeneficiary = useCallback(async (data: CreateBeneficiaryData) => {
     try {
@@ -107,7 +107,7 @@ export function useBeneficiaries() {
       }
 
       setBeneficiaries(prev => [result.beneficiary, ...prev])
-      toast({
+      addToast({
         title: "Success",
         description: "Beneficiary added successfully",
       })
@@ -116,7 +116,7 @@ export function useBeneficiaries() {
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to add beneficiary'
       setError(message)
-      toast({
+      addToast({
         variant: "destructive",
         title: "Error",
         description: message,
@@ -125,7 +125,7 @@ export function useBeneficiaries() {
     } finally {
       setIsLoading(false)
     }
-  }, [toast])
+  }, [addToast])
 
   const updateBeneficiary = useCallback(async (
     id: string,
@@ -152,7 +152,7 @@ export function useBeneficiaries() {
       setBeneficiaries(prev =>
         prev.map(b => (b.id === id ? result.beneficiary : b))
       )
-      toast({
+      addToast({
         title: "Success",
         description: "Beneficiary updated successfully",
       })
@@ -161,7 +161,7 @@ export function useBeneficiaries() {
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to update beneficiary'
       setError(message)
-      toast({
+      addToast({
         variant: "destructive",
         title: "Error",
         description: message,
@@ -170,7 +170,7 @@ export function useBeneficiaries() {
     } finally {
       setIsLoading(false)
     }
-  }, [toast])
+  }, [addToast])
 
   const deleteBeneficiary = useCallback(async (id: string) => {
     try {
@@ -188,7 +188,7 @@ export function useBeneficiaries() {
       }
 
       setBeneficiaries(prev => prev.filter(b => b.id !== id))
-      toast({
+      addToast({
         title: "Success",
         description: "Beneficiary deleted successfully",
       })
@@ -197,7 +197,7 @@ export function useBeneficiaries() {
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to delete beneficiary'
       setError(message)
-      toast({
+      addToast({
         variant: "destructive",
         title: "Error",
         description: message,
@@ -206,7 +206,7 @@ export function useBeneficiaries() {
     } finally {
       setIsLoading(false)
     }
-  }, [toast])
+  }, [addToast])
 
   const getBeneficiaryById = useCallback((beneficiaryId: string) => {
     return beneficiaries.find(b => b.id === beneficiaryId)

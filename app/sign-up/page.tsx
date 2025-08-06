@@ -3,11 +3,12 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { toast } from 'react-hot-toast'
+import { useToast } from '@/components/ui/use-toast'
 
 export default function SignUpPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const { addToast } = useToast()
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -35,16 +36,24 @@ export default function SignUpPage() {
 
       // Show verification code in development mode
       if (process.env.NODE_ENV === 'development' && data.verificationCode) {
-        toast.success(`Verification code: ${data.verificationCode}`, {
-          duration: 10000, // Show for 10 seconds
+        addToast({
+          title: "Verification Code",
+          description: `Verification code: ${data.verificationCode}`,
         })
       }
 
-      toast.success(data.message)
+      addToast({
+        title: "Success",
+        description: data.message,
+      })
       router.push('/sign-in')
     } catch (error: any) {
       console.error('Sign-up error:', error)
-      toast.error(error.message || 'Failed to create account')
+      addToast({
+        title: "Error",
+        description: error.message || 'Failed to create account',
+        variant: "destructive"
+      })
     } finally {
       setLoading(false)
     }

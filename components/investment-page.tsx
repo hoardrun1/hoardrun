@@ -411,25 +411,25 @@ export function InvestmentPage() {
             <CardContent className="space-y-4">
               <div className="flex items-center space-x-2">
                 {securityChecks.isEmailVerified ? (
-                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  <CheckCircle className="w-5 h-5 text-black" />
                 ) : (
-                  <AlertTriangle className="w-5 h-5 text-yellow-500" />
+                  <AlertTriangle className="w-5 h-5 text-black/60" />
                 )}
                 <span>Email Verification</span>
               </div>
               <div className="flex items-center space-x-2">
                 {securityChecks.isIdentityVerified ? (
-                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  <CheckCircle className="w-5 h-5 text-black" />
                 ) : (
-                  <AlertTriangle className="w-5 h-5 text-yellow-500" />
+                  <AlertTriangle className="w-5 h-5 text-black/60" />
                 )}
                 <span>Identity Verification</span>
               </div>
               <div className="flex items-center space-x-2">
                 {securityChecks.isInvestorVerified ? (
-                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  <CheckCircle className="w-5 h-5 text-black" />
                 ) : (
-                  <AlertTriangle className="w-5 h-5 text-yellow-500" />
+                  <AlertTriangle className="w-5 h-5 text-black/60" />
                 )}
                 <span>Investor Verification</span>
               </div>
@@ -489,17 +489,17 @@ export function InvestmentPage() {
         <SidebarToggle />
         <LayoutWrapper className="min-h-screen bg-white">
       {/* Investment Overview */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-8">
+      <div className="bg-black text-white py-8">
         <div className="container mx-auto px-4 ml-16">
           <div className="flex justify-between items-center mb-6">
             <div>
               <h1 className="text-3xl font-bold">Smart Investments</h1>
-              <p className="text-blue-100">AI-Powered Portfolio Management</p>
+              <p className="text-white/60">AI-Powered Portfolio Management</p>
             </div>
             <div className="flex gap-4">
               <Button
                 onClick={() => router.push('/startupregistration')}
-                className="bg-green-500 text-white hover:bg-green-600"
+                className="bg-black text-white hover:bg-black/90"
                 disabled={marketDataLoading}
               >
                 <Building2 className="w-4 h-4 mr-2" />
@@ -507,7 +507,7 @@ export function InvestmentPage() {
               </Button>
               <Button
                 onClick={() => setShowInvestModal(true)}
-                className="bg-white text-blue-600 hover:bg-blue-50"
+                className="bg-white text-black hover:bg-white/90"
                 disabled={marketDataLoading}
               >
                 {marketDataLoading ? 'Loading...' : 'New Investment'}
@@ -530,7 +530,7 @@ export function InvestmentPage() {
                 <div>
                   <p className="text-gray-500">Change</p>
                   <p className={`text-2xl font-bold ${
-                    marketData.change >= 0 ? 'text-green-600' : 'text-red-600'
+                    marketData.change >= 0 ? 'text-black' : 'text-black'
                   }`}>
                     {marketData.change.toFixed(2)}
                   </p>
@@ -545,7 +545,7 @@ export function InvestmentPage() {
               <CardHeader>
                 <CardTitle className="text-lg">Portfolio Value</CardTitle>
                 <div className="text-3xl font-bold">$45,678.90</div>
-                <div className="flex items-center text-green-400">
+                <div className="flex items-center text-white/60">
                   <ArrowUpRight className="h-4 w-4 mr-1" />
                   +12.5% YTD
                 </div>
@@ -556,7 +556,7 @@ export function InvestmentPage() {
               <CardHeader>
                 <CardTitle className="text-lg">Total Returns</CardTitle>
                 <div className="text-3xl font-bold">$5,432.10</div>
-                <div className="flex items-center text-green-400">
+                <div className="flex items-center text-white/60">
                   <ArrowUpRight className="h-4 w-4 mr-1" />
                   +8.3% MTD
                 </div>
@@ -567,7 +567,7 @@ export function InvestmentPage() {
               <CardHeader>
                 <CardTitle className="text-lg">AI Risk Score</CardTitle>
                 <div className="text-3xl font-bold">85/100</div>
-                <div className="text-blue-100">Optimized Portfolio</div>
+                <div className="text-white/60">Optimized Portfolio</div>
               </CardHeader>
             </Card>
           </div>
@@ -621,15 +621,15 @@ export function InvestmentPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    <category.icon className="h-5 w-5 text-blue-600" />
+                    <category.icon className="h-5 w-5 text-black" />
                     <CardTitle className="text-lg">{category.title}</CardTitle>
                   </div>
                   <div className={`px-2 py-1 rounded text-sm ${
                     category.risk === 'High' || category.risk === 'Very High'
-                      ? 'bg-red-100 text-red-700'
+                      ? 'bg-black/20 text-black'
                       : category.risk === 'Moderate'
-                      ? 'bg-yellow-100 text-yellow-700'
-                      : 'bg-green-100 text-green-700'
+                      ? 'bg-black/10 text-black'
+                      : 'bg-black/5 text-black'
                   }`}>
                     {category.risk}
                   </div>
@@ -640,7 +640,7 @@ export function InvestmentPage() {
                 <div className="space-y-4">
                   <div>
                     <div className="text-sm text-gray-500">Expected Return</div>
-                    <div className="text-2xl font-bold text-green-600">
+                    <div className="text-2xl font-bold text-black">
                       {category.return}%
                     </div>
                   </div>
@@ -654,8 +654,8 @@ export function InvestmentPage() {
                     <div className="text-sm text-gray-500 mb-2">Key Features</div>
                     <ul className="space-y-1">
                       {category.features.map((feature, index) => (
-                        <li key={index} className="text-sm flex items-center text-gray-600 dark:text-gray-300">
-                          <ArrowUpRight className="h-4 w-4 mr-2 text-green-500" />
+                        <li key={index} className="text-sm flex items-center text-black/60">
+                          <ArrowUpRight className="h-4 w-4 mr-2 text-black" />
                           {feature}
                         </li>
                       ))}
@@ -700,7 +700,7 @@ export function InvestmentPage() {
                       <p className="text-sm text-gray-500 dark:text-gray-400">Fundraising Progress</p>
                       <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2">
                         <div
-                          className="bg-blue-600 h-2.5 rounded-full"
+                          className="bg-black h-2.5 rounded-full"
                           style={{ width: `${startup.progress}%` }}
                         />
                       </div>
@@ -814,7 +814,7 @@ export function InvestmentPage() {
                     <p className="text-sm text-gray-500 mb-2">Fundraising Progress</p>
                     <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2">
                       <div
-                        className="bg-blue-600 h-2.5 rounded-full"
+                        className="bg-black h-2.5 rounded-full"
                         style={{ width: `${selectedStartup.progress}%` }}
                       />
                     </div>
@@ -961,7 +961,7 @@ export function InvestmentPage() {
             )}
 
             {mlPredictions && (
-              <Card className="bg-blue-50 dark:bg-blue-900/20">
+              <Card className="bg-black/5 border border-black/10">
                 <CardHeader>
                   <CardTitle className="text-sm flex items-center">
                     <Brain className="h-4 w-4 mr-2" />
@@ -972,7 +972,7 @@ export function InvestmentPage() {
                   <div className="text-sm space-y-1">
                     <div className="flex justify-between">
                       <span>Predicted Return:</span>
-                      <span className="font-medium text-green-600">
+                      <span className="font-medium text-black">
                         {mlPredictions.predictedReturn}%
                       </span>
                     </div>

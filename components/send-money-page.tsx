@@ -48,10 +48,14 @@ import { formatCurrency, calculateTransactionFee } from '@/lib/banking'
 import { AccountType, TransactionType } from '@prisma/client'
 import { cn } from '@/lib/utils'
 import { LayoutWrapper } from "@/components/ui/layout-wrapper"
+import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sidebar-layout'
+import { SidebarContent } from '@/components/ui/sidebar-content'
+import { SidebarToggle } from '@/components/ui/sidebar-toggle'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useSession } from 'next-auth/react'
 import { useToast } from '@/components/ui/use-toast'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { DepositModal } from '@/components/deposit-modal'
 import { MomoClient } from '@/lib/momo-client';
 import { MastercardClient } from '@/lib/mastercard-client';
 import { VisaClient } from '@/lib/visa-client';
@@ -145,7 +149,7 @@ const cardVariants = {
 export function SendMoneyPage() {
   const router = useRouter()
   const { data: session } = useSession()
-  const { toast } = useToast()
+  const { addToast } = useToast()
   const [amount, setAmount] = useState('')
   const [description, setDescription] = useState('')
   const [selectedAccountId, setSelectedAccountId] = useState('')
@@ -168,8 +172,9 @@ export function SendMoneyPage() {
   const [showVisaDeposit, setShowVisaDeposit] = useState(false)
   const [visaCardNumber, setVisaCardNumber] = useState('')
   const [isProcessingVisa, setIsProcessingVisa] = useState(false)
+  const [isDepositModalOpen, setIsDepositModalOpen] = useState(false)
 
-  const { 
+  const {
     accounts, 
     isLoading: accountsLoading, 
     error: accountsError,
@@ -487,12 +492,12 @@ export function SendMoneyPage() {
       setDescription('')
       setPreview(null)
 
-      toast({
+      addToast({
         title: 'Success',
         description: 'Money sent successfully',
       })
     } catch (error) {
-      toast({
+      addToast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Failed to send money',
         variant: 'destructive',
@@ -519,12 +524,12 @@ export function SendMoneyPage() {
         phoneNumber: '',
       })
 
-      toast({
+      addToast({
         title: 'Success',
         description: 'Beneficiary added successfully',
       })
     } catch (error) {
-      toast({
+      addToast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Failed to add beneficiary',
         variant: 'destructive',
@@ -554,13 +559,7 @@ export function SendMoneyPage() {
     handlePreviewTransaction()
   }, [amount, selectedAccountId, selectedBeneficiaryId, handlePreviewTransaction])
 
-  const filteredBeneficiaries = beneficiaries.filter(beneficiary =>
-    beneficiary.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    beneficiary.accountNumber.includes(searchQuery) ||
-    beneficiary.bankName.toLowerCase().includes(searchQuery)
-  )
-
-  if (isAccountsLoading || isBeneficiariesLoading) {
+  if (accountsLoading || beneficiariesLoading) {
     return <LoadingSkeleton />
   }
 
@@ -606,7 +605,7 @@ export function SendMoneyPage() {
 
   const handleVisaDeposit = async () => {
     if (!amount || !visaCardNumber) {
-      toast({
+      addToast({
         title: "Error",
         description: "Please enter amount and card number",
         variant: "destructive",
@@ -640,7 +639,7 @@ export function SendMoneyPage() {
         }),
       });
 
-      toast({
+      addToast({
         title: "Success",
         description: "Deposit successful",
       });
@@ -650,7 +649,7 @@ export function SendMoneyPage() {
       setVisaCardNumber('');
       setShowVisaDeposit(false);
     } catch (error) {
-      toast({
+      addToast({
         title: "Error",
         description: "Deposit failed",
         variant: "destructive",
@@ -661,14 +660,19 @@ export function SendMoneyPage() {
   };
 
   return (
-    <LayoutWrapper>
-      <motion.div 
-        className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800"
-        variants={pageTransitionVariants}
-        initial="initial"
-        animate="animate"
-        exit="exit"
+    <SidebarProvider>
+      <ResponsiveSidebarLayout
+        sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
       >
+        <SidebarToggle />
+        <LayoutWrapper>
+          <motion.div
+            className="min-h-screen bg-white"
+            variants={pageTransitionVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+          >
         {/* Header */}
         <motion.div 
           className="sticky top-0 z-10 bg-white dark:bg-gray-900 shadow-sm"
@@ -956,7 +960,14 @@ export function SendMoneyPage() {
           </div>
         </DialogContent>
       </Dialog>
-    </LayoutWrapper>
+
+      <DepositModal
+        open={isDepositModalOpen}
+        onOpenChange={setIsDepositModalOpen}
+      />
+        </LayoutWrapper>
+      </ResponsiveSidebarLayout>
+    </SidebarProvider>
   )
 }
 

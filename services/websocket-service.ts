@@ -1,4 +1,4 @@
-import { toast } from '@/components/ui/use-toast'
+// Note: This service runs outside React context, so we'll use console.error instead of toast
 
 interface WebSocketMessage {
   type: 'balance' | 'transaction' | 'notification'
@@ -41,11 +41,7 @@ class WebSocketService {
 
       this.ws.onerror = (error) => {
         console.error('WebSocket error:', error)
-        toast({
-          title: "Connection Error",
-          description: "Lost connection to server. Attempting to reconnect...",
-          variant: "destructive"
-        })
+        console.warn('Lost connection to server. Attempting to reconnect...')
       }
     } catch (error) {
       console.error('Error initializing WebSocket:', error)
@@ -60,12 +56,7 @@ class WebSocketService {
         this.initialize()
       }, this.reconnectDelay)
     } else {
-      toast({
-        title: "Connection Failed",
-        description: "Unable to connect to server. Please refresh the page.",
-        variant: "destructive",
-        duration: 0
-      })
+      console.error('Unable to connect to server. Please refresh the page.')
     }
   }
 

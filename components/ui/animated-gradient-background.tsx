@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion'
 import { useTheme } from 'next-themes'
 
-export default function AnimatedGradientBackground({ children }: { children: React.ReactNode }) {
+export function AnimatedGradientBackground({ children }: { children: React.ReactNode }) {
   const { theme } = useTheme()
 
   return (

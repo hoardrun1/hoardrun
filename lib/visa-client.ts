@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { cardSchema, isCardExpired } from './card-validation';
 import { enforceVisaRateLimit } from './visa-rate-limiter';
 import { logTransaction } from './transaction-logger';
-import { APIError } from '@/middleware/error-handler';
+import { AppError, ErrorCode } from '@/lib/error-handling';
 
 interface VisaConfig {
   apiKey: string;
@@ -41,10 +41,10 @@ export class VisaClient {
       // Validate amount limits
       if (data.amount < Number(process.env.VISA_MIN_AMOUNT) ||
           data.amount > Number(process.env.VISA_MAX_AMOUNT)) {
-        throw new APIError(
-          400,
+        throw new AppError(
           'Amount outside allowed limits',
-          'INVALID_AMOUNT'
+          ErrorCode.INVALID_AMOUNT,
+          400
         );
       }
 
@@ -57,19 +57,19 @@ export class VisaClient {
       });
 
       if (!cardValidation.success) {
-        throw new APIError(
-          400,
+        throw new AppError(
           'Invalid card details',
-          'INVALID_CARD'
+          ErrorCode.VALIDATION_ERROR,
+          400
         );
       }
 
       // Check card expiration
       if (isCardExpired(data.expiryMonth, data.expiryYear)) {
-        throw new APIError(
-          400,
+        throw new AppError(
           'Card has expired',
-          'CARD_EXPIRED'
+          ErrorCode.VALIDATION_ERROR,
+          400
         );
       }
 
@@ -100,10 +100,10 @@ export class VisaClient {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new APIError(
-          response.status,
+        throw new AppError(
           result.message || 'Visa payment failed',
-          'VISA_API_ERROR'
+          ErrorCode.PAYMENT_FAILED,
+          response.status
         );
       }
 

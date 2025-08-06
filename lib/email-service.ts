@@ -1,18 +1,40 @@
-import nodemailer from 'nodemailer';
+// Browser-compatible email service
+const isBrowser = typeof window !== 'undefined';
 
-// Configure email transporter
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || 'sandbox.smtp.mailtrap.io',
-  port: parseInt(process.env.SMTP_PORT || '2525'),
-  secure: process.env.SMTP_SECURE === 'true',
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASSWORD,
-  },
-});
+// Email transporter (server-side only)
+let transporter: any = null;
+
+if (!isBrowser) {
+  try {
+    const nodemailer = require('nodemailer');
+
+    // Configure email transporter
+    transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || 'sandbox.smtp.mailtrap.io',
+      port: parseInt(process.env.SMTP_PORT || '2525'),
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASSWORD,
+      },
+    });
+  } catch (error) {
+    console.warn('Nodemailer not available:', error);
+  }
+}
 
 export async function sendEmail(to: string, subject: string, html: string, text?: string) {
   try {
+    if (isBrowser) {
+      // In browser, log the email attempt (could send to API endpoint instead)
+      console.log('Email would be sent (browser mode):', { to, subject });
+      return 'browser-mock-message-id';
+    }
+
+    if (!transporter) {
+      throw new Error('Email transporter not available');
+    }
+
     const info = await transporter.sendMail({
       from: process.env.SMTP_FROM || '"HoardRun" <noreply@hoardrun.com>',
       to,
@@ -20,7 +42,7 @@ export async function sendEmail(to: string, subject: string, html: string, text?
       html,
       text,
     });
-    
+
     console.log('Email sent:', info.messageId);
     return info.messageId;
   } catch (error) {

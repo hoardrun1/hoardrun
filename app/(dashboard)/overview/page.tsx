@@ -35,7 +35,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import { DepositModal } from '@/components/deposit-modal';
-import { Sidebar } from '@/components/ui/sidebar';
+import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sidebar-layout';
+import { SidebarContent } from '@/components/ui/sidebar-content';
+import { SidebarToggle } from '@/components/ui/sidebar-toggle';
 
 interface FinancialSummary {
   totalBalance: number;
@@ -331,8 +333,13 @@ export default function OverviewPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 p-6">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <SidebarProvider>
+      <ResponsiveSidebarLayout
+        sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
+      >
+        <SidebarToggle />
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 p-6">
+          <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -948,16 +955,15 @@ export default function OverviewPage() {
             </CardContent>
           </Card>
         </motion.div>
-      </div>
+          </div>
+        </div>
 
-      {/* Sidebar */}
-      <Sidebar onAddMoney={() => setIsDepositModalOpen(true)} />
-
-      {/* Deposit Modal */}
-      <DepositModal
-        open={isDepositModalOpen}
-        onOpenChange={setIsDepositModalOpen}
-      />
-    </div>
+        {/* Deposit Modal */}
+        <DepositModal
+          open={isDepositModalOpen}
+          onOpenChange={setIsDepositModalOpen}
+        />
+      </ResponsiveSidebarLayout>
+    </SidebarProvider>
   );
 }

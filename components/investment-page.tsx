@@ -34,7 +34,9 @@ import { useMarketData } from '@/hooks/useMarketData';
 import { useSession } from 'next-auth/react';
 import { MarketQuote } from '@/types/market';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Sidebar } from '@/components/ui/sidebar';
+import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sidebar-layout';
+import { SidebarContent } from '@/components/ui/sidebar-content';
+import { SidebarToggle } from '@/components/ui/sidebar-toggle';
 import { LayoutWrapper } from '@/components/ui/layout-wrapper';
 import { DepositModal } from '@/components/deposit-modal';
 import { z } from "zod"
@@ -480,8 +482,12 @@ export function InvestmentPage() {
 
   // Enhance investment modal with validation
   return (
-    <LayoutWrapper className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Sidebar />
+    <SidebarProvider>
+      <ResponsiveSidebarLayout
+        sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
+      >
+        <SidebarToggle />
+        <LayoutWrapper className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Investment Overview */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-8">
         <div className="container mx-auto px-4 ml-16">
@@ -1050,14 +1056,13 @@ export function InvestmentPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Sidebar */}
-      <Sidebar onAddMoney={() => setIsDepositModalOpen(true)} />
-
       {/* Deposit Modal */}
       <DepositModal
         open={isDepositModalOpen}
         onOpenChange={setIsDepositModalOpen}
       />
-    </LayoutWrapper>
+        </LayoutWrapper>
+      </ResponsiveSidebarLayout>
+    </SidebarProvider>
   )
 }

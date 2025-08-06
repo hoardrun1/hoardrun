@@ -14,10 +14,10 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Check if we should bypass auth in development mode
+  // Check if we should bypass auth globally (not just in development)
   const bypassAuth = process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true';
-  if (bypassAuth && process.env.NODE_ENV === 'development') {
-    console.log('Auth bypass enabled in development mode');
+  if (bypassAuth) {
+    console.log('Auth bypass enabled globally');
     return NextResponse.next();
   }
 

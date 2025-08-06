@@ -15,12 +15,24 @@ export default function DashboardLayout({
   const router = useRouter();
   const { user, isLoading } = useAuth();
 
+  // Check if auth bypass is enabled
+  const bypassAuth = process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true';
+
   // Check if user is authenticated
   useEffect(() => {
+    if (bypassAuth) {
+      console.log('Auth bypass enabled - skipping dashboard authentication check');
+      return;
+    }
+
     if (!isLoading && !user) {
       router.push('/signin');
     }
-  }, [user, isLoading, router]);
+  }, [user, isLoading, router, bypassAuth]);
+
+  if (bypassAuth) {
+    return <>{children}</>;
+  }
 
   if (isLoading) {
     return (
@@ -32,7 +44,6 @@ export default function DashboardLayout({
 
   // Use the mock provider in development mode
   const isDevelopment = process.env.NODE_ENV === 'development';
-  const bypassAuth = process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true';
 
   // If we're in development mode and bypassing auth, use the mock provider
   if (isDevelopment && bypassAuth) {

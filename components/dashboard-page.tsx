@@ -11,6 +11,14 @@ export function DashboardPage() {
   useEffect(() => {
     const checkUserStatus = async () => {
       try {
+        // Check if auth bypass is enabled
+        const bypassAuth = process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true';
+
+        if (bypassAuth) {
+          console.log('Auth bypass enabled for dashboard');
+          return; // Skip all checks when bypass is enabled
+        }
+
         // Get token from sessionStorage
         const token = sessionStorage.getItem('token');
 

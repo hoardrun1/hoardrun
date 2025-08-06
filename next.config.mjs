@@ -11,6 +11,28 @@ const nextConfig = {
   experimental: {
     outputFileTracingRoot: process.cwd(),
   },
+  // Webpack configuration to handle Node.js modules
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      // Exclude Node.js modules from client bundle
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        path: false,
+        crypto: false,
+        stream: false,
+        util: false,
+        buffer: false,
+        events: false,
+        child_process: false,
+        os: false,
+        winston: false,
+        'winston-daily-rotate-file': false,
+        'file-stream-rotator': false,
+      };
+    }
+    return config;
+  },
   // Environment-specific configurations
   env: {
     CUSTOM_KEY: process.env.CUSTOM_KEY,

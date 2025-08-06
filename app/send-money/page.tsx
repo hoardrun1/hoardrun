@@ -1,5 +1,5 @@
-import { SendMoneyPageComponent } from "@/components/send-money-page"
+import { SendMoneyPage } from "@/components/send-money-page"
 
 export default function SendMoney() {
-  return <SendMoneyPageComponent />
-} 
+  return <SendMoneyPage />
+}

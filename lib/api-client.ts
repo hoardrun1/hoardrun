@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { toast } from '@/components/ui/use-toast';
 import { AppError, ErrorCode } from './error-handling';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';

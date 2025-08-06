@@ -43,7 +43,11 @@ interface SidebarLayoutProps {
 }
 
 export function SidebarLayout({ children, sidebar, className = '' }: SidebarLayoutProps) {
-  const { isOpen } = useSidebar()
+  const { isOpen, setIsOpen } = useSidebar()
+
+  const handleOverlayClick = () => {
+    setIsOpen(false)
+  }
 
   return (
     <div className={`flex min-h-screen bg-white ${className}`}>
@@ -75,10 +79,7 @@ export function SidebarLayout({ children, sidebar, className = '' }: SidebarLayo
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 md:hidden"
-              onClick={() => {
-                const { setIsOpen } = useSidebar()
-                setIsOpen(false)
-              }}
+              onClick={handleOverlayClick}
             />
           )}
         </AnimatePresence>
@@ -107,7 +108,11 @@ export function SidebarLayout({ children, sidebar, className = '' }: SidebarLayo
 
 // Mobile responsive version
 export function ResponsiveSidebarLayout({ children, sidebar, className = '' }: SidebarLayoutProps) {
-  const { isOpen } = useSidebar()
+  const { isOpen, setIsOpen } = useSidebar()
+
+  const handleMobileOverlayClick = () => {
+    setIsOpen(false)
+  }
 
   return (
     <div className={`flex min-h-screen bg-white ${className}`}>
@@ -141,10 +146,7 @@ export function ResponsiveSidebarLayout({ children, sidebar, className = '' }: S
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 md:hidden"
-                onClick={() => {
-                  const { setIsOpen } = useSidebar()
-                  setIsOpen(false)
-                }}
+                onClick={handleMobileOverlayClick}
               />
               
               {/* Mobile Sidebar */}

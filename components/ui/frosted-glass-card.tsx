@@ -30,4 +30,4 @@ const FrostedGlassCard = ({ children, className }: FrostedGlassCardProps) => {
   )
 }
 
-export default FrostedGlassCard
+export { FrostedGlassCard }

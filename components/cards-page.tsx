@@ -9,9 +9,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { LayoutWrapper } from "@/components/ui/layout-wrapper"
-import { Sidebar } from "@/components/ui/sidebar"
+import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sidebar-layout'
+import { SidebarContent } from '@/components/ui/sidebar-content'
+import { SidebarToggle } from '@/components/ui/sidebar-toggle'
+import { DepositModal } from '@/components/deposit-modal'
 import { responsiveStyles as rs } from '@/styles/responsive-utilities'
-import { toast } from "@/components/ui/use-toast"
+import { useToast } from "@/components/ui/use-toast"
 import { MastercardClient } from '@/lib/mastercard-client'
 import { COUNTRY_CODES, type CountryCode } from '@/lib/constants/country-codes';
 
@@ -50,6 +53,8 @@ export function CardsPageComponent() {
   ])
 
   const [showCardDetails, setShowCardDetails] = useState<Record<string, boolean>>({})
+  const [isDepositModalOpen, setIsDepositModalOpen] = useState(false)
+  const { addToast } = useToast()
 
   const toggleCardLock = (cardId: string) => {
     setCards(cards.map(card =>
@@ -94,7 +99,7 @@ export function CardsPageComponent() {
       // Implement virtual card issuance
       // Add to cards state
     } catch (error) {
-      toast({
+      addToast({
         title: "Error",
         description: "Failed to issue virtual card",
         variant: "destructive",
@@ -103,9 +108,12 @@ export function CardsPageComponent() {
   };
 
   return (
-    <LayoutWrapper className="bg-gray-50 dark:bg-gray-900 min-h-screen">
-      {/* Sidebar */}
-      <Sidebar />
+    <SidebarProvider>
+      <ResponsiveSidebarLayout
+        sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
+      >
+        <SidebarToggle />
+        <LayoutWrapper className="bg-white min-h-screen">
 
       {/* Header */}
       <header className={`sticky top-0 z-30 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 ${rs.padding}`}>
@@ -350,6 +358,13 @@ export function CardsPageComponent() {
         </div>
       </footer>
     </LayoutWrapper>
+
+        <DepositModal
+          open={isDepositModalOpen}
+          onOpenChange={setIsDepositModalOpen}
+        />
+      </ResponsiveSidebarLayout>
+    </SidebarProvider>
   )
 }
 

@@ -130,12 +130,12 @@ export function HomePageComponent() {
   useEffect(() => {
     const checkUserAccess = async () => {
       try {
-        // Check if we should bypass auth in development mode
+        // Check if we should bypass auth
         const bypassAuth = process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true';
-        if (bypassAuth && process.env.NODE_ENV === 'development') {
-          console.log('Auth bypass enabled in development mode for home page');
+        if (bypassAuth) {
+          console.log('Auth bypass enabled for home page');
           setIsLoading(false);
-          fetchData(); // Your existing data fetching function
+          fetchData();
           return;
         }
 
@@ -160,31 +160,17 @@ export function HomePageComponent() {
         }
 
         // Check if we have a valid navigation flow
-        // In development, we'll allow direct access to the home page
-        const allowDirectAccess = process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true' && process.env.NODE_ENV === 'development';
-
-        if (!allowDirectAccess &&
-            !navigation.isValidTransition('create-profile', 'home') &&
+        if (!navigation.isValidTransition('create-profile', 'home') &&
             !navigation.isValidTransition('dashboard', 'home') &&
             !navigation.isValidTransition('signin', 'home')) {
           router.push('/signin');
           return;
         }
 
-        // If we're allowing direct access, make sure to connect the navigation flow
-        if (allowDirectAccess) {
-          navigation.connect('signin', 'home');
-        }
-
         setIsLoading(false);
-        fetchData(); // Your existing data fetching function
+        fetchData();
       } catch (error) {
         setError('Failed to verify user access');
-        // toast({
-        //   title: "Error",
-        //   description: "Failed to load home page",
-        //   variant: "destructive"
-        // });
       }
     };
 
@@ -244,11 +230,11 @@ export function HomePageComponent() {
       setIsLoading(true)
       setError(null)
 
-      // Check if we're in development mode with bypass enabled
+      // Check if we have bypass enabled
       const bypassAuth = process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true';
-      if (bypassAuth && process.env.NODE_ENV === 'development') {
-        // Use mock data in development mode
-        console.log('Using mock data in development mode');
+      if (bypassAuth) {
+        // Use mock data when bypass is enabled
+        console.log('Using mock data with auth bypass enabled');
 
         // Mock transactions data
         const mockTransactions: Transaction[] = [

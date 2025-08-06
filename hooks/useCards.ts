@@ -34,12 +34,42 @@ export function useCards() {
   const [error, setError] = useState<string | null>(null)
 
   const fetchCards = useCallback(async () => {
-    if (!session?.user) return
+    const bypassAuth = process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true';
+
+    if (!bypassAuth && !session?.user) return
 
     setIsLoading(true)
     setError(null)
 
     try {
+      if (bypassAuth) {
+        // Use mock data when bypass is enabled
+        console.log('Using mock cards data with auth bypass enabled');
+        const mockCards: Card[] = [
+          {
+            id: '1',
+            name: 'Primary Card',
+            lastFour: '1234',
+            type: 'credit',
+            balance: 1250.50,
+            limit: 5000,
+            isActive: true
+          },
+          {
+            id: '2',
+            name: 'Savings Card',
+            lastFour: '5678',
+            type: 'debit',
+            balance: 3200.75,
+            limit: 0,
+            isActive: true
+          }
+        ];
+        setCards(mockCards);
+        setIsLoading(false);
+        return;
+      }
+
       const response = await fetch('/api/cards')
       if (!response.ok) throw new Error('Failed to fetch cards')
 

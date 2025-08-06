@@ -11,6 +11,14 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { status } = useSession();
   const router = useRouter();
 
+  // Check if auth bypass is enabled
+  const bypassAuth = process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true';
+
+  if (bypassAuth) {
+    console.log('Auth bypass enabled - skipping NextAuth session check');
+    return <>{children}</>;
+  }
+
   if (status === 'loading') {
     return (
       <div className="p-4">

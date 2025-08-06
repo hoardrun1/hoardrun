@@ -26,7 +26,7 @@ export function middleware(request: NextRequest) {
 
   // Protect these routes
   const protectedPaths = ['/home', '/finance', '/cards', '/investment', '/settings',
-                         '/send-money', '/receive-money', '/savings']
+                         '/send-money', '/receive-money', '/savings', '/startupregistration']
   const isProtectedPath = protectedPaths.some(path =>
     request.nextUrl.pathname.startsWith(path)
   )
@@ -50,6 +50,7 @@ export const config = {
     '/send-money/:path*',
     '/receive-money/:path*',
     '/savings/:path*',
+    '/startupregistration/:path*',
     '/signin',
     '/signup'
   ]

@@ -667,7 +667,7 @@ export function SendMoneyPage() {
         <SidebarToggle />
         <LayoutWrapper>
           <motion.div
-            className="min-h-screen bg-white p-4 sm:p-6"
+            className="min-h-screen bg-white pt-20 pb-4 px-4 sm:pt-24 sm:pb-6 sm:px-6"
             variants={pageTransitionVariants}
             initial="initial"
             animate="animate"

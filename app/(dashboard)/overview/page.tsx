@@ -74,7 +74,7 @@ interface RecentActivity {
 export default function OverviewPage() {
   const { user } = useAuth();
   const router = useRouter();
-  const { toast } = useToast();
+  const { addToast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [financialSummary, setFinancialSummary] = useState<FinancialSummary | null>(null);
   const [overviewStats, setOverviewStats] = useState<OverviewStats | null>(null);
@@ -180,7 +180,7 @@ export default function OverviewPage() {
     console.log('handleTransfer called!', { transferAmount, transferRecipient, transferMethod, transferNote });
     if (!transferAmount || !transferRecipient) {
       console.log('Validation failed: missing required fields');
-      toast({
+      addToast({
         title: "Error",
         description: "Please fill in all required fields",
         variant: "destructive",
@@ -190,7 +190,7 @@ export default function OverviewPage() {
 
     const amount = parseFloat(transferAmount);
     if (isNaN(amount) || amount <= 0) {
-      toast({
+      addToast({
         title: "Error",
         description: "Please enter a valid amount",
         variant: "destructive",
@@ -203,7 +203,7 @@ export default function OverviewPage() {
       // Mock transfer processing - replace with actual API call
       await new Promise(resolve => setTimeout(resolve, 2000));
 
-      toast({
+      addToast({
         title: "Transfer Successful",
         description: `Successfully sent ${formatCurrency(amount)} to ${transferRecipient}`,
       });
@@ -218,7 +218,7 @@ export default function OverviewPage() {
       // In a real app, you'd refresh the financial data here
 
     } catch (error) {
-      toast({
+      addToast({
         title: "Transfer Failed",
         description: "There was an error processing your transfer. Please try again.",
         variant: "destructive",
@@ -232,7 +232,7 @@ export default function OverviewPage() {
     console.log('handleCreateGoal called!', { goalName, goalAmount, goalDeadline });
     if (!goalName || !goalAmount || !goalDeadline) {
       console.log('Validation failed: missing required fields for goal creation');
-      toast({
+      addToast({
         title: "Error",
         description: "Please fill in all required fields",
         variant: "destructive",
@@ -242,7 +242,7 @@ export default function OverviewPage() {
 
     const amount = parseFloat(goalAmount);
     if (isNaN(amount) || amount <= 0) {
-      toast({
+      addToast({
         title: "Error",
         description: "Please enter a valid goal amount",
         variant: "destructive",
@@ -255,7 +255,7 @@ export default function OverviewPage() {
       // Mock goal creation - replace with actual API call
       await new Promise(resolve => setTimeout(resolve, 1500));
 
-      toast({
+      addToast({
         title: "Goal Created",
         description: `Successfully created savings goal "${goalName}" for ${formatCurrency(amount)}`,
       });
@@ -270,7 +270,7 @@ export default function OverviewPage() {
       // In a real app, you'd refresh the financial data here
 
     } catch (error) {
-      toast({
+      addToast({
         title: "Goal Creation Failed",
         description: "There was an error creating your savings goal. Please try again.",
         variant: "destructive",
@@ -338,8 +338,8 @@ export default function OverviewPage() {
         sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
       >
         <SidebarToggle />
-        <div className="min-h-screen bg-white p-6">
-          <div className="max-w-7xl mx-auto space-y-8">
+        <div className="min-h-screen bg-white pt-20 pb-4 px-4 sm:pt-24 sm:pb-6 sm:px-6">
+          <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>

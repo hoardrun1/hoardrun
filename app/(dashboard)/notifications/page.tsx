@@ -128,20 +128,20 @@ export default function NotificationsPage() {
         sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
       >
         <SidebarToggle />
-        <div className="min-h-screen bg-white p-6">
-          <div className="max-w-4xl mx-auto space-y-6">
+        <div className="min-h-screen bg-white p-4 sm:p-6">
+          <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
               <div>
-                <h1 className="text-3xl font-bold text-black flex items-center">
+                <h1 className="text-2xl sm:text-3xl font-bold text-black flex items-center">
                   Notifications
                   {unreadCount > 0 && (
-                    <Badge className="ml-3 bg-black text-white">
+                    <Badge className="ml-3 bg-black text-white text-xs">
                       {unreadCount}
                     </Badge>
                   )}
                 </h1>
-                <p className="text-black/60 mt-1">
+                <p className="text-black/60 mt-1 text-sm sm:text-base">
                   Stay updated with your account activity and important alerts
                 </p>
               </div>
@@ -149,7 +149,7 @@ export default function NotificationsPage() {
                 <Button
                   onClick={markAllAsRead}
                   variant="outline"
-                  className="border-black text-black hover:bg-black hover:text-white"
+                  className="border-black text-black hover:bg-black hover:text-white w-full sm:w-auto"
                 >
                   <Check className="h-4 w-4 mr-2" />
                   Mark All Read
@@ -158,7 +158,7 @@ export default function NotificationsPage() {
             </div>
 
             {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Total</CardTitle>
@@ -212,13 +212,13 @@ export default function NotificationsPage() {
               </Card>
             </div>
 
-            <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
-              <TabsList>
-                <TabsTrigger value="all">All</TabsTrigger>
-                <TabsTrigger value="unread">Unread ({unreadCount})</TabsTrigger>
-                <TabsTrigger value="transaction">Transactions</TabsTrigger>
-                <TabsTrigger value="security">Security</TabsTrigger>
-                <TabsTrigger value="system">System</TabsTrigger>
+            <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4 sm:space-y-6">
+              <TabsList className="grid w-full grid-cols-3 sm:grid-cols-5">
+                <TabsTrigger value="all" className="text-xs sm:text-sm">All</TabsTrigger>
+                <TabsTrigger value="unread" className="text-xs sm:text-sm">Unread ({unreadCount})</TabsTrigger>
+                <TabsTrigger value="transaction" className="text-xs sm:text-sm">Transactions</TabsTrigger>
+                <TabsTrigger value="security" className="text-xs sm:text-sm">Security</TabsTrigger>
+                <TabsTrigger value="system" className="text-xs sm:text-sm">System</TabsTrigger>
               </TabsList>
 
               <TabsContent value={selectedTab} className="space-y-4">

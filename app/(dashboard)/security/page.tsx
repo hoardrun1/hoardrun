@@ -131,15 +131,15 @@ export default function SecurityPage() {
         sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
       >
         <SidebarToggle />
-        <div className="min-h-screen bg-white p-6">
-          <div className="max-w-4xl mx-auto space-y-6">
+        <div className="min-h-screen bg-white p-4 sm:p-6">
+          <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
             {/* Header */}
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-bold text-black">
+                <h1 className="text-2xl sm:text-3xl font-bold text-black">
                   Security
                 </h1>
-                <p className="text-black/60 mt-1">
+                <p className="text-black/60 mt-1 text-sm sm:text-base">
                   Manage your account security and authentication settings
                 </p>
               </div>
@@ -173,12 +173,12 @@ export default function SecurityPage() {
               </CardContent>
             </Card>
 
-            <Tabs defaultValue="password" className="space-y-6">
-              <TabsList>
-                <TabsTrigger value="password">Password</TabsTrigger>
-                <TabsTrigger value="2fa">Two-Factor Auth</TabsTrigger>
-                <TabsTrigger value="sessions">Active Sessions</TabsTrigger>
-                <TabsTrigger value="activity">Security Activity</TabsTrigger>
+            <Tabs defaultValue="password" className="space-y-4 sm:space-y-6">
+              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
+                <TabsTrigger value="password" className="text-xs sm:text-sm">Password</TabsTrigger>
+                <TabsTrigger value="2fa" className="text-xs sm:text-sm">Two-Factor Auth</TabsTrigger>
+                <TabsTrigger value="sessions" className="text-xs sm:text-sm">Active Sessions</TabsTrigger>
+                <TabsTrigger value="activity" className="text-xs sm:text-sm">Security Activity</TabsTrigger>
               </TabsList>
 
               <TabsContent value="password" className="space-y-6">

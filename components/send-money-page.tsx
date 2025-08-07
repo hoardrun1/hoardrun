@@ -667,7 +667,7 @@ export function SendMoneyPage() {
         <SidebarToggle />
         <LayoutWrapper>
           <motion.div
-            className="min-h-screen bg-white"
+            className="min-h-screen bg-white p-4 sm:p-6"
             variants={pageTransitionVariants}
             initial="initial"
             animate="animate"
@@ -690,7 +690,7 @@ export function SendMoneyPage() {
               >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
-              <h1 className="text-xl font-semibold">Send Money</h1>
+              <h1 className="text-lg sm:text-xl font-semibold">Send Money</h1>
             </div>
           </div>
         </motion.div>

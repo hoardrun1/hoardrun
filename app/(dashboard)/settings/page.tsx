@@ -71,26 +71,26 @@ export default function SettingsPage() {
         sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
       >
         <SidebarToggle />
-        <div className="min-h-screen bg-white p-6">
-          <div className="max-w-4xl mx-auto space-y-6">
+        <div className="min-h-screen bg-white p-4 sm:p-6">
+          <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
             {/* Header */}
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-bold text-black">
+                <h1 className="text-2xl sm:text-3xl font-bold text-black">
                   Settings
                 </h1>
-                <p className="text-black/60 mt-1">
+                <p className="text-black/60 mt-1 text-sm sm:text-base">
                   Customize your app experience and preferences
                 </p>
               </div>
             </div>
 
-            <Tabs defaultValue="general" className="space-y-6">
-              <TabsList>
-                <TabsTrigger value="general">General</TabsTrigger>
-                <TabsTrigger value="notifications">Notifications</TabsTrigger>
-                <TabsTrigger value="privacy">Privacy</TabsTrigger>
-                <TabsTrigger value="account">Account</TabsTrigger>
+            <Tabs defaultValue="general" className="space-y-4 sm:space-y-6">
+              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
+                <TabsTrigger value="general" className="text-xs sm:text-sm">General</TabsTrigger>
+                <TabsTrigger value="notifications" className="text-xs sm:text-sm">Notifications</TabsTrigger>
+                <TabsTrigger value="privacy" className="text-xs sm:text-sm">Privacy</TabsTrigger>
+                <TabsTrigger value="account" className="text-xs sm:text-sm">Account</TabsTrigger>
               </TabsList>
 
               <TabsContent value="general" className="space-y-6">
@@ -107,11 +107,11 @@ export default function SettingsPage() {
                         <Label>Theme</Label>
                         <p className="text-sm text-black/60">Choose your preferred theme</p>
                       </div>
-                      <Select 
-                        value={settings.preferences.theme} 
+                      <Select
+                        value={settings.preferences.theme}
                         onValueChange={(value) => handleSettingChange('preferences', 'theme', value)}
                       >
-                        <SelectTrigger className="w-[180px]">
+                        <SelectTrigger className="w-full sm:w-[180px]">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>

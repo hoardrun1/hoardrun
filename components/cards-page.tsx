@@ -113,7 +113,7 @@ export function CardsPageComponent() {
         sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
       >
         <SidebarToggle />
-        <LayoutWrapper className="bg-white min-h-screen pt-20 pb-4 px-4 sm:pt-24 sm:pb-6 sm:px-6">
+        <LayoutWrapper className="bg-white min-h-screen pt-16 pb-4 px-4 sm:pt-20 sm:pb-6 sm:px-6">
 
       {/* Header */}
       <header className={`sticky top-0 z-30 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 ${rs.padding}`}>

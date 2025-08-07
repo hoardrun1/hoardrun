@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sidebar-layout'
 import { SidebarContent } from '@/components/ui/sidebar-content'
 import { SidebarToggle } from '@/components/ui/sidebar-toggle'
@@ -21,6 +22,7 @@ import {
 } from 'lucide-react'
 
 export default function HomePage() {
+  const router = useRouter()
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false)
 
   // Mock data for the dashboard
@@ -40,6 +42,14 @@ export default function HomePage() {
     { id: 4, type: 'income', description: 'Freelance Payment', amount: 800.00, date: '2024-01-12' }
   ]
 
+  const handleQuickAction = (action: any) => {
+    if (action.href) {
+      router.push(action.href)
+    } else if (action.action) {
+      action.action()
+    }
+  }
+
   const quickActions = [
     { label: 'Send Money', href: '/send', icon: ArrowUpRight, color: 'bg-black' },
     { label: 'Add Money', action: () => setIsDepositModalOpen(true), icon: ArrowDownLeft, color: 'bg-black' },
@@ -53,7 +63,7 @@ export default function HomePage() {
         sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
       >
         <SidebarToggle />
-        <div className="min-h-screen bg-white pt-20 pb-4 px-4 sm:pt-24 sm:pb-6 sm:px-6">
+        <div className="min-h-screen bg-white pt-16 pb-4 px-4 sm:pt-20 sm:pb-6 sm:px-6">
           <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
@@ -156,7 +166,7 @@ export default function HomePage() {
                         key={index}
                         variant="outline"
                         className="h-16 sm:h-20 flex flex-col items-center justify-center space-y-1 sm:space-y-2 border-black/10 hover:bg-black hover:text-white transition-colors"
-                        onClick={action.action}
+                        onClick={() => handleQuickAction(action)}
                       >
                         <action.icon className="h-4 w-4 sm:h-5 sm:w-5" />
                         <span className="text-xs text-center">{action.label}</span>

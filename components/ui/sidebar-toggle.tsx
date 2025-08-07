@@ -17,7 +17,7 @@ export function SidebarToggle({ className = '' }: SidebarToggleProps) {
       variant="ghost"
       size="icon"
       onClick={toggle}
-      className={`fixed left-5 top-6 z-[60] w-11 h-11 rounded-2xl border-2 backdrop-blur-xl transition-all duration-500 shadow-2xl ${
+      className={`fixed left-4 top-4 z-[60] w-9 h-9 rounded-xl border-2 backdrop-blur-xl transition-all duration-500 shadow-2xl ${
         isOpen
           ? 'bg-white border-black hover:bg-white text-black shadow-black/20'
           : 'bg-black border-white hover:bg-black text-white shadow-white/20'
@@ -28,7 +28,7 @@ export function SidebarToggle({ className = '' }: SidebarToggleProps) {
         animate={{ rotate: isOpen ? 180 : 0 }}
         transition={{ duration: 0.4, ease: [0.23, 1, 0.320, 1] }}
       >
-        {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        {isOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
       </motion.div>
     </Button>
   )

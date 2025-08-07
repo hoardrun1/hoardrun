@@ -487,7 +487,7 @@ export function InvestmentPage() {
         sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
       >
         <SidebarToggle />
-        <LayoutWrapper className="min-h-screen bg-white pt-20 pb-4 px-4 sm:pt-24 sm:pb-6 sm:px-6">
+        <LayoutWrapper className="min-h-screen bg-white pt-16 pb-4 px-4 sm:pt-20 sm:pb-6 sm:px-6">
       {/* Investment Overview */}
       <div className="bg-black text-white py-8">
         <div className="container mx-auto px-4 ml-16">

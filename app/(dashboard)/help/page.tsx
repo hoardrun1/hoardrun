@@ -15,7 +15,7 @@ export default function HelpPage() {
         sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
       >
         <SidebarToggle />
-        <div className="min-h-screen bg-white p-4 sm:p-6">
+        <div className="min-h-screen bg-white pt-20 pb-4 px-4 sm:pt-24 sm:pb-6 sm:px-6">
           <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
             <div className="text-center">
               <h1 className="text-2xl sm:text-3xl font-bold text-black">Help Center</h1>

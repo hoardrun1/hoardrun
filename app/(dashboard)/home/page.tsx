@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sidebar-layout'
 import { SidebarContent } from '@/components/ui/sidebar-content'
 import { SidebarToggle } from '@/components/ui/sidebar-toggle'
+import { RightSidebar } from '@/components/ui/right-sidebar'
+import { RightSidebarToggle } from '@/components/ui/right-sidebar-toggle'
 import { DepositModal } from '@/components/deposit-modal'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -24,6 +26,7 @@ import {
 export default function HomePage() {
   const router = useRouter()
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false)
+  const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false)
 
   // Mock data for the dashboard
   const stats = {
@@ -63,8 +66,15 @@ export default function HomePage() {
         sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
       >
         <SidebarToggle />
-        <div className="min-h-screen bg-white pt-16 pb-4 px-4 sm:pt-20 sm:pb-6 sm:px-6">
-          <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
+        <RightSidebarToggle
+          isOpen={isRightSidebarOpen}
+          onToggle={() => setIsRightSidebarOpen(!isRightSidebarOpen)}
+          notificationCount={2}
+        />
+        <div className={`min-h-screen bg-white pt-16 pb-4 px-4 sm:pt-20 sm:pb-6 sm:px-6 transition-all duration-300 ${
+          isRightSidebarOpen ? 'lg:mr-80' : ''
+        }`}>
+          <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6">
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
               <div>
@@ -270,6 +280,20 @@ export default function HomePage() {
           open={isDepositModalOpen}
           onOpenChange={setIsDepositModalOpen}
         />
+
+        {/* Right Sidebar */}
+        <RightSidebar
+          isOpen={isRightSidebarOpen}
+          onClose={() => setIsRightSidebarOpen(false)}
+        />
+
+        {/* Right Sidebar Overlay for Mobile */}
+        {isRightSidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 md:hidden"
+            onClick={() => setIsRightSidebarOpen(false)}
+          />
+        )}
       </ResponsiveSidebarLayout>
     </SidebarProvider>
   )

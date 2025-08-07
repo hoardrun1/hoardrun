@@ -68,21 +68,21 @@ export default function ProfilePage() {
         sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
       >
         <SidebarToggle />
-        <div className="min-h-screen bg-white p-6">
-          <div className="max-w-4xl mx-auto space-y-6">
+        <div className="min-h-screen bg-white p-4 sm:p-6">
+          <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
               <div>
-                <h1 className="text-3xl font-bold text-black">
+                <h1 className="text-2xl sm:text-3xl font-bold text-black">
                   Profile
                 </h1>
-                <p className="text-black/60 mt-1">
+                <p className="text-black/60 mt-1 text-sm sm:text-base">
                   Manage your personal information and preferences
                 </p>
               </div>
               <Button
                 onClick={() => isEditing ? handleSave() : setIsEditing(true)}
-                className="bg-black text-white hover:bg-black/90"
+                className="bg-black text-white hover:bg-black/90 w-full sm:w-auto"
               >
                 {isEditing ? (
                   <>
@@ -98,44 +98,44 @@ export default function ProfilePage() {
               </Button>
             </div>
 
-            <Tabs defaultValue="personal" className="space-y-6">
-              <TabsList>
-                <TabsTrigger value="personal">Personal Info</TabsTrigger>
-                <TabsTrigger value="security">Security</TabsTrigger>
-                <TabsTrigger value="preferences">Preferences</TabsTrigger>
+            <Tabs defaultValue="personal" className="space-y-4 sm:space-y-6">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="personal" className="text-xs sm:text-sm">Personal Info</TabsTrigger>
+                <TabsTrigger value="security" className="text-xs sm:text-sm">Security</TabsTrigger>
+                <TabsTrigger value="preferences" className="text-xs sm:text-sm">Preferences</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="personal" className="space-y-6">
+              <TabsContent value="personal" className="space-y-4 sm:space-y-6">
                 {/* Profile Header */}
                 <Card>
-                  <CardContent className="pt-6">
-                    <div className="flex items-center space-x-6">
+                  <CardContent className="pt-4 sm:pt-6">
+                    <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-6">
                       <div className="relative">
-                        <Avatar className="w-24 h-24">
+                        <Avatar className="w-20 h-20 sm:w-24 sm:h-24">
                           <AvatarImage src="/placeholder-avatar.jpg" />
-                          <AvatarFallback className="text-2xl bg-black text-white">
+                          <AvatarFallback className="text-xl sm:text-2xl bg-black text-white">
                             {profileData.firstName[0]}{profileData.lastName[0]}
                           </AvatarFallback>
                         </Avatar>
                         {isEditing && (
                           <Button
                             size="sm"
-                            className="absolute -bottom-2 -right-2 rounded-full w-8 h-8 p-0 bg-black text-white hover:bg-black/90"
+                            className="absolute -bottom-2 -right-2 rounded-full w-7 h-7 sm:w-8 sm:h-8 p-0 bg-black text-white hover:bg-black/90"
                           >
-                            <Camera className="h-4 w-4" />
+                            <Camera className="h-3 w-3 sm:h-4 sm:w-4" />
                           </Button>
                         )}
                       </div>
-                      <div className="flex-1">
-                        <h2 className="text-2xl font-bold text-black">
+                      <div className="flex-1 text-center sm:text-left">
+                        <h2 className="text-xl sm:text-2xl font-bold text-black">
                           {profileData.firstName} {profileData.lastName}
                         </h2>
-                        <p className="text-black/60">{profileData.email}</p>
-                        <div className="flex items-center space-x-4 mt-2">
-                          <Badge variant="secondary" className="bg-black/10 text-black">
+                        <p className="text-black/60 text-sm sm:text-base">{profileData.email}</p>
+                        <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-2 sm:space-y-0 sm:space-x-4 mt-2">
+                          <Badge variant="secondary" className="bg-black/10 text-black text-xs">
                             Verified Account
                           </Badge>
-                          <Badge variant="secondary" className="bg-black/10 text-black">
+                          <Badge variant="secondary" className="bg-black/10 text-black text-xs">
                             Premium Member
                           </Badge>
                         </div>

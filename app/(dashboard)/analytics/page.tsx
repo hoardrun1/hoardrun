@@ -67,29 +67,29 @@ export default function AnalyticsPage() {
         sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
       >
         <SidebarToggle />
-        <div className="min-h-screen bg-white p-6">
-          <div className="max-w-7xl mx-auto space-y-6">
+        <div className="min-h-screen bg-white p-4 sm:p-6">
+          <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
             {/* Header */}
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-bold text-black">
+                <h1 className="text-2xl sm:text-3xl font-bold text-black">
                   Analytics
                 </h1>
-                <p className="text-black/60 mt-1">
+                <p className="text-black/60 mt-1 text-sm sm:text-base">
                   Insights into your financial patterns and trends
                 </p>
               </div>
             </div>
 
             {/* Key Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Avg Monthly Income</CardTitle>
                   <TrendingUp className="h-4 w-4 text-black/60" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-black">
+                  <div className="text-xl sm:text-2xl font-bold text-black">
                     ${avgMonthlyIncome.toLocaleString()}
                   </div>
                   <p className="text-xs text-black/60">Last 6 months</p>
@@ -136,22 +136,22 @@ export default function AnalyticsPage() {
               </Card>
             </div>
 
-            <Tabs defaultValue="overview" className="space-y-6">
-              <TabsList>
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="spending">Spending</TabsTrigger>
-                <TabsTrigger value="trends">Trends</TabsTrigger>
+            <Tabs defaultValue="overview" className="space-y-4 sm:space-y-6">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
+                <TabsTrigger value="spending" className="text-xs sm:text-sm">Spending</TabsTrigger>
+                <TabsTrigger value="trends" className="text-xs sm:text-sm">Trends</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="overview" className="space-y-6">
+              <TabsContent value="overview" className="space-y-4 sm:space-y-6">
                 {/* Monthly Overview */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                   <Card>
                     <CardHeader>
                       <CardTitle>Monthly Financial Overview</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <ResponsiveContainer width="100%" height={300}>
+                      <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
                         <BarChart data={monthlyData}>
                           <CartesianGrid strokeDasharray="3 3" />
                           <XAxis dataKey="month" />

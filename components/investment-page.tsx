@@ -278,18 +278,18 @@ export function InvestmentPage() {
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false)
 
   const router = useRouter()
-  const { addToast, toast } = useToast()
+  const { addToast } = useToast()
 
   // Use the finance context with proper error handling
   const financeContext = useFinance();
   const balance = financeContext?.balance || 25000; // Default investment balance
   const depositFunds = financeContext?.depositFunds || (async (amount: number) => {
     console.warn('Finance context not available, using mock deposit function');
-    toast({ title: "Deposit", description: `Mock deposit of $${amount}` });
+    addToast({ title: "Deposit", description: `Mock deposit of $${amount}` });
   });
   const withdrawFunds = financeContext?.withdrawFunds || (async (amount: number) => {
     console.warn('Finance context not available, using mock withdraw function');
-    toast({ title: "Withdraw", description: `Mock withdraw of $${amount}` });
+    addToast({ title: "Withdraw", description: `Mock withdraw of $${amount}` });
   });
 
   const { data: session, status } = useSession()

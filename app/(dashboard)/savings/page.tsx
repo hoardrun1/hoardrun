@@ -132,7 +132,7 @@ export default function SavingsPage() {
         isAutoSave: true,
       })
     } catch (error) {
-      toast({
+      addToast({
         title: 'Error',
         description: error instanceof Error ? error.message : 'Failed to create savings goal',
         variant: 'destructive',

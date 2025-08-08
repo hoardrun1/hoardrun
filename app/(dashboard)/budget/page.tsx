@@ -26,7 +26,6 @@ import {
   ShoppingCart, Home, Car, Utensils, Gamepad2,
   Heart, GraduationCap, Plane
 } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
 
 // Mock data for budget categories
 const budgetCategories = [
@@ -353,7 +352,7 @@ export default function BudgetPage() {
                     <div>
                       <p className="font-medium">Great job on Transportation!</p>
                       <p className="text-sm text-black/60">
-                        You're 24% under budget this month
+                        You&apos;re 24% under budget this month
                       </p>
                     </div>
                   </div>
@@ -362,7 +361,7 @@ export default function BudgetPage() {
                     <div>
                       <p className="font-medium">Watch your Entertainment spending</p>
                       <p className="text-sm text-black/60">
-                        You're 40% over budget in this category
+                        You&apos;re 40% over budget in this category
                       </p>
                     </div>
                   </div>
@@ -371,7 +370,7 @@ export default function BudgetPage() {
                     <div>
                       <p className="font-medium">On track overall</p>
                       <p className="text-sm text-black/60">
-                        You're within 5% of your total monthly budget
+                        You&apos;re within 5% of your total monthly budget
                       </p>
                     </div>
                   </div>

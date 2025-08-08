@@ -1,4 +1,3 @@
-import { useServerSession } from '@/hooks/useServerSession'
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
@@ -13,7 +12,7 @@ const investmentSchema = z.object({
 
 export async function GET() {
   try {
-    const session = await useServerSession()
+    const session = await getTypedSession()
     
     const investments = await prisma.investment.findMany({
       where: {

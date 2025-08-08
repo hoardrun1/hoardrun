@@ -7,7 +7,7 @@ import {
   Building2, Upload, AlertTriangle, FileText,
   DollarSign, Target, Globe, Link2,
   Shield, Info, Lock, CheckCircle, Scan,
-  BarChart3, FileCheck, Clock
+  BarChart3, FileCheck, Clock, ArrowLeft
 } from 'lucide-react'
 import { 
   Card, CardContent, CardHeader, 
@@ -383,6 +383,18 @@ export default function StartupRegistration() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
+          {/* Back Button */}
+          <div className="mb-6">
+            <Button
+              variant="ghost"
+              onClick={() => router.push('/investment')}
+              className="flex items-center text-black hover:text-black/80 hover:bg-black/5 p-2"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Investment
+            </Button>
+          </div>
+
           {/* Header */}
           <div className="text-center mb-8">
             <div className="flex items-center justify-center mb-4">

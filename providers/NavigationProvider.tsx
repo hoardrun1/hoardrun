@@ -45,7 +45,7 @@ export const NavigationProvider: React.FC<NavigationProviderProps> = ({ children
   useEffect(() => {
     const handleNavigationError = (event: ErrorEvent) => {
       console.error('Navigation error:', event.error)
-      toast({
+      addToast({
         title: "Navigation Error",
         description: "Failed to load the page. Please try again.",
         variant: "destructive"
@@ -55,7 +55,7 @@ export const NavigationProvider: React.FC<NavigationProviderProps> = ({ children
 
     window.addEventListener('error', handleNavigationError)
     return () => window.removeEventListener('error', handleNavigationError)
-  }, [toast])
+  }, [addToast])
 
   // Track page transitions
   useEffect(() => {

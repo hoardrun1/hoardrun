@@ -11,6 +11,7 @@ export enum ErrorCode {
   INTERNAL_ERROR = 'INTERNAL_ERROR',
   NETWORK_ERROR = 'NETWORK_ERROR',
   TIMEOUT_ERROR = 'TIMEOUT_ERROR',
+  RATE_LIMIT_EXCEEDED = 'RATE_LIMIT_EXCEEDED',
 }
 
 // Generic application error class

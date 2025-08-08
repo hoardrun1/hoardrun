@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 import { prisma } from '@/lib/prisma'
-import { AppError, errorCodes } from '@/lib/error-handling'
+import { AppError, ErrorCode } from '@/lib/error-handling'
 
 // Payment validation schema
 const paymentSchema = z.object({

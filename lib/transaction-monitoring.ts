@@ -1,6 +1,6 @@
 import { prisma } from './prisma';
 import { cache } from './cache';
-import { AppError, errorCodes } from './error-handling';
+import { AppError, ErrorCode } from './error-handling';
 
 export class TransactionMonitoring {
   private readonly VELOCITY_CHECK_WINDOW = 5 * 60; // 5 minutes
@@ -24,7 +24,7 @@ export class TransactionMonitoring {
     if (riskScore > 80) {
       throw new AppError(
         errorCodes.HIGH_RISK_TRANSACTION,
-        'Transaction flagged for review',
+        ErrorCode.VALIDATION_ERROR,
         403
       );
     }

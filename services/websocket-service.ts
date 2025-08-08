@@ -81,7 +81,8 @@ class WebSocketService {
       this.ws.send(JSON.stringify({ type, data }))
     } else {
       console.error('WebSocket is not connected')
-      toast({
+      // Toast functionality disabled for Vercel deployment
+      console.log('WebSocket notification:', {
         title: "Error",
         description: "Unable to send data. Please try again.",
         variant: "destructive"

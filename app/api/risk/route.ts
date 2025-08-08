@@ -1,5 +1,0 @@
-router.post('/risk/assess', riskController.assessRisk)
-router.get('/risk/limits', riskController.getTransactionLimits)
-router.post('/risk/update-limits', riskController.updateLimits)
-router.get('/risk/fraud-alerts', riskController.getFraudAlerts)
-router.post('/risk/report-fraud', riskController.reportFraud)

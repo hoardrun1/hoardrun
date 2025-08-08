@@ -48,7 +48,7 @@ export async function POST(request: Request) {
       apiKey: process.env.MASTERCARD_API_KEY!,
       partnerId: process.env.MASTERCARD_PARTNER_ID!,
       environment: process.env.MASTERCARD_ENVIRONMENT as 'sandbox' | 'production',
-      certificatePath: process.env.MASTERCARD_CERT_PATH!,
+      // certificatePath: process.env.MASTERCARD_CERT_PATH!, // Disabled for Vercel
       privateKeyPath: process.env.MASTERCARD_PRIVATE_KEY_PATH!,
       clientId: process.env.MASTERCARD_CLIENT_ID!,
       orgName: process.env.MASTERCARD_ORG_NAME!,

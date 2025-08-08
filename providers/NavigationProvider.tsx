@@ -29,7 +29,7 @@ interface NavigationProviderProps {
 
 export const NavigationProvider: React.FC<NavigationProviderProps> = ({ children }) => {
   const pathname = usePathname()
-  const { toast } = useToast()
+  const { addToast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const [previousPage, setPreviousPage] = useState<string | null>(null)
   const setCurrentPage = useNavigationStore((state) => state.setCurrentPage)
@@ -79,7 +79,7 @@ export const NavigationProvider: React.FC<NavigationProviderProps> = ({ children
 
   return (
     <NavigationContext.Provider value={contextValue}>
-      <NavigationProgress isLoading={isLoading} />
+      <NavigationProgress />
       <div className="min-h-screen">
         <PageTransition>
           {children}

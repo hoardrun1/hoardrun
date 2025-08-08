@@ -1,4 +1,4 @@
-import api from '@/lib/api-client'
+import { api } from '@/lib/api-client'
 import { cache } from '@/lib/cache'
 import { alphaVantageAPI } from '@/lib/alpha-vantage-client'
 

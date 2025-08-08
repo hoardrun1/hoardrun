@@ -280,15 +280,8 @@ export function InvestmentPage() {
   const router = useRouter()
   const { addToast, toast } = useToast()
 
-  // Try to use the finance context, but provide a fallback if it's not available
-  let financeContext;
-  try {
-    financeContext = useFinance();
-  } catch (error) {
-    console.warn('Finance context not available, using default values');
-    financeContext = null;
-  }
-
+  // Use the finance context with proper error handling
+  const financeContext = useFinance();
   const balance = financeContext?.balance || 25000; // Default investment balance
   const depositFunds = financeContext?.depositFunds || (async (amount: number) => {
     console.warn('Finance context not available, using mock deposit function');

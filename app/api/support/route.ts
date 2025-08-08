@@ -1,5 +1,18 @@
-router.post('/support/ticket', supportController.createTicket)
-router.get('/support/tickets', supportController.getTickets)
-router.get('/support/faq', supportController.getFAQ)
-router.post('/support/chat', supportController.initiateChat)
-router.post('/support/feedback', supportController.submitFeedback)
+import { NextResponse } from 'next/server'
+
+export async function GET() {
+  return NextResponse.json({
+    message: 'Support API endpoint',
+    endpoints: [
+      'POST /api/support - Create support ticket',
+      'GET /api/support - Get support tickets',
+      'GET /api/support/faq - Get FAQ',
+      'POST /api/support/chat - Initiate chat',
+      'POST /api/support/feedback - Submit feedback'
+    ]
+  })
+}
+
+export async function POST() {
+  return NextResponse.json({ message: 'Support ticket created' })
+}

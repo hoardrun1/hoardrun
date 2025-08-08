@@ -1,27 +1,8 @@
 import { cache } from './cache'
-import { logger } from './logger'
-import { APIError } from '@/middleware/error-handler'
-import { RateLimiter } from '@/lib/rate-limiter'
-import * as OTPAuth from 'otpauth'
-import { generateSecret } from '@/lib/crypto'
-import * as base32 from 'hi-base32'
-import * as cbor from 'cbor'
-import { 
-  generateRegistrationOptions,
-  verifyRegistrationResponse,
-  generateAuthenticationOptions,
-  verifyAuthenticationResponse,
-} from '@simplewebauthn/server'
-import type {
-  GenerateRegistrationOptionsOpts,
-  GenerateAuthenticationOptionsOpts,
-  VerifyRegistrationResponseOpts,
-  VerifyAuthenticationResponseOpts,
-} from '@simplewebauthn/server'
-import type {
-  RegistrationResponseJSON,
-  AuthenticationResponseJSON,
-} from '@simplewebauthn/typescript-types'
+import { AppError, ErrorCode } from './error-handling'
+import { RateLimiter } from './rate-limiter'
+// Note: Some MFA features are simplified for Vercel deployment
+// Complex crypto operations and WebAuthn may have limitations in serverless environment
 
 interface TOTPConfig {
   secret: string

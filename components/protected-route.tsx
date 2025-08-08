@@ -1,7 +1,6 @@
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Skeleton } from '@/components/ui/skeleton';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -22,9 +21,11 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   if (status === 'loading') {
     return (
       <div className="p-4">
-        <Skeleton className="h-8 w-full max-w-sm mb-4" />
-        <Skeleton className="h-32 w-full mb-4" />
-        <Skeleton className="h-32 w-full" />
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-full max-w-sm mb-4"></div>
+          <div className="h-32 bg-gray-200 rounded w-full mb-4"></div>
+          <div className="h-32 bg-gray-200 rounded w-full"></div>
+        </div>
       </div>
     );
   }

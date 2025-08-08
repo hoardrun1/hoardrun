@@ -32,39 +32,8 @@ if (isBrowser) {
   // Use simple console logger in browser
   logger = createBrowserLogger();
 } else {
-  // Use winston with file transports in Node.js environment
-  try {
-    const winston = require('winston');
-    const { rotatingFileTransport, errorRotatingFileTransport } = require('../../config/winston-daily-rotate');
-
-    const winstonLogger = winston.createLogger({
-      level: 'info',
-      format: winston.format.combine(
-        winston.format.timestamp(),
-        winston.format.json()
-      ),
-      defaultMeta: { service: 'momo-service' },
-      transports: [
-        errorRotatingFileTransport,
-        rotatingFileTransport
-      ]
-    });
-
-    if (process.env.NODE_ENV !== 'production') {
-      winstonLogger.add(new winston.transports.Console({
-        format: winston.format.combine(
-          winston.format.colorize(),
-          winston.format.simple()
-        ),
-      }));
-    }
-
-    logger = winstonLogger;
-  } catch (error) {
-    // Fallback to console logger if winston setup fails
-    console.warn('Winston logger setup failed, using console logger:', error);
-    logger = createBrowserLogger();
-  }
+  // Use console logger in Node.js environment (Winston disabled for Vercel)
+  logger = createBrowserLogger();
 }
 
 export class MomoLogger {

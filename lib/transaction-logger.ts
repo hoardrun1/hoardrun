@@ -19,31 +19,12 @@ if (isBrowser) {
     warn: (message: string, meta?: any) => console.warn(`[TRANSACTION-WARN] ${message}`, meta || ''),
   };
 } else {
-  // Server-side winston logger
-  try {
-    const winston = require('winston');
-
-    const winstonLogger = winston.createLogger({
-      level: 'info',
-      format: winston.format.combine(
-        winston.format.timestamp(),
-        winston.format.json()
-      ),
-      transports: [
-        new winston.transports.File({ filename: 'logs/transactions.log' }),
-        new winston.transports.Console()
-      ]
-    });
-
-    logger = winstonLogger;
-  } catch (error) {
-    // Fallback to console if winston fails
-    logger = {
-      info: (message: string, meta?: any) => console.log(`[TRANSACTION-INFO] ${message}`, meta || ''),
-      error: (message: string, meta?: any) => console.error(`[TRANSACTION-ERROR] ${message}`, meta || ''),
-      warn: (message: string, meta?: any) => console.warn(`[TRANSACTION-WARN] ${message}`, meta || ''),
-    };
-  }
+  // Server-side console logger (Winston disabled for Vercel)
+  logger = {
+    info: (message: string, meta?: any) => console.log(`[TRANSACTION-INFO] ${message}`, meta || ''),
+    error: (message: string, meta?: any) => console.error(`[TRANSACTION-ERROR] ${message}`, meta || ''),
+    warn: (message: string, meta?: any) => console.warn(`[TRANSACTION-WARN] ${message}`, meta || ''),
+  };
 }
 
 // Import prisma only on server side

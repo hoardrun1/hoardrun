@@ -1,15 +1,8 @@
-import express from 'express'
-import next from 'next'
-import http from 'http'
-import rateLimit from 'express-rate-limit'
-import helmet from 'helmet'
-import { createClient } from '@prisma/client'
-import { Queue } from 'bull'
-import winston from 'winston'
-import FinanceWebSocketServer from './websocket-server'
-import { authMiddleware } from './middleware/auth'
-import { errorHandler } from './middleware/error-handler'
-import { setupMonitoring } from './monitoring'
+// Express server is disabled for Vercel deployment
+// Vercel uses serverless functions instead of Express server
+// This file is kept for reference but not used in production
+
+console.log('Express server is disabled for Vercel deployment');
 
 const dev = process.env.NODE_ENV !== 'production'
 const app = next({ dev })

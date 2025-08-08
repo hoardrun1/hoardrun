@@ -320,7 +320,7 @@ export default function StartupRegistration() {
 
       addToast({
         title: "Registration Successful",
-        description: "Your startup has been registered successfully. We'll review your submission.",
+        description: "Your startup has been registered successfully. We&apos;ll review your submission.",
       })
 
       router.push('/investment')

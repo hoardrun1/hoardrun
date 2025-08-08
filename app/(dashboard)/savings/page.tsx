@@ -96,7 +96,7 @@ export default function SavingsPage() {
         insights: [
           {
             title: 'Savings Progress',
-            description: `You're on track to save $${monthlyGrowth.toLocaleString()} per month`
+            description: `You&apos;re on track to save $${monthlyGrowth.toLocaleString()} per month`
           }
         ]
       })

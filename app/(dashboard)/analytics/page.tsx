@@ -11,15 +11,11 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, PieChart, Pie, Cell, AreaChart, Area
 } from 'recharts'
-import { 
-  BarChart3, 
-  TrendingUp, 
-  TrendingDown, 
+import {
+  TrendingUp,
+  TrendingDown,
   DollarSign,
-  Calendar,
-  Target,
-  PieChart as PieChartIcon,
-  Activity
+  Target
 } from 'lucide-react'
 
 // Mock analytics data

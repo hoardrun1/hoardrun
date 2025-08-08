@@ -10,16 +10,15 @@ import { RightSidebarToggle } from '@/components/ui/right-sidebar-toggle'
 import { DepositModal } from '@/components/deposit-modal'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { 
-  DollarSign, 
-  TrendingUp, 
-  TrendingDown, 
+import {
+  DollarSign,
+  TrendingUp,
+  TrendingDown,
   CreditCard,
   ArrowUpRight,
   ArrowDownLeft,
   PiggyBank,
   Target,
-  Activity,
   Calendar
 } from 'lucide-react'
 
@@ -45,7 +44,7 @@ export default function HomePage() {
     { id: 4, type: 'income', description: 'Freelance Payment', amount: 800.00, date: '2024-01-12' }
   ]
 
-  const handleQuickAction = (action: any) => {
+  const handleQuickAction = (action: { href?: string; action?: () => void }) => {
     if (action.href) {
       router.push(action.href)
     } else if (action.action) {

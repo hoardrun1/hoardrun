@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { useState } from 'react'
 import {
   PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, LineChart, Line
@@ -16,19 +15,18 @@ import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+
 import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sidebar-layout'
 import { SidebarContent } from '@/components/ui/sidebar-content'
 import { SidebarToggle } from '@/components/ui/sidebar-toggle'
 import { DepositModal } from '@/components/deposit-modal'
 import {
   DollarSign, TrendingUp, TrendingDown, AlertTriangle,
-  Plus, Edit, Trash2, Target, Calendar, PiggyBank,
-  ShoppingCart, Home, Car, Utensils, Coffee, Gamepad2,
-  Heart, GraduationCap, Plane, Gift
+  Plus, Target, PiggyBank,
+  ShoppingCart, Home, Car, Utensils, Gamepad2,
+  Heart, GraduationCap, Plane
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
-import { isAuthBypassEnabled } from '@/lib/auth-bypass'
 
 // Mock data for budget categories
 const budgetCategories = [
@@ -53,14 +51,12 @@ const monthlyTrend = [
 ]
 
 export default function BudgetPage() {
-  const { user } = useAuth()
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false)
-  const [selectedCategory, setSelectedCategory] = useState(null)
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false)
   const [newCategory, setNewCategory] = useState({ name: '', budget: '', icon: 'ShoppingCart' })
   const [budgetData, setBudgetData] = useState(budgetCategories)
   const [totalBudget, setTotalBudget] = useState(4600)
-  const [totalSpent, setTotalSpent] = useState(3970)
+  const [totalSpent] = useState(3970)
 
   // Calculate budget summary
   const remainingBudget = totalBudget - totalSpent

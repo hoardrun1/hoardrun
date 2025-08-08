@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
-import { prisma } from '@/lib/prisma'
+import { prisma } from '@/lib/server/db'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-config'
 import { generateAccountNumber } from '@/lib/banking'

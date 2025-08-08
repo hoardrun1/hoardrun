@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import bcrypt from 'bcryptjs'
-import { prisma } from '@/lib/prisma'
+import { prisma } from '@/lib/server/db'
 import { sendVerificationEmail } from '@/lib/mailgun-service' // Fixed import
 import { generateToken } from '@/lib/jwt'
 

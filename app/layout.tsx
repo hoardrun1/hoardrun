@@ -4,6 +4,7 @@ import './globals.css'
 import ClientAuthProvider from '../components/client-auth-provider'
 import NextAuthProvider from '../components/next-auth-provider'
 import { NavigationProvider } from '@/providers/NavigationProvider'
+import { FinanceProvider } from '@/contexts/FinanceContext'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -22,9 +23,11 @@ export default function RootLayout({
       <body className={inter.className}>
         <NextAuthProvider>
           <ClientAuthProvider>
-            <NavigationProvider>
-              {children}
-            </NavigationProvider>
+            <FinanceProvider>
+              <NavigationProvider>
+                {children}
+              </NavigationProvider>
+            </FinanceProvider>
           </ClientAuthProvider>
         </NextAuthProvider>
       </body>

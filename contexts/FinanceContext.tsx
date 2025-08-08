@@ -1,3 +1,5 @@
+'use client'
+
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
 import { useSession } from 'next-auth/react'
 import { useToast } from '@/components/ui/use-toast'

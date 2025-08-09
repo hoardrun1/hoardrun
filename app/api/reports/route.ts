@@ -180,10 +180,11 @@ async function getInvestmentReport(userId: string, params: ReportQueryParams): P
     const { metrics } = calculateMetrics(investment, performanceHistory);
     
     // Create a clean investment object without the transactions
-    const { Transaction: transactions, user, ...baseInvestment } = investment as InvestmentWithTransactions;
+    const { transactions, user, ...baseInvestment } = investment as any;
     
     return {
       ...baseInvestment,
+      returns: baseInvestment.return, // Map 'return' field to 'returns' for interface compatibility
       performance: {
         history: performanceHistory,
         metrics

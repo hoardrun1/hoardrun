@@ -258,7 +258,47 @@ const mockPrismaClient = {
     update: async (args?: any) => mockSecuritySettings,
     delete: async (args?: any) => mockSecuritySettings,
   },
-  // Add other models as needed
+  // Add missing models
+  auditLog: {
+    create: async (args?: any) => mockGeneric,
+  },
+  securityAlert: {
+    create: async (args?: any) => mockGeneric,
+  },
+  savingsContribution: {
+    findMany: async (args?: any) => [mockGeneric],
+    create: async (args?: any) => mockGeneric,
+  },
+  card: {
+    findMany: async (args?: any) => [mockGeneric],
+    create: async (args?: any) => mockGeneric,
+    update: async (args?: any) => mockGeneric,
+  },
+  notification: {
+    findMany: async (args?: any) => [mockGeneric],
+    create: async (args?: any) => mockGeneric,
+    update: async (args?: any) => mockGeneric,
+  },
+  kycDocument: {
+    findMany: async (args?: any) => [mockGeneric],
+    create: async (args?: any) => mockGeneric,
+  },
+  session: {
+    findFirst: async (args?: any) => mockGeneric,
+    create: async (args?: any) => mockGeneric,
+    delete: async (args?: any) => mockGeneric,
+  },
+  transactionLog: {
+    create: async (args?: any) => mockGeneric,
+  },
+  certificateCheck: {
+    create: async (args?: any) => mockGeneric,
+  },
+  // Transaction wrapper
+  $transaction: async (callback: Function) => {
+    return await callback(mockPrismaClient);
+  },
+  $disconnect: async () => Promise.resolve(),
 };
 
 // Export the mock client for client-side use

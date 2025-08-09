@@ -104,6 +104,30 @@ class AlphaVantageAPI {
       300 // 5 minutes cache
     );
   }
+
+  async getCompanyOverview(symbol: string) {
+    return this.makeRequest(
+      {
+        function: 'OVERVIEW',
+        symbol,
+      },
+      `overview:${symbol}`,
+      3600 // 1 hour cache
+    );
+  }
+
+  async getIntradayPrices(symbol: string, interval: string = '5min') {
+    return this.makeRequest(
+      {
+        function: 'TIME_SERIES_INTRADAY',
+        symbol,
+        interval,
+        outputsize: 'compact'
+      },
+      `intraday:${symbol}:${interval}`,
+      60 // 1 minute cache
+    );
+  }
 }
 
 export const alphaVantageAPI = new AlphaVantageAPI();

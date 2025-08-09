@@ -10,8 +10,8 @@ const nextConfig = {
   images: {
     domains: ['images.unsplash.com'],
   },
-  // Enable standalone output for Docker deployment
-  output: 'standalone',
+  // Conditional output based on deployment target
+  ...(process.env.DOCKER_BUILD && { output: 'standalone' }),
   // Optimize for Render deployment
   experimental: {
     outputFileTracingRoot: process.cwd(),

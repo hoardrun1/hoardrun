@@ -60,7 +60,7 @@ export async function GET(request: Request) {
     if (error instanceof AppError) {
       return NextResponse.json(
         { error: error.message },
-        { status: error.status }
+        { status: error.statusCode }
       );
     }
     return NextResponse.json(

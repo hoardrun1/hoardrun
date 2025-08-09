@@ -72,8 +72,7 @@ export async function POST(
         where: { id: params.id },
         data: {
           currentAmount: newAmount,
-          progress: Math.min(Math.round((newAmount / savingsGoal.targetAmount) * 100), 100),
-          isCompleted,
+          status: isCompleted ? 'COMPLETED' : 'ACTIVE',
         },
       })
 

@@ -102,7 +102,7 @@ export function CheckEmailPage() {
       {/* Animated geometric background pattern - Adjusted for mobile */}
       <div className="absolute inset-0 opacity-5 sm:opacity-10">
         <div 
-          className="absolute top-0 left-0 w-48 sm:w-96 h-48 sm:h-96 border border-white/30 rounded-full -translate-x-24 sm:-translate-x-48 -translate-y-24 sm:-translate-y-48 transition-all duration-[3s] ease-out"
+          className="absolute top-0 left-0 w-48 sm:w-96 h-48 sm:h-96 border border-white/30 rounded-full -translate-x-24 sm:-translate-x-48 -translate-y-24 sm:-translate-y-48 transition-all duration-&lsqb;3s&rsqb; ease-out"
           style={{
             transform: mounted 
               ? 'translateX(-6rem) translateY(-6rem) rotate(45deg) sm:translateX(-12rem) sm:translateY(-12rem)' 
@@ -110,7 +110,7 @@ export function CheckEmailPage() {
           }}
         ></div>
         <div 
-          className="absolute bottom-0 right-0 w-48 sm:w-96 h-48 sm:h-96 border border-white/30 rounded-full translate-x-24 sm:translate-x-48 translate-y-24 sm:translate-y-48 transition-all duration-[3.5s] ease-out"
+          className="absolute bottom-0 right-0 w-48 sm:w-96 h-48 sm:h-96 border border-white/30 rounded-full translate-x-24 sm:translate-x-48 translate-y-24 sm:translate-y-48 transition-all duration-&lsqb;3.5s&rsqb; ease-out"
           style={{
             transform: mounted 
               ? 'translateX(6rem) translateY(6rem) rotate(-45deg) sm:translateX(12rem) sm:translateY(12rem)' 
@@ -118,7 +118,7 @@ export function CheckEmailPage() {
           }}
         ></div>
         <div 
-          className="absolute top-1/2 left-1/2 w-32 sm:w-64 h-32 sm:h-64 border border-white/20 rounded-full -translate-x-16 sm:-translate-x-32 -translate-y-16 sm:-translate-y-32 transition-all duration-[4s] ease-out"
+          className="absolute top-1/2 left-1/2 w-32 sm:w-64 h-32 sm:h-64 border border-white/20 rounded-full -translate-x-16 sm:-translate-x-32 -translate-y-16 sm:-translate-y-32 transition-all duration-&lsqb;4s&rsqb; ease-out"
           style={{
             transform: mounted 
               ? 'translateX(-4rem) translateY(-4rem) rotate(90deg) scale(1) sm:translateX(-8rem) sm:translateY(-8rem)' 

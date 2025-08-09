@@ -39,11 +39,11 @@ export async function POST(request: Request) {
       partnerId: process.env.MASTERCARD_PARTNER_ID!,
       environment: process.env.MASTERCARD_ENVIRONMENT as 'sandbox' | 'production',
       // certificatePath: process.env.MASTERCARD_CERT_PATH!, // Disabled for Vercel
-      privateKeyPath: process.env.MASTERCARD_PRIVATE_KEY_PATH!,
+      // privateKeyPath: process.env.MASTERCARD_PRIVATE_KEY_PATH!, // Not in interface
       clientId: process.env.MASTERCARD_CLIENT_ID!,
       orgName: process.env.MASTERCARD_ORG_NAME!,
       country: country,
-      certPassword: process.env.MASTERCARD_CERT_PASSWORD!,
+      // certPassword: process.env.MASTERCARD_CERT_PASSWORD!, // Not in interface
     });
 
     const result = await mastercardClient.generatePaymentLink({

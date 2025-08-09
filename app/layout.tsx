@@ -1,12 +1,13 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+// Temporarily commented out due to network issues during build
+// import { Inter } from 'next/font/google'
 import './globals.css'
 import ClientAuthProvider from '../components/client-auth-provider'
 import NextAuthProvider from '../components/next-auth-provider'
 import { NavigationProvider } from '@/providers/NavigationProvider'
 import { FinanceProvider } from '@/contexts/FinanceContext'
 
-const inter = Inter({ subsets: ['latin'] })
+// const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'Hoardrun',
@@ -20,7 +21,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className="font-sans">
         <NextAuthProvider>
           <ClientAuthProvider>
             <FinanceProvider>

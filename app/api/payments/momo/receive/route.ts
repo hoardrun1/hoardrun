@@ -22,12 +22,12 @@ export async function POST(request: Request) {
     const data = receiveSchema.parse(body);
 
     // Create pending transaction record
-    const transaction = await prisma.momoTransaction.create({
+    const transaction = await prisma.transaction.create({
       data: {
         userId: data.userId,
         amount: data.amount,
-        phone: data.phone,
-        type: 'RECEIVE',
+        description: `MOMO receive from ${data.phone}`,
+        type: 'DEPOSIT',
         status: 'PENDING',
       },
     });
@@ -35,19 +35,23 @@ export async function POST(request: Request) {
     // Generate payment link (implementation depends on MTN MOMO API)
     const momoClient = new MomoClient({
       baseUrl: process.env.MOMO_API_URL!,
-      subscriptionKey: process.env.MOMO_SUBSCRIPTION_KEY!,
-      targetEnvironment: process.env.MOMO_ENVIRONMENT!,
-      apiKey: process.env.MOMO_API_KEY!,
+      primaryKey: process.env.MOMO_PRIMARY_KEY!,
+      secondaryKey: process.env.MOMO_SECONDARY_KEY!,
+      targetEnvironment: process.env.MOMO_TARGET_ENVIRONMENT!,
       callbackUrl: `${process.env.NEXT_PUBLIC_API_URL}/api/payments/momo/callback`,
+      userId: process.env.MOMO_USER_ID!,
+      apiKey: process.env.MOMO_API_KEY!,
     });
 
-    const paymentLink = await momoClient.generatePaymentLink({
-      amount: data.amount,
-      phone: data.phone,
-      referenceId: transaction.id,
-    });
+    const paymentResult = await momoClient.requestToPay(
+      data.amount,
+      'EUR', // Default currency
+      data.phone,
+      `Payment request for ${data.amount}`,
+      { externalId: transaction.id }
+    );
 
-    return NextResponse.json({ paymentLink });
+    return NextResponse.json({ paymentResult });
   } catch (error) {
     console.error('MOMO receive payment error:', error);
     return new NextResponse('Payment link generation failed', { status: 500 });

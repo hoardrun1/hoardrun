@@ -3,12 +3,7 @@ import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth-config'
 import { z } from 'zod'
 
-// Import prisma only on the server side
-let prisma;
-if (typeof window === 'undefined') {
-  const { prisma: prismaClient } = require('@/lib/prisma');
-  prisma = prismaClient;
-}
+import { prisma } from '@/lib/server/db';
 
 const savingsGoalSchema = z.object({
   name: z.string().min(1, 'Name is required'),

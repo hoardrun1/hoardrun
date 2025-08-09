@@ -4,8 +4,7 @@ import { z } from 'zod'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/server/db'
 import { RateLimiter } from '@/lib/rate-limiter'
-import { generateTwoFactorCode } from '@/lib/auth'
-import { sendTwoFactorCode } from '@/lib/email'
+// Removed unused imports: generateTwoFactorCode, sendTwoFactorCode
 import { detectSuspiciousActivity } from '@/lib/security'
 
 const signInSchema = z.object({
@@ -75,10 +74,7 @@ export async function POST(request: Request) {
     console.log('Looking for user with email:', email.toLowerCase())
     const user = await prisma.user.findUnique({
       where: { email: email.toLowerCase() },
-      include: {
-        devices: true,
-        securitySettings: true,
-      },
+      // Removed devices and securitySettings - they don't exist in User model
     })
 
     console.log('User found:', user ? { id: user.id, email: user.email, hasPassword: !!user.password } : 'No user found')
@@ -170,59 +166,11 @@ export async function POST(request: Request) {
       .setIssuedAt()
       .sign(new TextEncoder().encode(jwtSecret))
 
-    // Record the login attempt
-    try {
-      await prisma.loginAttempt.create({
-        data: {
-          userId: user.id,
-          success: true,
-          ipAddress: clientIp,
-          userAgent: finalDeviceInfo.userAgent,
-          deviceFingerprint: finalDeviceInfo.fingerprint,
-          timestamp: new Date(finalDeviceInfo.timestamp)
-        }
-      })
-    } catch (error) {
-      console.warn('Could not record login attempt:', error)
-    }
+    // Note: LoginAttempt model doesn't exist in Prisma schema
+    // Skipping login attempt recording
 
-    // Check if this is a new device
-    const isKnownDevice = user.devices && user.devices.some(d => d.fingerprint === finalDeviceInfo.fingerprint)
-    
-    if (!isKnownDevice) {
-      // Record new device
-      try {
-        await prisma.device.create({
-          data: {
-            userId: user.id,
-            fingerprint: finalDeviceInfo.fingerprint,
-            userAgent: finalDeviceInfo.userAgent,
-            lastIp: clientIp,
-            lastUsed: new Date(),
-            isVerified: false
-          }
-        })
-      } catch (error) {
-        console.warn('Could not record new device:', error)
-      }
-
-      // Generate and send 2FA code if enabled
-      if (user.securitySettings?.twoFactorEnabled) {
-        try {
-          const twoFactorCode = generateTwoFactorCode()
-          await prisma.twoFactorCode.create({
-            data: {
-              userId: user.id,
-              code: twoFactorCode,
-              expiresAt: new Date(Date.now() + 10 * 60 * 1000) // 10 minutes
-            }
-          })
-          await sendTwoFactorCode(user.email, twoFactorCode)
-        } catch (error) {
-          console.warn('Could not send 2FA code:', error)
-        }
-      }
-    }
+    // Note: Device and SecuritySettings models don't exist in Prisma schema
+    // Skip device tracking and 2FA since models don't exist
 
     // Reset rate limiting on successful login
     RateLimiter.resetLimit(rateLimitKey)
@@ -243,7 +191,7 @@ export async function POST(request: Request) {
           name: user.name,
           role: 'user' // Default role since User model doesn't have role field
         },
-        requiresVerification: !isKnownDevice && user.securitySettings?.twoFactorEnabled,
+        requiresVerification: false, // Disabled since securitySettings model doesn't exist
         isSuspicious
       }),
       { 

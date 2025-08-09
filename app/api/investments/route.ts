@@ -145,7 +145,7 @@ export async function PATCH(req: Request) {
         })
 
         // Return funds to user balance with potential returns
-        if (completed.returns) {
+        if (completed.return) { // Fixed: property is 'return' not 'returns'
           const account = await tx.account.findFirst({
             where: {
               userId: session.user.id,
@@ -166,7 +166,7 @@ export async function PATCH(req: Request) {
                   where: { id: account.id },
                   data: {
                     balance: {
-                      increment: completed.amount + completed.returns
+                      increment: completed.amount + (completed.return || 0) // Fixed: property is 'return' not 'returns'
                     }
                   }
                 }
@@ -179,7 +179,7 @@ export async function PATCH(req: Request) {
               userId: session.user.id,
               accountId: account.id,
               type: 'DEPOSIT', // Using DEPOSIT since money is being returned to account
-              amount: completed.amount + completed.returns,
+              amount: completed.amount + (completed.return || 0), // Fixed: property is 'return' not 'returns'
               description: `Investment return from ${completed.type}`,
               status: 'COMPLETED',
             }

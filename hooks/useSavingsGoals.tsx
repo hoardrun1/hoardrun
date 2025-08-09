@@ -1,6 +1,17 @@
 import { useState, useCallback } from 'react'
-import { SavingsStatus, SavingsFrequency } from '@prisma/client'
 import { useToast } from '@/components/ui/use-toast'
+
+enum SavingsStatus {
+  ACTIVE = 'ACTIVE',
+  COMPLETED = 'COMPLETED',
+  PAUSED = 'PAUSED'
+}
+
+enum SavingsFrequency {
+  WEEKLY = 'WEEKLY',
+  MONTHLY = 'MONTHLY',
+  QUARTERLY = 'QUARTERLY'
+}
 
 interface SavingsGoal {
   id: string
@@ -203,11 +214,11 @@ export function useSavingsGoals() {
   }, [])
 
   const getActiveGoals = useCallback(() => {
-    return savingsGoals.filter(goal => goal.status === 'IN_PROGRESS')
+    return savingsGoals.filter(goal => goal.status === SavingsStatus.ACTIVE)
   }, [savingsGoals])
 
   const getCompletedGoals = useCallback(() => {
-    return savingsGoals.filter(goal => goal.status === 'COMPLETED')
+    return savingsGoals.filter(goal => goal.status === SavingsStatus.COMPLETED)
   }, [savingsGoals])
 
   return {

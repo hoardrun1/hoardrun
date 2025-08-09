@@ -2,6 +2,21 @@ import { motion } from 'framer-motion'
 import { Card } from './card'
 import { Progress } from './progress'
 
+interface SavingsGoal {
+  id: string;
+  name: string;
+  targetAmount: number;
+  currentAmount: number;
+  targetDate: string;
+}
+
+interface SavingsGoalCardProps {
+  goal: SavingsGoal;
+  onContribute: (goalId: string) => void;
+  onEdit: (goalId: string) => void;
+  onDelete: (goalId: string) => void;
+}
+
 export const SavingsGoalCard = ({
   goal,
   onContribute,

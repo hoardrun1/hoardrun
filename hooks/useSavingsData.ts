@@ -5,10 +5,10 @@ import { useToast } from '@/components/ui/use-toast';
 
 export function useSavingsData() {
   const { toast } = useToast();
-  const [savingsGoals, setSavingsGoals] = useState([]);
+  const [savingsGoals, setSavingsGoals] = useState<any[]>([]);
   const [analytics, setAnalytics] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   // Fetch savings goals
   const fetchSavingsGoals = useCallback(async () => {
@@ -63,7 +63,7 @@ export function useSavingsData() {
   }, [toast]);
 
   // Create a new savings goal
-  const addSavingsGoal = useCallback(async (goalData) => {
+  const addSavingsGoal = useCallback(async (goalData: any) => {
     setIsLoading(true);
 
     try {

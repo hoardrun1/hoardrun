@@ -92,7 +92,7 @@ export function TransferModal({
         description,
         category,
         beneficiaryId: beneficiary.id,
-        scheduledDate: isScheduled ? scheduledDate : undefined,
+        scheduledDate: isScheduled && scheduledDate ? scheduledDate : undefined,
         isRecurring,
         recurringFrequency: isRecurring ? recurringFrequency : undefined,
       })

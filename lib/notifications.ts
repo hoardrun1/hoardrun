@@ -15,6 +15,33 @@ export interface AlertOptions {
   metadata?: any;
 }
 
+export class NotificationService {
+  static async sendNotification(userId: string, message: string, type: string = 'info'): Promise<void> {
+    // Mock implementation
+    console.log(`Notification sent to user ${userId}: ${message} (${type})`);
+  }
+
+  static async sendEmail(to: string, subject: string, body: string): Promise<void> {
+    // Mock implementation
+    console.log(`Email sent to ${to}: ${subject}`);
+  }
+
+  static async sendSMS(to: string, message: string): Promise<void> {
+    // Mock implementation
+    console.log(`SMS sent to ${to}: ${message}`);
+  }
+
+  static async sendAccountNotification(userId: string, notification: any): Promise<void> {
+    // Mock implementation
+    console.log(`Account notification sent to user ${userId}:`, notification);
+  }
+
+  static async sendUrgentNotification(userId: string, notification: any): Promise<void> {
+    // Mock implementation
+    console.log(`Urgent notification sent to user ${userId}:`, notification);
+  }
+}
+
 export async function sendAlert(options: AlertOptions): Promise<void> {
   try {
     const { channels, message, recipients, severity = 'MEDIUM', metadata } = options;

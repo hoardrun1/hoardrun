@@ -54,8 +54,8 @@ export const HeatMap: React.FC<HeatMapProps> = ({
   };
 
   // Group data by weeks
-  const weeks = [];
-  let currentWeek = [];
+  const weeks: (HeatMapData | null)[][] = [];
+  let currentWeek: (HeatMapData | null)[] = [];
   
   heatMapData.forEach((item, index) => {
     const date = new Date(item.date);

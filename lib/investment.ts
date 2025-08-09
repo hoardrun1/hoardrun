@@ -62,7 +62,7 @@ const getVolatilityFactor = (risk: RiskLevel): number => {
 export const analyzeRisk = (investments: Investment[]): RiskProfile => {
   if (!investments.length) {
     return {
-      overallRisk: 'MODERATE',
+      overallRisk: 'MEDIUM', // Fixed from MODERATE
       diversification: 0,
       volatility: 0,
       confidence: 1,
@@ -121,20 +121,19 @@ const getRiskFactor = (risk: RiskLevel): number => {
   switch (risk) {
     case 'LOW':
       return 0.2
-    case 'MODERATE':
+    case 'MEDIUM': // Fixed from MODERATE
       return 0.4
     case 'HIGH':
       return 0.7
-    case 'VERY_HIGH':
-      return 1.0
+    default:
+      return 0.4
   }
 }
 
 const getOverallRiskLevel = (volatility: number): RiskLevel => {
   if (volatility <= 0.3) return 'LOW'
-  if (volatility <= 0.5) return 'MODERATE'
-  if (volatility <= 0.7) return 'HIGH'
-  return 'VERY_HIGH'
+  if (volatility <= 0.5) return 'MEDIUM' // Fixed from MODERATE
+  return 'HIGH' // Simplified since VERY_HIGH doesn't exist in Prisma enum
 }
 
 const generateSuggestions = (

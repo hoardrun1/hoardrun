@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { prisma } from '@/lib/server/db';
 import { MomoClient } from '@/lib/momo-client';
 
 export async function POST(request: Request) {

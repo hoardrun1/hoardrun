@@ -21,7 +21,7 @@ const sampleInvestments = [
   {
     id: '2',
     name: 'Sustainable Energy',
-    type: 'STOCKS',
+    type: 'STOCK', // Fixed to match Prisma InvestmentType enum
     value: 2800,
     change: -1.8,
     positive: false,

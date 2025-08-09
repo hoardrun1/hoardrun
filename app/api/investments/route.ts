@@ -139,7 +139,7 @@ export async function PATCH(req: Request) {
         const completed = await tx.investment.update({
           where: { id },
           data: {
-            status: 'COMPLETED',
+            status: 'CLOSED', // Fixed: COMPLETED doesn't exist, using CLOSED instead
             endDate: new Date(),
           }
         })

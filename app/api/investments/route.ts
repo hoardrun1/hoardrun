@@ -192,7 +192,7 @@ export async function PATCH(req: Request) {
       updatedInvestment = await prisma.investment.update({
         where: { id },
         data: {
-          status: 'CANCELLED',
+          status: 'CLOSED',
           endDate: new Date()
         }
       })

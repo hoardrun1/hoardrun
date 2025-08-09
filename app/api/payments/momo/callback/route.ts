@@ -13,6 +13,8 @@ export async function POST(request: Request) {
       secondaryKey: process.env.MOMO_SECONDARY_KEY!,
       targetEnvironment: process.env.MOMO_TARGET_ENVIRONMENT!,
       callbackUrl: process.env.MOMO_CALLBACK_HOST!,
+      userId: process.env.MOMO_USER_ID!,
+      apiKey: process.env.MOMO_API_KEY!,
     });
 
     // Verify transaction status
@@ -21,7 +23,7 @@ export async function POST(request: Request) {
     // Update transaction and user balance
     await prisma.$transaction(async (tx) => {
       const transaction = await tx.transaction.findFirst({
-        where: { reference: body.referenceId },
+        where: { id: body.referenceId },
         include: { user: true },
       });
 
@@ -33,15 +35,15 @@ export async function POST(request: Request) {
       await tx.transaction.update({
         where: { id: transaction.id },
         data: { 
-          status: status.status,
-          completedAt: status.status === 'SUCCESSFUL' ? new Date() : null,
+          status: status.status === 'SUCCESSFUL' ? 'COMPLETED' : status.status === 'FAILED' ? 'FAILED' : 'PENDING',
+          // completedAt: status.status === 'SUCCESSFUL' ? new Date() : null, // completedAt doesn't exist in schema
         },
       });
 
-      // Update user balance if transaction is successful
-      if (status.status === 'SUCCESSFUL') {
-        await tx.user.update({
-          where: { id: transaction.userId },
+      // Update account balance if transaction is successful
+      if (status.status === 'SUCCESSFUL' && transaction.accountId) {
+        await tx.account.update({
+          where: { id: transaction.accountId },
           data: {
             balance: {
               decrement: transaction.amount,

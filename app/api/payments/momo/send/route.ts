@@ -48,12 +48,12 @@ export async function POST(request: Request) {
     );
 
     // Check user balance
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+    const account = await prisma.account.findFirst({
+      where: { userId: session.user.id, isActive: true },
       select: { balance: true },
     });
 
-    if (!user || user.balance < convertedAmount) {
+    if (!account || account.balance < convertedAmount) {
       throw new MomoError(
         momoErrorCodes.INSUFFICIENT_FUNDS,
         'Insufficient balance',
@@ -68,22 +68,18 @@ export async function POST(request: Request) {
       secondaryKey: process.env.MOMO_SECONDARY_KEY!,
       targetEnvironment: process.env.MOMO_TARGET_ENVIRONMENT!,
       callbackUrl: process.env.MOMO_CALLBACK_HOST!,
+      userId: process.env.MOMO_USER_ID!,
+      apiKey: process.env.MOMO_API_KEY!,
     });
 
     // Create transaction record
     const transaction = await prisma.transaction.create({
       data: {
-        type: 'MOMO_TRANSFER',
+        type: 'TRANSFER',
         amount: convertedAmount,
         status: 'PENDING',
-        description: data.description || 'MTN MOMO Transfer',
+        description: `${data.description || 'MTN MOMO Transfer'} to ${formattedPhone}`,
         userId: session.user.id,
-        metadata: {
-          phone: formattedPhone,
-          originalAmount: data.amount,
-          originalCurrency: data.currency,
-          country: data.country,
-        },
       },
     });
 
@@ -99,9 +95,10 @@ export async function POST(request: Request) {
     );
 
     // Update transaction with reference ID
+    // Update transaction description with reference ID
     await prisma.transaction.update({
       where: { id: transaction.id },
-      data: { reference: referenceId },
+      data: { description: `${transaction.description} (Ref: ${referenceId})` },
     });
 
     // Log successful request

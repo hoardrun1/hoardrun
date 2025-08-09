@@ -48,13 +48,13 @@ export async function POST(request: Request) {
     const user = await prisma.user.findUnique({
       where: { email: email.toLowerCase() },
       include: {
-        devices: true,
-        securitySettings: true,
+        // devices: true, // Not available in schema
+        // securitySettings: true, // Not available in schema
       },
     })
 
     if (!user) {
-      await RateLimiter.increment(`signin:${email}:${clientIp}`)
+      await RateLimiter.checkLimit(`signin:${email}:${clientIp}`)
       return new NextResponse(
         JSON.stringify({ error: 'Invalid email or password' }),
         { status: 401 }
@@ -64,7 +64,7 @@ export async function POST(request: Request) {
     // Verify password
     const isValidPassword = await bcrypt.compare(password, user.password)
     if (!isValidPassword) {
-      await RateLimiter.increment(`signin:${email}:${clientIp}`)
+      await RateLimiter.checkLimit(`signin:${email}:${clientIp}`)
       return new NextResponse(
         JSON.stringify({ error: 'Invalid email or password' }),
         { status: 401 }

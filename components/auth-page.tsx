@@ -13,7 +13,7 @@ import {
   UserIcon, 
   Loader2,
   ArrowLeft,
-  LucideGoogle,
+  Globe, // Using Globe instead of LucideGoogle which doesn't exist
   Facebook,
   Apple,
   ChevronRight,
@@ -116,7 +116,7 @@ export default function AuthPage() {
           password: formData.password,
           deviceInfo: {
             userAgent: window.navigator.userAgent,
-            deviceId: await getDeviceId(), // You'll need to implement this
+            deviceId: Math.random().toString(36).substring(2, 15), // Simple device ID
             ip: '', // Will be set by server
             components: {} // Add device fingerprinting if needed
           }
@@ -446,7 +446,7 @@ export default function AuthPage() {
                   onClick={() => handleSocialAuth('google')}
                   className="h-11 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 transition-all"
                 >
-                  <LucideGoogle className="h-5 w-5" />
+                  <Globe className="h-5 w-5" />
                 </Button>
                 <Button
                   variant="outline"

@@ -1,6 +1,20 @@
 import { useFinanceNavigation } from '@/hooks/useFinanceNavigation';
 import { transferService } from '@/services/transfer-service';
 
+interface Beneficiary {
+  id: string;
+  name: string;
+  accountNumber: string;
+  bankName: string;
+  bankCode?: string;
+  email?: string;
+  phoneNumber?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  transactionCount?: number;
+}
+
 export function SendMoneyFlow() {
   const { navigateTo, getCurrentPageData } = useFinanceNavigation();
 

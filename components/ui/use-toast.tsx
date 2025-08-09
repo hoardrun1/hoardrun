@@ -11,6 +11,7 @@ interface Toast {
 interface ToastState {
   toasts: Toast[]
   addToast: (toast: Omit<Toast, 'id'>) => void
+  toast: (toast: Omit<Toast, 'id'>) => void // Alias for addToast for compatibility
   removeToast: (id: string) => void
 }
 
@@ -46,6 +47,7 @@ const useToast = (): ToastState => {
   return {
     toasts,
     addToast,
+    toast: addToast, // Alias for compatibility
     removeToast,
   }
 }

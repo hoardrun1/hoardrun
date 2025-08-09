@@ -20,9 +20,9 @@ export class VisaClient {
   private apiKey: string;
   private baseUrl: string;
 
-  constructor() {
-    this.apiKey = process.env.VISA_API_KEY!;
-    this.baseUrl = process.env.VISA_ENVIRONMENT === 'production'
+  constructor(config?: VisaConfig) {
+    this.apiKey = config?.apiKey || process.env.VISA_API_KEY!;
+    this.baseUrl = (config?.environment === 'production' || process.env.VISA_ENVIRONMENT === 'production')
       ? 'https://api.visa.com'
       : 'https://sandbox.api.visa.com';
   }

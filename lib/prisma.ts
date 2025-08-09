@@ -145,6 +145,7 @@ const mockPrismaClient = {
     create: async (args?: any) => mockUser,
     update: async (args?: any) => mockUser,
     delete: async (args?: any) => mockUser,
+    count: async (args?: any) => 1,
   },
   savingsGoal: {
     findUnique: async (args?: any) => mockSavingsGoal,
@@ -153,6 +154,7 @@ const mockPrismaClient = {
     create: async (args?: any) => mockSavingsGoal,
     update: async (args?: any) => mockSavingsGoal,
     delete: async (args?: any) => mockSavingsGoal,
+    count: async (args?: any) => 1,
   },
   account: {
     findUnique: async (args?: any) => mockAccount,
@@ -161,6 +163,7 @@ const mockPrismaClient = {
     create: async (args?: any) => mockAccount,
     update: async (args?: any) => mockAccount,
     delete: async (args?: any) => mockAccount,
+    count: async (args?: any) => 1,
   },
   beneficiary: {
     findUnique: async (args?: any) => mockBeneficiary,
@@ -169,6 +172,7 @@ const mockPrismaClient = {
     create: async (args?: any) => mockBeneficiary,
     update: async (args?: any) => mockBeneficiary,
     delete: async (args?: any) => mockBeneficiary,
+    count: async (args?: any) => 1, // Added missing count method
   },
   loginAttempt: {
     findUnique: async (args?: any) => mockLoginAttempt,

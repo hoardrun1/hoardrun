@@ -68,7 +68,7 @@ export interface SavingsRecommendation {
   impact: {
     timeframe: number   // Months
     potentialSavings: number
-    riskLevel: 'LOW' | 'MODERATE' | 'HIGH'
+    riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' // Fixed to match Prisma RiskLevel enum
   }
   confidence: number    // 0-100
   actionSteps: string[]
@@ -96,7 +96,7 @@ export interface SavingsGoalTemplate {
   recommendedDuration: number  // months
   description: string
   tips: string[]
-  riskLevel: 'LOW' | 'MODERATE' | 'HIGH'
+  riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' // Fixed to match Prisma RiskLevel enum
   autoSaveRecommended: boolean
   minimumContribution: number
 }

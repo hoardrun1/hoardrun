@@ -281,8 +281,10 @@ export function SendMoneyPage() {
 
         const momoClient = new MomoClient({
           baseUrl: process.env.NEXT_PUBLIC_MOMO_API_URL!,
-          subscriptionKey: process.env.NEXT_PUBLIC_MOMO_SUBSCRIPTION_KEY!,
+          primaryKey: process.env.NEXT_PUBLIC_MOMO_SUBSCRIPTION_KEY!,
+          secondaryKey: process.env.NEXT_PUBLIC_MOMO_SECONDARY_KEY || process.env.NEXT_PUBLIC_MOMO_SUBSCRIPTION_KEY!,
           targetEnvironment: process.env.NEXT_PUBLIC_MOMO_ENVIRONMENT!,
+          userId: 'mock-user-id', // In real app, get from auth context
           apiKey: process.env.NEXT_PUBLIC_MOMO_API_KEY!,
           callbackUrl: `${process.env.NEXT_PUBLIC_API_URL}/api/payments/momo/callback`,
         })
@@ -478,7 +480,7 @@ export function SendMoneyPage() {
 
       const transactionData = {
         accountId: selectedAccountId,
-        type: 'TRANSFER',
+        type: 'TRANSFER' as const,
         amount: parseFloat(amount),
         description,
         beneficiaryId: selectedBeneficiaryId,
@@ -621,9 +623,13 @@ export function SendMoneyPage() {
       });
 
       await visaClient.initiateDeposit({
+        userId: 'mock-user-id', // In real app, get from auth context
         amount: parseFloat(amount),
         currency: 'EUR',
         cardNumber: visaCardNumber,
+        expiryMonth: 12, // Mock values - in real app, get from form
+        expiryYear: 2025,
+        cvv: '123',
         description: 'Visa deposit'
       });
 

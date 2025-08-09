@@ -262,7 +262,7 @@ export default function StartupRegistration() {
     }[step] || []
 
     const stepData = Object.fromEntries(
-      stepFields.map(field => [field, formData[field]])
+      stepFields.map(field => [field, (formData as any)[field]])
     )
 
     try {
@@ -271,9 +271,12 @@ export default function StartupRegistration() {
       return true
     } catch (error) {
       if (error instanceof z.ZodError) {
-        const newErrors = {}
+        const newErrors: Record<string, string> = {}
         error.errors.forEach((err) => {
-          newErrors[err.path[0]] = err.message
+          const fieldName = err.path[0]
+          if (typeof fieldName === 'string') {
+            newErrors[fieldName] = err.message
+          }
         })
         setFormErrors(newErrors)
       }
@@ -295,7 +298,7 @@ export default function StartupRegistration() {
 
   const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1))
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!validateStep(currentStep)) return
 
@@ -308,8 +311,9 @@ export default function StartupRegistration() {
 
       const submitData = new FormData()
       Object.entries(formData).forEach(([key, value]) => {
-        if (value instanceof File) {
-          submitData.append(key, value)
+        if (value && typeof value === 'object' && 'name' in value && 'size' in value) {
+          // This is likely a File object
+          submitData.append(key, value as File)
         } else {
           submitData.append(key, String(value))
         }
@@ -327,7 +331,7 @@ export default function StartupRegistration() {
     } catch (error) {
       addToast({
         title: "Registration Failed",
-        description: error.message || "There was an error registering your startup. Please try again.",
+        description: error instanceof Error ? error.message : "There was an error registering your startup. Please try again.",
         variant: "destructive",
       })
     } finally {
@@ -775,7 +779,7 @@ export default function StartupRegistration() {
                                             ? `$${value.toLocaleString()}`
                                             : typeof value === 'number'
                                               ? value.toLocaleString()
-                                              : value}
+                                              : String(value)}
                                         </span>
                                       </div>
                                     ))}
@@ -964,7 +968,7 @@ export default function StartupRegistration() {
                             <Checkbox
                               id="gdprCompliance"
                               checked={formData.gdprCompliance}
-                              onCheckedChange={(checked) => setFormData(prev => ({ ...prev, gdprCompliance: checked }))}
+                              onCheckedChange={(checked) => setFormData(prev => ({ ...prev, gdprCompliance: Boolean(checked) }))}
                             />
                             <Label htmlFor="gdprCompliance" className="text-sm text-black">
                               I confirm GDPR compliance and data protection measures are in place <span className="text-red-500">*</span>
@@ -975,7 +979,7 @@ export default function StartupRegistration() {
                             <Checkbox
                               id="termsAccepted"
                               checked={formData.termsAccepted}
-                              onCheckedChange={(checked) => setFormData(prev => ({ ...prev, termsAccepted: checked }))}
+                              onCheckedChange={(checked) => setFormData(prev => ({ ...prev, termsAccepted: Boolean(checked) }))}
                             />
                             <Label htmlFor="termsAccepted" className="text-sm text-black">
                               I accept the terms and conditions and privacy policy <span className="text-red-500">*</span>

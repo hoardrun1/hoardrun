@@ -8,13 +8,36 @@ const isBrowser = typeof window !== 'undefined';
 const mockPrismaClient = {
   // Add mock methods as needed
   user: {
-    findUnique: async () => null,
-    findMany: async () => [],
-    create: async () => ({ id: 'mock-id' }),
+    findUnique: async (args?: any) => null,
+    findMany: async (args?: any) => [],
+    findFirst: async (args?: any) => null,
+    create: async (args?: any) => ({ id: 'mock-id' }),
+    update: async (args?: any) => ({ id: 'mock-id' }),
+    delete: async (args?: any) => ({ id: 'mock-id' }),
   },
   savingsGoal: {
-    findMany: async () => [],
-    create: async () => ({ id: 'mock-id' }),
+    findUnique: async (args?: any) => null,
+    findMany: async (args?: any) => [],
+    findFirst: async (args?: any) => null,
+    create: async (args?: any) => ({ id: 'mock-id' }),
+    update: async (args?: any) => ({ id: 'mock-id' }),
+    delete: async (args?: any) => ({ id: 'mock-id' }),
+  },
+  account: {
+    findUnique: async (args?: any) => null,
+    findMany: async (args?: any) => [],
+    findFirst: async (args?: any) => null,
+    create: async (args?: any) => ({ id: 'mock-id' }),
+    update: async (args?: any) => ({ id: 'mock-id' }),
+    delete: async (args?: any) => ({ id: 'mock-id' }),
+  },
+  beneficiary: {
+    findUnique: async (args?: any) => null,
+    findMany: async (args?: any) => [],
+    findFirst: async (args?: any) => null,
+    create: async (args?: any) => ({ id: 'mock-id' }),
+    update: async (args?: any) => ({ id: 'mock-id' }),
+    delete: async (args?: any) => ({ id: 'mock-id' }),
   },
   // Add other models as needed
 };

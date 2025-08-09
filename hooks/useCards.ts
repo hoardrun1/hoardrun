@@ -49,20 +49,28 @@ export function useCards() {
           {
             id: '1',
             name: 'Primary Card',
-            lastFour: '1234',
-            type: 'credit',
+            number: '****1234',
+            type: 'VISA' as const,
+            expiryMonth: 12,
+            expiryYear: 2025,
             balance: 1250.50,
             limit: 5000,
-            isActive: true
+            isActive: true,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
           },
           {
             id: '2',
             name: 'Savings Card',
-            lastFour: '5678',
-            type: 'debit',
+            number: '****5678',
+            type: 'MASTERCARD' as const,
+            expiryMonth: 8,
+            expiryYear: 2026,
             balance: 3200.75,
             limit: 0,
-            isActive: true
+            isActive: true,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
           }
         ];
         setCards(mockCards);

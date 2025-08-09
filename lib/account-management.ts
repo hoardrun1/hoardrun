@@ -12,12 +12,63 @@ const accountLimitsSchema = z.object({
 });
 
 export class AccountManager {
-  private notificationService: NotificationService;
   private fraudDetection: FraudDetectionService;
 
   constructor() {
-    this.notificationService = new NotificationService();
     this.fraudDetection = new FraudDetectionService();
+  }
+
+  private getDateRange(period: string): Date {
+    const now = new Date();
+    switch (period) {
+      case '7d':
+        return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      case '30d':
+        return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      case '90d':
+        return new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+      default:
+        return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    }
+  }
+
+  private calculateInflow(transactions: any[]): number {
+    return transactions
+      .filter(t => t.type === 'DEPOSIT')
+      .reduce((sum, t) => sum + t.amount, 0);
+  }
+
+  private calculateOutflow(transactions: any[]): number {
+    return transactions
+      .filter(t => t.type === 'WITHDRAWAL')
+      .reduce((sum, t) => sum + t.amount, 0);
+  }
+
+  private async calculateAverageBalance(accountId: string, period: string): Promise<number> {
+    // Mock implementation - in real app would calculate from balance history
+    return 5000;
+  }
+
+  private getCategoryBreakdown(transactions: any[]): any {
+    const breakdown: any = {};
+    transactions.forEach(t => {
+      if (t.category) {
+        breakdown[t.category] = (breakdown[t.category] || 0) + t.amount;
+      }
+    });
+    return breakdown;
+  }
+
+
+
+  private async predictNextMonthBalance(account: any): Promise<number> {
+    // Mock implementation
+    return account.balance + 500;
+  }
+
+  private async detectUnusualActivity(transactions: any[]): Promise<any[]> {
+    // Mock implementation
+    return [];
   }
 
   async createAccount(userId: string, type: 'SAVINGS' | 'CHECKING' | 'INVESTMENT') {
@@ -29,7 +80,7 @@ export class AccountManager {
     if (!user) throw new Error('User not found');
 
     // Check if user is verified for investment account
-    if (type === 'INVESTMENT' && !user.isVerified) {
+    if (type === 'INVESTMENT' && !user.emailVerified) {
       throw new Error('User must be verified to open an investment account');
     }
 
@@ -45,7 +96,7 @@ export class AccountManager {
       },
     });
 
-    await this.notificationService.sendAccountNotification(userId, {
+    await NotificationService.sendAccountNotification(userId, {
       type: 'ACCOUNT_CREATED',
       accountId: account.id,
     });
@@ -54,7 +105,7 @@ export class AccountManager {
   }
 
   async updateAccountLimits(accountId: string, limits: z.infer<typeof accountLimitsSchema>) {
-    return await prisma.$transaction(async (tx) => {
+    return await prisma.$transaction(async (tx: any) => {
       const account = await tx.account.findUnique({
         where: { id: accountId },
         include: { user: true }
@@ -84,7 +135,7 @@ export class AccountManager {
         }
       });
 
-      await this.notificationService.sendAccountNotification(account.userId, {
+      await NotificationService.sendAccountNotification(account.userId, {
         type: 'LIMITS_UPDATED',
         accountId,
         limits: validated,
@@ -104,7 +155,7 @@ export class AccountManager {
       },
     });
 
-    await this.notificationService.sendUrgentNotification(account.userId, {
+    await NotificationService.sendUrgentNotification(account.userId, {
       type: 'ACCOUNT_FROZEN',
       accountId,
       reason,
@@ -134,15 +185,17 @@ export class AccountManager {
     const cached = await cache.get(cacheKey);
     if (cached) return JSON.parse(cached);
 
+    const transactions = (account as any).transactions || [];
+
     const analytics = {
-      totalInflow: this.calculateInflow(account.transactions),
-      totalOutflow: this.calculateOutflow(account.transactions),
+      totalInflow: this.calculateInflow(transactions),
+      totalOutflow: this.calculateOutflow(transactions),
       averageBalance: await this.calculateAverageBalance(accountId, period),
-      transactionVolume: account.transactions.length,
-      categoryBreakdown: this.getCategoryBreakdown(account.transactions),
+      transactionVolume: transactions.length,
+      categoryBreakdown: this.getCategoryBreakdown(transactions),
       riskMetrics: await this.calculateRiskMetrics(account),
       predictedBalance: await this.predictNextMonthBalance(account),
-      unusualActivity: await this.detectUnusualActivity(account.transactions),
+      unusualActivity: await this.detectUnusualActivity(transactions),
     };
 
     // Cache for 1 hour
@@ -201,14 +254,30 @@ export class AccountManager {
       },
     };
 
-    return baseLimits[accountType] || baseLimits.CHECKING;
+    return (baseLimits as any)[accountType] || baseLimits.CHECKING;
   }
 
   private async calculateRiskMetrics(account: any) {
+    const transactions = (account as any).transactions || [];
     return {
-      volatility: this.calculateVolatility(account.transactions),
-      overdraftFrequency: this.calculateOverdraftFrequency(account.transactions),
-      largeTransactionRatio: this.calculateLargeTransactionRatio(account.transactions),
+      volatility: this.calculateVolatility(transactions),
+      overdraftFrequency: this.calculateOverdraftFrequency(transactions),
+      largeTransactionRatio: this.calculateLargeTransactionRatio(transactions),
     };
+  }
+
+  private calculateVolatility(transactions: any[]): number {
+    // Mock implementation
+    return 0.1;
+  }
+
+  private calculateOverdraftFrequency(transactions: any[]): number {
+    // Mock implementation
+    return 0;
+  }
+
+  private calculateLargeTransactionRatio(transactions: any[]): number {
+    // Mock implementation
+    return 0.05;
   }
 }

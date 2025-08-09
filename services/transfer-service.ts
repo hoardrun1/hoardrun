@@ -11,6 +11,8 @@ export interface Beneficiary {
   phoneNumber?: string
   avatar?: string
   isActive: boolean
+  isFavorite?: boolean
+  recentTransfer?: boolean
   transactionCount?: number
   lastTransaction?: {
     amount: number

@@ -1,5 +1,5 @@
 import axios, { AxiosError } from 'axios';
-import { AppError, ErrorCode } from './error-handling';
+// import { AppError, ErrorCode } from './error-handling';
 import { marketCache } from './market-cache';
 import { retry } from './api';
 
@@ -35,29 +35,17 @@ class AlphaVantageAPI {
           );
 
           if (response.data?.['Error Message']) {
-            throw new AppError(
-              ErrorCode.API_ERROR,
-              response.data['Error Message'],
-              400
-            );
+            throw new Error(response.data['Error Message']);
           }
 
           return response.data;
         } catch (error) {
           if (error instanceof AxiosError) {
             if (error.response?.status === 429) {
-              throw new AppError(
-                ErrorCode.RATE_LIMIT_EXCEEDED,
-                'API rate limit exceeded',
-                429
-              );
+              throw new Error('API rate limit exceeded');
             }
           }
-          throw new AppError(
-            ErrorCode.API_ERROR,
-            'Failed to fetch market data',
-            500
-          );
+          throw new Error('Failed to fetch market data');
         }
       },
       cacheDuration
@@ -74,13 +62,9 @@ class AlphaVantageAPI {
       60 // 1 minute cache
     );
 
-    const quote = data['Global Quote'];
+    const quote = (data as any)['Global Quote'];
     if (!quote) {
-      throw new AppError(
-        ErrorCode.NOT_FOUND,
-        'No data available for this symbol',
-        404
-      );
+      throw new Error('No data available for this symbol');
     }
 
     return {

@@ -89,7 +89,7 @@ export function useSavings() {
     setError(null)
 
     try {
-      if (isDev) {
+      if (process.env.NODE_ENV === 'development' || bypassAuth) {
         // Create mock goal in development
         console.log('Creating mock savings goal in development mode', data);
 
@@ -108,8 +108,7 @@ export function useSavings() {
           isCompleted: false,
           progress: 0,
           createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          daysLeft: 365 // Default to 1 year
+          updatedAt: new Date().toISOString()
         };
 
         setSavingsGoals(prev => [newGoal, ...prev]);

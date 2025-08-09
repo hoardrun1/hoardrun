@@ -31,11 +31,7 @@ export function useTransactions() {
 
   const fetchTransactions = useCallback(async () => {
     if (!session?.user) {
-      throw new AppError(
-        ErrorCode.UNAUTHORIZED,
-        'Authentication required',
-        401
-      );
+      throw new Error('Authentication required');
     }
 
     setIsLoading(true);
@@ -45,17 +41,13 @@ export function useTransactions() {
       const response = await fetch('/api/transactions');
       if (!response.ok) {
         const errorData = await response.json();
-        throw new AppError(
-          errorData.code || ErrorCode.INTERNAL_ERROR,
-          errorData.message || 'Failed to fetch transactions',
-          response.status
-        );
+        throw new Error(errorData.message || 'Failed to fetch transactions');
       }
 
       const data = await response.json();
       setTransactions(data);
     } catch (err) {
-      const message = err instanceof AppError ? err.message : 'An error occurred';
+      const message = err instanceof Error ? err.message : 'An error occurred';
       setError(message);
       toast({
         title: 'Error',

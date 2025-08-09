@@ -1,7 +1,7 @@
 import { Investment } from '@prisma/client'
 
-type InvestmentType = 'STOCKS' | 'BONDS' | 'REAL_ESTATE' | 'CRYPTO' | 'ETF' | 'MUTUAL_FUND'
-type RiskLevel = 'LOW' | 'MODERATE' | 'HIGH' | 'VERY_HIGH'
+type InvestmentType = 'STOCK' | 'BOND' | 'REAL_ESTATE' | 'CRYPTO' | 'ETF' | 'MUTUAL_FUND' // Fixed to match Prisma enum
+type RiskLevel = 'LOW' | 'MEDIUM' | 'HIGH' // Fixed to match Prisma enum
 
 interface RiskProfile {
   overallRisk: RiskLevel
@@ -13,8 +13,8 @@ interface RiskProfile {
 
 // Base return rates for different investment types
 const baseReturnRates: Record<InvestmentType, number> = {
-  STOCKS: 0.10, // 10% annual return
-  BONDS: 0.05, // 5% annual return
+  STOCK: 0.10, // 10% annual return (fixed from STOCKS)
+  BOND: 0.05, // 5% annual return (fixed from BONDS)
   REAL_ESTATE: 0.08, // 8% annual return
   CRYPTO: 0.15, // 15% annual return (high risk)
   ETF: 0.09, // 9% annual return
@@ -24,9 +24,8 @@ const baseReturnRates: Record<InvestmentType, number> = {
 // Risk multipliers for different risk levels
 const riskMultipliers: Record<RiskLevel, number> = {
   LOW: 0.8, // 20% lower returns, but safer
-  MODERATE: 1.0, // Base return rate
+  MEDIUM: 1.0, // Base return rate (fixed from MODERATE)
   HIGH: 1.2, // 20% higher returns, but riskier
-  VERY_HIGH: 1.5, // 50% higher returns, but very risky
 }
 
 export const calculateInvestmentReturn = (
@@ -51,12 +50,12 @@ const getVolatilityFactor = (risk: RiskLevel): number => {
   switch (risk) {
     case 'LOW':
       return 0.05 // 5% volatility
-    case 'MODERATE':
+    case 'MEDIUM': // Fixed from MODERATE
       return 0.10 // 10% volatility
     case 'HIGH':
       return 0.20 // 20% volatility
-    case 'VERY_HIGH':
-      return 0.35 // 35% volatility
+    default:
+      return 0.10
   }
 }
 

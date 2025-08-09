@@ -12,7 +12,7 @@ import { TransactionType } from '@prisma/client'
 
 const createTransactionSchema = z.object({
   accountId: z.string(),
-  type: z.enum(['DEPOSIT', 'WITHDRAWAL', 'TRANSFER', 'PAYMENT', 'REFUND', 'INVESTMENT', 'SAVINGS']),
+  type: z.enum(['DEPOSIT', 'WITHDRAWAL', 'TRANSFER', 'PAYMENT', 'REFUND', 'FEE']), // Fixed to match Prisma TransactionType enum
   amount: z.number().positive(),
   description: z.string().optional(),
   beneficiaryId: z.string().optional(),

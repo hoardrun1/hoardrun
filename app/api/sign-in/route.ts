@@ -79,10 +79,10 @@ export async function POST(request: Request) {
     })
 
     // Generate JWT token
-    const token = await new SignJWT({ 
+    const token = await new SignJWT({
       userId: user.id,
       email: user.email,
-      role: user.role,
+      role: 'user', // Default role since User model doesn't have role field
       deviceId: deviceInfo.fingerprint
     })
       .setProtectedHeader({ alg: 'HS256' })
@@ -142,7 +142,7 @@ export async function POST(request: Request) {
           id: user.id,
           email: user.email,
           name: user.name,
-          role: user.role
+          role: 'user' // Default role since User model doesn't have role field
         },
         requiresVerification: !isKnownDevice && user.securitySettings?.twoFactorEnabled,
         isSuspicious

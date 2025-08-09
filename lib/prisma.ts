@@ -4,7 +4,28 @@
 // Check if we're in a browser environment
 const isBrowser = typeof window !== 'undefined';
 
-// Create mock data objects with proper structure
+// Create mock data objects with proper structure including relations
+const mockDevice = {
+  id: 'mock-device-id',
+  userId: 'mock-user-id',
+  fingerprint: 'mock-fingerprint',
+  name: 'Mock Device',
+  type: 'desktop',
+  isActive: true,
+  createdAt: new Date(),
+  updatedAt: new Date()
+};
+
+const mockSecuritySettings = {
+  id: 'mock-security-id',
+  userId: 'mock-user-id',
+  twoFactorEnabled: false,
+  loginNotifications: true,
+  deviceTracking: true,
+  createdAt: new Date(),
+  updatedAt: new Date()
+};
+
 const mockUser = {
   id: 'mock-user-id',
   email: 'mock@example.com',
@@ -16,7 +37,19 @@ const mockUser = {
   profileImage: null,
   createdAt: new Date(),
   updatedAt: new Date(),
-  password: 'mock-password'
+  password: 'mock-password',
+  // Relations
+  devices: [mockDevice],
+  accounts: [],
+  savingsGoals: [],
+  beneficiaries: [],
+  transactions: [],
+  investments: [],
+  payments: [],
+  securitySettings: mockSecuritySettings,
+  loginAttempts: [],
+  verificationCodes: [],
+  twoFactorCodes: []
 };
 
 const mockAccount = {
@@ -49,6 +82,55 @@ const mockBeneficiary = {
   name: 'Mock Beneficiary',
   email: 'beneficiary@example.com',
   relationship: 'Friend',
+  createdAt: new Date(),
+  updatedAt: new Date()
+};
+
+// Additional mock objects for other models
+const mockLoginAttempt = {
+  id: 'mock-login-attempt-id',
+  userId: 'mock-user-id',
+  success: true,
+  ipAddress: '127.0.0.1',
+  userAgent: 'Mock User Agent',
+  createdAt: new Date()
+};
+
+
+
+const mockTransaction = {
+  id: 'mock-transaction-id',
+  userId: 'mock-user-id',
+  amount: 100,
+  type: 'DEPOSIT',
+  status: 'COMPLETED',
+  description: 'Mock Transaction',
+  createdAt: new Date(),
+  updatedAt: new Date()
+};
+
+const mockInvestment = {
+  id: 'mock-investment-id',
+  userId: 'mock-user-id',
+  amount: 1000,
+  type: 'STOCK',
+  status: 'ACTIVE',
+  createdAt: new Date(),
+  updatedAt: new Date()
+};
+
+const mockPayment = {
+  id: 'mock-payment-id',
+  userId: 'mock-user-id',
+  amount: 100,
+  currency: 'USD',
+  status: 'COMPLETED',
+  createdAt: new Date(),
+  updatedAt: new Date()
+};
+
+const mockGeneric = {
+  id: 'mock-id',
   createdAt: new Date(),
   updatedAt: new Date()
 };
@@ -87,6 +169,94 @@ const mockPrismaClient = {
     create: async (args?: any) => mockBeneficiary,
     update: async (args?: any) => mockBeneficiary,
     delete: async (args?: any) => mockBeneficiary,
+  },
+  loginAttempt: {
+    findUnique: async (args?: any) => mockLoginAttempt,
+    findMany: async (args?: any) => [mockLoginAttempt],
+    findFirst: async (args?: any) => mockLoginAttempt,
+    create: async (args?: any) => mockLoginAttempt,
+    update: async (args?: any) => mockLoginAttempt,
+    delete: async (args?: any) => mockLoginAttempt,
+  },
+  device: {
+    findUnique: async (args?: any) => mockDevice,
+    findMany: async (args?: any) => [mockDevice],
+    findFirst: async (args?: any) => mockDevice,
+    create: async (args?: any) => mockDevice,
+    update: async (args?: any) => mockDevice,
+    delete: async (args?: any) => mockDevice,
+  },
+  transaction: {
+    findUnique: async (args?: any) => mockTransaction,
+    findMany: async (args?: any) => [mockTransaction],
+    findFirst: async (args?: any) => mockTransaction,
+    create: async (args?: any) => mockTransaction,
+    update: async (args?: any) => mockTransaction,
+    delete: async (args?: any) => mockTransaction,
+  },
+  investment: {
+    findUnique: async (args?: any) => mockInvestment,
+    findMany: async (args?: any) => [mockInvestment],
+    findFirst: async (args?: any) => mockInvestment,
+    create: async (args?: any) => mockInvestment,
+    update: async (args?: any) => mockInvestment,
+    delete: async (args?: any) => mockInvestment,
+  },
+  payment: {
+    findUnique: async (args?: any) => mockPayment,
+    findMany: async (args?: any) => [mockPayment],
+    findFirst: async (args?: any) => mockPayment,
+    create: async (args?: any) => mockPayment,
+    update: async (args?: any) => mockPayment,
+    delete: async (args?: any) => mockPayment,
+  },
+  paymentMethod: {
+    findUnique: async (args?: any) => mockGeneric,
+    findMany: async (args?: any) => [mockGeneric],
+    findFirst: async (args?: any) => mockGeneric,
+    create: async (args?: any) => mockGeneric,
+    update: async (args?: any) => mockGeneric,
+    delete: async (args?: any) => mockGeneric,
+  },
+  momoTransaction: {
+    findUnique: async (args?: any) => mockGeneric,
+    findMany: async (args?: any) => [mockGeneric],
+    findFirst: async (args?: any) => mockGeneric,
+    create: async (args?: any) => mockGeneric,
+    update: async (args?: any) => mockGeneric,
+    delete: async (args?: any) => mockGeneric,
+  },
+  systemMetric: {
+    findUnique: async (args?: any) => mockGeneric,
+    findMany: async (args?: any) => [mockGeneric],
+    findFirst: async (args?: any) => mockGeneric,
+    create: async (args?: any) => mockGeneric,
+    update: async (args?: any) => mockGeneric,
+    delete: async (args?: any) => mockGeneric,
+  },
+  twoFactorCode: {
+    findUnique: async (args?: any) => mockGeneric,
+    findMany: async (args?: any) => [mockGeneric],
+    findFirst: async (args?: any) => mockGeneric,
+    create: async (args?: any) => mockGeneric,
+    update: async (args?: any) => mockGeneric,
+    delete: async (args?: any) => mockGeneric,
+  },
+  verificationCode: {
+    findUnique: async (args?: any) => mockGeneric,
+    findMany: async (args?: any) => [mockGeneric],
+    findFirst: async (args?: any) => mockGeneric,
+    create: async (args?: any) => mockGeneric,
+    update: async (args?: any) => mockGeneric,
+    delete: async (args?: any) => mockGeneric,
+  },
+  securitySettings: {
+    findUnique: async (args?: any) => mockSecuritySettings,
+    findMany: async (args?: any) => [mockSecuritySettings],
+    findFirst: async (args?: any) => mockSecuritySettings,
+    create: async (args?: any) => mockSecuritySettings,
+    update: async (args?: any) => mockSecuritySettings,
+    delete: async (args?: any) => mockSecuritySettings,
   },
   // Add other models as needed
 };

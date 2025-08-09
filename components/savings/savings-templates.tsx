@@ -35,7 +35,7 @@ const SAVINGS_TEMPLATES: SavingsGoalTemplate[] = [
       'Consider tax-advantaged accounts',
       'Diversify your retirement portfolio'
     ],
-    riskLevel: 'MODERATE',
+    riskLevel: 'MEDIUM', // Fixed to match Prisma RiskLevel enum
     autoSaveRecommended: true,
     minimumContribution: 1000
   },
@@ -152,7 +152,7 @@ export function SavingsTemplates({ onSelectTemplate, selectedCategory }: Savings
                   </div>
                   <Badge variant={
                     template.riskLevel === 'LOW' ? 'secondary' :
-                    template.riskLevel === 'MODERATE' ? 'default' :
+                    template.riskLevel === 'MEDIUM' ? 'default' : // Fixed from MODERATE
                     'destructive'
                   }>
                     {template.riskLevel}

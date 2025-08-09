@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { z } from 'zod';
-import { prisma } from '@/lib/prisma';
+import { prisma } from '@/lib/server/db';
 import { MomoClient } from '@/lib/momo-client';
 import { MomoTransactionService } from '@/lib/services/momo-transaction-service';
 import { authOptions } from '@/lib/auth-config';

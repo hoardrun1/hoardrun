@@ -4,16 +4,20 @@ import { z } from 'zod'
 import { getTypedSession } from '@/lib/auth'
 
 const investmentSchema = z.object({
-  type: z.enum(['STOCKS', 'BONDS', 'REAL_ESTATE', 'CRYPTO']),
+  type: z.enum(['STOCK', 'BOND', 'REAL_ESTATE', 'CRYPTO']), // Fixed to match Prisma schema
   amount: z.number().positive(),
-  risk: z.enum(['LOW', 'MODERATE', 'HIGH', 'VERY_HIGH']),
+  risk: z.enum(['LOW', 'MEDIUM', 'HIGH']), // Fixed to match Prisma RiskLevel enum
   description: z.string().optional(),
 })
 
 export async function GET() {
   try {
     const session = await getTypedSession()
-    
+
+    if (!session || !session.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const investments = await prisma.investment.findMany({
       where: {
         userId: session.user.id,
@@ -81,7 +85,7 @@ export async function POST(req: Request) {
         data: {
           userId: session.user.id,
           accountId: account.id,  // Add the account ID
-          type: 'INVESTMENT',
+          type: 'WITHDRAWAL', // Using WITHDRAWAL since money is being withdrawn for investment
           amount: validatedData.amount,
           description: `Investment in ${validatedData.type}`,
           status: 'COMPLETED',
@@ -175,7 +179,7 @@ export async function PATCH(req: Request) {
             data: {
               userId: session.user.id,
               accountId: account.id,
-              type: 'INVESTMENT',
+              type: 'DEPOSIT', // Using DEPOSIT since money is being returned to account
               amount: completed.amount + completed.returns,
               description: `Investment return from ${completed.type}`,
               status: 'COMPLETED',

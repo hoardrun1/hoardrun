@@ -89,7 +89,6 @@ export async function POST(req: Request) {
           amount: validatedData.amount,
           description: `Investment in ${validatedData.type}`,
           status: 'COMPLETED',
-          reference: `INV-${Date.now()}`,  // Add a unique reference
         }
       })
 
@@ -183,7 +182,6 @@ export async function PATCH(req: Request) {
               amount: completed.amount + completed.returns,
               description: `Investment return from ${completed.type}`,
               status: 'COMPLETED',
-              reference: `INV-RET-${Date.now()}` // Added reference field
             }
           })
         }

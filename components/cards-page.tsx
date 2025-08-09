@@ -38,6 +38,8 @@ export function CardsPageComponent() {
       lastFourDigits: '4567',
       expiryDate: '12/25',
       cardholderName: 'John Doe',
+      network: 'visa',
+      status: 'active',
       isLocked: false,
       isContactless: true
     },
@@ -47,6 +49,8 @@ export function CardsPageComponent() {
       lastFourDigits: '8901',
       expiryDate: '06/24',
       cardholderName: 'John Doe',
+      network: 'mastercard',
+      status: 'active',
       isLocked: true,
       isContactless: false
     }
@@ -88,12 +92,9 @@ export function CardsPageComponent() {
         apiKey: process.env.NEXT_PUBLIC_MASTERCARD_API_KEY!,
         partnerId: process.env.NEXT_PUBLIC_MASTERCARD_PARTNER_ID!,
         environment: process.env.NODE_ENV === 'production' ? 'production' : 'sandbox',
-        certificatePath: process.env.MASTERCARD_CERT_PATH!,
-        privateKeyPath: process.env.MASTERCARD_PRIVATE_KEY_PATH!,
         clientId: process.env.MASTERCARD_CLIENT_ID!,
         orgName: process.env.MASTERCARD_ORG_NAME!,
         country: country,
-        certPassword: process.env.MASTERCARD_CERT_PASSWORD!,
       });
 
       // Implement virtual card issuance

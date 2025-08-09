@@ -31,6 +31,14 @@ export function useBeneficiaries() {
   const [beneficiaries, setBeneficiaries] = useState<Beneficiary[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [newBeneficiary, setNewBeneficiary] = useState<CreateBeneficiaryData>({
+    name: '',
+    accountNumber: '',
+    bankName: '',
+    bankCode: '',
+    email: '',
+    phoneNumber: ''
+  })
 
   const fetchBeneficiaries = useCallback(async () => {
     if (!session?.user) return
@@ -212,6 +220,8 @@ export function useBeneficiaries() {
     beneficiaries,
     isLoading,
     error,
+    newBeneficiary,
+    setNewBeneficiary,
     fetchBeneficiaries,
     createBeneficiary,
     updateBeneficiary,

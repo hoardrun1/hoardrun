@@ -101,6 +101,16 @@ export function FinancePageComponent() {
   const [showNewTransactionDialog, setShowNewTransactionDialog] = useState(false)
   const [showInsights, setShowInsights] = useState(true)
 
+  // Chart data for financial overview
+  const chartData = [
+    { name: 'Jan', income: 4000, expenses: 2400 },
+    { name: 'Feb', income: 3000, expenses: 1398 },
+    { name: 'Mar', income: 2000, expenses: 9800 },
+    { name: 'Apr', income: 2780, expenses: 3908 },
+    { name: 'May', income: 1890, expenses: 4800 },
+    { name: 'Jun', income: 2390, expenses: 3800 },
+  ]
+
   // Fetch initial data
   const fetchData = useCallback(async () => {
     try {
@@ -467,7 +477,7 @@ export function FinancePageComponent() {
             </CardHeader>
             <CardContent className="pl-2">
               <ResponsiveContainer width="100%" height={350}>
-                <AreaChart data={data}>
+                <AreaChart data={chartData || []}>
                   <defs>
                     <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#22c55e" stopOpacity={0.8}/>

@@ -161,10 +161,12 @@ interface SavingsTip {
 
 // Add new interfaces for AI features
 interface AIRecommendation {
+  id: string
   type: 'savings' | 'investment'
   title: string
   description: string
   confidence: number
+  impact?: number
   potentialReturn?: number
 }
 
@@ -235,6 +237,7 @@ export function SavingsPageComponent() {
   const [recommendations, setRecommendations] = useState<AIRecommendation[]>([])
   const [insights, setInsights] = useState<AIBehaviorInsight[]>([])
   const [goalRecommendations, setGoalRecommendations] = useState<AIGoalRecommendation[]>([])
+  const [selectedPeriod, setSelectedPeriod] = useState('6months')
   const [isNewGoalDialogOpen, setIsNewGoalDialogOpen] = useState(false)
   const [newGoalForm, setNewGoalForm] = useState<NewGoalFormData>({
     name: '',
@@ -613,9 +616,11 @@ export function SavingsPageComponent() {
                                 {rec.description}
                               </p>
                               <div className="flex items-center gap-4 mt-2">
-                                <Badge variant="secondary">
-                                  {rec.impact > 0 ? '+' : ''}{rec.impact}% Impact
-                                </Badge>
+                                {rec.impact !== undefined && (
+                                  <Badge variant="secondary">
+                                    {rec.impact > 0 ? '+' : ''}{rec.impact}% Impact
+                                  </Badge>
+                                )}
                                 <div className="flex items-center gap-2">
                                   <span className="text-xs text-gray-500">AI Confidence:</span>
                                   <Progress value={rec.confidence} className="w-24" />

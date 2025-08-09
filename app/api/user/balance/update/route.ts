@@ -22,9 +22,17 @@ export async function POST(request: Request) {
 
     // Update user balance and create transaction record
     const result = await prisma.$transaction(async (tx) => {
-      // Update balance
-      const user = await tx.user.update({
-        where: { id: session.user.id },
+      // Update account balance instead of user balance
+      const account = await tx.account.findFirst({
+        where: { userId: session.user.id, isActive: true }
+      })
+      
+      if (!account) {
+        throw new Error('No active account found')
+      }
+      
+      const updatedAccount = await tx.account.update({
+        where: { id: account.id },
         data: {
           balance: {
             increment: data.type === 'DEPOSIT' ? data.amount : -data.amount
@@ -39,12 +47,11 @@ export async function POST(request: Request) {
           type: data.type,
           amount: data.amount,
           status: 'COMPLETED',
-          provider: data.provider,
           description: `${data.type} via ${data.provider}`,
         }
       });
 
-      return { user, transaction };
+      return { account: updatedAccount, transaction };
     });
 
     return NextResponse.json(result);

@@ -94,7 +94,7 @@ export async function POST(request: Request) {
     }
 
     // Log database connection errors
-    if (error.code === 'P1001' || error.code === 'P1002') {
+    if ((error as any).code === 'P1001' || (error as any).code === 'P1002') {
       console.error('Database connection error:', error)
       return new NextResponse(
         JSON.stringify({ error: 'Database connection error' }),

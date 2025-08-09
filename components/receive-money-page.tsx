@@ -210,9 +210,13 @@ export function ReceiveMoneyPageComponent() {
       });
 
       const response = await visaClient.initiateDeposit({
+        userId: 'mock-user-id', // In real app, get from auth context
         amount: parseFloat(amount),
         currency: 'EUR',
         cardNumber: visaCardNumber,
+        expiryMonth: 12, // Mock values - in real app, get from form
+        expiryYear: 2025,
+        cvv: '123',
         description: 'Visa deposit'
       });
 

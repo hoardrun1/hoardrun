@@ -46,16 +46,20 @@ export async function GET() {
     // Get AI-powered recommendations
     const recommendations = [
       {
+        id: '1',
         type: 'savings',
         title: 'Increase Emergency Fund',
         description: 'Based on your spending patterns, consider increasing your emergency fund.',
         confidence: 85,
+        impact: 15,
       },
       {
+        id: '2',
         type: 'investment',
         title: 'Investment Opportunity',
         description: 'You have excess savings. Consider diversifying into investments.',
         confidence: 90,
+        impact: 25,
         potentialReturn: 12.5,
       },
     ]

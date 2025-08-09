@@ -6,7 +6,7 @@ import { CardService } from '@/services/core';
 
 export function CardManagement() {
   const [cards, setCards] = useState([]);
-  const [selectedCard, setSelectedCard] = useState(null);
+  const [selectedCard, setSelectedCard] = useState<string | null>(null);
 
   const handleCardFreeze = async (cardId: string) => {
     await CardService.freezeCard(cardId);
@@ -20,16 +20,25 @@ export function CardManagement() {
 
   return (
     <div className="space-y-8">
-      <CardList 
-        cards={cards} 
-        onCardSelect={setSelectedCard} 
+      <CardList
+        cards={cards}
+        onToggleLock={(cardId) => console.log('Toggle lock:', cardId)}
+        onViewDetails={setSelectedCard}
       />
-      <CardControls 
-        selectedCard={selectedCard}
-        onFreeze={handleCardFreeze}
-        onLimitChange={handleLimitChange}
+      {selectedCard && (
+        <CardControls
+          cardId={selectedCard}
+          isLocked={false}
+          spendingLimit={1000}
+          onToggleLock={(cardId) => console.log('Toggle lock:', cardId)}
+          onUpdateSpendingLimit={handleLimitChange}
+          onFreezeCard={handleCardFreeze}
+          onReportLost={(cardId) => console.log('Report lost:', cardId)}
+        />
+      )}
+      <VirtualCardCreator
+        onCreateCard={(data) => console.log('Create card:', data)}
       />
-      <VirtualCardCreator />
     </div>
   );
 }

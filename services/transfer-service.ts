@@ -9,6 +9,7 @@ export interface Beneficiary {
   bankCode?: string
   email?: string
   phoneNumber?: string
+  avatar?: string
   isActive: boolean
   transactionCount?: number
   lastTransaction?: {

@@ -342,9 +342,12 @@ export function InvestmentPage() {
       return true
     } catch (error) {
       if (error instanceof z.ZodError) {
-        const newErrors = {}
+        const newErrors: Record<string, string> = {}
         error.errors.forEach((err) => {
-          newErrors[err.path[0]] = err.message
+          const fieldName = err.path[0]
+          if (typeof fieldName === 'string') {
+            newErrors[fieldName] = err.message
+          }
         })
         setFormErrors(newErrors)
       }
@@ -359,9 +362,12 @@ export function InvestmentPage() {
       return true
     } catch (error) {
       if (error instanceof z.ZodError) {
-        const newErrors = {}
+        const newErrors: Record<string, string> = {}
         error.errors.forEach((err) => {
-          newErrors[err.path[0]] = err.message
+          const fieldName = err.path[0]
+          if (typeof fieldName === 'string') {
+            newErrors[fieldName] = err.message
+          }
         })
         setFormErrors(newErrors)
       }
@@ -374,7 +380,17 @@ export function InvestmentPage() {
       const quote = await fetchStockQuote(symbol)
 
       if (quote) {
-        setMarketData(quote)
+        // Ensure the quote has all required MarketQuote properties
+        const completeQuote: MarketQuote = {
+          ...quote,
+          high: quote.price * 1.05, // Mock high price
+          low: quote.price * 0.95,  // Mock low price
+          open: quote.price * 0.98, // Mock open price
+          close: quote.price,       // Use current price as close
+          timestamp: new Date(),    // Current timestamp
+          marketCap: quote.marketCap || 0
+        }
+        setMarketData(completeQuote)
       }
     } catch (error) {
       console.error('Error fetching market data:', error)

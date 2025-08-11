@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth-config';
 
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 // Mock analytics data
 const mockAnalytics = {
   totalSavings: 12500,

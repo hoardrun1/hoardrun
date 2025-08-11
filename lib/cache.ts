@@ -1,33 +1,9 @@
-import Redis from 'ioredis'
-import { promisify } from 'util'
-
-const redisClient = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
-  maxRetriesPerRequest: 3,
-  enableReadyCheck: true,
-  retryStrategy: (times) => {
-    const delay = Math.min(times * 50, 2000)
-    return delay
-  },
-})
-
-redisClient.on('error', (error) => {
-  console.error('Redis error:', error)
-})
-
-redisClient.on('connect', () => {
-  console.log('Connected to Redis')
-})
+import { safeCache, getRedis } from './redis-safe'
 
 class Cache {
-  private client: Redis
-
-  constructor(client: Redis) {
-    this.client = client
-  }
-
   async get(key: string): Promise<string | null> {
     try {
-      return await this.client.get(key)
+      return await safeCache.get(key)
     } catch (error) {
       console.error('Cache get error:', error)
       return null
@@ -36,11 +12,7 @@ class Cache {
 
   async set(key: string, value: string, expirySeconds?: number): Promise<void> {
     try {
-      if (expirySeconds) {
-        await this.client.setex(key, expirySeconds, value)
-      } else {
-        await this.client.set(key, value)
-      }
+      await safeCache.set(key, value, expirySeconds)
     } catch (error) {
       console.error('Cache set error:', error)
     }
@@ -48,7 +20,7 @@ class Cache {
 
   async del(key: string): Promise<void> {
     try {
-      await this.client.del(key)
+      await safeCache.del(key)
     } catch (error) {
       console.error('Cache delete error:', error)
     }
@@ -56,9 +28,14 @@ class Cache {
 
   async delPattern(pattern: string): Promise<void> {
     try {
-      const keys = await this.client.keys(pattern)
+      const redis = getRedis()
+      if (!redis) {
+        console.log('Redis not available for pattern deletion')
+        return
+      }
+      const keys = await redis.keys(pattern)
       if (keys.length > 0) {
-        await this.client.del(...keys)
+        await redis.del(...keys)
       }
     } catch (error) {
       console.error('Cache delete pattern error:', error)
@@ -87,7 +64,9 @@ class Cache {
 
   async increment(key: string, amount = 1): Promise<number> {
     try {
-      return await this.client.incrby(key, amount)
+      const redis = getRedis()
+      if (!redis) return 0
+      return await redis.incrby(key, amount)
     } catch (error) {
       console.error('Cache increment error:', error)
       return 0
@@ -96,7 +75,9 @@ class Cache {
 
   async decrement(key: string, amount = 1): Promise<number> {
     try {
-      return await this.client.decrby(key, amount)
+      const redis = getRedis()
+      if (!redis) return 0
+      return await redis.decrby(key, amount)
     } catch (error) {
       console.error('Cache decrement error:', error)
       return 0
@@ -105,7 +86,9 @@ class Cache {
 
   async setHash(key: string, data: Record<string, any>): Promise<void> {
     try {
-      await this.client.hmset(key, data)
+      const redis = getRedis()
+      if (!redis) return
+      await redis.hmset(key, data)
     } catch (error) {
       console.error('Cache setHash error:', error)
     }
@@ -113,7 +96,9 @@ class Cache {
 
   async getHash(key: string): Promise<Record<string, string>> {
     try {
-      return await this.client.hgetall(key)
+      const redis = getRedis()
+      if (!redis) return {}
+      return await redis.hgetall(key)
     } catch (error) {
       console.error('Cache getHash error:', error)
       return {}
@@ -122,14 +107,16 @@ class Cache {
 
   async clearAll(): Promise<void> {
     try {
-      await this.client.flushall()
+      const redis = getRedis()
+      if (!redis) return
+      await redis.flushall()
     } catch (error) {
       console.error('Cache clearAll error:', error)
     }
   }
 }
 
-export const cache = new Cache(redisClient)
+export const cache = new Cache()
 
 // For testing and development
 if (process.env.NODE_ENV === 'development') {

@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-config';
-import { AuditService } from '@/lib/audit-service';
+import { AuditService } from '@/lib/audit-service'
+
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs';
 
 export async function GET(request: Request) {
   try {

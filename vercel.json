@@ -1,0 +1,19 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "framework": "nextjs",
+  "functions": {
+    "app/api/**/*.js": {
+      "maxDuration": 30
+    }
+  },
+  "env": {
+    "NODE_ENV": "production",
+    "NEXT_PHASE": "phase-production-build"
+  },
+  "build": {
+    "env": {
+      "NEXT_PHASE": "phase-production-build"
+    }
+  }
+}

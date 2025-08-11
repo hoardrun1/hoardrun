@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth-config'
+
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 import { calculateSavingsProjection, calculateInterestRate } from '@/lib/banking'
 
 // Import prisma only on the server side

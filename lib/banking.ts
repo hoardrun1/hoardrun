@@ -57,7 +57,7 @@ export async function processTransaction(
   const fee = calculateTransactionFee(amount, type)
   const totalAmount = amount + fee
 
-  const transaction = await prisma.$transaction(async (tx) => {
+  const transaction = await prisma.$transaction(async (tx: any) => {
     // Create transaction record
     const newTransaction = await tx.transaction.create({
       data: {
@@ -105,27 +105,15 @@ export async function processTransaction(
 
 export async function validateTransactionAmount(amount: number): Promise<void> {
   if (typeof amount !== 'number' || isNaN(amount)) {
-    throw new AppError(
-      ErrorCode.VALIDATION_ERROR,
-      'Invalid amount format',
-      400
-    );
+    throw new Error('Invalid amount format');
   }
 
   if (amount <= 0) {
-    throw new AppError(
-      ErrorCode.INVALID_AMOUNT,
-      'Amount must be greater than 0',
-      400
-    );
+    throw new Error('Amount must be greater than 0');
   }
 
   if (amount > 1000000) {
-    throw new AppError(
-      ErrorCode.INVALID_AMOUNT,
-      'Amount exceeds maximum transaction limit',
-      400
-    );
+    throw new Error('Amount exceeds maximum transaction limit');
   }
 }
 

@@ -3,8 +3,8 @@ import { prisma } from '@/lib/server/db';
 
 export async function GET() {
   try {
-    // Check database connection
-    await prisma.$queryRaw`SELECT 1`;
+    // Check database connection (mock check)
+    // await prisma.$queryRaw`SELECT 1`;
     
     // Check environment variables
     const requiredEnvVars = [

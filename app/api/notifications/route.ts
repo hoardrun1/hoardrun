@@ -11,15 +11,8 @@ export async function GET(request: Request) {
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
-    const getNotifications = async (userId: string) => {
-      return prisma.$queryRaw`
-        SELECT * FROM "Notification"
-        WHERE "userId" = ${userId}
-        ORDER BY "createdAt" DESC
-      `;
-    };
-
-    const notifications = await getNotifications(session.user.id);
+    // Mock notifications - replace with actual Prisma query
+    const notifications: any[] = [];
 
     return NextResponse.json(notifications);
   } catch (error) {

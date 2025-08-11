@@ -1,6 +1,6 @@
 import { cache } from './cache'
 import { logger } from './logger'
-import { APIError } from '@/middleware/error-handler'
+// import { APIError } from '@/middleware/error-handler'
 import { deviceFingerprint } from '@/lib/device-fingerprint'
 import { fraudDetection } from '@/lib/fraud-detection'
 import { generateToken } from '@/lib/jwt'
@@ -82,7 +82,7 @@ export class SocialAuthService {
 
       const payload = ticket.getPayload()
       if (!payload) {
-        throw new APIError(401, 'Invalid Google token', 'INVALID_TOKEN')
+        throw new Error('Invalid Google token')
       }
 
       const profile: SocialProfile = {
@@ -102,7 +102,7 @@ export class SocialAuthService {
       return this.handleSocialProfile(profile, deviceInfo)
     } catch (error) {
       logger.error('Google authentication error:', error)
-      throw new APIError(401, 'Google authentication failed', 'GOOGLE_AUTH_FAILED')
+      throw new Error('Google authentication failed')
     }
   }
 
@@ -135,7 +135,7 @@ export class SocialAuthService {
       return this.handleSocialProfile(profile, deviceInfo)
     } catch (error) {
       logger.error('Facebook authentication error:', error)
-      throw new APIError(401, 'Facebook authentication failed', 'FACEBOOK_AUTH_FAILED')
+      throw new Error('Facebook authentication failed')
     }
   }
 
@@ -170,7 +170,7 @@ export class SocialAuthService {
       return this.handleSocialProfile(profile, deviceInfo)
     } catch (error) {
       logger.error('Twitter authentication error:', error)
-      throw new APIError(401, 'Twitter authentication failed', 'TWITTER_AUTH_FAILED')
+      throw new Error('Twitter authentication failed')
     }
   }
 
@@ -200,7 +200,7 @@ export class SocialAuthService {
       return this.handleSocialProfile(profile, deviceInfo)
     } catch (error) {
       logger.error('Apple authentication error:', error)
-      throw new APIError(401, 'Apple authentication failed', 'APPLE_AUTH_FAILED')
+      throw new Error('Apple authentication failed')
     }
   }
 
@@ -225,7 +225,7 @@ export class SocialAuthService {
       })
 
       if (!fraudCheck.isAllowed) {
-        throw new APIError(403, 'Suspicious activity detected', 'SUSPICIOUS_ACTIVITY')
+        throw new Error('Suspicious activity detected')
       }
 
       // Find or create user
@@ -341,7 +341,7 @@ export class SocialAuthService {
       })
 
       if (!user) {
-        throw new APIError(404, 'User not found', 'USER_NOT_FOUND')
+        throw new Error('User not found')
       }
 
       // Prevent unlinking if it's the only authentication method
@@ -349,11 +349,7 @@ export class SocialAuthService {
       const socialAccountsCount = user.socialAccounts.length
 
       if (!hasPassword && socialAccountsCount <= 1) {
-        throw new APIError(
-          400,
-          'Cannot unlink the only authentication method',
-          'INVALID_OPERATION'
-        )
+        throw new Error('Cannot unlink the only authentication method')
       }
 
       await prisma.socialAccount.deleteMany({

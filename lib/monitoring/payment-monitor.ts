@@ -25,7 +25,7 @@ export class PaymentMonitor {
         await this.handleConsecutiveFailures(recentFailures);
       }
     } catch (error) {
-      MomoLogger.logError(error, { context: 'Payment Failure Monitoring' });
+      MomoLogger.logError(error as Error, { context: 'Payment Failure Monitoring' });
     }
   }
 

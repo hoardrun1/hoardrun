@@ -1,5 +1,5 @@
 import { RateLimiterMemory } from 'rate-limiter-flexible';
-import { AppError, ErrorCode } from '@/lib/error-handling';
+// import { AppError, ErrorCode } from '@/lib/error-handling';
 
 const visaRateLimiter = new RateLimiterMemory({
   points: parseInt(process.env.VISA_RATE_LIMIT || '100'),
@@ -10,10 +10,6 @@ export async function enforceVisaRateLimit(userId: string): Promise<void> {
   try {
     await visaRateLimiter.consume(`visa:${userId}`);
   } catch (error) {
-    throw new AppError(
-      'Too many Visa transactions. Please try again later.',
-      ErrorCode.RATE_LIMIT_EXCEEDED,
-      429
-    );
+    throw new Error('Too many Visa transactions. Please try again later.');
   }
 }

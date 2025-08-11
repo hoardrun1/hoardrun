@@ -1,6 +1,6 @@
 import { cache } from './cache'
 import { logger } from './logger'
-import { APIError } from '@/middleware/error-handler'
+// import { APIError } from '@/middleware/error-handler'
 import * as faceapi from 'face-api.js'
 import { createHash } from 'crypto'
 
@@ -42,7 +42,7 @@ export class BiometricAuthService {
       ])
     } catch (error) {
       logger.error('Failed to initialize face-api:', error)
-      throw new APIError(500, 'Failed to initialize biometric service')
+      throw new Error('Failed to initialize biometric service')
     }
   }
 
@@ -50,19 +50,19 @@ export class BiometricAuthService {
     try {
       // Validate image data
       if (!this.isValidImageData(imageData)) {
-        throw new APIError(400, 'Invalid image data format')
+        throw new Error('Invalid image data format')
       }
 
       // Detect and extract face features
       const detection = await this.detectFace(imageData)
       if (!detection) {
-        throw new APIError(400, 'No face detected in the image')
+        throw new Error('No face detected in the image')
       }
 
       // Get face descriptor
       const descriptor = await this.getFaceDescriptor(imageData)
       if (!descriptor) {
-        throw new APIError(400, 'Failed to extract face features')
+        throw new Error('Failed to extract face features')
       }
 
       // Store face data
@@ -90,7 +90,7 @@ export class BiometricAuthService {
       // Get stored face data
       const storedData = await this.getBiometricData(userId, 'face')
       if (!storedData) {
-        throw new APIError(404, 'No enrolled face data found')
+        throw new Error('No enrolled face data found')
       }
 
       // Detect face in the new image
@@ -148,7 +148,7 @@ export class BiometricAuthService {
     try {
       // Validate fingerprint data
       if (!this.isValidFingerprintData(fingerprintData)) {
-        throw new APIError(400, 'Invalid fingerprint data format')
+        throw new Error('Invalid fingerprint data format')
       }
 
       // Hash fingerprint data for secure storage
@@ -179,7 +179,7 @@ export class BiometricAuthService {
       // Get stored fingerprint data
       const storedData = await this.getBiometricData(userId, 'fingerprint')
       if (!storedData) {
-        throw new APIError(404, 'No enrolled fingerprint data found')
+        throw new Error('No enrolled fingerprint data found')
       }
 
       // Hash and compare fingerprint data

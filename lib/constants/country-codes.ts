@@ -30,6 +30,8 @@ export const COUNTRY_NAMES: Record<CountryCode, string> = {
   UG: 'Uganda',
   CM: 'Cameroon',
   CI: "Côte d'Ivoire",
+  US: 'United States',
+  GB: 'United Kingdom',
   // ... rest of countries
   ZW: 'Zimbabwe'
 };

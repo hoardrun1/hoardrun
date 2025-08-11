@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { AppError, ErrorCode } from './error-handling';
+// import { AppError, ErrorCode } from './error-handling';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
@@ -36,16 +36,12 @@ api.interceptors.response.use(
     
     // Ensure we have proper error data
     const errorMessage = errorData?.message || 'An unexpected error occurred';
-    const errorCode = errorData?.code || ErrorCode.INTERNAL_ERROR;
     const status = error.response?.status || 500;
-    
-    // Throw typed error
-    throw new AppError(
-      errorCode,
-      errorMessage,
-      status,
-      errorData?.data
-    );
+
+    // Throw simple error
+    const err = new Error(errorMessage);
+    (err as any).status = status;
+    throw err;
   }
 )
 

@@ -133,7 +133,7 @@ export const cache = new Cache(redisClient)
 
 // For testing and development
 if (process.env.NODE_ENV === 'development') {
-  globalThis.cache = cache
+  (globalThis as any).cache = cache
 }
 
 export default cache 

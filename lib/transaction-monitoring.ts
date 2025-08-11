@@ -1,6 +1,6 @@
 import { prisma } from './prisma';
 import { cache } from './cache';
-import { AppError, ErrorCode } from './error-handling';
+// import { AppError, ErrorCode } from './error-handling';
 
 export class TransactionMonitoring {
   private readonly VELOCITY_CHECK_WINDOW = 5 * 60; // 5 minutes
@@ -22,11 +22,7 @@ export class TransactionMonitoring {
     const riskScore = await this.calculateRiskScore(transaction);
     
     if (riskScore > 80) {
-      throw new AppError(
-        errorCodes.HIGH_RISK_TRANSACTION,
-        ErrorCode.VALIDATION_ERROR,
-        403
-      );
+      throw new Error('High risk transaction detected');
     }
 
     if (riskScore > 50) {

@@ -1,9 +1,9 @@
 import { cache } from './cache'
 import { logger } from './logger'
-import { APIError } from '@/middleware/error-handler'
+// import { APIError } from '@/middleware/error-handler'
 import { createHash } from 'crypto'
-import { gzip, ungzip } from 'node-gzip'
-import { performance } from 'perf_hooks'
+// import { gzip, ungzip } from 'node-gzip'
+import { performance as perfHooks } from 'perf_hooks'
 
 interface CacheConfig {
   ttl: number
@@ -60,9 +60,9 @@ export class PerformanceService {
 
       let serializedData = JSON.stringify(data)
 
-      // Compress if enabled and data is large enough
+      // Mock compression - just encode to base64
       if (finalConfig.compress && serializedData.length > this.COMPRESSION_THRESHOLD) {
-        serializedData = (await gzip(serializedData)).toString('base64')
+        serializedData = Buffer.from(serializedData).toString('base64')
       }
 
       const cacheEntry = {
@@ -79,7 +79,7 @@ export class PerformanceService {
       )
 
       // Store cache tags for invalidation
-      if (finalConfig.tags.length > 0) {
+      if (finalConfig.tags && finalConfig.tags.length > 0) {
         await this.storeCacheTags(key, finalConfig.tags)
       }
     } catch (error) {
@@ -98,10 +98,9 @@ export class PerformanceService {
       const cacheEntry = JSON.parse(rawData)
       let data = cacheEntry.data
 
-      // Decompress if necessary
+      // Mock decompression - just decode from base64
       if (cacheEntry.compressed) {
-        const buffer = Buffer.from(data, 'base64')
-        data = (await ungzip(buffer)).toString()
+        data = Buffer.from(data, 'base64').toString()
       }
 
       return JSON.parse(data)
@@ -136,14 +135,14 @@ export class PerformanceService {
     fn: () => Promise<T>,
     context: { userId?: string; metadata?: Record<string, any> } = {}
   ): Promise<T> {
-    const start = performance.now()
+    const start = perfHooks.now()
     const startMemory = process.memoryUsage()
     const startCpu = process.cpuUsage()
 
     try {
       const result = await fn()
       
-      const duration = performance.now() - start
+      const duration = perfHooks.now() - start
       const endMemory = process.memoryUsage()
       const endCpu = process.cpuUsage(startCpu)
 

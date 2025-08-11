@@ -28,7 +28,7 @@ export class RateLimitMonitor {
         }
       }
     } catch (error) {
-      MomoLogger.logError(error, { context: 'Rate Limit Monitoring' });
+      MomoLogger.logError(error as Error, { context: 'Rate Limit Monitoring' });
     }
   }
 

@@ -41,11 +41,7 @@ export class VisaClient {
       // Validate amount limits
       if (data.amount < Number(process.env.VISA_MIN_AMOUNT) ||
           data.amount > Number(process.env.VISA_MAX_AMOUNT)) {
-        throw new AppError(
-          'Amount outside allowed limits',
-          ErrorCode.INVALID_AMOUNT,
-          400
-        );
+        throw new Error('Amount outside allowed limits');
       }
 
       // Validate card details
@@ -57,20 +53,12 @@ export class VisaClient {
       });
 
       if (!cardValidation.success) {
-        throw new AppError(
-          'Invalid card details',
-          ErrorCode.VALIDATION_ERROR,
-          400
-        );
+        throw new Error('Invalid card details');
       }
 
       // Check card expiration
       if (isCardExpired(data.expiryMonth, data.expiryYear)) {
-        throw new AppError(
-          'Card has expired',
-          ErrorCode.VALIDATION_ERROR,
-          400
-        );
+        throw new Error('Card has expired');
       }
 
       // Enforce rate limiting

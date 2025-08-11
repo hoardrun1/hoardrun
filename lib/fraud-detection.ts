@@ -1,6 +1,6 @@
 import { cache } from './cache'
 import { logger } from './logger'
-import { APIError } from '@/middleware/error-handler'
+import { AppError, ErrorCode } from './error-handling'
 import { Transaction, User } from '@prisma/client'
 import geoip from 'geoip-lite'
 
@@ -121,7 +121,7 @@ export class FraudDetectionService {
       }
     } catch (error) {
       logger.error('Fraud check error:', error)
-      throw new APIError(500, 'Failed to complete fraud check')
+      throw new Error('Failed to complete fraud check')
     }
   }
 
@@ -135,8 +135,8 @@ export class FraudDetectionService {
       // Validate input
       if (!context.userId || !context.amount) {
         throw new AppError(
-          ErrorCode.VALIDATION_ERROR,
           'Invalid transaction context',
+          ErrorCode.VALIDATION_ERROR,
           400
         );
       }
@@ -165,8 +165,8 @@ export class FraudDetectionService {
     } catch (error) {
       if (error instanceof AppError) throw error;
       throw new AppError(
-        ErrorCode.INTERNAL_ERROR,
         'Fraud check failed',
+        ErrorCode.INTERNAL_ERROR,
         500
       );
     }

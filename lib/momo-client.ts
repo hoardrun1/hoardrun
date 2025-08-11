@@ -74,7 +74,7 @@ export class MomoClient {
     const data = await response.json();
     this.token = data.access_token;
     this.tokenExpiry = new Date(Date.now() + data.expires_in * 1000);
-    return this.token;
+    return this.token || '';
   }
 
   async getAccountBalance(): Promise<{ amount: number; currency: string }> {

@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { cache } from './cache'
 import { logger } from './logger'
-import { APIError } from '@/middleware/error-handler'
+// import { APIError } from '@/middleware/error-handler'
 import { createHash, randomBytes } from 'crypto'
 
 interface PasswordPolicy {
@@ -175,7 +175,7 @@ export class PasswordPolicyService {
       await this.cache.set(key, JSON.stringify(passwords))
     } catch (error) {
       logger.error('Error storing password history:', error)
-      throw new APIError(500, 'Failed to store password history')
+      throw new Error('Failed to store password history')
     }
   }
 

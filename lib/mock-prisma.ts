@@ -22,11 +22,12 @@ class MockPrismaClient extends PrismaClient {
     };
     
     // Add mock implementations for commonly used models
-    this.user = this.createMockUserModel();
-    this.account = this.createMockAccountModel();
-    this.transaction = this.createMockTransactionModel();
-    this.savingsGoal = this.createMockSavingsGoalModel();
-    this.investment = this.createMockInvestmentModel();
+    (this as any).user = this.createMockUserModel();
+    (this as any).account = this.createMockAccountModel();
+    (this as any).transaction = this.createMockTransactionModel();
+    (this as any).savingsGoal = this.createMockSavingsGoalModel();
+    (this as any).investment = this.createMockInvestmentModel();
+    (this as any).rateLimitLog = this.createMockRateLimitLogModel();
   }
   
   private createMockUserModel() {
@@ -81,6 +82,18 @@ class MockPrismaClient extends PrismaClient {
       update: async (data: any) => ({ id: 'mock-id', ...data.data }),
       delete: async () => ({ id: 'mock-id' }),
       count: async () => 0,
+    };
+  }
+
+  private createMockRateLimitLogModel() {
+    return {
+      findUnique: async () => null,
+      findMany: async () => [],
+      create: async (data: any) => ({ id: 'mock-rate-limit-log-id', ...data.data }),
+      update: async (args: any) => ({ id: args.where.id, ...args.data }),
+      delete: async () => ({ id: 'mock-rate-limit-log-id' }),
+      count: async () => 0,
+      groupBy: async () => [],
     };
   }
 }

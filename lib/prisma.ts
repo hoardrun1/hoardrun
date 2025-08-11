@@ -197,6 +197,7 @@ const mockPrismaClient = {
     create: async (args?: any) => mockTransaction,
     update: async (args?: any) => mockTransaction,
     delete: async (args?: any) => mockTransaction,
+    count: async (args?: any) => 1,
   },
   investment: {
     findUnique: async (args?: any) => mockInvestment,
@@ -296,6 +297,15 @@ const mockPrismaClient = {
     create: async (args?: any) => mockGeneric,
   },
   certificateCheck: {
+    create: async (args?: any) => mockGeneric,
+  },
+  rateLimitLog: {
+    findMany: async (args?: any) => [mockGeneric],
+    create: async (args?: any) => mockGeneric,
+    groupBy: async (args?: any) => [{ userId: 'mock-user-id', _count: { id: 0 } }],
+  },
+  transactionAlert: {
+    findMany: async (args?: any) => [mockGeneric],
     create: async (args?: any) => mockGeneric,
   },
   // Transaction wrapper

@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-config';
 import { alphaVantageAPI } from '@/lib/alpha-vantage-client';
 import { RateLimiter } from '@/lib/rate-limiter';
-import { AppError, ErrorCode } from '@/lib/error-handling';
+// import { AppError, ErrorCode } from '@/lib/error-handling';
 
 export async function GET(request: Request) {
   try {
@@ -57,14 +57,9 @@ export async function GET(request: Request) {
 
   } catch (error) {
     console.error('Market API error:', error);
-    if (error instanceof AppError) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: error.statusCode }
-      );
-    }
+    const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: errorMessage },
       { status: 500 }
     );
   }

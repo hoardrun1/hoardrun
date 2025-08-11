@@ -22,15 +22,13 @@ export class LogMonitor {
       await this.handleErrorThresholdExceeded(errorKey, errors.length);
     }
 
-    // Log to database
-    await prisma.errorLog.create({
-      data: {
-        type: 'PAYMENT_ERROR',
-        message: error.message,
-        stack: error.stack,
-        context: context,
-        timestamp: new Date()
-      }
+    // Log to database (mock - errorLog table doesn't exist)
+    console.log('Payment error logged:', {
+      type: 'PAYMENT_ERROR',
+      message: error.message,
+      stack: error.stack,
+      context: context,
+      timestamp: new Date()
     });
   }
 

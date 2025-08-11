@@ -1,3 +1,14 @@
+interface SavingsTip {
+  type: string;
+  title: string;
+  description: string;
+  action?: string;
+  category?: string;
+  potentialSavings?: number;
+  difficulty?: 'easy' | 'medium' | 'hard';
+  priority?: string;
+}
+
 export const getProgressColor = (progress: number): string => {
   if (progress >= 90) return 'bg-green-500'
   if (progress >= 70) return 'bg-emerald-500'
@@ -35,7 +46,7 @@ export const generateSavingsTips = (
   }
 
   // Check emergency fund
-  const emergencyFund = savingsData.goals.find(g => g.category === 'EMERGENCY')
+  const emergencyFund = savingsData.goals?.find((g: any) => g.category === 'EMERGENCY')
   if (!emergencyFund || emergencyFund.progress < 50) {
     tips.push({
       type: 'suggestion',

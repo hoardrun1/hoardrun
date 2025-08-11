@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { MastercardClient } from '@/lib/mastercard-client';
 import { authOptions } from '@/lib/auth-config';
 import { COUNTRY_CODES, type CountryCode } from '@/lib/constants/country-codes';
+import { prisma } from '@/lib/prisma';
 
 const linkSchema = z.object({
   amount: z.number().positive(),
@@ -27,11 +28,8 @@ export async function POST(request: Request) {
     // Get user's country from database if not provided
     let country = data.country;
     if (!country) {
-      const user = await prisma.user.findUnique({
-        where: { id: session.user.id },
-        select: { country: true }
-      });
-      country = (user?.country as CountryCode) || process.env.MASTERCARD_COUNTRY as CountryCode;
+      // User model doesn't have country field, use default
+      country = process.env.MASTERCARD_COUNTRY as CountryCode || 'US';
     }
 
     const mastercardClient = new MastercardClient({

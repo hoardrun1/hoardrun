@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { z } from 'zod';
-import { prisma } from '@/lib/server/db';
+import { prisma } from '@/lib/prisma';
 import { MomoClient } from '@/lib/momo-client';
 import { PhoneValidator } from '@/lib/validators/phone-validator';
 import { MomoError, momoErrorCodes } from '@/lib/error-handling/momo-errors';

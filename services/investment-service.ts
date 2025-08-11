@@ -57,7 +57,7 @@ class InvestmentService {
         return JSON.parse(cached)
       }
 
-      const response = await api.investments.getAll(filters)
+      const response = await api.get('/investments', { params: filters })
       const investments = response.data
 
       await cache.set(cacheKey, JSON.stringify(investments), this.CACHE_DURATION)
@@ -75,7 +75,7 @@ class InvestmentService {
     description?: string
   }): Promise<Investment> {
     try {
-      const response = await api.investments.create(data)
+      const response = await api.post('/investments', data)
       await this.invalidateInvestmentCache()
       return response.data
     } catch (error) {
@@ -92,7 +92,7 @@ class InvestmentService {
         return JSON.parse(cached)
       }
 
-      const response = await api.investments.getCategories()
+      const response = await api.get('/investments/categories')
       const categories = response.data
 
       await cache.set(cacheKey, JSON.stringify(categories), this.CACHE_DURATION)
@@ -114,7 +114,7 @@ class InvestmentService {
         return JSON.parse(cached)
       }
 
-      const response = await api.investments.getPredictions(params)
+      const response = await api.get('/investments/predictions', { params })
       const predictions = response.data
 
       await cache.set(cacheKey, JSON.stringify(predictions), this.CACHE_DURATION)
@@ -139,7 +139,7 @@ class InvestmentService {
         return JSON.parse(cached)
       }
 
-      const response = await api.investments.getPerformance(investmentId)
+      const response = await api.get(`/investments/${investmentId}/performance`)
       const performance = response.data
 
       await cache.set(cacheKey, JSON.stringify(performance), this.CACHE_DURATION)
@@ -169,7 +169,7 @@ class InvestmentService {
         return JSON.parse(cached)
       }
 
-      const response = await api.investments.getAnalytics()
+      const response = await api.get('/investments/analytics')
       const analytics = response.data
 
       await cache.set(cacheKey, JSON.stringify(analytics), this.CACHE_DURATION)
@@ -182,7 +182,7 @@ class InvestmentService {
 
   async cancelInvestment(investmentId: string): Promise<void> {
     try {
-      await api.investments.cancel(investmentId)
+      await api.delete(`/investments/${investmentId}`)
       await this.invalidateInvestmentCache()
     } catch (error) {
       console.error('Cancel investment error:', error)
@@ -209,16 +209,19 @@ class InvestmentService {
         alphaVantageAPI.getCompanyOverview(symbol),
       ]);
 
+      const quoteData = quote as any;
+      const overviewData = overview as any;
+
       return {
-        currentPrice: quote.price,
-        priceChange: quote.change,
-        priceChangePercent: quote.changePercent,
-        volume: quote.volume,
-        companyName: overview.Name,
-        industry: overview.Industry,
-        peRatio: parseFloat(overview.PERatio),
-        marketCap: parseInt(overview.MarketCapitalization),
-        dividendYield: parseFloat(overview.DividendYield),
+        currentPrice: quoteData.price,
+        priceChange: quoteData.change,
+        priceChangePercent: quoteData.changePercent,
+        volume: quoteData.volume,
+        companyName: overviewData.Name,
+        industry: overviewData.Industry,
+        peRatio: parseFloat(overviewData.PERatio || '0'),
+        marketCap: parseInt(overviewData.MarketCapitalization || '0'),
+        dividendYield: parseFloat(overviewData.DividendYield || '0'),
       };
     } catch (error) {
       console.error('Market analysis error:', error);

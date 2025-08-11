@@ -1,6 +1,7 @@
 import { cache } from './cache'
 import { AppError, ErrorCode } from './error-handling'
 import { RateLimiter } from './rate-limiter'
+import { logger } from './logger'
 // Note: Some MFA features are simplified for Vercel deployment
 // Complex crypto operations and WebAuthn may have limitations in serverless environment
 

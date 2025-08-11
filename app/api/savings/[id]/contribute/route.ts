@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
-import { prisma } from '@/lib/server/db'
+import { prisma } from '@/lib/prisma'
 import { authOptions } from '@/lib/auth-config'
 import { z } from 'zod'
 
@@ -53,7 +53,7 @@ export async function POST(
     }
 
     // Process contribution in a transaction
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: any) => {
       // Create contribution record
       const contribution = await tx.savingsContribution.create({
         data: {

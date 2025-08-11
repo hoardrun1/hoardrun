@@ -63,9 +63,8 @@ export class MomoTransactionService {
       MomoLogger.logTransaction({
         type: 'PAYMENT_INITIATED',
         status: 'SUCCESS',
-        transactionId: transaction.id,
         referenceId,
-        metadata: { amount, currency, phone },
+        metadata: { amount, currency, phone, transactionId: transaction.id },
       });
 
       return { referenceId, transactionId: transaction.id };
@@ -100,7 +99,7 @@ export class MomoTransactionService {
       );
     }
 
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       // Update transaction status
       await tx.transaction.update({
         where: { id: transaction.id },
@@ -127,8 +126,8 @@ export class MomoTransactionService {
     MomoLogger.logTransaction({
       type: 'CALLBACK_PROCESSED',
       status,
-      transactionId: transaction.id,
       referenceId,
+      metadata: { transactionId: transaction.id },
     });
   }
 }

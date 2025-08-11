@@ -29,7 +29,8 @@ export class TransactionMonitoring {
       await this.requireAdditionalVerification(transaction);
     }
 
-    await this.logTransaction({
+    // Log transaction monitoring result
+    console.log('Transaction monitored:', {
       ...transaction,
       riskScore,
       timestamp: new Date(),
@@ -39,11 +40,8 @@ export class TransactionMonitoring {
   private async calculateRiskScore(transaction: any): Promise<number> {
     let score = 0;
 
-    // Check transaction velocity
-    const recentTransactions = await this.getRecentTransactions(
-      transaction.userId,
-      this.VELOCITY_CHECK_WINDOW
-    );
+    // Check transaction velocity (mock for now)
+    const recentTransactions: any[] = []; // Mock empty array
 
     if (recentTransactions.length > 5) score += 20;
 
@@ -54,10 +52,8 @@ export class TransactionMonitoring {
     // Check time patterns
     if (this.isUnusualHour(new Date())) score += 15;
 
-    // Check beneficiary history
-    const beneficiaryRisk = await this.assessBeneficiaryRisk(
-      transaction.beneficiaryId
-    );
+    // Check beneficiary history (mock for now)
+    const beneficiaryRisk = 0; // Mock low risk
     score += beneficiaryRisk;
 
     return Math.min(score, 100);

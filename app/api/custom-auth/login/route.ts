@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { SignJWT } from 'jose'
 import { z } from 'zod'
 import bcrypt from 'bcryptjs'
-import { prisma } from '@/lib/server/db'
+import { prisma } from '@/lib/prisma'
 import { RateLimiter } from '@/lib/rate-limiter'
 // Removed unused imports: generateTwoFactorCode, sendTwoFactorCode
 import { detectSuspiciousActivity } from '@/lib/security'

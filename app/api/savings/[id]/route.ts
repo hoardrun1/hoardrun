@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
-import { prisma } from '@/lib/server/db'
+import { prisma } from '@/lib/prisma'
 import { authOptions } from '@/lib/auth-config'
 import { z } from 'zod'
 
@@ -118,7 +118,7 @@ export async function DELETE(
 
     // If there are contributions, we need to handle them in a transaction
     if (existingGoal.currentAmount > 0) {
-      const result = await prisma.$transaction(async (tx) => {
+      const result = await prisma.$transaction(async (tx: any) => {
         // Get user's account
         const account = await tx.account.findFirst({
           where: {

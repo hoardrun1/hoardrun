@@ -57,7 +57,7 @@ class TransferService {
         return JSON.parse(cached)
       }
 
-      const response = await api.transfer.getBeneficiaries({ search })
+      const response = await api.get('/transfer/beneficiaries', { params: { search } })
       const beneficiaries = response.data
 
       await cache.set(cacheKey, JSON.stringify(beneficiaries), this.CACHE_DURATION)
@@ -77,7 +77,7 @@ class TransferService {
     phoneNumber?: string
   }): Promise<Beneficiary> {
     try {
-      const response = await api.transfer.addBeneficiary(data)
+      const response = await api.post('/transfer/beneficiaries', data)
       await this.invalidateBeneficiaryCache()
       return response.data
     } catch (error) {
@@ -91,7 +91,7 @@ class TransferService {
     fee: number
   }> {
     try {
-      const response = await api.transfer.send(data)
+      const response = await api.post('/transfer/send', data)
       await this.invalidateTransferCache()
       return response.data
     } catch (error) {
@@ -124,7 +124,7 @@ class TransferService {
         return JSON.parse(cached)
       }
 
-      const response = await api.transfer.getHistory(beneficiaryId, params)
+      const response = await api.get(`/transfer/history/${beneficiaryId}`, { params })
       const history = response.data
 
       await cache.set(cacheKey, JSON.stringify(history), this.CACHE_DURATION)
@@ -141,7 +141,7 @@ class TransferService {
     accountName?: string
   }> {
     try {
-      const response = await api.transfer.validateBeneficiary({ accountNumber })
+      const response = await api.post('/transfer/validate', { accountNumber })
       return response.data
     } catch (error) {
       console.error('Validate beneficiary error:', error)
@@ -159,7 +159,7 @@ class TransferService {
     }
   }> {
     try {
-      const response = await api.transfer.calculateFee({ amount })
+      const response = await api.post('/transfer/calculate-fee', { amount })
       return response.data
     } catch (error) {
       console.error('Calculate fee error:', error)

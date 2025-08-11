@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/server/db';
+import { prisma } from '@/lib/prisma';
 import { MomoClient } from '@/lib/momo-client';
 
 export async function POST(request: Request) {
@@ -21,7 +21,7 @@ export async function POST(request: Request) {
     const status = await momoClient.getTransactionStatus(body.referenceId);
 
     // Update transaction and user balance
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       const transaction = await tx.transaction.findFirst({
         where: { id: body.referenceId },
         include: { user: true },

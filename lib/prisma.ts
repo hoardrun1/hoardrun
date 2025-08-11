@@ -49,7 +49,9 @@ const mockUser = {
   securitySettings: mockSecuritySettings,
   loginAttempts: [],
   verificationCodes: [],
-  twoFactorCodes: []
+  twoFactorCodes: [],
+  socialAccounts: [],
+  security: { emailVerified: true, lastLogin: new Date() }
 };
 
 const mockAccount = {
@@ -198,6 +200,7 @@ const mockPrismaClient = {
     update: async (args?: any) => mockTransaction,
     delete: async (args?: any) => mockTransaction,
     count: async (args?: any) => 1,
+    groupBy: async (args?: any) => [{ type: 'PAYMENT', status: 'COMPLETED', _sum: { amount: 1000 }, _count: { _all: 5 } }],
   },
   investment: {
     findUnique: async (args?: any) => mockInvestment,
@@ -231,14 +234,7 @@ const mockPrismaClient = {
     update: async (args?: any) => mockGeneric,
     delete: async (args?: any) => mockGeneric,
   },
-  systemMetric: {
-    findUnique: async (args?: any) => mockGeneric,
-    findMany: async (args?: any) => [mockGeneric],
-    findFirst: async (args?: any) => mockGeneric,
-    create: async (args?: any) => mockGeneric,
-    update: async (args?: any) => mockGeneric,
-    delete: async (args?: any) => mockGeneric,
-  },
+
   twoFactorCode: {
     findUnique: async (args?: any) => mockGeneric,
     findMany: async (args?: any) => [mockGeneric],
@@ -248,9 +244,9 @@ const mockPrismaClient = {
     delete: async (args?: any) => mockGeneric,
   },
   verificationCode: {
-    findUnique: async (args?: any) => mockGeneric,
+    findUnique: async (args?: any) => ({ ...mockGeneric, user: mockUser }),
     findMany: async (args?: any) => [mockGeneric],
-    findFirst: async (args?: any) => mockGeneric,
+    findFirst: async (args?: any) => ({ ...mockGeneric, user: mockUser }),
     create: async (args?: any) => mockGeneric,
     update: async (args?: any) => mockGeneric,
     delete: async (args?: any) => mockGeneric,
@@ -307,6 +303,28 @@ const mockPrismaClient = {
   transactionAlert: {
     findMany: async (args?: any) => [mockGeneric],
     create: async (args?: any) => mockGeneric,
+  },
+  apiKey: {
+    findMany: async (args?: any) => [mockGeneric],
+    create: async (args?: any) => mockGeneric,
+    update: async (args?: any) => mockGeneric,
+  },
+  systemMetric: {
+    findUnique: async (args?: any) => ({ ...mockGeneric, timestamp: new Date(), value: 100 }),
+    findMany: async (args?: any) => [{ ...mockGeneric, timestamp: new Date(), value: 100 }],
+    findFirst: async (args?: any) => ({ ...mockGeneric, timestamp: new Date(), value: 100 }),
+    create: async (args?: any) => mockGeneric,
+    update: async (args?: any) => mockGeneric,
+    delete: async (args?: any) => mockGeneric,
+    groupBy: async (args?: any) => [{ name: 'mock-metric', unit: 'count', _avg: { value: 100 } }],
+  },
+  socialAccount: {
+    findUnique: async (args?: any) => mockGeneric,
+    findMany: async (args?: any) => [mockGeneric],
+    findFirst: async (args?: any) => mockGeneric,
+    create: async (args?: any) => mockGeneric,
+    update: async (args?: any) => mockGeneric,
+    delete: async (args?: any) => mockGeneric,
   },
   // Transaction wrapper
   $transaction: async (callback: Function) => {

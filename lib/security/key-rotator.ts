@@ -27,7 +27,7 @@ export class ApiKeyRotator {
         }
       }
     } catch (error) {
-      MomoLogger.logError(error, { context: 'API Key Rotation' });
+      MomoLogger.logError(error as Error, { context: 'API Key Rotation' });
     }
   }
 

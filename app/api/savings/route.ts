@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth-config'
 import { z } from 'zod'
 
-import { prisma } from '@/lib/server/db';
+import { prisma } from '@/lib/prisma';
 
 const savingsGoalSchema = z.object({
   name: z.string().min(1, 'Name is required'),

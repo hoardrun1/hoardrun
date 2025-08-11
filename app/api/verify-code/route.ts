@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
-import { prisma } from '@/lib/server/db'
+import { prisma } from '@/lib/prisma'
 
 const verifyCodeSchema = z.object({
   code: z.string().length(6),

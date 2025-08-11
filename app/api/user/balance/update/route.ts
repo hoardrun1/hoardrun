@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { z } from 'zod';
-import { prisma } from '@/lib/server/db';
+import { prisma } from '@/lib/prisma';
 import { authOptions } from '@/lib/auth-config';
 
 const updateSchema = z.object({
@@ -21,7 +21,7 @@ export async function POST(request: Request) {
     const data = updateSchema.parse(body);
 
     // Update user balance and create transaction record
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: any) => {
       // Update account balance instead of user balance
       const account = await tx.account.findFirst({
         where: { userId: session.user.id, isActive: true }

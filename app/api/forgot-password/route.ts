@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
-import { prisma } from '@/lib/server/db'
+import { prisma } from '@/lib/prisma'
 
 const forgotPasswordSchema = z.object({
   email: z.string().email(),

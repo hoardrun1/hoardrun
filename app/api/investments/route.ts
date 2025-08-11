@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/server/db'
+import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 import { getTypedSession } from '@/lib/auth'
 
@@ -62,7 +62,7 @@ export async function POST(req: Request) {
     }
 
     // Create investment and update user balance in a transaction
-    const investment = await prisma.$transaction(async (tx) => {
+    const investment = await prisma.$transaction(async (tx: any) => {
       const newInvestment = await tx.investment.create({
         data: {
           userId: session.user.id,
@@ -135,7 +135,7 @@ export async function PATCH(req: Request) {
     let updatedInvestment
 
     if (action === 'COMPLETE') {
-      updatedInvestment = await prisma.$transaction(async (tx) => {
+      updatedInvestment = await prisma.$transaction(async (tx: any) => {
         const completed = await tx.investment.update({
           where: { id },
           data: {

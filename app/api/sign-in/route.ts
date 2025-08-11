@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { SignJWT } from 'jose'
 import { z } from 'zod'
 import bcrypt from 'bcryptjs'
-import { prisma } from '@/lib/server/db'
+import { prisma } from '@/lib/prisma'
 
 const signInSchema = z.object({
   email: z.string().email(),

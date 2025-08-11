@@ -47,7 +47,7 @@ export async function detectSuspiciousActivity({
     if (recentLogins.length >= 5) {
       const oldestRecentLogin = recentLogins[recentLogins.length - 1]
       const newestLogin = recentLogins[0]
-      const timeDiff = newestLogin.timestamp.getTime() - oldestRecentLogin.timestamp.getTime()
+      const timeDiff = newestLogin.createdAt.getTime() - oldestRecentLogin.createdAt.getTime()
       
       if (timeDiff < 10 * 60 * 1000) { // Less than 10 minutes for 5+ attempts
         console.log('Suspicious: Rapid login attempts detected for user', user.email)
@@ -142,7 +142,7 @@ export async function validateMFA(userId: string, code: string): Promise<boolean
     // Use timing-safe comparison
     const isValid = timingSafeEqual(
       Buffer.from(code),
-      Buffer.from(storedCode.code)
+      Buffer.from((storedCode as any).code || '')
     )
 
     if (isValid) {
@@ -177,7 +177,6 @@ export async function createSecureSession(userId: string, deviceInfo: DeviceInfo
         createdAt: Date.now(),
         expiresAt: expiresAt.getTime()
       }),
-      'EX',
       24 * 60 * 60 // 24 hours in seconds
     )
   } catch (error) {

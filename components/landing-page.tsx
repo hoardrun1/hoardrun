@@ -112,8 +112,8 @@ const AnimatedBackground = () => {
 
 export function LandingPageComponent() {
   const [isScrolled, setIsScrolled] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const aboutRef = useRef(null)
-
   const servicesRef = useRef(null)
 
   useEffect(() => {
@@ -126,11 +126,20 @@ export function LandingPageComponent() {
 
   const scrollToSection = (elementRef: React.RefObject<HTMLElement>) => {
     if (elementRef.current) {
+      const headerHeight = 80; // Account for fixed header
+      const elementPosition = elementRef.current.offsetTop - headerHeight;
       window.scrollTo({
-        top: elementRef.current.offsetTop - 100,
+        top: elementPosition,
         behavior: "smooth",
       })
     }
+  }
+
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    })
   }
 
   return (
@@ -140,15 +149,15 @@ export function LandingPageComponent() {
       >
         <div className="container mx-auto px-4 sm:px-6 md:px-8">
           <nav className="flex justify-between items-center">
-            <motion.a
-              href="#"
-              className="text-base sm:text-lg md:text-xl font-bold"
+            <motion.button
+              onClick={scrollToTop}
+              className="text-base sm:text-lg md:text-xl font-bold cursor-pointer"
               whileHover={{ scale: 1.05 }}
               transition={{ type: "spring", stiffness: 300 }}
             >
               <span className="text-white">Hoard</span>
               <span className="text-gray-400">run</span>
-            </motion.a>
+            </motion.button>
             <div className="hidden md:flex space-x-6">
               <motion.button
                 onClick={() => scrollToSection(aboutRef)}
@@ -171,18 +180,79 @@ export function LandingPageComponent() {
             <div className="flex items-center space-x-3">
               <Button
                 variant="ghost"
+                onClick={() => window.open('/login', '_blank')}
                 className="text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-300 text-sm px-3 py-1.5"
               >
                 Log In
               </Button>
-              <Button className="bg-white text-black hover:bg-gray-200 transition-all duration-300 transform hover:scale-105 text-sm px-4 py-1.5">
+              <Button
+                onClick={() => window.open('/signup', '_blank')}
+                className="bg-white text-black hover:bg-gray-200 transition-all duration-300 transform hover:scale-105 text-sm px-4 py-1.5"
+              >
                 Sign up
               </Button>
-              <Button className="md:hidden" variant="ghost" size="icon">
+              <Button
+                className="md:hidden"
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              >
                 <Menu className="h-4 w-4" />
               </Button>
             </div>
           </nav>
+
+          {/* Mobile Menu */}
+          {isMobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="md:hidden bg-black/95 backdrop-blur-sm border-t border-white/10 py-4"
+            >
+              <div className="flex flex-col space-y-4 px-4">
+                <button
+                  onClick={() => {
+                    scrollToSection(aboutRef)
+                    setIsMobileMenuOpen(false)
+                  }}
+                  className="text-gray-300 hover:text-white transition-all duration-300 text-left py-2"
+                >
+                  About
+                </button>
+                <button
+                  onClick={() => {
+                    scrollToSection(servicesRef)
+                    setIsMobileMenuOpen(false)
+                  }}
+                  className="text-gray-300 hover:text-white transition-all duration-300 text-left py-2"
+                >
+                  Services
+                </button>
+                <div className="flex space-x-3 pt-2">
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      window.open('/login', '_blank')
+                      setIsMobileMenuOpen(false)
+                    }}
+                    className="text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-300 text-sm px-3 py-1.5"
+                  >
+                    Log In
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      window.open('/signup', '_blank')
+                      setIsMobileMenuOpen(false)
+                    }}
+                    className="bg-white text-black hover:bg-gray-200 transition-all duration-300 text-sm px-4 py-1.5"
+                  >
+                    Sign up
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          )}
         </div>
       </header>
 
@@ -235,7 +305,10 @@ export function LandingPageComponent() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, delay: 0.5 }}
                   >
-                    <Button className="bg-white text-black hover:bg-gray-200 text-xs sm:text-sm md:text-base px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-full transition-all duration-500 transform hover:scale-110 shadow-xl">
+                    <Button
+                      onClick={() => scrollToSection(servicesRef)}
+                      className="bg-white text-black hover:bg-gray-200 text-xs sm:text-sm md:text-base px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-full transition-all duration-500 transform hover:scale-110 shadow-xl"
+                    >
                       Get Started
                       <motion.div
                         className="ml-2"
@@ -245,8 +318,9 @@ export function LandingPageComponent() {
                         →
                       </motion.div>
                     </Button>
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
+                      onClick={() => scrollToSection(aboutRef)}
                       className="border-white/50 text-white hover:bg-white hover:text-black text-xs sm:text-sm md:text-base px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-full transition-all duration-300 bg-black/20"
                     >
                       Learn More
@@ -504,7 +578,10 @@ export function LandingPageComponent() {
                   transition={{ duration: 0.8, delay: 0.4 }}
                   viewport={{ once: true }}
                 >
-                  <Button className="bg-white text-black hover:bg-gray-200 text-sm sm:text-base px-6 py-2.5 sm:px-8 sm:py-3 rounded-full transition-all duration-500 transform hover:scale-110 shadow-xl">
+                  <Button
+                    onClick={() => window.open('/signup', '_blank')}
+                    className="bg-white text-black hover:bg-gray-200 text-sm sm:text-base px-6 py-2.5 sm:px-8 sm:py-3 rounded-full transition-all duration-500 transform hover:scale-110 shadow-xl"
+                  >
                     Start Your Journey
                     <motion.div
                       className="ml-2"
@@ -735,10 +812,13 @@ export function LandingPageComponent() {
           </div>
           <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-white/10 flex flex-col sm:flex-row justify-between items-center">
             <div className="flex items-center space-x-4 mb-4 sm:mb-0">
-              <span className="text-base sm:text-lg md:text-xl font-bold">
+              <button
+                onClick={scrollToTop}
+                className="text-base sm:text-lg md:text-xl font-bold cursor-pointer hover:opacity-80 transition-opacity duration-300"
+              >
                 <span className="text-white">Hoard</span>
                 <span className="text-gray-400">run</span>
-              </span>
+              </button>
             </div>
             <p className="text-gray-400 text-center sm:text-right text-xs sm:text-sm">
               &copy; 2024 Hoardrun. All rights reserved.

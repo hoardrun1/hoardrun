@@ -68,7 +68,7 @@ export default function AnalyticsPage() {
             {/* Header */}
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-black">
+                <h1 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-black">
                   Analytics
                 </h1>
                 <p className="text-black/60 mt-1 text-sm sm:text-base">
@@ -85,7 +85,7 @@ export default function AnalyticsPage() {
                   <TrendingUp className="h-4 w-4 text-black/60" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-xl sm:text-2xl font-bold text-black">
+                  <div className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-black">
                     ${avgMonthlyIncome.toLocaleString()}
                   </div>
                   <p className="text-xs text-black/60">Last 6 months</p>
@@ -98,7 +98,7 @@ export default function AnalyticsPage() {
                   <TrendingDown className="h-4 w-4 text-black/60" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-black">
+                  <div className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-black">
                     ${avgMonthlyExpenses.toLocaleString()}
                   </div>
                   <p className="text-xs text-black/60">Last 6 months</p>
@@ -111,7 +111,7 @@ export default function AnalyticsPage() {
                   <Target className="h-4 w-4 text-black/60" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-black">
+                  <div className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-black">
                     {savingsRate}%
                   </div>
                   <p className="text-xs text-black/60">Of total income</p>
@@ -124,7 +124,7 @@ export default function AnalyticsPage() {
                   <DollarSign className="h-4 w-4 text-black/60" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-black">
+                  <div className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-black">
                     ${totalSavings.toLocaleString()}
                   </div>
                   <p className="text-xs text-black/60">Last 6 months</p>

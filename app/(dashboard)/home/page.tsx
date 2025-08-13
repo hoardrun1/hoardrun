@@ -70,17 +70,17 @@ export default function HomePage() {
           onToggle={() => setIsRightSidebarOpen(!isRightSidebarOpen)}
           notificationCount={2}
         />
-        <div className={`min-h-screen bg-white pt-16 pb-4 px-4 sm:pt-20 sm:pb-6 sm:px-6 transition-all duration-300 ${
+        <div className={`min-h-screen bg-white pt-12 sm:pt-16 md:pt-20 pb-2 sm:pb-4 md:pb-6 px-2 sm:px-4 md:px-6 transition-all duration-300 ${
           isRightSidebarOpen ? 'lg:mr-80' : ''
         }`}>
-          <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6">
+          <div className="max-w-full sm:max-w-5xl md:max-w-6xl mx-auto space-y-2 sm:space-y-4 md:space-y-6">
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
               <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-black">
+                <h1 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-black">
                   Welcome back!
                 </h1>
-                <p className="text-black/60 mt-1 text-sm sm:text-base">
+                <p className="text-black/60 mt-0.5 sm:mt-1 text-xs sm:text-sm md:text-base">
                   Here's what's happening with your money today
                 </p>
               </div>
@@ -100,14 +100,14 @@ export default function HomePage() {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4 lg:gap-6">
               <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Balance</CardTitle>
-                  <DollarSign className="h-4 w-4 text-black/60" />
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2 p-2 sm:p-4 md:p-6">
+                  <CardTitle className="text-xs sm:text-sm font-medium">Total Balance</CardTitle>
+                  <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 text-black/60" />
                 </CardHeader>
-                <CardContent>
-                  <div className="text-xl sm:text-2xl font-bold text-black">
+                <CardContent className="p-2 sm:p-4 md:p-6 pt-0">
+                  <div className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-black">
                     ${stats.totalBalance.toLocaleString()}
                   </div>
                   <p className="text-xs text-black/60">
@@ -122,7 +122,7 @@ export default function HomePage() {
                   <TrendingUp className="h-4 w-4 text-black/60" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-black">
+                  <div className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-black">
                     ${stats.monthlyIncome.toLocaleString()}
                   </div>
                   <p className="text-xs text-black/60">
@@ -137,7 +137,7 @@ export default function HomePage() {
                   <TrendingDown className="h-4 w-4 text-black/60" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-black">
+                  <div className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-black">
                     ${stats.monthlyExpenses.toLocaleString()}
                   </div>
                   <p className="text-xs text-black/60">
@@ -152,7 +152,7 @@ export default function HomePage() {
                   <PiggyBank className="h-4 w-4 text-black/60" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-black">
+                  <div className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-black">
                     ${stats.savings.toLocaleString()}
                   </div>
                   <p className="text-xs text-black/60">

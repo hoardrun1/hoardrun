@@ -188,7 +188,7 @@ export default function VerifySigninPage() {
           >
             <Link href="/">
               <motion.h1 
-                className={`text-2xl font-bold ${
+                className={`text-sm sm:text-base md:text-lg font-bold ${
                   theme === 'dark' ? 'text-blue-400' : 'text-blue-600'
                 }`}
                 whileHover={{ scale: 1.05 }}
@@ -197,7 +197,7 @@ export default function VerifySigninPage() {
                 Hoardrun
               </motion.h1>
             </Link>
-            <h2 className={`text-3xl font-extrabold ${
+            <h2 className={`text-base sm:text-lg md:text-xl font-extrabold ${
               theme === 'dark' ? 'text-white' : 'text-gray-900'
             }`}>
               Verify Sign In

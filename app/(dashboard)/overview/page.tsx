@@ -343,7 +343,7 @@ export default function OverviewPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-black to-gray-700 bg-clip-text text-transparent">
+            <h1 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold bg-gradient-to-r from-black to-gray-700 bg-clip-text text-transparent">
               Financial Overview
             </h1>
             <p className="text-black/60 mt-2 text-lg">
@@ -373,7 +373,7 @@ export default function OverviewPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-gray-300 text-sm font-medium">Total Balance</p>
-                      <h3 className="text-3xl font-bold mt-2">
+                      <h3 className="text-sm sm:text-base md:text-lg lg:text-xl font-bold mt-1 sm:mt-2">
                         {formatCurrency(financialSummary.totalBalance)}
                       </h3>
                       <div className={`flex items-center mt-3 ${getChangeColor(financialSummary.changePercentages.balance)}`}>
@@ -402,7 +402,7 @@ export default function OverviewPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-gray-600 text-sm font-medium">Monthly Income</p>
-                      <h3 className="text-3xl font-bold mt-2 text-black">
+                      <h3 className="text-sm sm:text-base md:text-lg lg:text-xl font-bold mt-1 sm:mt-2 text-black">
                         {formatCurrency(financialSummary.monthlyIncome)}
                       </h3>
                       <div className={`flex items-center mt-3 ${getChangeColor(financialSummary.changePercentages.income)}`}>
@@ -431,7 +431,7 @@ export default function OverviewPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-gray-300 text-sm font-medium">Monthly Expenses</p>
-                      <h3 className="text-3xl font-bold mt-2">
+                      <h3 className="text-sm sm:text-base md:text-lg lg:text-xl font-bold mt-1 sm:mt-2">
                         {formatCurrency(financialSummary.monthlyExpenses)}
                       </h3>
                       <div className={`flex items-center mt-3 ${getChangeColor(-financialSummary.changePercentages.expenses)}`}>
@@ -460,7 +460,7 @@ export default function OverviewPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-gray-600 text-sm font-medium">Savings Rate</p>
-                      <h3 className="text-3xl font-bold mt-2 text-black">
+                      <h3 className="text-sm sm:text-base md:text-lg lg:text-xl font-bold mt-1 sm:mt-2 text-black">
                         {financialSummary.savingsRate}%
                       </h3>
                       <div className={`flex items-center mt-3 ${getChangeColor(financialSummary.changePercentages.savings)}`}>
@@ -676,7 +676,7 @@ export default function OverviewPage() {
         >
           <Card className="border-0 shadow-xl bg-gradient-to-r from-white to-gray-50">
             <CardHeader>
-              <CardTitle className="text-2xl text-black">Quick Actions</CardTitle>
+              <CardTitle className="text-lg sm:text-xl md:text-2xl text-black">Quick Actions</CardTitle>
               <CardDescription className="text-gray-600">
                 Common tasks to manage your finances
               </CardDescription>

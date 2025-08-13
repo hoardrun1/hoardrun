@@ -237,7 +237,7 @@ export function SignInPage() {
   }
 
   return (
-    <div className="min-h-screen relative flex items-center justify-center p-4 md:p-8">
+    <div className="min-h-screen relative flex items-center justify-center p-2 sm:p-4 md:p-6 lg:p-8">
       <Image
         alt="Dark crumpled paper background"
         src="https://images.unsplash.com/photo-1618123069754-cd64c230a169?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
@@ -252,12 +252,12 @@ export function SignInPage() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md md:max-w-xl lg:max-w-2xl relative z-10"
+        className="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl relative z-10"
       >
-        <div className="bg-white/10 rounded-3xl p-8 md:p-12 shadow-2xl border border-gray-100/50">
-          <div className="text-center mb-8 md:mb-10">
-            <h1 className="text-3xl md:text-4xl font-extrabold text-white">Welcome Back</h1>
-            <p className="mt-2 text-white text-base md:text-lg">Sign in to access your account</p>
+        <div className="bg-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 lg:p-12 shadow-2xl border border-gray-100/50 w-full max-w-sm sm:max-w-md md:max-w-lg">
+          <div className="text-center mb-4 sm:mb-6 md:mb-8 lg:mb-10">
+            <h1 className="text-base sm:text-lg md:text-xl lg:text-2xl font-extrabold text-white">Welcome Back</h1>
+            <p className="mt-1 sm:mt-2 text-white text-xs sm:text-sm md:text-base">Sign in to access your account</p>
           </div>
 
           <div className="space-y-3 mb-8">
@@ -332,7 +332,7 @@ export function SignInPage() {
                       placeholder="Email"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="pl-10 h-12 bg-white border-gray-300 text-black focus:border-black"
+                      className="pl-8 sm:pl-10 h-8 sm:h-9 md:h-10 bg-white border-gray-300 text-black focus:border-black text-xs sm:text-sm"
                       disabled={isLoading}
                       required
                     />
@@ -346,7 +346,7 @@ export function SignInPage() {
                       placeholder="Password"
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      className="pl-10 h-12 bg-white border-gray-300 text-black focus:border-black"
+                      className="pl-8 sm:pl-10 h-8 sm:h-9 md:h-10 bg-white border-gray-300 text-black focus:border-black text-xs sm:text-sm"
                       disabled={isLoading}
                       required
                       minLength={8}
@@ -381,7 +381,7 @@ export function SignInPage() {
 
                 <Button
                   type="submit"
-                  className="w-full h-12 bg-black hover:bg-gray-800 text-white font-semibold text-base"
+                  className="w-full h-8 sm:h-9 md:h-10 bg-black hover:bg-gray-800 text-white font-semibold text-xs sm:text-sm"
                   disabled={isLoading}
                 >
                   {isLoading ? (
@@ -410,11 +410,11 @@ export function SignInPage() {
                 <Input
                   type="tel"
                   placeholder="Phone number"
-                  className="pl-10 h-12 bg-white border-gray-300 text-black focus:border-black"
+                  className="pl-8 sm:pl-10 h-8 sm:h-9 md:h-10 bg-white border-gray-300 text-black focus:border-black text-xs sm:text-sm"
                   disabled={isLoading}
                 />
                 <Button
-                  className="w-full h-12 bg-black hover:bg-gray-800 text-white font-semibold text-base"
+                  className="w-full h-8 sm:h-9 md:h-10 bg-black hover:bg-gray-800 text-white font-semibold text-xs sm:text-sm"
                   disabled={isLoading}
                 >
                   Send Code

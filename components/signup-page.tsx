@@ -113,7 +113,7 @@ export function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen relative flex items-center justify-center p-4 md:p-8">
+    <div className="min-h-screen relative flex items-center justify-center p-2 sm:p-4 md:p-6 lg:p-8">
       <Image
         alt="Dark crumpled paper background"
         src="https://images.unsplash.com/photo-1618123069754-cd64c230a169?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
@@ -128,22 +128,22 @@ export function SignupPage() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md md:max-w-xl lg:max-w-2xl relative z-10" // Added relative z-10 to bring content to front
+        className="w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl relative z-10" // Added relative z-10 to bring content to front
       >
-        <div className="bg-white/10 rounded-3xl p-8 md:p-12 shadow-2xl border border-gray-100/50">
+        <div className="bg-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 lg:p-12 shadow-2xl border border-gray-100/50 w-full max-w-sm sm:max-w-md md:max-w-lg">
           {/* Updated Logo and Title */}
-          <div className="text-center mb-8 md:mb-10">
-            <h1 className="text-3xl md:text-4xl font-extrabold text-white">Begin Your Financial Journey</h1>
-            <p className="mt-2 text-white text-base md:text-lg">
+          <div className="text-center mb-4 sm:mb-6 md:mb-8 lg:mb-10">
+            <h1 className="text-sm sm:text-base md:text-lg lg:text-xl font-extrabold text-white">Begin Your Financial Journey</h1>
+            <p className="mt-2 text-white text-xs sm:text-sm md:text-base">
               Experience next-generation mobile banking with AI-powered security
             </p>
           </div>
 
           {/* Social Login Buttons */}
-          <div className="space-y-3 mb-8">
+          <div className="space-y-2 sm:space-y-3 md:space-y-4 mb-4 sm:mb-6 md:mb-8">
             <Button
               variant="outline"
-              className="w-full bg-white hover:bg-gray-100 border-gray-300 text-black py-6 text-base"
+              className="w-full bg-white hover:bg-gray-100 border-gray-300 text-black py-2 sm:py-3 md:py-4 text-xs sm:text-sm"
               onClick={() => handleSocialLogin("google")}
             >
               <Image src="/google-icon.svg" alt="Google" width={20} height={20} className="mr-2" />
@@ -151,7 +151,7 @@ export function SignupPage() {
             </Button>
             <Button
               variant="outline"
-              className="w-full bg-white hover:bg-gray-100 border-gray-300 text-black py-6 text-base"
+              className="w-full bg-white hover:bg-gray-100 border-gray-300 text-black py-2 sm:py-3 md:py-4 text-xs sm:text-sm"
               onClick={() => handleSocialLogin("apple")}
             >
               <Image src="/apple-icon.svg" alt="Apple" width={20} height={20} className="mr-2" />
@@ -174,7 +174,7 @@ export function SignupPage() {
             </Alert>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 md:space-y-5">
             <div className="space-y-2">
               <Label htmlFor="name" className="text-sm font-medium text-white">
                 Full Name
@@ -186,7 +186,7 @@ export function SignupPage() {
                   name="name"
                   type="text"
                   placeholder="John Doe"
-                  className="pl-10 h-12 bg-white border-gray-300 text-black focus:border-black"
+                  className="pl-8 sm:pl-10 h-8 sm:h-9 md:h-10 bg-white border-gray-300 text-black focus:border-black text-xs sm:text-sm"
                   value={formData.name}
                   onChange={handleChange}
                   disabled={isLoading}
@@ -205,7 +205,7 @@ export function SignupPage() {
                   name="email"
                   type="email"
                   placeholder="you@example.com"
-                  className="pl-10 h-12 bg-white border-gray-300 text-black focus:border-black"
+                  className="pl-8 sm:pl-10 h-8 sm:h-9 md:h-10 bg-white border-gray-300 text-black focus:border-black text-xs sm:text-sm"
                   value={formData.email}
                   onChange={handleChange}
                   disabled={isLoading}
@@ -223,7 +223,7 @@ export function SignupPage() {
                   name="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
-                  className="pr-10 h-12 bg-white border-gray-300 text-black focus:border-black"
+                  className="pr-8 sm:pr-10 h-8 sm:h-9 md:h-10 bg-white border-gray-300 text-black focus:border-black text-xs sm:text-sm"
                   value={formData.password}
                   onChange={handleChange}
                   disabled={isLoading}
@@ -248,7 +248,7 @@ export function SignupPage() {
                   name="confirmPassword"
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
-                  className="pr-10 h-12 bg-white border-gray-300 text-black focus:border-black"
+                  className="pr-8 sm:pr-10 h-8 sm:h-9 md:h-10 bg-white border-gray-300 text-black focus:border-black text-xs sm:text-sm"
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   disabled={isLoading}
@@ -258,7 +258,7 @@ export function SignupPage() {
 
             <Button
               type="submit"
-              className="w-full h-12 bg-black hover:bg-gray-800 text-white font-semibold text-base"
+              className="w-full h-8 sm:h-9 md:h-10 bg-black hover:bg-gray-800 text-white font-semibold text-xs sm:text-sm"
               disabled={isLoading}
             >
               {isLoading ? (

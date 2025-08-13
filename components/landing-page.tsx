@@ -3,6 +3,7 @@
 import type React from "react"
 
 import { useState, useEffect, useRef } from "react"
+import { useRouter } from "next/navigation"
 import { motion, useScroll, useTransform } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -111,6 +112,7 @@ const AnimatedBackground = () => {
 }
 
 export function LandingPageComponent() {
+  const router = useRouter()
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const aboutRef = useRef(null)
@@ -125,13 +127,21 @@ export function LandingPageComponent() {
   }, [])
 
   const scrollToSection = (elementRef: React.RefObject<HTMLElement>) => {
+    console.log('scrollToSection called', elementRef);
+
     if (elementRef.current) {
-      const headerHeight = 80; // Account for fixed header
-      const elementPosition = elementRef.current.offsetTop - headerHeight;
-      window.scrollTo({
-        top: elementPosition,
-        behavior: "smooth",
-      })
+      console.log('Element found, scrolling...');
+
+      // Close mobile menu if open
+      setIsMobileMenuOpen(false);
+
+      // Use scrollIntoView for better compatibility
+      elementRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    } else {
+      console.warn('Element ref is null, cannot scroll to section');
     }
   }
 
@@ -180,13 +190,13 @@ export function LandingPageComponent() {
             <div className="flex items-center space-x-3">
               <Button
                 variant="ghost"
-                onClick={() => window.open('/login', '_blank')}
+                onClick={() => router.push('/signin')}
                 className="text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-300 text-sm px-3 py-1.5"
               >
                 Log In
               </Button>
               <Button
-                onClick={() => window.open('/signup', '_blank')}
+                onClick={() => router.push('/signup')}
                 className="bg-white text-black hover:bg-gray-200 transition-all duration-300 transform hover:scale-105 text-sm px-4 py-1.5"
               >
                 Sign up
@@ -233,7 +243,7 @@ export function LandingPageComponent() {
                   <Button
                     variant="ghost"
                     onClick={() => {
-                      window.open('/login', '_blank')
+                      router.push('/signin')
                       setIsMobileMenuOpen(false)
                     }}
                     className="text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-300 text-sm px-3 py-1.5"
@@ -242,7 +252,7 @@ export function LandingPageComponent() {
                   </Button>
                   <Button
                     onClick={() => {
-                      window.open('/signup', '_blank')
+                      router.push('/signup')
                       setIsMobileMenuOpen(false)
                     }}
                     className="bg-white text-black hover:bg-gray-200 transition-all duration-300 text-sm px-4 py-1.5"
@@ -300,14 +310,17 @@ export function LandingPageComponent() {
                   </motion.p>
                   
                   <motion.div
-                    className="flex flex-row gap-2 sm:gap-3 md:gap-4 justify-center items-center"
+                    className="flex flex-row gap-2 sm:gap-3 md:gap-4 justify-center items-center relative z-20"
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, delay: 0.5 }}
                   >
                     <Button
-                      onClick={() => scrollToSection(servicesRef)}
-                      className="bg-white text-black hover:bg-gray-200 text-xs sm:text-sm md:text-base px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-full transition-all duration-500 transform hover:scale-110 shadow-xl"
+                      onClick={() => {
+                        console.log('Get Started clicked, scrolling to services');
+                        scrollToSection(servicesRef);
+                      }}
+                      className="bg-white text-black hover:bg-gray-200 text-xs sm:text-sm md:text-base px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-full transition-all duration-500 transform hover:scale-110 shadow-xl cursor-pointer relative z-10"
                     >
                       Get Started
                       <motion.div
@@ -320,8 +333,11 @@ export function LandingPageComponent() {
                     </Button>
                     <Button
                       variant="outline"
-                      onClick={() => scrollToSection(aboutRef)}
-                      className="border-white/50 text-white hover:bg-white hover:text-black text-xs sm:text-sm md:text-base px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-full transition-all duration-300 bg-black/20"
+                      onClick={() => {
+                        console.log('Learn More clicked, scrolling to about');
+                        scrollToSection(aboutRef);
+                      }}
+                      className="border-white/50 text-white hover:bg-white hover:text-black text-xs sm:text-sm md:text-base px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-full transition-all duration-300 bg-black/20 cursor-pointer relative z-10"
                     >
                       Learn More
                     </Button>
@@ -579,7 +595,7 @@ export function LandingPageComponent() {
                   viewport={{ once: true }}
                 >
                   <Button
-                    onClick={() => window.open('/signup', '_blank')}
+                    onClick={() => router.push('/signup')}
                     className="bg-white text-black hover:bg-gray-200 text-sm sm:text-base px-6 py-2.5 sm:px-8 sm:py-3 rounded-full transition-all duration-500 transform hover:scale-110 shadow-xl"
                   >
                     Start Your Journey

@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { navigation } from "@/lib/navigation"
+import { useAuth } from "@/contexts/AuthContext"
 import { motion } from "framer-motion"
 import Link from "next/link"
 import { EyeIcon, EyeOffIcon, MailIcon, UserIcon, Loader2, ArrowRight } from "lucide-react"
@@ -20,6 +20,7 @@ import { Separator } from "@/components/ui/separator"
 export function SignupPage() {
   const router = useRouter()
   const { addToast } = useToast()
+  const { login } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
@@ -86,15 +87,21 @@ export function SignupPage() {
         throw new Error("Server returned invalid JSON")
       }
 
+      if (!response.ok) {
+        throw new Error(data.error || "Signup failed")
+      }
+
+      // Log the user in with the returned token and user data
+      login(data.token, data.user)
+
       // Show success message
       addToast({
         title: "Success",
-        description: "Account created successfully. Please check your email.",
+        description: "Account created successfully! Welcome to Hoardrun.",
       })
 
-      // Connect to check email page
-      navigation.connect("signup", "check-email", { email: formData.email })
-      router.push("/check-email")
+      // Redirect to home page
+      router.push("/home")
     } catch (error) {
       setError(error instanceof Error ? error.message : "Signup failed")
       addToast({

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { SignJWT } from 'jose'
 import { z } from 'zod'
 import bcrypt from 'bcryptjs'
-import { prisma } from '@/lib/prisma'
+import { userStorage } from '@/lib/user-storage'
 
 const signInSchema = z.object({
   email: z.string().email(),
@@ -30,9 +30,7 @@ export async function POST(request: Request) {
     const { email, password, rememberMe } = validation.data
 
     // Find user
-    const user = await prisma.user.findUnique({
-      where: { email: email.toLowerCase() }
-    })
+    const user = userStorage.findByEmail(email.toLowerCase())
 
     if (!user) {
       return new NextResponse(

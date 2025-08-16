@@ -316,10 +316,7 @@ export function LandingPageComponent() {
                     transition={{ duration: 0.8, delay: 0.5 }}
                   >
                     <Button
-                      onClick={() => {
-                        console.log('Get Started clicked, scrolling to services');
-                        scrollToSection(servicesRef);
-                      }}
+                      onClick={() => router.push('/signup')}
                       className="bg-white text-black hover:bg-gray-200 text-xs sm:text-sm md:text-base px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-full transition-all duration-500 transform hover:scale-110 shadow-xl cursor-pointer relative z-10"
                     >
                       Get Started

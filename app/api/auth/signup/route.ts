@@ -11,14 +11,17 @@ export async function GET() {
   })
 }
 
-import { z } from 'zod';
-import { sendVerificationEmail } from '@/lib/mailgun-service';
+import { NextResponse } from 'next/server'
+import { z } from 'zod'
+import bcrypt from 'bcryptjs'
+import { generateToken } from '@/lib/jwt'
+import { userStorage } from '@/lib/user-storage'
 
 // Define validation schema
 const signUpSchema = z.object({
   email: z.string().email('Invalid email format'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
-  name: z.string().min(2, 'Name must be at least 2 characters').optional(),
+  name: z.string().min(2, 'Name must be at least 2 characters'),
 });
 
 export async function POST(request: Request) {
@@ -30,45 +33,55 @@ export async function POST(request: Request) {
     const validation = signUpSchema.safeParse(body);
 
     if (!validation.success) {
-      return new Response(JSON.stringify({
-        message: 'Invalid input data',
+      return NextResponse.json({
+        error: 'Invalid input data',
         details: validation.error.errors
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      }, { status: 400 });
     }
 
-    const { email, name } = validation.data;
+    const { email, password, name } = validation.data;
 
-    // In a real app, you would check if the user exists and create the user in the database
-    // For this demo, we'll just generate a fake user ID
-    const userId = Math.random().toString(36).substring(2, 15);
+    // Check if user already exists
+    const existingUser = userStorage.findByEmail(email);
 
-    // Send verification email
-    const verificationCode = await sendVerificationEmail(email, userId);
+    if (existingUser) {
+      return NextResponse.json({
+        error: 'User already exists with this email'
+      }, { status: 400 });
+    }
 
-    // Return success response
-    return new Response(JSON.stringify({
-      message: 'Account created successfully. Please check your email for verification.',
-      userId: userId,
-      email: email,
-      name: name || email.split('@')[0],
-      // Include verification code in development mode for testing
-      verificationCode: process.env.NODE_ENV === 'development' ? verificationCode : undefined
-    }), {
-      status: 201,
-      headers: { 'Content-Type': 'application/json' }
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create user in memory (replace with database in production)
+    const user = userStorage.create({
+      email,
+      password: hashedPassword,
+      name,
     });
+
+    // Generate JWT token
+    const token = await generateToken({
+      userId: user.id,
+      email: user.email,
+    }, '24h');
+
+    // Return success response with token and user data
+    return NextResponse.json({
+      message: 'Account created successfully',
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+      }
+    }, { status: 201 });
 
   } catch (error) {
     console.error('Sign-up error:', error);
-    return new Response(JSON.stringify({
-      message: 'Internal server error',
+    return NextResponse.json({
+      error: 'Internal server error',
       details: error instanceof Error ? error.message : String(error)
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    }, { status: 500 });
   }
 }

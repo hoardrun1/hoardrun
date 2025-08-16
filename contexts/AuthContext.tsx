@@ -16,6 +16,10 @@ interface AuthContextType {
   logout: () => Promise<void>;
   isLoading: boolean;
   isAuthenticated: boolean;
+  // Firebase auth methods
+  signupWithFirebase: (email: string, password: string, name?: string) => Promise<void>;
+  signinWithFirebase: (email: string, password: string) => Promise<void>;
+  authMethod: 'jwt' | 'firebase' | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -28,6 +32,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [authMethod, setAuthMethod] = useState<'jwt' | 'firebase' | null>(null);
 
   useEffect(() => {
     // Check if auth bypass is enabled
@@ -163,6 +168,117 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  // Firebase authentication methods
+  const signupWithFirebase = async (email: string, password: string, name?: string) => {
+    try {
+      setIsLoading(true);
+
+      const response = await fetch('/api/auth/firebase/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password, name }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Firebase signup failed');
+      }
+
+      const data = await response.json();
+
+      // Sign in with custom token using Firebase client SDK
+      const firebaseResponse = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=${process.env.NEXT_PUBLIC_FIREBASE_API_KEY}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          token: data.customToken,
+          returnSecureToken: true
+        })
+      });
+
+      if (!firebaseResponse.ok) {
+        throw new Error('Failed to authenticate with Firebase');
+      }
+
+      const firebaseData = await firebaseResponse.json();
+
+      // Store Firebase ID token and user data
+      setToken(firebaseData.idToken);
+      setUser(data.user);
+      setAuthMethod('firebase');
+
+      // Store in localStorage
+      localStorage.setItem('auth_token', firebaseData.idToken);
+      localStorage.setItem('auth_user', JSON.stringify(data.user));
+      localStorage.setItem('auth_method', 'firebase');
+
+    } catch (error) {
+      console.error('Firebase signup error:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const signinWithFirebase = async (email: string, password: string) => {
+    try {
+      setIsLoading(true);
+
+      const response = await fetch('/api/auth/firebase/signin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Firebase signin failed');
+      }
+
+      const data = await response.json();
+
+      // Sign in with custom token using Firebase client SDK
+      const firebaseResponse = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=${process.env.NEXT_PUBLIC_FIREBASE_API_KEY}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          token: data.customToken,
+          returnSecureToken: true
+        })
+      });
+
+      if (!firebaseResponse.ok) {
+        throw new Error('Failed to authenticate with Firebase');
+      }
+
+      const firebaseData = await firebaseResponse.json();
+
+      // Store Firebase ID token and user data
+      setToken(firebaseData.idToken);
+      setUser(data.user);
+      setAuthMethod('firebase');
+
+      // Store in localStorage
+      localStorage.setItem('auth_token', firebaseData.idToken);
+      localStorage.setItem('auth_user', JSON.stringify(data.user));
+      localStorage.setItem('auth_method', 'firebase');
+
+    } catch (error) {
+      console.error('Firebase signin error:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const value = {
     user,
     token,
@@ -171,6 +287,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     logout,
     isLoading,
     isAuthenticated: !!user && !!token,
+    signupWithFirebase,
+    signinWithFirebase,
+    authMethod,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

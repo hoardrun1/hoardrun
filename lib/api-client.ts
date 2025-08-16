@@ -56,6 +56,31 @@ export const auth = {
   resetPassword: (data: ResetPasswordData) => api.post('/auth/reset-password', data),
 }
 
+// Firebase Auth API
+export const firebaseAuth = {
+  signup: (data: SignupData) => api.post('/auth/firebase/signup', data),
+  signin: (data: SigninData) => api.post('/auth/firebase/signin', data),
+  verify: (data: { idToken: string }) => api.post('/auth/firebase/verify', data),
+  signInWithCustomToken: async (customToken: string) => {
+    const response = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=${process.env.NEXT_PUBLIC_FIREBASE_API_KEY}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        token: customToken,
+        returnSecureToken: true
+      })
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to sign in with custom token')
+    }
+
+    return response.json()
+  }
+}
+
 // User API
 export const user = {
   getProfile: () => api.get('/user/profile'),
@@ -92,7 +117,7 @@ export const cards = {
 
 // Types
 interface SignupData {
-  name: string
+  name?: string
   email: string
   password: string
 }

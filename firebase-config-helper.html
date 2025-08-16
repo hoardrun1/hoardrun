@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Config Helper - HoardRun</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .step {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+        .step h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        .highlight {
+            background: #ffd700;
+            color: #000;
+            padding: 2px 4px;
+            border-radius: 2px;
+        }
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+        .link {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .link:hover {
+            text-decoration: underline;
+        }
+        ol {
+            padding-left: 20px;
+        }
+        li {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔥 Firebase Configuration Helper</h1>
+        <h2>Project: HoardRun (hoardrun-ef38e)</h2>
+        
+        <div class="success">
+            <strong>✅ Your Firebase project is identified!</strong><br>
+            Project ID: <code>hoardrun-ef38e</code><br>
+            Web App ID: <code>NGY4ZTYxNzQtODQ4My00YTQzLTg5MjEtMTE2MzkwOTk2Zjk3</code>
+        </div>
+
+        <div class="step">
+            <h3>📋 Step 1: Get Client Configuration</h3>
+            <p>You're already on the right page! Look for the <strong>firebaseConfig</strong> object on your Firebase console page.</p>
+            
+            <p><strong>It should look like this:</strong></p>
+            <div class="code-block">
+const firebaseConfig = {
+  apiKey: "<span class="highlight">AIzaSy...</span>",
+  authDomain: "hoardrun-ef38e.firebaseapp.com",
+  projectId: "hoardrun-ef38e", 
+  storageBucket: "hoardrun-ef38e.appspot.com",
+  messagingSenderId: "<span class="highlight">123456789</span>",
+  appId: "1:<span class="highlight">123456789</span>:web:NGY4ZTYxNzQtODQ4My00YTQzLTg5MjEtMTE2MzkwOTk2Zjk3"
+};
+            </div>
+            
+            <p><strong>Copy the highlighted values and use them in your .env file:</strong></p>
+            <div class="code-block">
+NEXT_PUBLIC_FIREBASE_API_KEY=<span class="highlight">AIzaSy...your_actual_api_key</span>
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=hoardrun-ef38e.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=hoardrun-ef38e
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=hoardrun-ef38e.appspot.com
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=<span class="highlight">your_messaging_sender_id</span>
+NEXT_PUBLIC_FIREBASE_APP_ID=1:<span class="highlight">your_sender_id</span>:web:NGY4ZTYxNzQtODQ4My00YTQzLTg5MjEtMTE2MzkwOTk2Zjk3
+            </div>
+        </div>
+
+        <div class="step">
+            <h3>🔑 Step 2: Get Service Account Key</h3>
+            <ol>
+                <li>In your Firebase Console, click the <strong>"Service accounts"</strong> tab</li>
+                <li>Select <strong>"Firebase Admin SDK"</strong></li>
+                <li>Choose <strong>"Node.js"</strong> as the language</li>
+                <li>Click <strong>"Generate new private key"</strong></li>
+                <li>Download the JSON file</li>
+            </ol>
+            
+            <p><strong>Direct link to Service Accounts:</strong></p>
+            <a href="https://console.firebase.google.com/project/hoardrun-ef38e/settings/serviceaccounts/adminsdk" 
+               class="link" target="_blank">
+               🔗 Open Service Accounts Page
+            </a>
+            
+            <div class="warning">
+                <strong>⚠️ Important:</strong> Keep this JSON file secure! It contains your private key.
+            </div>
+        </div>
+
+        <div class="step">
+            <h3>📝 Step 3: Extract Service Account Values</h3>
+            <p>From the downloaded JSON file, extract these values:</p>
+            
+            <div class="code-block">
+{
+  "type": "service_account",
+  "project_id": "<span class="highlight">hoardrun-ef38e</span>",
+  "private_key_id": "...",
+  "private_key": "<span class="highlight">-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n</span>",
+  "client_email": "<span class="highlight">firebase-adminsdk-xxxxx@hoardrun-ef38e.iam.gserviceaccount.com</span>",
+  ...
+}
+            </div>
+            
+            <p><strong>Add these to your .env file:</strong></p>
+            <div class="code-block">
+FIREBASE_ADMIN_PROJECT_ID=hoardrun-ef38e
+FIREBASE_ADMIN_CLIENT_EMAIL=<span class="highlight">firebase-adminsdk-xxxxx@hoardrun-ef38e.iam.gserviceaccount.com</span>
+FIREBASE_ADMIN_PRIVATE_KEY="<span class="highlight">-----BEGIN PRIVATE KEY-----\nyour_actual_private_key\n-----END PRIVATE KEY-----</span>"
+            </div>
+            
+            <div class="warning">
+                <strong>⚠️ Private Key Format:</strong> Keep the quotes and \n characters exactly as shown!
+            </div>
+        </div>
+
+        <div class="step">
+            <h3>🔐 Step 4: Enable Authentication</h3>
+            <ol>
+                <li>Go to <strong>Authentication</strong> in your Firebase Console</li>
+                <li>Click <strong>"Get started"</strong> if it's your first time</li>
+                <li>Go to <strong>"Sign-in method"</strong> tab</li>
+                <li>Enable <strong>"Email/Password"</strong></li>
+                <li>In <strong>"Settings"</strong> tab, add <code>localhost:3000</code> to authorized domains</li>
+            </ol>
+            
+            <p><strong>Direct link to Authentication:</strong></p>
+            <a href="https://console.firebase.google.com/project/hoardrun-ef38e/authentication/users" 
+               class="link" target="_blank">
+               🔗 Open Authentication Page
+            </a>
+        </div>
+
+        <div class="step">
+            <h3>✅ Step 5: Final .env File</h3>
+            <p>Your complete .env file should have these Firebase variables:</p>
+            
+            <div class="code-block">
+# Client-side Firebase config (replace with actual values)
+NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSy...your_actual_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=hoardrun-ef38e.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=hoardrun-ef38e
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=hoardrun-ef38e.appspot.com
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
+NEXT_PUBLIC_FIREBASE_APP_ID=1:your_sender_id:web:NGY4ZTYxNzQtODQ4My00YTQzLTg5MjEtMTE2MzkwOTk2Zjk3
+
+# Server-side Firebase config (replace with actual values)
+FIREBASE_ADMIN_PROJECT_ID=hoardrun-ef38e
+FIREBASE_ADMIN_CLIENT_EMAIL=firebase-adminsdk-xxxxx@hoardrun-ef38e.iam.gserviceaccount.com
+FIREBASE_ADMIN_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nyour_actual_private_key\n-----END PRIVATE KEY-----"
+            </div>
+        </div>
+
+        <div class="step">
+            <h3>🧪 Step 6: Test Your Configuration</h3>
+            <p>After updating your .env file:</p>
+            <ol>
+                <li>Restart your development server: <code>npm run dev</code></li>
+                <li>Open the test page: <code>http://localhost:3000/test-firebase</code></li>
+                <li>Or use the standalone test: Open <code>firebase-test.html</code> in your browser</li>
+            </ol>
+            
+            <div class="success">
+                <strong>🎉 Once configured, you'll have:</strong><br>
+                ✅ Firebase Authentication integrated with your existing user system<br>
+                ✅ Secure token-based authentication<br>
+                ✅ Users stored in your Prisma database<br>
+                ✅ Firebase handling session management
+            </div>
+        </div>
+
+        <div class="warning">
+            <strong>🔒 Security Reminders:</strong><br>
+            • Never commit your .env file to version control<br>
+            • Keep your service account JSON file secure<br>
+            • Add .env to your .gitignore file<br>
+            • Use environment variables in production
+        </div>
+    </div>
+</body>
+</html>

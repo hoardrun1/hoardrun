@@ -12,26 +12,12 @@ export const NavigationProgress = () => {
   useEffect(() => {
     if (isTransitioning) {
       setVisible(true)
-      setProgress(0)
-      const timer = setInterval(() => {
-        setProgress(prev => {
-          if (prev >= 90) {
-            clearInterval(timer)
-            return 90
-          }
-          return prev + 10
-        })
-      }, 100)
-
-      return () => clearInterval(timer)
+      setProgress(90) // Set to 90% immediately for faster perceived performance
     } else {
       setProgress(100)
-      const timer = setTimeout(() => {
-        setVisible(false)
-        setProgress(0)
-      }, 200)
-
-      return () => clearTimeout(timer)
+      // Hide immediately for faster navigation
+      setVisible(false)
+      setProgress(0)
     }
   }, [isTransitioning])
 

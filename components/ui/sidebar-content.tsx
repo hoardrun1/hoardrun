@@ -85,7 +85,7 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
   }
 
   const handleNavigation = (href: string) => {
-    navigation.connect(pathname.split('/')[1] || 'overview', href.split('/')[1])
+    // Use direct router.push for faster navigation
     router.push(href)
     // Close sidebar on mobile after navigation
     if (window.innerWidth < 768) {

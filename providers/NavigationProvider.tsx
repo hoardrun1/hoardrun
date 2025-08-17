@@ -62,12 +62,8 @@ export const NavigationProvider: React.FC<NavigationProviderProps> = ({ children
     setPreviousPage(pathname)
     setIsLoading(true)
 
-    // Simulate page load
-    const timeout = setTimeout(() => {
-      setIsLoading(false)
-    }, 300)
-
-    return () => clearTimeout(timeout)
+    // Remove artificial delay for faster navigation
+    setIsLoading(false)
   }, [pathname])
 
   const contextValue = {

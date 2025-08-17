@@ -50,9 +50,8 @@ export const navigationService = {
     }
     
     store.setTransitionDirection('forward')
-    
-    // Simulate transition time
-    await new Promise(resolve => setTimeout(resolve, 300))
+
+    // Remove artificial delay for faster navigation
     store.setIsTransitioning(false)
   },
 
@@ -68,9 +67,8 @@ export const navigationService = {
     store.popFromStack()
     store.setCurrentPage(store.navigationStack[store.navigationStack.length - 1])
     store.setTransitionDirection('backward')
-    
-    // Simulate transition time
-    await new Promise(resolve => setTimeout(resolve, 300))
+
+    // Remove artificial delay for faster navigation
     store.setIsTransitioning(false)
   },
 

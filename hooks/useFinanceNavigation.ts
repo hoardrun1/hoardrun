@@ -15,19 +15,11 @@ export const useFinanceNavigation = () => {
       replace?: boolean;
     }
   ) => {
-    const currentPath = window.location.pathname.substring(1) || 'home';
-    
     try {
-      if (!options?.skipValidation) {
-        const isValid = navigation.connect(currentPath, to, data);
-        if (!isValid) {
-          throw new Error(`Invalid navigation from ${currentPath} to ${to}`);
-        }
-      }
-
+      // Skip validation by default for faster navigation
       const method = options?.replace ? router.replace : router.push;
       await method(`/${to}`);
-      
+
       return true;
     } catch (error) {
       toast({

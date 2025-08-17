@@ -114,9 +114,98 @@ export function SignupPage() {
     }
   }
 
-  const handleSocialLogin = (provider: string) => {
-    // Implement social login logic
-    console.log(`Logging in with ${provider}`)
+  const handleSocialLogin = async (provider: "google" | "apple") => {
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      if (provider === "google") {
+        await handleGoogleSignup()
+      } else if (provider === "apple") {
+        await handleAppleSignup()
+      }
+    } catch (error) {
+      setError(error instanceof Error ? error.message : `${provider} signup failed`)
+      addToast({
+        title: "Error",
+        description: error instanceof Error ? error.message : `${provider} signup failed`,
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleGoogleSignup = async () => {
+    // For development, we'll simulate Google OAuth
+    // In production, you would use the Google Sign-In library
+    try {
+      // Simulate Google OAuth response
+      const mockGoogleToken = "mock-google-id-token"
+
+      const response = await fetch("/api/auth/google", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          idToken: mockGoogleToken,
+          action: "signup"
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || "Google signup failed")
+      }
+
+      // Log the user in with the returned token and user data
+      login(data.token, data.user)
+
+      addToast({
+        title: "Success",
+        description: data.message || "Account created successfully with Google!",
+      })
+
+      router.push("/home")
+    } catch (error) {
+      throw error
+    }
+  }
+
+  const handleAppleSignup = async () => {
+    // For development, we'll simulate Apple Sign In
+    // In production, you would use the Apple Sign In library
+    try {
+      // Simulate Apple Sign In response
+      const mockAppleToken = "mock-apple-identity-token"
+
+      const response = await fetch("/api/auth/apple", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          identityToken: mockAppleToken,
+          action: "signup"
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || "Apple signup failed")
+      }
+
+      // Log the user in with the returned token and user data
+      login(data.token, data.user)
+
+      addToast({
+        title: "Success",
+        description: data.message || "Account created successfully with Apple!",
+      })
+
+      router.push("/home")
+    } catch (error) {
+      throw error
+    }
   }
 
   return (
@@ -152,16 +241,26 @@ export function SignupPage() {
               variant="outline"
               className="w-full bg-white hover:bg-gray-100 border-gray-300 text-black py-2 sm:py-3 md:py-4 text-xs sm:text-sm"
               onClick={() => handleSocialLogin("google")}
+              disabled={isLoading}
             >
-              <Image src="/google-icon.svg" alt="Google" width={20} height={20} className="mr-2" />
+              {isLoading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Image src="/google-icon.svg" alt="Google" width={20} height={20} className="mr-2" />
+              )}
               Continue with Google
             </Button>
             <Button
               variant="outline"
               className="w-full bg-white hover:bg-gray-100 border-gray-300 text-black py-2 sm:py-3 md:py-4 text-xs sm:text-sm"
               onClick={() => handleSocialLogin("apple")}
+              disabled={isLoading}
             >
-              <Image src="/apple-icon.svg" alt="Apple" width={20} height={20} className="mr-2" />
+              {isLoading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Image src="/apple-icon.svg" alt="Apple" width={20} height={20} className="mr-2" />
+              )}
               Continue with Apple
             </Button>
           </div>

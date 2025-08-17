@@ -8,51 +8,38 @@ interface PageTransitionProps {
 }
 
 const slideVariants = {
-  enter: (direction: 'forward' | 'backward' | 'none') => ({
-    x: direction === 'forward' ? 1000 : direction === 'backward' ? -1000 : 0,
+  enter: {
     opacity: 0
-  }),
+  },
   center: {
-    zIndex: 1,
-    x: 0,
     opacity: 1
   },
-  exit: (direction: 'forward' | 'backward' | 'none') => ({
-    zIndex: 0,
-    x: direction === 'forward' ? -1000 : direction === 'backward' ? 1000 : 0,
+  exit: {
     opacity: 0
-  })
+  }
 }
 
 const transitionConfig = {
-  type: "spring",
-  stiffness: 300,
-  damping: 30
+  duration: 0.15, // Much faster transition
+  ease: "easeInOut"
 }
 
 export const PageTransition: React.FC<PageTransitionProps> = ({ children }) => {
-  const { currentPage, transitionDirection, isTransitioning } = useAppNavigation()
+  const { currentPage } = useAppNavigation()
 
   return (
-    <AnimatePresence initial={false} mode="wait" custom={transitionDirection}>
+    <AnimatePresence initial={false} mode="wait">
       <motion.div
         key={currentPage}
-        custom={transitionDirection}
         variants={slideVariants}
         initial="enter"
         animate="center"
         exit="exit"
         transition={transitionConfig}
         className="w-full min-h-screen"
-        style={{
-          position: 'absolute',
-          width: '100%',
-          height: '100%',
-          overflow: isTransitioning ? 'hidden' : 'auto'
-        }}
       >
         {children}
       </motion.div>
     </AnimatePresence>
   )
-} 
+}

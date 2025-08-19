@@ -1,48 +1,84 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { navigation } from '@/lib/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useToast } from '@/components/ui/use-toast'
 import { Button } from '@/components/ui/button'
-import { Loader2, Mail, CheckCircle } from 'lucide-react'
+import { Loader2, Mail, CheckCircle, XCircle } from 'lucide-react'
 import Link from 'next/link'
+import { useFirebaseAuth } from '@/hooks/useFirebaseAuth'
 
 export function CheckEmailPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { addToast } = useToast();
+  const { sendEmailVerification, verifyEmail, user } = useFirebaseAuth();
+
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [verificationStatus, setVerificationStatus] = useState<'pending' | 'success' | 'error'>('pending');
 
   useEffect(() => {
-    if (!navigation.isValidTransition('signup', 'check-email')) {
-      router.push('/signup');
+    // Check if this is a Firebase email verification callback
+    const actionCode = searchParams.get('oobCode');
+    const mode = searchParams.get('mode');
+
+    if (mode === 'verifyEmail' && actionCode) {
+      handleEmailVerification(actionCode);
       return;
     }
 
-    const data = navigation.getData('check-email');
-    if (!data?.email) {
+    // Get email from URL params or user
+    const emailParam = searchParams.get('email');
+    if (emailParam) {
+      setEmail(emailParam);
+    } else if (user?.email) {
+      setEmail(user.email);
+    } else {
+      // No email found, redirect to signup
       router.push('/signup');
-      return;
     }
+  }, [router, searchParams, user]);
 
-    setEmail(data.email);
-  }, [router]);
+  const handleEmailVerification = async (actionCode: string) => {
+    setVerificationStatus('pending');
+    try {
+      await verifyEmail(actionCode);
+      setVerificationStatus('success');
+
+      addToast({
+        title: "Email Verified",
+        description: "Your email has been successfully verified!",
+      });
+
+      // Redirect to signin page after a delay
+      setTimeout(() => {
+        router.push('/signin?verified=true');
+      }, 2000);
+
+    } catch (err) {
+      setVerificationStatus('error');
+      addToast({
+        title: "Verification Failed",
+        description: err instanceof Error ? err.message : 'Email verification failed',
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleResendEmail = async () => {
-    if (!email) return;
+    if (!user?.uid) {
+      addToast({
+        title: "Error",
+        description: "No user found. Please sign up again.",
+        variant: "destructive"
+      });
+      return;
+    }
 
     setIsLoading(true);
     try {
-      const response = await fetch('/api/auth/resend-verification', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message);
-
+      await sendEmailVerification(user.uid);
       addToast({
         title: "Success",
         description: "Verification email has been resent"
@@ -55,28 +91,6 @@ export function CheckEmailPage() {
       });
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleVerificationComplete = async (token: string) => {
-    try {
-      const response = await fetch('/api/auth/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token })
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message);
-
-      navigation.connect('check-email', 'verify-email');
-      router.push('/verify-email');
-    } catch (error) {
-      addToast({
-        title: "Error",
-        description: "Verification failed",
-        variant: "destructive"
-      });
     }
   };
 

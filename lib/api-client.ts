@@ -61,6 +61,8 @@ export const firebaseAuth = {
   signup: (data: SignupData) => api.post('/auth/firebase/signup', data),
   signin: (data: SigninData) => api.post('/auth/firebase/signin', data),
   verify: (data: { idToken: string }) => api.post('/auth/firebase/verify', data),
+  sendEmailVerification: (data: { userId: string }) => api.post('/auth/firebase/send-verification', data),
+  verifyEmail: (data: { actionCode: string }) => api.post('/auth/firebase/verify-email', data),
   signInWithCustomToken: async (customToken: string) => {
     const response = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=${process.env.NEXT_PUBLIC_FIREBASE_API_KEY}`, {
       method: 'POST',

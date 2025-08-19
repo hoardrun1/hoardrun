@@ -4,7 +4,6 @@ import type React from "react"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { useAuth } from "@/contexts/AuthContext"
 import { motion } from "framer-motion"
 import Link from "next/link"
 import { EyeIcon, EyeOffIcon, MailIcon, UserIcon, Loader2, ArrowRight } from "lucide-react"
@@ -15,13 +14,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useToast } from "@/components/ui/use-toast"
-import { Separator } from "@/components/ui/separator"
+
+import { useFirebaseAuth } from "@/hooks/useFirebaseAuth"
 
 export function SignupPage() {
   const router = useRouter()
   const { addToast } = useToast()
-  const { login } = useAuth()
-  const [isLoading, setIsLoading] = useState(false)
+  const { signUpWithFirebase, loading: firebaseLoading } = useFirebaseAuth()
   const [error, setError] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
   const [formData, setFormData] = useState({
@@ -41,172 +40,68 @@ export function SignupPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
     setError(null)
 
     // Validation
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match")
-      setIsLoading(false)
+      return
+    }
+
+    if (formData.password.length < 8) {
+      setError("Password must be at least 8 characters")
       return
     }
 
     try {
-      console.log("Submitting signup form:", {
+      console.log("Submitting Firebase signup form:", {
         name: formData.name,
         email: formData.email,
         password: "********", // Don't log actual password
       })
 
-      // Now try the actual POST request
-      console.log("Sending POST request...")
-      const response = await fetch("/api/auth/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          password: formData.password,
-        }),
-      })
-
-      console.log("Response status:", response.status)
-      console.log("Response headers:", Object.fromEntries(response.headers.entries()))
-
-      // Get the response as text first for debugging
-      const responseText = await response.text()
-      console.log("Response text:", responseText)
-
-      // Try to parse the response as JSON
-      let data
-      try {
-        data = JSON.parse(responseText)
-        console.log("Parsed JSON data:", data)
-      } catch (parseError) {
-        console.error("Failed to parse response as JSON:", parseError)
-        throw new Error("Server returned invalid JSON")
-      }
-
-      if (!response.ok) {
-        throw new Error(data.error || "Signup failed")
-      }
-
-      // Log the user in with the returned token and user data
-      login(data.token, data.user)
+      // Use Firebase authentication
+      await signUpWithFirebase(formData.email, formData.password, formData.name)
 
       // Show success message
       addToast({
         title: "Success",
-        description: "Account created successfully! Welcome to Hoardrun.",
+        description: "Account created successfully! Please check your email for verification.",
       })
 
-      // Redirect to home page
-      router.push("/home")
+      // Redirect to email verification page with email parameter
+      router.push(`/verify-email?email=${encodeURIComponent(formData.email)}`)
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Signup failed")
+      let errorMessage = "Signup failed"
+
+      if (error instanceof Error) {
+        errorMessage = error.message
+
+        // Handle specific error cases
+        if (error.message.includes("User already exists") || error.message.includes("already exists")) {
+          errorMessage = "An account with this email already exists. Please sign in instead."
+          setError(errorMessage)
+
+          // Show a toast with helpful message
+          addToast({
+            title: "Account Already Exists",
+            description: "An account with this email already exists. Please sign in instead.",
+            variant: "destructive",
+          })
+          return // Exit early to avoid showing the generic error
+        }
+      }
+
+      setError(errorMessage)
       addToast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Signup failed",
+        description: errorMessage,
         variant: "destructive",
       })
-    } finally {
-      setIsLoading(false)
     }
   }
 
-  const handleSocialLogin = async (provider: "google" | "apple") => {
-    setIsLoading(true)
-    setError(null)
-
-    try {
-      if (provider === "google") {
-        await handleGoogleSignup()
-      } else if (provider === "apple") {
-        await handleAppleSignup()
-      }
-    } catch (error) {
-      setError(error instanceof Error ? error.message : `${provider} signup failed`)
-      addToast({
-        title: "Error",
-        description: error instanceof Error ? error.message : `${provider} signup failed`,
-        variant: "destructive",
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleGoogleSignup = async () => {
-    // For development, we'll simulate Google OAuth
-    // In production, you would use the Google Sign-In library
-    try {
-      // Simulate Google OAuth response
-      const mockGoogleToken = "mock-google-id-token"
-
-      const response = await fetch("/api/auth/google", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          idToken: mockGoogleToken,
-          action: "signup"
-        }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || "Google signup failed")
-      }
-
-      // Log the user in with the returned token and user data
-      login(data.token, data.user)
-
-      addToast({
-        title: "Success",
-        description: data.message || "Account created successfully with Google!",
-      })
-
-      router.push("/home")
-    } catch (error) {
-      throw error
-    }
-  }
-
-  const handleAppleSignup = async () => {
-    // For development, we'll simulate Apple Sign In
-    // In production, you would use the Apple Sign In library
-    try {
-      // Simulate Apple Sign In response
-      const mockAppleToken = "mock-apple-identity-token"
-
-      const response = await fetch("/api/auth/apple", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          identityToken: mockAppleToken,
-          action: "signup"
-        }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || "Apple signup failed")
-      }
-
-      // Log the user in with the returned token and user data
-      login(data.token, data.user)
-
-      addToast({
-        title: "Success",
-        description: data.message || "Account created successfully with Apple!",
-      })
-
-      router.push("/home")
-    } catch (error) {
-      throw error
-    }
-  }
+  // Social login will be implemented later with Firebase OAuth providers
 
   return (
     <div className="min-h-screen relative flex items-center justify-center p-2 sm:p-4 md:p-6 lg:p-8">
@@ -235,48 +130,23 @@ export function SignupPage() {
             </p>
           </div>
 
-          {/* Social Login Buttons */}
-          <div className="space-y-2 sm:space-y-3 md:space-y-4 mb-4 sm:mb-6 md:mb-8">
-            <Button
-              variant="outline"
-              className="w-full bg-white hover:bg-gray-100 border-gray-300 text-black py-2 sm:py-3 md:py-4 text-xs sm:text-sm"
-              onClick={() => handleSocialLogin("google")}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Image src="/google-icon.svg" alt="Google" width={20} height={20} className="mr-2" />
-              )}
-              Continue with Google
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full bg-white hover:bg-gray-100 border-gray-300 text-black py-2 sm:py-3 md:py-4 text-xs sm:text-sm"
-              onClick={() => handleSocialLogin("apple")}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Image src="/apple-icon.svg" alt="Apple" width={20} height={20} className="mr-2" />
-              )}
-              Continue with Apple
-            </Button>
-          </div>
-
-          <div className="relative mb-8">
-            <div className="absolute inset-0 flex items-center">
-              <Separator className="w-full bg-gray-200" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 -mt-4 bg-white/10 text-white">Or continue with email</span>
-            </div>
-          </div>
+          {/* Email Signup Form */}
 
           {error && (
             <Alert variant="destructive" className="mb-6">
-              <AlertDescription>{error}</AlertDescription>
+              <AlertDescription>
+                {error}
+                {error.includes("already exists") && (
+                  <div className="mt-2">
+                    <Link
+                      href="/signin"
+                      className="text-white underline hover:text-gray-200 font-medium"
+                    >
+                      Go to Sign In →
+                    </Link>
+                  </div>
+                )}
+              </AlertDescription>
             </Alert>
           )}
 
@@ -295,7 +165,7 @@ export function SignupPage() {
                   className="pl-8 sm:pl-10 h-8 sm:h-9 md:h-10 bg-white border-gray-300 text-black focus:border-black text-xs sm:text-sm"
                   value={formData.name}
                   onChange={handleChange}
-                  disabled={isLoading}
+                  disabled={firebaseLoading}
                 />
               </div>
             </div>
@@ -314,7 +184,7 @@ export function SignupPage() {
                   className="pl-8 sm:pl-10 h-8 sm:h-9 md:h-10 bg-white border-gray-300 text-black focus:border-black text-xs sm:text-sm"
                   value={formData.email}
                   onChange={handleChange}
-                  disabled={isLoading}
+                  disabled={firebaseLoading}
                 />
               </div>
             </div>
@@ -332,7 +202,7 @@ export function SignupPage() {
                   className="pr-8 sm:pr-10 h-8 sm:h-9 md:h-10 bg-white border-gray-300 text-black focus:border-black text-xs sm:text-sm"
                   value={formData.password}
                   onChange={handleChange}
-                  disabled={isLoading}
+                  disabled={firebaseLoading}
                 />
                 <button
                   type="button"
@@ -357,7 +227,7 @@ export function SignupPage() {
                   className="pr-8 sm:pr-10 h-8 sm:h-9 md:h-10 bg-white border-gray-300 text-black focus:border-black text-xs sm:text-sm"
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  disabled={isLoading}
+                  disabled={firebaseLoading}
                 />
               </div>
             </div>
@@ -365,9 +235,9 @@ export function SignupPage() {
             <Button
               type="submit"
               className="w-full h-8 sm:h-9 md:h-10 bg-black hover:bg-gray-800 text-white font-semibold text-xs sm:text-sm"
-              disabled={isLoading}
+              disabled={firebaseLoading}
             >
-              {isLoading ? (
+              {firebaseLoading ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                   Creating account...

@@ -13,6 +13,8 @@ export interface FirebaseAuthActions {
   signUpWithFirebase: (email: string, password: string, name?: string) => Promise<void>
   signInWithFirebase: (email: string, password: string) => Promise<void>
   signOutFromFirebase: () => Promise<void>
+  sendEmailVerification: (userId: string) => Promise<void>
+  verifyEmail: (actionCode: string) => Promise<void>
   clearError: () => void
 }
 
@@ -97,6 +99,61 @@ export function useFirebaseAuth(): FirebaseAuthState & FirebaseAuthActions {
     }
   }
 
+  const sendEmailVerification = async (userId: string) => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      const response = await fetch('/api/auth/firebase/send-verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to send email verification')
+      }
+
+    } catch (err: any) {
+      setError(err.message || 'Failed to send email verification')
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const verifyEmail = async (actionCode: string) => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      const response = await fetch('/api/auth/firebase/verify-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ actionCode })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to verify email')
+      }
+
+      // Refresh the auth state to get updated email verification status
+      if (auth && auth.currentUser) {
+        await auth.currentUser.reload()
+      }
+
+    } catch (err: any) {
+      setError(err.message || 'Failed to verify email')
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const clearError = () => {
     setError(null)
   }
@@ -108,6 +165,8 @@ export function useFirebaseAuth(): FirebaseAuthState & FirebaseAuthActions {
     signUpWithFirebase,
     signInWithFirebase,
     signOutFromFirebase,
+    sendEmailVerification,
+    verifyEmail,
     clearError
   }
 }

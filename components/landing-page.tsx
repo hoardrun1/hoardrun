@@ -350,7 +350,7 @@ export function LandingPageComponent() {
                 >
                   <div className="relative rounded-2xl overflow-hidden shadow-2xl max-w-4xl mx-auto">
                     <img
-                      src="https://images.unsplash.com/photo-1655813710718-00043b177128?q=80&w=764&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                      src="https://images.unsplash.com/photo-1579621970795-87facc2f976d?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
                       alt="Modern banking dashboard interface"
                       className="w-full h-48 sm:h-64 md:h-80 lg:h-96 object-cover"
                     />

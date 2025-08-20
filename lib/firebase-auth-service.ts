@@ -73,13 +73,15 @@ export class FirebaseAuthService {
   }
 
   /**
-   * Sign up a new user and create Firebase custom token
+   * Sign up a new user with Firebase email verification
+   * Note: This creates the user but doesn't automatically send verification email
+   * The client should use Firebase Client SDK to trigger automatic email sending
    */
-  async signUp(data: SignupData): Promise<{ user: any; customToken: string }> {
+  async signUp(data: SignupData): Promise<{ user: any; customToken: string; needsEmailVerification: boolean; verificationLink?: string }> {
     try {
       const { email, password, name } = data
 
-      // Check if user already exists
+      // Check if user already exists in database
       const existingUser = await prisma.user.findUnique({
         where: { email: email.toLowerCase() }
       })
@@ -88,12 +90,31 @@ export class FirebaseAuthService {
         throw new AppError('User already exists', ErrorCode.CONFLICT, 409)
       }
 
-      // Hash password
+      // Create user in Firebase first
+      let firebaseUser
+      try {
+        firebaseUser = await adminAuth.createUser({
+          email: email.toLowerCase(),
+          password: password,
+          displayName: name || email.split('@')[0],
+          emailVerified: false
+        })
+        logger.info(`Firebase user created: ${firebaseUser.uid}`)
+      } catch (firebaseError: any) {
+        if (firebaseError.code === 'auth/email-already-exists') {
+          throw new AppError('User already exists', ErrorCode.CONFLICT, 409)
+        }
+        logger.error('Firebase user creation error:', firebaseError)
+        throw new AppError('Failed to create Firebase user', ErrorCode.INTERNAL_ERROR, 500)
+      }
+
+      // Hash password for local storage
       const hashedPassword = await bcrypt.hash(password, 10)
 
-      // Create user in database
+      // Create user in database with Firebase UID
       const user = await prisma.user.create({
         data: {
+          id: firebaseUser.uid, // Use Firebase UID as primary key
           email: email.toLowerCase(),
           password: hashedPassword,
           name: name || email.split('@')[0],
@@ -101,11 +122,24 @@ export class FirebaseAuthService {
         }
       })
 
-      // Create custom Firebase token
-      const customToken = await this.createCustomToken(user.id)
+      // Generate email verification link (for manual sending or development)
+      let verificationLink
+      try {
+        verificationLink = await adminAuth.generateEmailVerificationLink(email.toLowerCase())
+        logger.info(`Email verification link generated for: ${email}`)
+      } catch (linkError) {
+        logger.error('Failed to generate verification link:', linkError)
+        // Don't fail the signup if link generation fails
+      }
 
-      logger.info(`New user created: ${user.id}`)
-      
+      // Create custom Firebase token
+      const customToken = await this.createCustomToken(user.id, {
+        emailVerified: false,
+        needsVerification: true
+      })
+
+      logger.info(`New user created with Firebase integration: ${user.id}`)
+
       return {
         user: {
           id: user.id,
@@ -113,7 +147,9 @@ export class FirebaseAuthService {
           name: user.name,
           emailVerified: user.emailVerified
         },
-        customToken
+        customToken,
+        needsEmailVerification: true,
+        ...(verificationLink && { verificationLink })
       }
     } catch (error) {
       if (error instanceof AppError) {
@@ -170,21 +206,73 @@ export class FirebaseAuthService {
   }
 
   /**
+   * Verify email with Firebase
+   */
+  async verifyEmail(idToken: string): Promise<{ user: any; verified: boolean }> {
+    try {
+      // Verify the ID token
+      const decodedToken = await adminAuth.verifyIdToken(idToken)
+
+      // Get the latest user data from Firebase
+      const firebaseUser = await adminAuth.getUser(decodedToken.uid)
+
+      // Update user in database
+      const user = await prisma.user.update({
+        where: { id: decodedToken.uid },
+        data: {
+          emailVerified: firebaseUser.emailVerified
+        }
+      })
+
+      logger.info(`Email verification status updated for user: ${user.id}, verified: ${firebaseUser.emailVerified}`)
+
+      return {
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          emailVerified: user.emailVerified
+        },
+        verified: firebaseUser.emailVerified
+      }
+    } catch (error) {
+      logger.error('Error verifying email:', error)
+      throw new AppError('Failed to verify email', ErrorCode.INTERNAL_ERROR, 500)
+    }
+  }
+
+  /**
+   * Resend email verification
+   */
+  async resendEmailVerification(email: string): Promise<{ verificationLink: string }> {
+    try {
+      const verificationLink = await adminAuth.generateEmailVerificationLink(email.toLowerCase())
+      logger.info(`Email verification link regenerated for: ${email}`)
+
+      return { verificationLink }
+    } catch (error) {
+      logger.error('Error resending email verification:', error)
+      throw new AppError('Failed to resend verification email', ErrorCode.INTERNAL_ERROR, 500)
+    }
+  }
+
+  /**
    * Get or create user from Firebase token
    */
   async getOrCreateUserFromToken(idToken: string): Promise<any> {
     try {
       const firebaseUser = await this.verifyIdToken(idToken)
-      
+
       // Try to find existing user
       let user = await prisma.user.findUnique({
-        where: { email: firebaseUser.email }
+        where: { id: firebaseUser.uid }
       })
 
       // Create user if doesn't exist
       if (!user) {
         user = await prisma.user.create({
           data: {
+            id: firebaseUser.uid,
             email: firebaseUser.email,
             name: firebaseUser.name || firebaseUser.email.split('@')[0],
             emailVerified: firebaseUser.emailVerified,
@@ -192,6 +280,14 @@ export class FirebaseAuthService {
           }
         })
         logger.info(`New user created from Firebase token: ${user.id}`)
+      } else {
+        // Update email verification status
+        user = await prisma.user.update({
+          where: { id: firebaseUser.uid },
+          data: {
+            emailVerified: firebaseUser.emailVerified
+          }
+        })
       }
 
       return {

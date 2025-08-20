@@ -12,7 +12,7 @@ const signUpSchema = z.object({
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    logger.info('Firebase signup request received:', { email: body.email })
+    logger.info('Firebase signup with email verification request received:', { email: body.email })
 
     const validation = signUpSchema.safeParse(body)
     
@@ -35,23 +35,30 @@ export async function POST(request: Request) {
       name
     })
 
+    // Return response with instructions for client-side email verification
     return NextResponse.json({
       success: true,
-      message: 'Account created successfully. Please check your email for verification.',
+      message: 'Account created successfully. Use the client SDK to send verification email.',
       user: result.user,
       customToken: result.customToken,
       needsEmailVerification: result.needsEmailVerification,
-      // Instructions for client
+      // Instructions for client to send verification email
+      clientInstructions: {
+        step1: 'Sign in with custom token using Firebase Client SDK',
+        step2: 'Call sendEmailVerification() on the user object',
+        step3: 'User will receive verification email from Firebase'
+      },
+      // Firebase endpoints for client
       firebaseEndpoint: `https://identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=${process.env.NEXT_PUBLIC_FIREBASE_API_KEY}`,
       // In development, include verification link for testing
-      ...(process.env.NODE_ENV === 'development' && {
+      ...(process.env.NODE_ENV === 'development' && result.verificationLink && { 
         verificationLink: result.verificationLink,
-        note: 'Verification link included for development testing'
+        note: 'Verification link included for development testing - in production, use client SDK to send email'
       })
     }, { status: 201 })
 
   } catch (error: any) {
-    logger.error('Firebase signup error:', error)
+    logger.error('Firebase signup with email error:', error)
     
     return NextResponse.json(
       { 
@@ -61,4 +68,13 @@ export async function POST(request: Request) {
       { status: error.statusCode || 500 }
     )
   }
+}
+
+// GET endpoint for testing
+export async function GET() {
+  return NextResponse.json({
+    message: 'Firebase signup with email verification endpoint is working',
+    timestamp: new Date().toISOString(),
+    note: 'This endpoint creates users and provides instructions for client-side email verification'
+  })
 }

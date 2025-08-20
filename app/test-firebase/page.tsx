@@ -15,10 +15,91 @@ export default function TestFirebasePage() {
     try {
       setError('')
       setMessage('Signing up...')
-      await signupWithFirebase(email, password, name)
-      setMessage('Signup successful!')
+
+      const response = await fetch('/api/auth/firebase/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, name })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setMessage(`✅ Signup successful!\n\n${data.message}\n\n${JSON.stringify(data, null, 2)}`)
+        if (data.verificationLink) {
+          setMessage(prev => prev + `\n\n🔗 Development Verification Link:\n${data.verificationLink}`)
+        }
+      } else {
+        setError(data.error || 'Signup failed')
+      }
     } catch (err: any) {
       setError(err.message || 'Signup failed')
+      setMessage('')
+    }
+  }
+
+  const handleSignupWithEmail = async () => {
+    try {
+      setError('')
+      setMessage('Creating account and sending verification email...')
+
+      // Step 1: Create user account
+      const signupResponse = await fetch('/api/auth/firebase/signup-with-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, name })
+      })
+
+      const signupData = await signupResponse.json()
+
+      if (!signupResponse.ok) {
+        setError(signupData.error || 'Signup failed')
+        return
+      }
+
+      setMessage('✅ Account created! Now sending verification email...')
+
+      // Step 2: Sign in with custom token and send verification email
+      try {
+        const firebaseResponse = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=${process.env.NEXT_PUBLIC_FIREBASE_API_KEY}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            token: signupData.customToken,
+            returnSecureToken: true
+          })
+        })
+
+        if (!firebaseResponse.ok) {
+          throw new Error('Failed to sign in with custom token')
+        }
+
+        const firebaseData = await firebaseResponse.json()
+
+        // Step 3: Send verification email using Firebase REST API
+        const verificationResponse = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${process.env.NEXT_PUBLIC_FIREBASE_API_KEY}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            requestType: 'VERIFY_EMAIL',
+            idToken: firebaseData.idToken
+          })
+        })
+
+        if (verificationResponse.ok) {
+          const verificationData = await verificationResponse.json()
+          setMessage(`✅ SUCCESS! Verification email sent to ${email}!\n\nCheck your email inbox (and spam folder) for the verification link.\n\n📧 Email: ${verificationData.email}\n\n${JSON.stringify(signupData, null, 2)}`)
+        } else {
+          const verificationError = await verificationResponse.json()
+          setError(`Failed to send verification email: ${verificationError.error?.message || 'Unknown error'}`)
+        }
+
+      } catch (firebaseError) {
+        setError(`Firebase error: ${firebaseError.message}`)
+      }
+
+    } catch (err: any) {
+      setError(err.message || 'Signup with email failed')
       setMessage('')
     }
   }
@@ -44,6 +125,33 @@ export default function TestFirebasePage() {
       setMessage(`Endpoint test: ${JSON.stringify(data, null, 2)}`)
     } catch (err: any) {
       setError(err.message || 'Endpoint test failed')
+      setMessage('')
+    }
+  }
+
+  const resendVerification = async () => {
+    try {
+      setError('')
+      setMessage('Resending verification email...')
+
+      const response = await fetch('/api/auth/firebase/verify-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'resend', email })
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setMessage(`✅ Verification email sent!\n\n${JSON.stringify(data, null, 2)}`)
+        if (data.verificationLink) {
+          setMessage(prev => prev + `\n\n🔗 Development Verification Link:\n${data.verificationLink}`)
+        }
+      } else {
+        setError(data.error || 'Failed to resend verification')
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to resend verification')
       setMessage('')
     }
   }
@@ -102,7 +210,15 @@ export default function TestFirebasePage() {
             disabled={isLoading}
             className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
           >
-            Test Firebase Signup
+            Test Firebase Signup (No Email)
+          </button>
+
+          <button
+            onClick={handleSignupWithEmail}
+            disabled={isLoading}
+            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50"
+          >
+            🔥 Test Signup + Send Verification Email
           </button>
           
           <button
@@ -119,6 +235,14 @@ export default function TestFirebasePage() {
             className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
           >
             Test API Endpoint
+          </button>
+
+          <button
+            onClick={resendVerification}
+            disabled={isLoading}
+            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 disabled:opacity-50"
+          >
+            Resend Verification Email
           </button>
         </div>
 

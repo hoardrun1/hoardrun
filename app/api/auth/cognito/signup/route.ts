@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
-import { firebaseAuthService } from '@/lib/firebase-auth-service'
+import { cognitoAuthService } from '@/lib/aws-cognito-auth-service'
 import { logger } from '@/lib/logger'
 
 const signUpSchema = z.object({
@@ -12,7 +12,7 @@ const signUpSchema = z.object({
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    logger.info('Firebase signup request received:', { email: body.email })
+    logger.info('Cognito signup request received:', { email: body.email })
 
     const validation = signUpSchema.safeParse(body)
     
@@ -28,8 +28,8 @@ export async function POST(request: Request) {
 
     const { email, password, name } = validation.data
 
-    // Create user and get custom token
-    const result = await firebaseAuthService.signUp({
+    // Create user with Cognito
+    const result = await cognitoAuthService.signUp({
       email,
       password,
       name
@@ -37,21 +37,16 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      message: 'Account created successfully. Please check your email for verification.',
+      message: result.needsVerification 
+        ? 'Account created successfully. Please check your email for verification code.'
+        : 'Account created and verified successfully.',
       user: result.user,
-      customToken: result.customToken,
-      needsEmailVerification: result.needsEmailVerification,
-      // Instructions for client
-      firebaseEndpoint: `https://identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=${process.env.NEXT_PUBLIC_FIREBASE_API_KEY}`,
-      // In development, include verification link for testing
-      ...(process.env.NODE_ENV === 'development' && {
-        verificationLink: result.verificationLink,
-        note: 'Verification link included for development testing'
-      })
+      needsVerification: result.needsVerification,
+      session: result.session
     }, { status: 201 })
 
   } catch (error: any) {
-    logger.error('Firebase signup error:', error)
+    logger.error('Cognito signup error:', error)
     
     return NextResponse.json(
       { 
@@ -61,4 +56,12 @@ export async function POST(request: Request) {
       { status: error.statusCode || 500 }
     )
   }
+}
+
+// GET endpoint for testing
+export async function GET() {
+  return NextResponse.json({
+    message: 'AWS Cognito signup endpoint is working',
+    timestamp: new Date().toISOString()
+  })
 }

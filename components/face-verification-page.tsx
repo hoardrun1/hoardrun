@@ -174,7 +174,7 @@ export function FaceVerificationPageComponent() {
         },
         body: JSON.stringify({ 
           image: imageData,
-          userId: user?.id 
+          userId: user?.uid
         }),
       })
 

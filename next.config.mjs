@@ -40,6 +40,8 @@ const nextConfig = {
         nodemailer: false,
       };
     }
+
+
     return config;
   },
   // Environment-specific configurations

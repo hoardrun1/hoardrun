@@ -1,15 +1,17 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { navigation } from '@/lib/navigation'
 import { useToast } from '@/components/ui/use-toast'
 import { Button } from '@/components/ui/button'
 import { Loader2, Mail, CheckCircle } from 'lucide-react'
 import Link from 'next/link'
+import { sendVerificationEmail, generateVerificationToken, generateVerificationLink } from '@/lib/web3forms-email'
 
 export function CheckEmailPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { addToast } = useToast();
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -17,7 +19,15 @@ export function CheckEmailPage() {
 
   useEffect(() => {
     setMounted(true);
-    
+
+    // Get email from URL params (Web3Forms flow) or navigation data (legacy flow)
+    const emailFromParams = searchParams?.get('email');
+    if (emailFromParams) {
+      setEmail(emailFromParams);
+      return;
+    }
+
+    // Fallback to navigation data for legacy flow
     if (!navigation.isValidTransition('signup', 'check-email')) {
       router.push('/signup');
       return;
@@ -30,26 +40,31 @@ export function CheckEmailPage() {
     }
 
     setEmail(data.email);
-  }, [router]);
+  }, [router, searchParams]);
 
   const handleResendEmail = async () => {
     if (!email) return;
 
     setIsLoading(true);
     try {
-      const response = await fetch('/api/auth/resend-verification', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      });
+      // Generate new verification token and link
+      const verificationToken = generateVerificationToken(email);
+      const verificationLink = generateVerificationLink(email, verificationToken);
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message);
+      // Extract name from email (simple approach)
+      const userName = email.split('@')[0];
 
-      addToast({
-        title: "Success",
-        description: "Verification email has been resent"
-      });
+      // Send verification email using Web3Forms
+      const emailResult = await sendVerificationEmail(email, userName, verificationLink);
+
+      if (emailResult.success) {
+        addToast({
+          title: "Success",
+          description: "Verification email has been resent"
+        });
+      } else {
+        throw new Error(emailResult.message);
+      }
     } catch (error) {
       addToast({
         title: "Error",
@@ -61,27 +76,7 @@ export function CheckEmailPage() {
     }
   };
 
-  const handleVerificationComplete = async (token: string) => {
-    try {
-      const response = await fetch('/api/auth/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token })
-      });
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message);
-
-      navigation.connect('check-email', 'verify-email');
-      router.push('/verify-email');
-    } catch (error) {
-      addToast({
-        title: "Error",
-        description: "Verification failed",
-        variant: "destructive"
-      });
-    }
-  };
 
   if (!mounted) return null;
 

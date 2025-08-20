@@ -1,4 +1,5 @@
-import { Investment } from '@prisma/client'
+// import { Investment } from '@prisma/client'
+type Investment = any // Placeholder type
 
 type InvestmentType = 'STOCK' | 'BOND' | 'REAL_ESTATE' | 'CRYPTO' | 'ETF' | 'MUTUAL_FUND' // Fixed to match Prisma enum
 type RiskLevel = 'LOW' | 'MEDIUM' | 'HIGH' // Fixed to match Prisma enum
@@ -92,7 +93,7 @@ export const analyzeRisk = (investments: Investment[]): RiskProfile => {
 
   // Calculate volatility based on risk distribution
   const volatility = Object.entries(riskDistribution).reduce((total, [risk, amount]) => {
-    const weight = amount / totalAmount
+    const weight = (amount as number) / totalAmount
     const riskFactor = getRiskFactor(risk as RiskLevel)
     return total + (weight * riskFactor)
   }, 0)

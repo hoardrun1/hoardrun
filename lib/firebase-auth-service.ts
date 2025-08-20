@@ -298,41 +298,29 @@ export class FirebaseAuthService {
 
   /**
    * Verify email using Firebase action code
+   * Note: This method is deprecated in favor of Web3Forms verification
    */
   async verifyEmail(actionCode: string): Promise<{ user: any }> {
     try {
-      // Apply the email verification action code
-      await adminAuth.checkActionCode(actionCode)
-      const result = await adminAuth.applyActionCode(actionCode)
+      // This method is no longer used - Web3Forms handles email verification
+      throw new AppError('Email verification is handled by Web3Forms', ErrorCode.VALIDATION_ERROR, 400)
 
-      // Get the email from the action code result
-      const email = result.data?.email
+      // Legacy code commented out:
+      // await adminAuth.checkActionCode(actionCode)
+      // const result = await adminAuth.applyActionCode(actionCode)
+      // const email = result.data?.email
+      // if (!email) {
+      //   throw new AppError('Invalid verification code', ErrorCode.BAD_REQUEST, 400)
+      // }
+      // const user = await prisma.user.update({
+      //   where: { email: email },
+      //   data: { emailVerified: true }
+      // })
 
-      if (!email) {
-        throw new AppError('Invalid verification code', ErrorCode.BAD_REQUEST, 400)
-      }
-
-      // Update user in database
-      const user = await prisma.user.update({
-        where: { email: email },
-        data: { emailVerified: true }
-      })
-
-      // Update Firebase user record
-      await adminAuth.updateUser(user.id, {
-        emailVerified: true
-      })
-
-      logger.info(`Email verified for user: ${user.id}`)
-
-      return {
-        user: {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          emailVerified: user.emailVerified
-        }
-      }
+      // Legacy code commented out:
+      // await adminAuth.updateUser(user.id, { emailVerified: true })
+      // logger.info(`Email verified for user: ${user.id}`)
+      // return { user: { id: user.id, email: user.email, name: user.name, emailVerified: user.emailVerified } }
     } catch (error) {
       if (error instanceof AppError) {
         throw error

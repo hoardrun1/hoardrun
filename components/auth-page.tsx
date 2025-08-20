@@ -45,7 +45,7 @@ export default function AuthPage() {
 
   const router = useRouter()
   const { toast } = useToast()
-  const { signup, login } = useAuth()
+  const { signUpWithFirebase, signInWithFirebase } = useAuth()
 
   useEffect(() => {
     const validateEmail = async () => {
@@ -78,17 +78,22 @@ export default function AuthPage() {
   const handleSocialAuth = async (provider: 'google' | 'facebook' | 'apple') => {
     setIsLoading(true)
     try {
-      // Implement social auth logic here
-      const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH_BACKEND_URL}/api/v1/auth/${provider}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
-      })
-      
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.message)
-      
-      // Handle successful auth
-      router.push('/dashboard')
+      if (provider === 'google') {
+        // Use Render backend only for Google OAuth
+        const response = await fetch(`${process.env.NEXT_PUBLIC_GOOGLE_AUTH_BACKEND_URL}/api/v1/auth/google`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        })
+
+        const data = await response.json()
+        if (!response.ok) throw new Error(data.message)
+
+        // Handle successful auth
+        router.push('/dashboard')
+      } else {
+        // Use Firebase for Facebook and Apple (not implemented yet)
+        throw new Error(`${provider} authentication not implemented yet. Please use Google or email/password.`)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Authentication failed')
     } finally {
@@ -187,19 +192,7 @@ export default function AuthPage() {
     setError(null);
 
     try {
-      const response = await fetch('/api/sign-in', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: formData.email.toLowerCase().trim(),
-          password: formData.password
-        })
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || 'Authentication failed');
-
-      await login(data.token, data.user);
+      await signInWithFirebase(formData.email.toLowerCase().trim(), formData.password);
       router.push('/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Authentication failed');

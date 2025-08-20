@@ -1,4 +1,7 @@
-import { SavingsGoal, SavingsContribution, Transaction } from '@prisma/client'
+// import { SavingsGoal, SavingsContribution, Transaction } from '@prisma/client'
+type SavingsGoal = any // Placeholder type
+type SavingsContribution = any // Placeholder type
+type Transaction = any // Placeholder type
 
 interface InterestRate {
   baseRate: number

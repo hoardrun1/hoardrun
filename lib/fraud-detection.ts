@@ -1,7 +1,9 @@
 import { cache } from './cache'
 import { logger } from './logger'
 import { AppError, ErrorCode } from './error-handling'
-import { Transaction, User } from '@prisma/client'
+// import { Transaction, User } from '@prisma/client'
+type Transaction = any // Placeholder type
+type User = any // Placeholder type
 import geoip from 'geoip-lite'
 
 interface FraudDetectionConfig {

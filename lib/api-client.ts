@@ -1,7 +1,8 @@
 import axios from 'axios';
 // import { AppError, ErrorCode } from './error-handling';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || `${process.env.NEXT_PUBLIC_AUTH_BACKEND_URL}/api/v1` || '/api';
+// Using Firebase for auth, local Next.js API routes for other operations
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,

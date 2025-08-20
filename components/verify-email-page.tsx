@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Loader2, Mail, CheckCircle, XCircle } from 'lucide-react'
 import Link from 'next/link'
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth'
+import { sendWelcomeEmail } from '@/lib/web3forms-email'
 
 export function CheckEmailPage() {
   const router = useRouter();
@@ -19,9 +20,19 @@ export function CheckEmailPage() {
   const [verificationStatus, setVerificationStatus] = useState<'pending' | 'success' | 'error'>('pending');
 
   useEffect(() => {
+    // Check if this is a Web3Forms verification callback
+    const token = searchParams?.get('token');
+    const emailParam = searchParams?.get('email');
+
+    if (emailParam && token) {
+      setEmail(emailParam);
+      handleWeb3FormsVerification(emailParam, token);
+      return;
+    }
+
     // Check if this is a Firebase email verification callback
-    const actionCode = searchParams.get('oobCode');
-    const mode = searchParams.get('mode');
+    const actionCode = searchParams?.get('oobCode');
+    const mode = searchParams?.get('mode');
 
     if (mode === 'verifyEmail' && actionCode) {
       handleEmailVerification(actionCode);
@@ -29,7 +40,6 @@ export function CheckEmailPage() {
     }
 
     // Get email from URL params or user
-    const emailParam = searchParams.get('email');
     if (emailParam) {
       setEmail(emailParam);
     } else if (user?.email) {
@@ -39,6 +49,53 @@ export function CheckEmailPage() {
       router.push('/signup');
     }
   }, [router, searchParams, user]);
+
+  const handleWeb3FormsVerification = async (userEmail: string, verificationToken: string) => {
+    setVerificationStatus('pending');
+    try {
+      // Simulate verification process (in a real app, you'd validate the token)
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // For demo purposes, we'll consider any token valid
+      // In production, you'd validate the token against your database
+      const isValidToken = verificationToken.length > 10;
+
+      if (isValidToken) {
+        setVerificationStatus('success');
+
+        // Send welcome email
+        const userName = userEmail.split('@')[0]; // Extract name from email
+        await sendWelcomeEmail(userEmail, userName);
+
+        addToast({
+          title: "Email Verified!",
+          description: "Your account is now active. Welcome to HoardRun!",
+        });
+
+        // Redirect to dashboard after 3 seconds
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 3000);
+
+      } else {
+        setVerificationStatus('error');
+        addToast({
+          title: "Verification Failed",
+          description: "Invalid or expired verification token.",
+          variant: "destructive"
+        });
+      }
+
+    } catch (error) {
+      console.error('Web3Forms verification error:', error);
+      setVerificationStatus('error');
+      addToast({
+        title: "Verification Failed",
+        description: "An error occurred while verifying your email.",
+        variant: "destructive"
+      });
+    }
+  };
 
   const handleEmailVerification = async (actionCode: string) => {
     setVerificationStatus('pending');

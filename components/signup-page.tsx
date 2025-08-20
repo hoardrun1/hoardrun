@@ -19,6 +19,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useFirebaseAuth } from "@/hooks/useFirebaseAuth"
 import { signInWithCustomToken } from 'firebase/auth'
 import { auth } from '@/lib/firebase-config'
+import { sendVerificationEmail, generateVerificationToken, generateVerificationLink } from '@/lib/web3forms-email'
 
 // Google Identity Services types
 declare global {
@@ -147,14 +148,31 @@ export function SignupPage() {
       // Use Firebase authentication
       await signUpWithFirebase(formData.email, formData.password, formData.name)
 
-      // Show success message
-      addToast({
-        title: "Success",
-        description: "Account created successfully! Please check your email for verification.",
-      })
+      // Generate verification token and link
+      const verificationToken = generateVerificationToken(formData.email)
+      const verificationLink = generateVerificationLink(formData.email, verificationToken)
 
-      // Redirect to email verification page with email parameter
-      router.push(`/verify-email?email=${encodeURIComponent(formData.email)}`)
+      // Send verification email using Web3Forms
+      console.log('Sending verification email via Web3Forms...')
+      const emailResult = await sendVerificationEmail(formData.email, formData.name, verificationLink)
+
+      if (emailResult.success) {
+        // Show success message
+        addToast({
+          title: "Success",
+          description: "Account created successfully! Please check your email for verification.",
+        })
+
+        // Redirect to a page telling user to check their email
+        router.push(`/check-email?email=${encodeURIComponent(formData.email)}`)
+      } else {
+        // Account created but email failed
+        addToast({
+          title: "Account Created",
+          description: "Account created but verification email failed to send. You can still sign in.",
+        })
+        router.push('/signin')
+      }
     } catch (error) {
       let errorMessage = "Signup failed"
 

@@ -17,6 +17,8 @@ import Image from "next/image"
 import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useFirebaseAuth } from "@/hooks/useFirebaseAuth"
+import { signInWithCustomToken } from 'firebase/auth'
+import { auth } from '@/lib/firebase-config'
 
 // Google Identity Services types
 declare global {
@@ -116,64 +118,62 @@ export function SignInPage() {
     setError(null)
 
     try {
-      // Load Google Identity Services
-      if (typeof window !== 'undefined' && !window.google) {
-        await new Promise((resolve, reject) => {
-          const script = document.createElement('script')
-          script.src = 'https://accounts.google.com/gsi/client'
-          script.onload = resolve
-          script.onerror = reject
-          document.head.appendChild(script)
-        })
+      // Use Google OAuth popup flow (more reliable than One Tap for localhost)
+      const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '575518235403-kkrsrim8d8dml8qv2gurqll3ug8oo7cr.apps.googleusercontent.com'
+      const redirectUri = `${window.location.origin}/auth/google/callback`
+      const scope = 'email profile openid'
+
+      const authUrl = `https://accounts.google.com/oauth/authorize?` +
+        `client_id=${clientId}&` +
+        `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+        `scope=${encodeURIComponent(scope)}&` +
+        `response_type=code&` +
+        `access_type=offline&` +
+        `prompt=consent`
+
+      // Open popup window for OAuth
+      const popup = window.open(
+        authUrl,
+        'google-oauth',
+        'width=500,height=600,scrollbars=yes,resizable=yes'
+      )
+
+      if (!popup) {
+        throw new Error('Popup blocked by browser. Please allow popups for this site.')
       }
 
-      // Initialize Google Sign-In
-      window.google?.accounts.id.initialize({
-        client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '575518235403-kkrsrim8d8dml8qv2gurqll3ug8oo7cr.apps.googleusercontent.com',
-        callback: async (response: any) => {
-          try {
-            // Send the ID token to our backend
-            const apiResponse = await fetch('/api/auth/google', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                idToken: response.credential,
-                action: 'signin'
-              }),
-            })
+      // Listen for popup messages and completion
+      const handleMessage = (event: MessageEvent) => {
+        if (event.origin !== window.location.origin) return
 
-            const data = await apiResponse.json()
+        if (event.data.success) {
+          // Success - store user data and redirect
+          addToast({
+            title: "Success",
+            description: "Signed in successfully with Google!",
+          })
+          router.push('/dashboard')
+        } else if (event.data.error) {
+          setError(event.data.error)
+        }
 
-            if (!apiResponse.ok) {
-              throw new Error(data.error || 'Google sign-in failed')
-            }
+        setGoogleLoading(false)
+        window.removeEventListener('message', handleMessage)
+      }
 
-            // Store the token and redirect
-            localStorage.setItem('token', data.token)
-            localStorage.setItem('user', JSON.stringify(data.user))
+      window.addEventListener('message', handleMessage)
 
-            addToast({
-              title: "Success",
-              description: data.message || "Signed in successfully with Google!",
-            })
+      const checkClosed = setInterval(() => {
+        if (popup.closed) {
+          clearInterval(checkClosed)
+          setGoogleLoading(false)
+          window.removeEventListener('message', handleMessage)
+        }
+      }, 1000)
 
-            router.push('/dashboard')
-          } catch (error) {
-            console.error('Google sign-in error:', error)
-            setError(error instanceof Error ? error.message : 'Google sign-in failed')
-          } finally {
-            setGoogleLoading(false)
-          }
-        },
-      })
-
-      // Prompt for sign-in
-      window.google?.accounts.id.prompt()
     } catch (error) {
-      console.error('Failed to load Google Sign-In:', error)
-      setError('Failed to load Google Sign-In. Please try again.')
+      console.error('Failed to initiate Google OAuth:', error)
+      setError(error instanceof Error ? error.message : 'Failed to start Google sign-in. Please try again.')
       setGoogleLoading(false)
     }
   }

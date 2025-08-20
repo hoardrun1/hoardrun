@@ -79,7 +79,7 @@ export default function AuthPage() {
     setIsLoading(true)
     try {
       // Implement social auth logic here
-      const response = await fetch(`/api/auth/${provider}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_AUTH_BACKEND_URL}/api/v1/auth/${provider}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       })

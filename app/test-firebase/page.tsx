@@ -4,7 +4,11 @@ import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 
 export default function TestFirebasePage() {
+<<<<<<< HEAD
   const { signupWithFirebase, signinWithFirebase, user, token, authMethod, isLoading } = useAuth()
+=======
+  const { signUpWithFirebase, signInWithFirebase, user, loading } = useAuth()
+>>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
   const [email, setEmail] = useState('test@example.com')
   const [password, setPassword] = useState('testpassword123')
   const [name, setName] = useState('Test User')
@@ -15,6 +19,7 @@ export default function TestFirebasePage() {
     try {
       setError('')
       setMessage('Signing up...')
+<<<<<<< HEAD
 
       const response = await fetch('/api/auth/firebase/signup', {
         method: 'POST',
@@ -32,12 +37,17 @@ export default function TestFirebasePage() {
       } else {
         setError(data.error || 'Signup failed')
       }
+=======
+      await signUpWithFirebase(email, password, name)
+      setMessage('Signup successful!')
+>>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
     } catch (err: any) {
       setError(err.message || 'Signup failed')
       setMessage('')
     }
   }
 
+<<<<<<< HEAD
   const handleSignupWithEmail = async () => {
     try {
       setError('')
@@ -104,11 +114,17 @@ export default function TestFirebasePage() {
     }
   }
 
+=======
+>>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
   const handleSignin = async () => {
     try {
       setError('')
       setMessage('Signing in...')
+<<<<<<< HEAD
       await signinWithFirebase(email, password)
+=======
+      await signInWithFirebase(email, password)
+>>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
       setMessage('Signin successful!')
     } catch (err: any) {
       setError(err.message || 'Signin failed')
@@ -129,6 +145,7 @@ export default function TestFirebasePage() {
     }
   }
 
+<<<<<<< HEAD
   const resendVerification = async () => {
     try {
       setError('')
@@ -156,6 +173,8 @@ export default function TestFirebasePage() {
     }
   }
 
+=======
+>>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
@@ -165,9 +184,13 @@ export default function TestFirebasePage() {
         <div className="mb-6 p-4 bg-gray-100 rounded">
           <h3 className="font-semibold mb-2">Current Auth Status:</h3>
           <p><strong>User:</strong> {user ? user.email : 'Not authenticated'}</p>
+<<<<<<< HEAD
           <p><strong>Token:</strong> {token ? 'Present' : 'None'}</p>
           <p><strong>Method:</strong> {authMethod || 'None'}</p>
           <p><strong>Loading:</strong> {isLoading ? 'Yes' : 'No'}</p>
+=======
+          <p><strong>Loading:</strong> {loading ? 'Yes' : 'No'}</p>
+>>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
         </div>
 
         {/* Test Form */}
@@ -207,6 +230,7 @@ export default function TestFirebasePage() {
         <div className="mt-6 space-y-3">
           <button
             onClick={handleSignup}
+<<<<<<< HEAD
             disabled={isLoading}
             className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
           >
@@ -219,11 +243,21 @@ export default function TestFirebasePage() {
             className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:opacity-50"
           >
             🔥 Test Signup + Send Verification Email
+=======
+            disabled={loading}
+            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+          >
+            Test Firebase Signup
+>>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
           </button>
           
           <button
             onClick={handleSignin}
+<<<<<<< HEAD
             disabled={isLoading}
+=======
+            disabled={loading}
+>>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
             className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
           >
             Test Firebase Signin
@@ -231,11 +265,16 @@ export default function TestFirebasePage() {
           
           <button
             onClick={testEndpoint}
+<<<<<<< HEAD
             disabled={isLoading}
+=======
+            disabled={loading}
+>>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
             className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
           >
             Test API Endpoint
           </button>
+<<<<<<< HEAD
 
           <button
             onClick={resendVerification}
@@ -244,6 +283,8 @@ export default function TestFirebasePage() {
           >
             Resend Verification Email
           </button>
+=======
+>>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
         </div>
 
         {/* Messages */}

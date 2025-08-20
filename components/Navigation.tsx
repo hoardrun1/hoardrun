@@ -4,10 +4,17 @@ import { useAuth } from '../contexts/AuthContext';
 
 export default function Navigation() {
   const router = useRouter();
+<<<<<<< HEAD
   const { logout } = useAuth();
 
   const handleLogout = () => {
     logout();
+=======
+  const { signOutFromFirebase } = useAuth();
+
+  const handleLogout = () => {
+    signOutFromFirebase();
+>>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
     router.push('/auth/signin');
   };
 

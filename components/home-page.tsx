@@ -388,7 +388,11 @@ export function HomePageComponent() {
                 <Wallet className="h-8 w-8 text-black dark:text-white" />
                 <div>
                   <h1 className="text-xl font-bold text-black dark:text-white">
+<<<<<<< HEAD
                     Welcome back, {user?.name || 'User'}
+=======
+                    Welcome back, {user?.displayName || 'User'}
+>>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
                   </h1>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     {new Date().toLocaleDateString('en-US', {

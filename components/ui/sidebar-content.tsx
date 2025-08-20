@@ -219,7 +219,11 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-bold text-white text-sm truncate">
+<<<<<<< HEAD
                 {user?.name || 'Demo User'}
+=======
+                {user?.displayName || 'Demo User'}
+>>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
               </p>
               <p className="text-xs text-white/60 truncate">
                 {user?.email || 'user@example.com'}

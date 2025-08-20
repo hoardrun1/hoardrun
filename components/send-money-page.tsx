@@ -45,7 +45,13 @@ import {
   Plus
 } from 'lucide-react'
 import { formatCurrency, calculateTransactionFee } from '@/lib/banking'
+<<<<<<< HEAD
 import { AccountType, TransactionType } from '@prisma/client'
+=======
+// import { AccountType, TransactionType } from '@prisma/client'
+type AccountType = 'CHECKING' | 'SAVINGS' | 'CREDIT'
+type TransactionType = 'SEND' | 'RECEIVE' | 'DEPOSIT' | 'WITHDRAWAL' | 'TRANSFER'
+>>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
 import { cn } from '@/lib/utils'
 import { LayoutWrapper } from "@/components/ui/layout-wrapper"
 import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sidebar-layout'

@@ -174,7 +174,11 @@ export function FaceVerificationPageComponent() {
         },
         body: JSON.stringify({ 
           image: imageData,
+<<<<<<< HEAD
           userId: user?.id 
+=======
+          userId: user?.uid
+>>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
         }),
       })
 

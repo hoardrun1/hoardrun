@@ -1,15 +1,27 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+<<<<<<< HEAD
 import { useRouter } from 'next/navigation'
+=======
+import { useRouter, useSearchParams } from 'next/navigation'
+>>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
 import { navigation } from '@/lib/navigation'
 import { useToast } from '@/components/ui/use-toast'
 import { Button } from '@/components/ui/button'
 import { Loader2, Mail, CheckCircle } from 'lucide-react'
 import Link from 'next/link'
+<<<<<<< HEAD
 
 export function CheckEmailPage() {
   const router = useRouter();
+=======
+import { sendVerificationEmail, generateVerificationToken, generateVerificationLink } from '@/lib/web3forms-email'
+
+export function CheckEmailPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+>>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
   const { addToast } = useToast();
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -17,7 +29,19 @@ export function CheckEmailPage() {
 
   useEffect(() => {
     setMounted(true);
+<<<<<<< HEAD
     
+=======
+
+    // Get email from URL params (Web3Forms flow) or navigation data (legacy flow)
+    const emailFromParams = searchParams?.get('email');
+    if (emailFromParams) {
+      setEmail(emailFromParams);
+      return;
+    }
+
+    // Fallback to navigation data for legacy flow
+>>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
     if (!navigation.isValidTransition('signup', 'check-email')) {
       router.push('/signup');
       return;
@@ -30,13 +54,18 @@ export function CheckEmailPage() {
     }
 
     setEmail(data.email);
+<<<<<<< HEAD
   }, [router]);
+=======
+  }, [router, searchParams]);
+>>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
 
   const handleResendEmail = async () => {
     if (!email) return;
 
     setIsLoading(true);
     try {
+<<<<<<< HEAD
       const response = await fetch('/api/auth/resend-verification', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -50,6 +79,26 @@ export function CheckEmailPage() {
         title: "Success",
         description: "Verification email has been resent"
       });
+=======
+      // Generate new verification token and link
+      const verificationToken = generateVerificationToken(email);
+      const verificationLink = generateVerificationLink(email, verificationToken);
+
+      // Extract name from email (simple approach)
+      const userName = email.split('@')[0];
+
+      // Send verification email using Web3Forms
+      const emailResult = await sendVerificationEmail(email, userName, verificationLink);
+
+      if (emailResult.success) {
+        addToast({
+          title: "Success",
+          description: "Verification email has been resent"
+        });
+      } else {
+        throw new Error(emailResult.message);
+      }
+>>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
     } catch (error) {
       addToast({
         title: "Error",
@@ -61,6 +110,7 @@ export function CheckEmailPage() {
     }
   };
 
+<<<<<<< HEAD
   const handleVerificationComplete = async (token: string) => {
     try {
       const response = await fetch('/api/auth/verify', {
@@ -82,6 +132,9 @@ export function CheckEmailPage() {
       });
     }
   };
+=======
+
+>>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
 
   if (!mounted) return null;
 

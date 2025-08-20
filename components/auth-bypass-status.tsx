@@ -72,9 +72,15 @@ export function AuthBypassStatus() {
             <div className="text-sm font-medium">Current User:</div>
             {user ? (
               <div className="text-xs space-y-1 bg-gray-50 dark:bg-gray-900 p-2 rounded">
+<<<<<<< HEAD
                 <div><strong>ID:</strong> {user.id}</div>
                 <div><strong>Email:</strong> {user.email}</div>
                 <div><strong>Name:</strong> {user.name || 'N/A'}</div>
+=======
+                <div><strong>ID:</strong> {user.uid}</div>
+                <div><strong>Email:</strong> {user.email}</div>
+                <div><strong>Name:</strong> {user.displayName || 'N/A'}</div>
+>>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
               </div>
             ) : (
               <div className="text-xs text-gray-500">No user data</div>

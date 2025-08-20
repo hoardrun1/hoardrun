@@ -1,5 +1,6 @@
 'use client'
 
+<<<<<<< HEAD
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
 interface User {
@@ -20,6 +21,23 @@ interface AuthContextType {
   signupWithFirebase: (email: string, password: string, name?: string) => Promise<void>;
   signinWithFirebase: (email: string, password: string) => Promise<void>;
   authMethod: 'jwt' | 'firebase' | null;
+=======
+import React, { createContext, useContext, ReactNode } from 'react';
+import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
+import { User } from 'firebase/auth';
+
+interface AuthContextType {
+  user: User | null;
+  loading: boolean;
+  error: string | null;
+  signUpWithFirebase: (email: string, password: string, name?: string) => Promise<void>;
+  signInWithFirebase: (email: string, password: string) => Promise<void>;
+  signOutFromFirebase: () => Promise<void>;
+  sendEmailVerification: (userId: string) => Promise<void>;
+  verifyEmail: (actionCode: string) => Promise<void>;
+  clearError: () => void;
+  isAuthenticated: boolean;
+>>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -29,6 +47,7 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
+<<<<<<< HEAD
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -290,6 +309,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
     signupWithFirebase,
     signinWithFirebase,
     authMethod,
+=======
+  const firebaseAuth = useFirebaseAuth();
+
+  // Create the context value using Firebase auth
+  const value: AuthContextType = {
+    user: firebaseAuth.user,
+    loading: firebaseAuth.loading,
+    error: firebaseAuth.error,
+    signUpWithFirebase: firebaseAuth.signUpWithFirebase,
+    signInWithFirebase: firebaseAuth.signInWithFirebase,
+    signOutFromFirebase: firebaseAuth.signOutFromFirebase,
+    sendEmailVerification: firebaseAuth.sendEmailVerification,
+    verifyEmail: firebaseAuth.verifyEmail,
+    clearError: firebaseAuth.clearError,
+    isAuthenticated: !!firebaseAuth.user,
+>>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

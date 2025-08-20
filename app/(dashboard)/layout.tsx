@@ -13,7 +13,11 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+<<<<<<< HEAD
   const { user, isLoading } = useAuth();
+=======
+  const { user, loading } = useAuth();
+>>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
 
   // Check if we should bypass auth in development mode
   const isDevelopment = process.env.NODE_ENV === 'development';
@@ -27,6 +31,7 @@ export default function DashboardLayout({
       return;
     }
 
+<<<<<<< HEAD
     if (!isLoading && !user) {
       router.push('/signin');
     }
@@ -34,6 +39,15 @@ export default function DashboardLayout({
 
   // Skip loading check if bypassing auth in development
   if (isLoading && !(isDevelopment && bypassAuth)) {
+=======
+    if (!loading && !user) {
+      router.push('/signin');
+    }
+  }, [user, loading, router, isDevelopment, bypassAuth]);
+
+  // Skip loading check if bypassing auth in development
+  if (loading && !(isDevelopment && bypassAuth)) {
+>>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>

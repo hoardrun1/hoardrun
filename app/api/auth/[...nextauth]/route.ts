@@ -1,14 +1,6 @@
-// NextAuth.js disabled - using Firebase Auth instead
-import { NextResponse } from 'next/server'
+import NextAuth from 'next-auth'
+import { authOptions } from '@/lib/auth-config'
 
-export async function GET() {
-  return NextResponse.json({
-    error: 'NextAuth.js disabled - using Firebase Authentication'
-  }, { status: 404 })
-}
+const handler = NextAuth(authOptions)
 
-export async function POST() {
-  return NextResponse.json({
-    error: 'NextAuth.js disabled - using Firebase Authentication'
-  }, { status: 404 })
-}
+export { handler as GET, handler as POST }

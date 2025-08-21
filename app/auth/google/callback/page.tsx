@@ -34,19 +34,63 @@ function GoogleCallbackContent() {
           }
         }
 
-        // Exchange code for tokens using your deployed backend
+        // Exchange code for tokens using Google's token endpoint directly
         const backendUrl = process.env.NEXT_PUBLIC_AUTH_BACKEND_URL || 'https://auth-backend-yqik.onrender.com'
-        
-        const response = await fetch(`${backendUrl}/api/v1/auth/google/callback`, {
+
+        // First, get the client configuration
+        const configResponse = await fetch(`${backendUrl}/api/v1/auth/config`)
+        const configData = await configResponse.json()
+
+        if (!configResponse.ok) {
+          throw new Error('Failed to get OAuth configuration')
+        }
+
+        const clientId = configData.data.clientId || configData.data.googleClientId
+        const redirectUri = `${window.location.origin}/auth/google/callback`
+
+        // Exchange authorization code for tokens with Google directly
+        const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/x-www-form-urlencoded',
           },
-          body: JSON.stringify({
+          body: new URLSearchParams({
             code,
-            action: parsedState.action || 'signin'
+            client_id: clientId,
+            client_secret: '', // We'll handle this on the backend
+            redirect_uri: redirectUri,
+            grant_type: 'authorization_code',
           }),
         })
+
+        // If direct token exchange fails, use backend callback
+        let response
+        if (!tokenResponse.ok) {
+          // Fallback to backend callback
+          response = await fetch(`${backendUrl}/api/v1/auth/google/callback`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              code,
+              action: parsedState.action || 'signin'
+            }),
+          })
+        } else {
+          const tokenData = await tokenResponse.json()
+
+          // Use the ID token with your backend's Google auth endpoint
+          response = await fetch(`${backendUrl}/api/v1/auth/google`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              idToken: tokenData.id_token
+            }),
+          })
+        }
 
         const data = await response.json()
 

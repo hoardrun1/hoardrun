@@ -70,9 +70,7 @@ SMTP_USER=your-email@gmail.com
 SMTP_PASS=your-app-password
 SMTP_FROM="HoardRun <noreply@hoardrun.com>"
 
-# OR
-MAILGUN_API_KEY=your-mailgun-api-key
-MAILGUN_DOMAIN=your-mailgun-domain
+# Email service removed - using development email service instead
 
 # SMS (optional)
 TWILIO_ACCOUNT_SID=your-twilio-account-sid

@@ -22,8 +22,8 @@ NEXTAUTH_URL=https://your-domain.vercel.app
 
 ### Email Service
 ```
-MAILGUN_API_KEY=your_mailgun_api_key
-MAILGUN_DOMAIN=your_mailgun_domain
+# Email service removed - using development email service instead
+# No configuration needed
 ```
 
 ### Payment Services

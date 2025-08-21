@@ -118,9 +118,19 @@ export function SignInPage() {
     setError(null)
 
     try {
-      // Use Google OAuth popup flow (more reliable than One Tap for localhost)
-      const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '575518235403-kkrsrim8d8dml8qv2gurqll3ug8oo7cr.apps.googleusercontent.com'
-      const redirectUri = `${window.location.origin}/auth/google/callback`
+      // Use your deployed Render backend for Google OAuth
+      const backendUrl = process.env.NEXT_PUBLIC_AUTH_BACKEND_URL || 'https://auth-backend-yqik.onrender.com'
+
+      // Get Google OAuth configuration from your backend
+      const configResponse = await fetch(`${backendUrl}/api/v1/auth/config`)
+      const config = await configResponse.json()
+
+      if (!config.success) {
+        throw new Error('Failed to get OAuth configuration')
+      }
+
+      const clientId = config.data.clientId || config.data.googleClientId
+      const redirectUri = config.data.redirectUri || `${window.location.origin}/auth/google/callback`
       const scope = 'email profile openid'
 
       const authUrl = `https://accounts.google.com/oauth/authorize?` +
@@ -129,7 +139,8 @@ export function SignInPage() {
         `scope=${encodeURIComponent(scope)}&` +
         `response_type=code&` +
         `access_type=offline&` +
-        `prompt=consent`
+        `prompt=consent&` +
+        `state=${encodeURIComponent(JSON.stringify({ action: 'signin', origin: window.location.origin }))}`
 
       // Open popup window for OAuth
       const popup = window.open(
@@ -143,18 +154,34 @@ export function SignInPage() {
       }
 
       // Listen for popup messages and completion
-      const handleMessage = (event: MessageEvent) => {
+      const handleMessage = async (event: MessageEvent) => {
         if (event.origin !== window.location.origin) return
 
-        if (event.data.success) {
-          // Success - store user data and redirect
-          addToast({
-            title: "Success",
-            description: "Signed in successfully with Google!",
-          })
-          router.push('/dashboard')
-        } else if (event.data.error) {
-          setError(event.data.error)
+        if (event.data.type === 'GOOGLE_AUTH_SUCCESS' && event.data.data) {
+          try {
+            const { user, accessToken, refreshToken, firebaseCustomToken } = event.data.data
+
+            // Store tokens
+            localStorage.setItem('accessToken', accessToken)
+            localStorage.setItem('refreshToken', refreshToken)
+
+            // Sign in with Firebase using custom token if available
+            if (firebaseCustomToken && auth) {
+              await signInWithCustomToken(auth, firebaseCustomToken)
+            }
+
+            // Success - show message and redirect
+            addToast({
+              title: "Success",
+              description: "Signed in successfully with Google!",
+            })
+            router.push('/dashboard')
+          } catch (error) {
+            console.error('Error processing Google auth success:', error)
+            setError('Authentication successful but failed to complete sign-in')
+          }
+        } else if (event.data.type === 'GOOGLE_AUTH_ERROR') {
+          setError(event.data.error || 'Google authentication failed')
         }
 
         setGoogleLoading(false)

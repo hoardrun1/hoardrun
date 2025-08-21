@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { navigation } from '@/lib/navigation'
 import { useToast } from '@/components/ui/use-toast'
@@ -9,7 +9,7 @@ import { Loader2, Mail, CheckCircle } from 'lucide-react'
 import Link from 'next/link'
 import { sendVerificationEmail, generateVerificationToken, generateVerificationLink } from '@/lib/web3forms-email'
 
-export function CheckEmailPage() {
+function CheckEmailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { addToast } = useToast();
@@ -498,5 +498,13 @@ export function CheckEmailPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export function CheckEmailPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div>Loading...</div></div>}>
+      <CheckEmailContent />
+    </Suspense>
   );
 }

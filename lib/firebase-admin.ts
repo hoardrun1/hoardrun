@@ -18,3 +18,14 @@ if (!getApps().length) {
 
 export const adminAuth = getAuth()
 export { getApps }
+
+// Verify Firebase ID token
+export async function verifyFirebaseToken(token: string) {
+  try {
+    const decodedToken = await adminAuth.verifyIdToken(token)
+    return decodedToken
+  } catch (error) {
+    console.error('Error verifying Firebase token:', error)
+    return null
+  }
+}

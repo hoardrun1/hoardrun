@@ -54,7 +54,7 @@ import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sideba
 import { SidebarContent } from '@/components/ui/sidebar-content'
 import { SidebarToggle } from '@/components/ui/sidebar-toggle'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ui/use-toast'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { DepositModal } from '@/components/deposit-modal'
@@ -150,7 +150,7 @@ const cardVariants = {
 
 export function SendMoneyPage() {
   const router = useRouter()
-  const { data: session } = useSession()
+  const { user } = useAuth()
   const { addToast } = useToast()
   const [amount, setAmount] = useState('')
   const [description, setDescription] = useState('')
@@ -220,11 +220,11 @@ export function SendMoneyPage() {
   }, [loadInitialData])
 
   useEffect(() => {
-    if (session?.user) {
+    if (user) {
       fetchBeneficiaries()
       fetchAccounts()
     }
-  }, [session, fetchBeneficiaries, fetchAccounts])
+  }, [user, fetchBeneficiaries, fetchAccounts])
 
   useEffect(() => {
     if (amount && !isNaN(parseFloat(amount))) {

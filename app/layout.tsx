@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 // import { Inter } from 'next/font/google'
 import './globals.css'
 import ClientAuthProvider from '../components/client-auth-provider'
-import NextAuthProvider from '../components/next-auth-provider'
+// NextAuthProvider removed - using Firebase Auth instead
 import { NavigationProvider } from '@/providers/NavigationProvider'
 import { FinanceProvider } from '@/contexts/FinanceContext'
 
@@ -22,15 +22,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="font-sans">
-        <NextAuthProvider>
-          <ClientAuthProvider>
-            <FinanceProvider>
-              <NavigationProvider>
-                {children}
-              </NavigationProvider>
-            </FinanceProvider>
-          </ClientAuthProvider>
-        </NextAuthProvider>
+        {/* NextAuthProvider removed - using Firebase Auth instead */}
+        <ClientAuthProvider>
+          <FinanceProvider>
+            <NavigationProvider>
+              {children}
+            </NavigationProvider>
+          </FinanceProvider>
+        </ClientAuthProvider>
       </body>
     </html>
   )

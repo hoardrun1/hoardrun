@@ -42,7 +42,7 @@ import { useNavigationContext } from '@/providers/NavigationProvider'
 import { DepositModal } from './deposit-modal'
 import { useFinance } from '@/contexts/FinanceContext'
 import { navigation } from '@/lib/navigation'
-import { useSession } from 'next-auth/react'
+// useSession removed - using Firebase Auth instead
 import { FeatureNavigation } from './home/feature-navigation'
 import { SavingsPreview } from './home/savings-preview'
 import { InvestmentPreview } from './home/investment-preview'

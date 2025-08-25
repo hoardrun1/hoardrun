@@ -16,21 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Image from "next/image"
 import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-// Firebase removed - using simple authentication without Firebase dependencies
-
-// Google Identity Services types
-declare global {
-  interface Window {
-    google?: {
-      accounts: {
-        id: {
-          initialize: (config: any) => void
-          prompt: () => void
-        }
-      }
-    }
-  }
-}
+import { useAuth } from "@/contexts/AuthContext"
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -78,6 +64,7 @@ export function SignInPage() {
   const { addToast } = useToast()
   const [error, setError] = useState<string | null>(null)
   const [googleLoading, setGoogleLoading] = useState(false)
+  const { signIn } = useAuth()
 
   useEffect(() => {
     // Check for verification success in URL parameters
@@ -116,87 +103,11 @@ export function SignInPage() {
     setError(null)
 
     try {
-      // Use your deployed Render backend for Google OAuth
-      const backendUrl = process.env.NEXT_PUBLIC_AUTH_BACKEND_URL || 'https://auth-backend-yqik.onrender.com'
-
-      // Get Google OAuth configuration from your backend
-      const configResponse = await fetch(`${backendUrl}/api/v1/auth/config`)
-      const config = await configResponse.json()
-
-      if (!config.success) {
-        throw new Error('Failed to get OAuth configuration')
-      }
-
-      const clientId = config.data.clientId || config.data.googleClientId
-      const redirectUri = config.data.redirectUri || `${window.location.origin}/auth/google/callback`
-      const scope = 'email profile openid'
-
-      const authUrl = `https://accounts.google.com/oauth/authorize?` +
-        `client_id=${clientId}&` +
-        `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-        `scope=${encodeURIComponent(scope)}&` +
-        `response_type=code&` +
-        `access_type=offline&` +
-        `prompt=consent&` +
-        `state=${encodeURIComponent(JSON.stringify({ action: 'signin', origin: window.location.origin }))}`
-
-      // Open popup window for OAuth
-      const popup = window.open(
-        authUrl,
-        'google-oauth',
-        'width=500,height=600,scrollbars=yes,resizable=yes'
-      )
-
-      if (!popup) {
-        throw new Error('Popup blocked by browser. Please allow popups for this site.')
-      }
-
-      // Listen for popup messages and completion
-      const handleMessage = async (event: MessageEvent) => {
-        if (event.origin !== window.location.origin) return
-
-        if (event.data.type === 'GOOGLE_AUTH_SUCCESS' && event.data.data) {
-          try {
-            const { user, accessToken, refreshToken, firebaseCustomToken } = event.data.data
-
-            // Store tokens
-            localStorage.setItem('accessToken', accessToken)
-            localStorage.setItem('refreshToken', refreshToken)
-
-            // Store user data (Firebase removed)
-            localStorage.setItem('user', JSON.stringify(user))
-
-            // Success - show message and redirect
-            addToast({
-              title: "Success",
-              description: "Signed in successfully with Google!",
-            })
-            router.push('/dashboard')
-          } catch (error) {
-            console.error('Error processing Google auth success:', error)
-            setError('Authentication successful but failed to complete sign-in')
-          }
-        } else if (event.data.type === 'GOOGLE_AUTH_ERROR') {
-          setError(event.data.error || 'Google authentication failed')
-        }
-
-        setGoogleLoading(false)
-        window.removeEventListener('message', handleMessage)
-      }
-
-      window.addEventListener('message', handleMessage)
-
-      const checkClosed = setInterval(() => {
-        if (popup.closed) {
-          clearInterval(checkClosed)
-          setGoogleLoading(false)
-          window.removeEventListener('message', handleMessage)
-        }
-      }, 1000)
-
+      // Use AWS Cognito Hosted UI for Google OAuth
+      await signIn('', '') // This will redirect to Cognito Hosted UI
     } catch (error) {
-      console.error('Failed to initiate Google OAuth:', error)
-      setError(error instanceof Error ? error.message : 'Failed to start Google sign-in. Please try again.')
+      console.error('Failed to initiate Cognito sign-in:', error)
+      setError(error instanceof Error ? error.message : 'Failed to start sign-in. Please try again.')
       setGoogleLoading(false)
     }
   }

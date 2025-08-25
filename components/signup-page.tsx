@@ -114,18 +114,18 @@ export function SignupPage() {
         // Show success message
         addToast({
           title: "Success",
-          description: "Account created successfully! Please check your email for verification.",
+          description: "Account created successfully! Welcome to HoardRun.",
         })
 
-        // Redirect to a page telling user to check their email
-        router.push(`/check-email?email=${encodeURIComponent(formData.email)}`)
+        // Redirect to home page
+        router.push('/home')
       } else {
         // Account created but email failed
         addToast({
           title: "Account Created",
-          description: "Account created but verification email failed to send. You can still sign in.",
+          description: "Account created successfully! Welcome to HoardRun.",
         })
-        router.push('/signin')
+        router.push('/home')
       }
     } catch (error) {
       let errorMessage = "Signup failed"

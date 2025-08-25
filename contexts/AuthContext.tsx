@@ -1,9 +1,9 @@
 'use client'
 
 import React, { createContext, useContext, ReactNode } from 'react';
-import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
+import { useAwsCognitoAuth } from '@/hooks/useAwsCognitoAuth';
 
-// Define a simple user type since Firebase is removed
+// Define a simple user type for AWS Cognito
 interface User {
   id: string;
   email: string;
@@ -15,13 +15,17 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   error: string | null;
-  signUpWithFirebase: (email: string, password: string, name?: string) => Promise<void>;
-  signInWithFirebase: (email: string, password: string) => Promise<void>;
-  signOutFromFirebase: () => Promise<void>;
+  signUp: (email: string, password: string, name?: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<void>;
+  signOut: () => Promise<void>;
   sendEmailVerification: (userId: string) => Promise<void>;
   verifyEmail: (actionCode: string) => Promise<void>;
   clearError: () => void;
   isAuthenticated: boolean;
+  // Keep Firebase method names for backward compatibility
+  signUpWithFirebase: (email: string, password: string, name?: string) => Promise<void>;
+  signInWithFirebase: (email: string, password: string) => Promise<void>;
+  signOutFromFirebase: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -31,20 +35,24 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const firebaseAuth = useFirebaseAuth();
+  const cognitoAuth = useAwsCognitoAuth();
 
-  // Create the context value using Firebase auth
+  // Create the context value using AWS Cognito auth
   const value: AuthContextType = {
-    user: firebaseAuth.user,
-    loading: firebaseAuth.loading,
-    error: firebaseAuth.error,
-    signUpWithFirebase: firebaseAuth.signUpWithFirebase,
-    signInWithFirebase: firebaseAuth.signInWithFirebase,
-    signOutFromFirebase: firebaseAuth.signOutFromFirebase,
-    sendEmailVerification: firebaseAuth.sendEmailVerification,
-    verifyEmail: firebaseAuth.verifyEmail,
-    clearError: firebaseAuth.clearError,
-    isAuthenticated: !!firebaseAuth.user,
+    user: cognitoAuth.user,
+    loading: cognitoAuth.loading,
+    error: cognitoAuth.error,
+    signUp: cognitoAuth.signUp,
+    signIn: cognitoAuth.signIn,
+    signOut: cognitoAuth.signOut,
+    sendEmailVerification: cognitoAuth.sendEmailVerification,
+    verifyEmail: cognitoAuth.verifyEmail,
+    clearError: cognitoAuth.clearError,
+    isAuthenticated: cognitoAuth.isAuthenticated,
+    // Backward compatibility aliases
+    signUpWithFirebase: cognitoAuth.signUp,
+    signInWithFirebase: cognitoAuth.signIn,
+    signOutFromFirebase: cognitoAuth.signOut,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -16,9 +16,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useToast } from "@/components/ui/use-toast"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-import { useFirebaseAuth } from "@/hooks/useFirebaseAuth"
-import { signInWithCustomToken } from 'firebase/auth'
-import { auth } from '@/lib/firebase-config'
+// Firebase removed - using simple authentication without Firebase dependencies
 import { sendVerificationEmail, generateVerificationToken, generateVerificationLink } from '@/lib/web3forms-email'
 
 // Google Identity Services types
@@ -38,7 +36,7 @@ declare global {
 export function SignupPage() {
   const router = useRouter()
   const { addToast } = useToast()
-  const { signUpWithFirebase, loading: firebaseLoading } = useFirebaseAuth()
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [googleLoading, setGoogleLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -110,10 +108,8 @@ export function SignupPage() {
             localStorage.setItem('accessToken', accessToken)
             localStorage.setItem('refreshToken', refreshToken)
 
-            // Sign in with Firebase using custom token if available
-            if (firebaseCustomToken && auth) {
-              await signInWithCustomToken(auth, firebaseCustomToken)
-            }
+            // Store user data (Firebase removed)
+            localStorage.setItem('user', JSON.stringify(user))
 
             // Success - show message and redirect
             addToast({
@@ -153,27 +149,46 @@ export function SignupPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+    setLoading(true)
 
     // Validation
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match")
+      setLoading(false)
       return
     }
 
     if (formData.password.length < 8) {
       setError("Password must be at least 8 characters")
+      setLoading(false)
       return
     }
 
     try {
-      console.log("Submitting Firebase signup form:", {
+      console.log("Submitting signup form:", {
         name: formData.name,
         email: formData.email,
         password: "********", // Don't log actual password
       })
 
-      // Use Firebase authentication
-      await signUpWithFirebase(formData.email, formData.password, formData.name)
+      // Call the sign-up API
+      const response = await fetch('/api/sign-up', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Signup failed')
+      }
 
       // Generate verification token and link
       const verificationToken = generateVerificationToken(formData.email)
@@ -217,6 +232,7 @@ export function SignupPage() {
             description: "An account with this email already exists. Please sign in instead.",
             variant: "destructive",
           })
+          setLoading(false)
           return // Exit early to avoid showing the generic error
         }
       }
@@ -227,6 +243,8 @@ export function SignupPage() {
         description: errorMessage,
         variant: "destructive",
       })
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -315,7 +333,7 @@ export function SignupPage() {
                   variant="outline"
                   className="w-full h-12 bg-white hover:bg-gray-50 text-gray-900 border-gray-300 flex items-center justify-center gap-3 transition-all duration-200"
                   onClick={handleGoogleSignUp}
-                  disabled={googleLoading || firebaseLoading}
+                  disabled={googleLoading || loading}
                 >
                   {googleLoading ? (
                     <>
@@ -388,7 +406,7 @@ export function SignupPage() {
                   className="pl-8 sm:pl-10 h-8 sm:h-9 md:h-10 bg-white border-gray-300 text-black focus:border-black text-xs sm:text-sm"
                   value={formData.name}
                   onChange={handleChange}
-                  disabled={firebaseLoading}
+                  disabled={loading}
                 />
               </div>
             </div>
@@ -407,7 +425,7 @@ export function SignupPage() {
                   className="pl-8 sm:pl-10 h-8 sm:h-9 md:h-10 bg-white border-gray-300 text-black focus:border-black text-xs sm:text-sm"
                   value={formData.email}
                   onChange={handleChange}
-                  disabled={firebaseLoading}
+                  disabled={loading}
                 />
               </div>
             </div>
@@ -425,7 +443,7 @@ export function SignupPage() {
                   className="pr-8 sm:pr-10 h-8 sm:h-9 md:h-10 bg-white border-gray-300 text-black focus:border-black text-xs sm:text-sm"
                   value={formData.password}
                   onChange={handleChange}
-                  disabled={firebaseLoading}
+                  disabled={loading}
                 />
                 <button
                   type="button"
@@ -450,7 +468,7 @@ export function SignupPage() {
                   className="pr-8 sm:pr-10 h-8 sm:h-9 md:h-10 bg-white border-gray-300 text-black focus:border-black text-xs sm:text-sm"
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  disabled={firebaseLoading}
+                  disabled={loading}
                 />
               </div>
             </div>
@@ -458,9 +476,9 @@ export function SignupPage() {
             <Button
               type="submit"
               className="w-full h-8 sm:h-9 md:h-10 bg-black hover:bg-gray-800 text-white font-semibold text-xs sm:text-sm"
-              disabled={firebaseLoading}
+              disabled={loading}
             >
-              {firebaseLoading ? (
+              {loading ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                   Creating account...
@@ -496,7 +514,7 @@ export function SignupPage() {
             <Button
               type="button"
               className="w-full h-8 sm:h-9 md:h-10 bg-black hover:bg-gray-800 text-white font-semibold text-xs sm:text-sm"
-              disabled={firebaseLoading}
+              disabled={loading}
             >
               Send Code
             </Button>

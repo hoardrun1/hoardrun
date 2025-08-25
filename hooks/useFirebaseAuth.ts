@@ -1,10 +1,7 @@
 import { useState, useEffect } from 'react'
-import { auth } from '@/lib/firebase-config'
-import { signInWithCustomToken, onAuthStateChanged, signOut, User } from 'firebase/auth'
-import { firebaseAuth } from '@/lib/api-client'
 
 export interface FirebaseAuthState {
-  user: User | null
+  user: any | null
   loading: boolean
   error: string | null
 }
@@ -19,19 +16,22 @@ export interface FirebaseAuthActions {
 }
 
 export function useFirebaseAuth(): FirebaseAuthState & FirebaseAuthActions {
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState<any | null>(null)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (typeof window === 'undefined' || !auth) return
-
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user)
-      setLoading(false)
-    })
-
-    return () => unsubscribe()
+    // Check for stored user data
+    if (typeof window !== 'undefined') {
+      const storedUser = localStorage.getItem('user')
+      if (storedUser) {
+        try {
+          setUser(JSON.parse(storedUser))
+        } catch (e) {
+          console.error('Error parsing stored user:', e)
+        }
+      }
+    }
   }, [])
 
   const signUpWithFirebase = async (email: string, password: string, name?: string) => {
@@ -39,17 +39,23 @@ export function useFirebaseAuth(): FirebaseAuthState & FirebaseAuthActions {
       setLoading(true)
       setError(null)
 
-      // Call our API to create user and get custom token
-      const response = await firebaseAuth.signup({ email, password, name: name || '' })
+      // Call our API to create user
+      const response = await fetch('/api/sign-up', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, name: name || '' })
+      })
 
-      if (!response.data.success) {
-        throw new Error(response.data.error || 'Failed to create account')
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to create account')
       }
 
-      // Sign in with the custom token
-      if (auth) {
-        await signInWithCustomToken(auth, response.data.customToken)
-      }
+      // Store user data
+      const userData = { email, name: name || '', id: result.userId || email }
+      localStorage.setItem('user', JSON.stringify(userData))
+      setUser(userData)
 
     } catch (err: any) {
       setError(err.message || 'Failed to create account')
@@ -64,17 +70,23 @@ export function useFirebaseAuth(): FirebaseAuthState & FirebaseAuthActions {
       setLoading(true)
       setError(null)
 
-      // Call our API to verify credentials and get custom token
-      const response = await firebaseAuth.signin({ email, password })
+      // Call our API to verify credentials
+      const response = await fetch('/api/sign-in', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      })
 
-      if (!response.data.success) {
-        throw new Error(response.data.error || 'Failed to sign in')
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to sign in')
       }
 
-      // Sign in with the custom token
-      if (auth) {
-        await signInWithCustomToken(auth, response.data.customToken)
-      }
+      // Store user data
+      const userData = { email, id: result.userId || email }
+      localStorage.setItem('user', JSON.stringify(userData))
+      setUser(userData)
 
     } catch (err: any) {
       setError(err.message || 'Failed to sign in')
@@ -88,9 +100,13 @@ export function useFirebaseAuth(): FirebaseAuthState & FirebaseAuthActions {
     try {
       setLoading(true)
       setError(null)
-      if (auth) {
-        await signOut(auth)
-      }
+      
+      // Clear stored user data
+      localStorage.removeItem('user')
+      localStorage.removeItem('accessToken')
+      localStorage.removeItem('refreshToken')
+      setUser(null)
+      
     } catch (err: any) {
       setError(err.message || 'Failed to sign out')
       throw err
@@ -104,7 +120,7 @@ export function useFirebaseAuth(): FirebaseAuthState & FirebaseAuthActions {
       setLoading(true)
       setError(null)
 
-      const response = await fetch('/api/auth/firebase/send-verification', {
+      const response = await fetch('/api/auth/send-verification', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId })
@@ -129,7 +145,7 @@ export function useFirebaseAuth(): FirebaseAuthState & FirebaseAuthActions {
       setLoading(true)
       setError(null)
 
-      const response = await fetch('/api/auth/firebase/verify-email', {
+      const response = await fetch('/api/auth/verify-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ actionCode })
@@ -139,11 +155,6 @@ export function useFirebaseAuth(): FirebaseAuthState & FirebaseAuthActions {
 
       if (!response.ok) {
         throw new Error(data.error || 'Failed to verify email')
-      }
-
-      // Refresh the auth state to get updated email verification status
-      if (auth && auth.currentUser) {
-        await auth.currentUser.reload()
       }
 
     } catch (err: any) {

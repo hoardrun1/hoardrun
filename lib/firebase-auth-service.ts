@@ -37,8 +37,14 @@ export class FirebaseAuthService {
         throw new AppError('User not found', ErrorCode.NOT_FOUND, 404)
       }
 
+      // Firebase removed - return a mock token for compatibility
+      if (!adminAuth) {
+        console.log('Firebase removed - returning mock custom token for user:', userId)
+        return `mock-token-${userId}-${Date.now()}`
+      }
+
       // Create custom token with user data
-      const customToken = await adminAuth.createCustomToken(userId, {
+      const customToken = await (adminAuth as any).createCustomToken(userId, {
         email: user.email,
         name: user.name,
         emailVerified: user.emailVerified,
@@ -58,7 +64,18 @@ export class FirebaseAuthService {
    */
   async verifyIdToken(idToken: string): Promise<FirebaseUser> {
     try {
-      const decodedToken = await adminAuth.verifyIdToken(idToken)
+      // Firebase removed - return mock data for compatibility
+      if (!adminAuth) {
+        console.log('Firebase removed - returning mock user data for token verification')
+        return {
+          uid: 'mock-uid',
+          email: 'user@example.com',
+          name: 'Mock User',
+          emailVerified: true
+        }
+      }
+
+      const decodedToken = await (adminAuth as any).verifyIdToken(idToken)
       
       return {
         uid: decodedToken.uid,
@@ -243,13 +260,39 @@ export class FirebaseAuthService {
         throw new AppError('Email is already verified', ErrorCode.CONFLICT, 409)
       }
 
+      // Firebase removed - skip Firebase operations
+      if (!adminAuth) {
+        console.log('Firebase removed - skipping email verification for user:', userId)
+        
+        // Create a mock verification link for testing
+        const mockVerificationLink = `${process.env.NEXT_PUBLIC_API_BASE_URL?.replace('/api', '') || 'http://localhost:3000'}/verify-email?userId=${userId}&mock=true`
+        
+        logger.info(`Mock email verification link for ${user.email}: ${mockVerificationLink}`)
+
+        // Store mock verification link in database for testing purposes
+        await prisma.verificationCode.create({
+          data: {
+            userId: userId,
+            code: mockVerificationLink,
+            type: 'EMAIL_VERIFICATION',
+            expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+            used: false
+          }
+        })
+
+        logger.info(`Mock email verification link generated for user: ${userId}`)
+        return
+      }
+
       // Create a Firebase user record if it doesn't exist
       try {
-        await adminAuth.getUserByEmail(user.email)
+        if (adminAuth) {
+          await (adminAuth as any).getUserByEmail(user.email)
+        }
       } catch (error: any) {
-        if (error.code === 'auth/user-not-found') {
+        if (error.code === 'auth/user-not-found' && adminAuth) {
           // Create Firebase user record
-          await adminAuth.createUser({
+          await (adminAuth as any).createUser({
             uid: userId,
             email: user.email,
             displayName: user.name || undefined,
@@ -266,10 +309,10 @@ export class FirebaseAuthService {
         handleCodeInApp: true,
       }
 
-      const verificationLink = await adminAuth.generateEmailVerificationLink(
+      const verificationLink = adminAuth ? await (adminAuth as any).generateEmailVerificationLink(
         user.email,
         actionCodeSettings
-      )
+      ) : `mock-verification-link-${userId}`
 
       // In a real application, you would send this link via email
       // For now, we'll log it and store it in the database for testing

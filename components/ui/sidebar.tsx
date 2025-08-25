@@ -350,14 +350,14 @@ export function Sidebar({ className, onAddMoney }: SidebarProps) {
                   <div className="relative">
                     <div className="bg-white w-12 h-12 rounded-2xl flex items-center justify-center shadow-xl">
                       <span className="text-black font-bold text-lg">
-                        {user?.displayName?.charAt(0) || 'U'}
+                        {user?.name?.charAt(0) || 'U'}
                       </span>
                     </div>
                     <div className="absolute -inset-1 bg-gradient-to-r from-white/30 to-white/10 rounded-2xl -z-10 blur-md"></div>
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-white font-bold text-base truncate">
-                      {user?.displayName || 'User'}
+                      {user?.name || 'User'}
                     </p>
                     <p className="text-gray-400 text-sm truncate font-medium">
                       {user?.email || 'user@example.com'}

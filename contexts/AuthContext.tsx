@@ -2,7 +2,14 @@
 
 import React, { createContext, useContext, ReactNode } from 'react';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
-import { User } from 'firebase/auth';
+
+// Define a simple user type since Firebase is removed
+interface User {
+  id: string;
+  email: string;
+  name?: string;
+  emailVerified?: boolean;
+}
 
 interface AuthContextType {
   user: User | null;

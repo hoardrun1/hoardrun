@@ -16,9 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Image from "next/image"
 import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { useFirebaseAuth } from "@/hooks/useFirebaseAuth"
-import { signInWithCustomToken } from 'firebase/auth'
-import { auth } from '@/lib/firebase-config'
+// Firebase removed - using simple authentication without Firebase dependencies
 
 // Google Identity Services types
 declare global {
@@ -73,7 +71,7 @@ export function SignInPage() {
     password: "",
     rememberMe: false,
   })
-  const { signInWithFirebase, loading: firebaseLoading } = useFirebaseAuth()
+  const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [activeTab, setActiveTab] = useState("social")
   const router = useRouter()
@@ -165,10 +163,8 @@ export function SignInPage() {
             localStorage.setItem('accessToken', accessToken)
             localStorage.setItem('refreshToken', refreshToken)
 
-            // Sign in with Firebase using custom token if available
-            if (firebaseCustomToken && auth) {
-              await signInWithCustomToken(auth, firebaseCustomToken)
-            }
+            // Store user data (Firebase removed)
+            localStorage.setItem('user', JSON.stringify(user))
 
             // Success - show message and redirect
             addToast({
@@ -222,10 +218,23 @@ export function SignInPage() {
       // Validate with Zod
       loginSchema.parse(formData)
 
-      console.log('Sending Firebase login request for:', formData.email)
-
-      // Use Firebase authentication
-      await signInWithFirebase(formData.email, formData.password)
+      setLoading(true)
+      
+      // Simple authentication (Firebase removed)
+      const response = await fetch('/api/sign-in', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: formData.email, password: formData.password })
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || 'Login failed')
+      }
+      
+      const data = await response.json()
+      localStorage.setItem('user', JSON.stringify(data.user))
+      localStorage.setItem('token', data.token)
 
       // Show success message
       addToast({
@@ -250,6 +259,8 @@ export function SignInPage() {
         description: errorMessage,
         variant: "destructive",
       })
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -326,7 +337,7 @@ export function SignInPage() {
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       className="pl-8 sm:pl-10 h-8 sm:h-9 md:h-10 bg-white border-gray-300 text-black focus:border-black text-xs sm:text-sm"
-                      disabled={firebaseLoading}
+                      disabled={loading}
                       required
                     />
                   </div>
@@ -340,7 +351,7 @@ export function SignInPage() {
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                       className="pl-8 sm:pl-10 h-8 sm:h-9 md:h-10 bg-white border-gray-300 text-black focus:border-black text-xs sm:text-sm"
-                      disabled={firebaseLoading}
+                      disabled={loading}
                       required
                       minLength={8}
                     />
@@ -361,7 +372,7 @@ export function SignInPage() {
                       className="border-gray-300 data-[state=checked]:bg-black data-[state=checked]:text-white"
                       checked={formData.rememberMe}
                       onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, rememberMe: Boolean(checked) }))}
-                      disabled={firebaseLoading}
+                      disabled={loading}
                     />
                     <label htmlFor="remember" className="ml-2 text-sm text-white">
                       Remember me
@@ -375,9 +386,9 @@ export function SignInPage() {
                 <Button
                   type="submit"
                   className="w-full h-8 sm:h-9 md:h-10 bg-black hover:bg-gray-800 text-white font-semibold text-xs sm:text-sm"
-                  disabled={firebaseLoading}
+                  disabled={loading}
                 >
-                  {firebaseLoading ? (
+                  {loading ? (
                     <>
                       <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                       Signing in...
@@ -397,7 +408,7 @@ export function SignInPage() {
                   variant="outline"
                   className="w-full h-12 bg-white hover:bg-gray-50 text-gray-900 border-gray-300 flex items-center justify-center gap-3 transition-all duration-200"
                   onClick={handleGoogleSignIn}
-                  disabled={googleLoading || firebaseLoading}
+                  disabled={googleLoading || loading}
                 >
                   {googleLoading ? (
                     <>
@@ -460,11 +471,11 @@ export function SignInPage() {
                   type="tel"
                   placeholder="Phone number"
                   className="pl-8 sm:pl-10 h-8 sm:h-9 md:h-10 bg-white border-gray-300 text-black focus:border-black text-xs sm:text-sm"
-                  disabled={firebaseLoading}
+                  disabled={loading}
                 />
                 <Button
                   className="w-full h-8 sm:h-9 md:h-10 bg-black hover:bg-gray-800 text-white font-semibold text-xs sm:text-sm"
-                  disabled={firebaseLoading}
+                  disabled={loading}
                 >
                   Send Code
                 </Button>

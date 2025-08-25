@@ -347,7 +347,7 @@ export default function OverviewPage() {
               Financial Overview
             </h1>
             <p className="text-black/60 mt-2 text-lg">
-              Welcome back, {user?.displayName || 'User'}! Here's your financial snapshot.
+              Welcome back, {user?.name || 'User'}! Here's your financial snapshot.
             </p>
           </div>
           <Button 

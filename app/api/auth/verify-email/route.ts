@@ -1,14 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { CognitoIdentityProviderClient, ConfirmSignUpCommand } from '@aws-sdk/client-cognito-identity-provider';
 
-const cognitoClient = new CognitoIdentityProviderClient({
-  region: process.env.AWS_REGION || 'us-east-1',
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
-  },
-});
-
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -21,45 +13,70 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Confirm sign up with AWS Cognito
-    const confirmSignUpCommand = new ConfirmSignUpCommand({
-      ClientId: process.env.COGNITO_CLIENT_ID || process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID,
-      Username: email,
-      ConfirmationCode: code,
-    });
+    console.log('Email verification request for:', email);
 
-    await cognitoClient.send(confirmSignUpCommand);
+    try {
+      // Create AWS Cognito client
+      const cognitoClient = new CognitoIdentityProviderClient({
+        region: process.env.AWS_REGION || 'us-east-1',
+        credentials: {
+          accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
+          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
+        },
+      });
 
-    return NextResponse.json({
-      success: true,
-      message: 'Email verified successfully. You can now sign in.',
-    });
+      // Confirm signup with verification code
+      const confirmCommand = new ConfirmSignUpCommand({
+        ClientId: process.env.COGNITO_CLIENT_ID || process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID,
+        Username: email,
+        ConfirmationCode: code,
+      });
+
+      await cognitoClient.send(confirmCommand);
+
+      console.log('Email verification successful for:', email);
+
+      return NextResponse.json({
+        success: true,
+        message: 'Email verified successfully. You can now sign in.',
+        email: email,
+      });
+
+    } catch (cognitoError: any) {
+      console.error('AWS Cognito verification error:', cognitoError);
+      
+      // Handle specific Cognito errors
+      let errorMessage = 'Email verification failed';
+      if (cognitoError.name === 'CodeMismatchException') {
+        errorMessage = 'Invalid verification code. Please check your email and try again.';
+      } else if (cognitoError.name === 'ExpiredCodeException') {
+        errorMessage = 'Verification code has expired. Please request a new one.';
+      } else if (cognitoError.name === 'UserNotFoundException') {
+        errorMessage = 'User not found. Please sign up first.';
+      } else if (cognitoError.name === 'NotAuthorizedException') {
+        errorMessage = 'User is already confirmed or verification failed.';
+      } else if (cognitoError.message) {
+        errorMessage = cognitoError.message;
+      }
+
+      return NextResponse.json({
+        error: errorMessage,
+        message: errorMessage
+      }, { status: 400 });
+    }
 
   } catch (error: any) {
     console.error('Email verification API error:', error);
     
-    let errorMessage = 'Email verification failed';
-    if (error.name === 'CodeMismatchException') {
-      errorMessage = 'Invalid verification code';
-    } else if (error.name === 'ExpiredCodeException') {
-      errorMessage = 'Verification code has expired';
-    } else if (error.name === 'UserNotFoundException') {
-      errorMessage = 'User not found';
-    } else if (error.name === 'NotAuthorizedException') {
-      errorMessage = 'User is already confirmed';
-    } else if (error.message) {
-      errorMessage = error.message;
-    }
-
     return NextResponse.json({
-      error: errorMessage,
-      message: errorMessage
-    }, { status: 400 });
+      error: 'Verification failed',
+      message: 'An unexpected error occurred during email verification.'
+    }, { status: 500 });
   }
 }
 
 export async function GET() {
   return NextResponse.json({
-    message: 'Email verification endpoint - use POST method'
+    message: 'Email verification endpoint - use POST method with email and code'
   });
 }

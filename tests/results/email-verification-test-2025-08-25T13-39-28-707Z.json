@@ -1,0 +1,126 @@
+{
+  "success": false,
+  "results": {
+    "configuration": {
+      "success": false,
+      "error": "Missing required environment variables"
+    },
+    "signup": {
+      "success": false,
+      "error": ""
+    },
+    "resend": {
+      "success": false,
+      "error": ""
+    },
+    "apiEndpoints": {
+      "success": false,
+      "data": {
+        "error": "Network timeout. Please try again.",
+        "message": "Network timeout. Please try again."
+      }
+    }
+  },
+  "logs": [
+    {
+      "timestamp": "2025-08-25T13:39:00.997Z",
+      "message": "🚀 Starting AWS Cognito Email Verification Tests",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-08-25T13:39:00.998Z",
+      "message": "============================================================",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-08-25T13:39:00.999Z",
+      "message": "🧪 Testing Email Delivery Configuration...",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-08-25T13:39:00.999Z",
+      "message": "❌ Missing environment variables: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION, COGNITO_CLIENT_ID",
+      "type": "error"
+    },
+    {
+      "timestamp": "2025-08-25T13:39:01.004Z",
+      "message": "🧪 Testing AWS Cognito Signup Email Sending...",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-08-25T13:39:09.492Z",
+      "message": "❌ Signup failed: ",
+      "type": "error"
+    },
+    {
+      "timestamp": "2025-08-25T13:39:09.493Z",
+      "message": "Error details: {\n  \"code\": \"ETIMEDOUT\",\n  \"name\": \"TimeoutError\",\n  \"$metadata\": {\n    \"attempts\": 3,\n    \"totalRetryDelay\": 150\n  }\n}",
+      "type": "error"
+    },
+    {
+      "timestamp": "2025-08-25T13:39:09.494Z",
+      "message": "🧪 Testing Resend Verification Email...",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-08-25T13:39:18.581Z",
+      "message": "❌ Resend verification failed: ",
+      "type": "error"
+    },
+    {
+      "timestamp": "2025-08-25T13:39:18.583Z",
+      "message": "🧪 Testing API Endpoints...",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-08-25T13:39:18.583Z",
+      "message": "Testing /api/sign-up endpoint...",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-08-25T13:39:28.701Z",
+      "message": "❌ Signup API endpoint failed: Network timeout. Please try again.",
+      "type": "error"
+    },
+    {
+      "timestamp": "2025-08-25T13:39:28.702Z",
+      "message": "============================================================",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-08-25T13:39:28.703Z",
+      "message": "📊 Test Results Summary:",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-08-25T13:39:28.704Z",
+      "message": "configuration: ❌ FAIL",
+      "type": "error"
+    },
+    {
+      "timestamp": "2025-08-25T13:39:28.704Z",
+      "message": "signup: ❌ FAIL",
+      "type": "error"
+    },
+    {
+      "timestamp": "2025-08-25T13:39:28.705Z",
+      "message": "resend: ❌ FAIL",
+      "type": "error"
+    },
+    {
+      "timestamp": "2025-08-25T13:39:28.705Z",
+      "message": "apiEndpoints: ❌ FAIL",
+      "type": "error"
+    },
+    {
+      "timestamp": "2025-08-25T13:39:28.706Z",
+      "message": "🧹 Cleaning up test users...",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-08-25T13:39:28.706Z",
+      "message": "\n🎯 Overall Test Result: ❌ SOME TESTS FAILED",
+      "type": "error"
+    }
+  ]
+}

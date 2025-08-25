@@ -64,7 +64,7 @@ export function SignInPage() {
   const { addToast } = useToast()
   const [error, setError] = useState<string | null>(null)
   const [googleLoading, setGoogleLoading] = useState(false)
-  const { signIn } = useAuth()
+  const { signIn } = useAwsCognitoAuth()
 
   useEffect(() => {
     // Check for verification success in URL parameters
@@ -139,11 +139,25 @@ export function SignInPage() {
       })
       
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || 'Login failed')
+        let errorMessage = 'Login failed'
+        try {
+          const errorData = await response.json()
+          errorMessage = errorData.message || errorMessage
+        } catch (parseError) {
+          // If we can't parse the error response, use a generic message
+          console.error('Failed to parse error response:', parseError)
+          errorMessage = `Login failed (${response.status})`
+        }
+        throw new Error(errorMessage)
       }
       
       const data = await response.json()
+      
+      // Validate response data
+      if (!data.user || !data.token) {
+        throw new Error('Invalid response from server')
+      }
+      
       localStorage.setItem('user', JSON.stringify(data.user))
       localStorage.setItem('token', data.token)
 

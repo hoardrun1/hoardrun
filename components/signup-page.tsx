@@ -97,6 +97,18 @@ export function SignupPage() {
         throw new Error(data.error || data.message || 'Signup failed')
       }
 
+      // Check if we need to use Cognito Hosted UI
+      if (data.useHostedUI) {
+        addToast({
+          title: "Redirecting...",
+          description: "Taking you to the secure signup page.",
+        })
+
+        // Use the existing signUp function which redirects to Cognito Hosted UI
+        await signUp(formData.email, formData.password, formData.name)
+        return
+      }
+
       // Success - redirect to email verification page
       addToast({
         title: "Account Created!",

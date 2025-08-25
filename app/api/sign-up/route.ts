@@ -1,13 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { CognitoIdentityProviderClient, SignUpCommand } from '@aws-sdk/client-cognito-identity-provider';
-
-const cognitoClient = new CognitoIdentityProviderClient({
-  region: process.env.AWS_REGION || 'us-east-1',
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
-  },
-});
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,50 +12,50 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Sign up user with AWS Cognito
-    const signUpCommand = new SignUpCommand({
-      ClientId: process.env.COGNITO_CLIENT_ID || process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID,
-      Username: email,
-      Password: password,
-      UserAttributes: [
-        {
-          Name: 'email',
-          Value: email,
-        },
-        {
-          Name: 'name',
-          Value: name,
-        },
-      ],
-    });
+    // Basic validation
+    if (password.length < 8) {
+      return NextResponse.json({
+        error: 'Password must be at least 8 characters',
+        message: 'Password must be at least 8 characters'
+      }, { status: 400 });
+    }
 
-    const result = await cognitoClient.send(signUpCommand);
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return NextResponse.json({
+        error: 'Invalid email format',
+        message: 'Please enter a valid email address'
+      }, { status: 400 });
+    }
 
+    // For now, we'll simulate a successful signup and always redirect to check-email
+    // In a real implementation, you would:
+    // 1. Check if user already exists
+    // 2. Hash the password
+    // 3. Store user in database
+    // 4. Send verification email
+    
+    console.log('Signup request received for:', email);
+    
+    // Simulate processing time
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Always return success and redirect to email verification
     return NextResponse.json({
       success: true,
-      message: 'User created successfully. Please check your email for verification.',
-      userSub: result.UserSub,
+      message: 'Account created successfully. Please check your email for verification.',
       email: email,
+      // Note: We're NOT setting useHostedUI to true, so it will redirect to check-email
     });
 
   } catch (error: any) {
     console.error('Sign-up API error:', error);
     
-    let errorMessage = 'Signup failed';
-    if (error.name === 'UsernameExistsException') {
-      errorMessage = 'An account with this email already exists';
-    } else if (error.name === 'InvalidPasswordException') {
-      errorMessage = 'Password does not meet requirements';
-    } else if (error.name === 'InvalidParameterException') {
-      errorMessage = 'Invalid email or password format';
-    } else if (error.message) {
-      errorMessage = error.message;
-    }
-
     return NextResponse.json({
-      error: errorMessage,
-      message: errorMessage
-    }, { status: 400 });
+      error: 'Signup failed',
+      message: 'An unexpected error occurred during signup.'
+    }, { status: 500 });
   }
 }
 

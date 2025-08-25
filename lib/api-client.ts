@@ -1,10 +1,4 @@
 import axios from 'axios';
-// import { AppError, ErrorCode } from './error-handling';
-
-<<<<<<< HEAD
-=======
-// Using Firebase for auth, local Next.js API routes for other operations
->>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
 const api = axios.create({
@@ -58,36 +52,6 @@ export const auth = {
   verifyFace: (data: VerifyFaceData) => api.post('/auth/verify-face', data),
   forgotPassword: (data: ForgotPasswordData) => api.post('/auth/forgot-password', data),
   resetPassword: (data: ResetPasswordData) => api.post('/auth/reset-password', data),
-}
-
-// Firebase Auth API
-export const firebaseAuth = {
-  signup: (data: SignupData) => api.post('/auth/firebase/signup', data),
-  signin: (data: SigninData) => api.post('/auth/firebase/signin', data),
-  verify: (data: { idToken: string }) => api.post('/auth/firebase/verify', data),
-<<<<<<< HEAD
-=======
-  sendEmailVerification: (data: { userId: string }) => api.post('/auth/firebase/send-verification', data),
-  verifyEmail: (data: { actionCode: string }) => api.post('/auth/firebase/verify-email', data),
->>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
-  signInWithCustomToken: async (customToken: string) => {
-    const response = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=${process.env.NEXT_PUBLIC_FIREBASE_API_KEY}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        token: customToken,
-        returnSecureToken: true
-      })
-    })
-
-    if (!response.ok) {
-      throw new Error('Failed to sign in with custom token')
-    }
-
-    return response.json()
-  }
 }
 
 // User API

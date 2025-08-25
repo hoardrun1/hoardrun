@@ -1,7 +1,6 @@
 'use client'
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { useCognitoAuth } from '@/hooks/useCognitoAuth';
 import { User as FirebaseUser } from 'firebase/auth';
 
@@ -60,7 +59,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [authMethod, setAuthMethod] = useState<'jwt' | 'firebase' | 'cognito' | null>(null);
 
   // Initialize auth hooks
-  const firebaseAuth = useFirebaseAuth();
   const cognitoAuth = useCognitoAuth();
 
   useEffect(() => {
@@ -186,11 +184,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       sessionStorage.removeItem('token');
       sessionStorage.removeItem('user');
 
-      // Clear Firebase auth if it was used
-      if (authMethod === 'firebase') {
-        await firebaseAuth.signOutFromFirebase();
-      }
-
       // Clear Cognito auth if it was used
       if (authMethod === 'cognito') {
         cognitoAuth.signOut();
@@ -200,8 +193,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const clearError = () => {
     setError(null);
-    firebaseAuth.clearError();
-    cognitoAuth.clearError();
+       cognitoAuth.clearError();
   };
 
   // JWT/Traditional signup
@@ -233,87 +225,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } finally {
       setLoading(false);
     }
-  };
-
-  // Firebase authentication methods
-  const signUpWithFirebase = async (email: string, password: string, name?: string) => {
-    try {
-      setLoading(true);
-      setError(null);
-      setAuthMethod('firebase');
-
-      await firebaseAuth.signUpWithFirebase(email, password, name);
-
-      // Convert Firebase user to our User interface
-      if (firebaseAuth.user) {
-        const unifiedUser: User = {
-          id: firebaseAuth.user.uid,
-          email: firebaseAuth.user.email || email,
-          name: firebaseAuth.user.displayName || name,
-          emailVerified: firebaseAuth.user.emailVerified
-        };
-
-        setUser(unifiedUser);
-        // Firebase handles its own token management
-        setToken('firebase-token'); // Placeholder since Firebase manages tokens internally
-
-        // Store in localStorage
-        localStorage.setItem('auth_user', JSON.stringify(unifiedUser));
-        localStorage.setItem('auth_method', 'firebase');
-      }
-    } catch (error: any) {
-      console.error('Firebase signup error:', error);
-      setError(error.message);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const signInWithFirebase = async (email: string, password: string) => {
-    try {
-      setLoading(true);
-      setError(null);
-      setAuthMethod('firebase');
-
-      await firebaseAuth.signInWithFirebase(email, password);
-
-      // Convert Firebase user to our User interface
-      if (firebaseAuth.user) {
-        const unifiedUser: User = {
-          id: firebaseAuth.user.uid,
-          email: firebaseAuth.user.email || email,
-          name: firebaseAuth.user.displayName,
-          emailVerified: firebaseAuth.user.emailVerified
-        };
-
-        setUser(unifiedUser);
-        setToken('firebase-token'); // Placeholder since Firebase manages tokens internally
-
-        // Store in localStorage
-        localStorage.setItem('auth_user', JSON.stringify(unifiedUser));
-        localStorage.setItem('auth_method', 'firebase');
-      }
-    } catch (error: any) {
-      console.error('Firebase signin error:', error);
-      setError(error.message);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const signOutFromFirebase = async () => {
-    await firebaseAuth.signOutFromFirebase();
-    await logout();
-  };
-
-  const sendEmailVerification = async (userId: string) => {
-    await firebaseAuth.sendEmailVerification(userId);
-  };
-
-  const verifyEmail = async (actionCode: string) => {
-    await firebaseAuth.verifyEmail(actionCode);
   };
 
   // AWS Cognito authentication methods
@@ -409,8 +320,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // User and state
     user,
     token,
-    loading: loading || firebaseAuth.loading || cognitoAuth.loading,
-    error: error || firebaseAuth.error || cognitoAuth.error,
+    loading: loading || cognitoAuth.loading,
+    error: error || cognitoAuth.error,
     isAuthenticated: !!user && !!token,
     authMethod,
 
@@ -421,13 +332,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     // JWT/Traditional auth
     signup,
-
-    // Firebase auth methods
-    signUpWithFirebase,
-    signInWithFirebase,
-    signOutFromFirebase,
-    sendEmailVerification,
-    verifyEmail,
 
     // AWS Cognito auth methods
     signUpWithCognito,

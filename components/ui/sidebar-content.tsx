@@ -99,7 +99,8 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
     setIsOpen(false)
   }
 
-  const renderMenuSection = (title: string, items: MenuItem[]) => (
+  const renderMenuSection = (title: string, items: MenuItem[]) => {
+    return (
     <div className="mb-8">
       <h3 className="text-xs font-bold text-white/40 uppercase tracking-wider mb-4 px-2">
         {title}
@@ -181,8 +182,10 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
         ))}
       </div>
     </div>
-  )
+    );
+  };
 
+  // Main component return
   return (
     <div
       ref={sidebarRef}
@@ -219,14 +222,6 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-bold text-white text-sm truncate">
-<<<<<<< HEAD
-                {user?.name || 'Demo User'}
-=======
-                {user?.displayName || 'Demo User'}
->>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
-              </p>
-              <p className="text-xs text-white/60 truncate">
-                {user?.email || 'user@example.com'}
               </p>
             </div>
           </motion.div>

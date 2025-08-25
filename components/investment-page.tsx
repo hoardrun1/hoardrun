@@ -39,6 +39,8 @@ import { SidebarContent } from '@/components/ui/sidebar-content';
 import { SidebarToggle } from '@/components/ui/sidebar-toggle';
 import { LayoutWrapper } from '@/components/ui/layout-wrapper';
 import { DepositModal } from '@/components/deposit-modal';
+import { CollectiveCapitalCircles } from '@/components/collective-capital/CollectiveCapitalCircles';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { z } from "zod"
 
 interface Investment {
@@ -111,7 +113,7 @@ const investmentCategories: InvestmentCategory[] = [
     icon: Briefcase,
     return: 18.5,
     risk: 'High',
-    minInvestment: 50000,
+    minInvestment: 10000,
     description: 'High-growth opportunities in private companies',
     features: ['Direct ownership', 'High potential returns', 'Long-term growth']
   },
@@ -121,7 +123,7 @@ const investmentCategories: InvestmentCategory[] = [
     icon: Building2,
     return: 12.3,
     risk: 'Moderate',
-    minInvestment: 25000,
+    minInvestment: 1000,
     description: 'Stable returns from property investments',
     features: ['Rental income', 'Property appreciation', 'Tax benefits']
   },
@@ -131,7 +133,7 @@ const investmentCategories: InvestmentCategory[] = [
     icon: Shield,
     return: 5.8,
     risk: 'Low',
-    minInvestment: 5000,
+    minInvestment: 100,
     description: 'Secure fixed-income investments',
     features: ['Regular interest payments', 'Capital preservation', 'Government backed']
   },
@@ -141,7 +143,7 @@ const investmentCategories: InvestmentCategory[] = [
     icon: ChartBar,
     return: 9.8,
     risk: 'Low',
-    minInvestment: 1000,
+    minInvestment: 50,
     description: 'Diversified market exposure',
     features: ['Low fees', 'High liquidity', 'Broad diversification']
   },
@@ -151,7 +153,7 @@ const investmentCategories: InvestmentCategory[] = [
     icon: Brain,
     return: 25.5,
     risk: 'Very High',
-    minInvestment: 100000,
+    minInvestment: 25000,
     description: 'Innovative startup investments',
     features: ['Early-stage companies', 'High growth potential', 'Tech focus']
   },
@@ -161,7 +163,7 @@ const investmentCategories: InvestmentCategory[] = [
     icon: Globe,
     return: 32.5,
     risk: 'Very High',
-    minInvestment: 500,
+    minInvestment: 5,
     description: 'Digital asset investments',
     features: ['24/7 trading', 'High volatility', 'Blockchain technology']
   },
@@ -171,7 +173,7 @@ const investmentCategories: InvestmentCategory[] = [
     icon: TrendingUp,
     return: 15.5,
     risk: 'High',
-    minInvestment: 10000,
+    minInvestment: 100,
     description: 'High-growth public company stocks',
     features: ['Rapid growth potential', 'Market leadership', 'Innovation focus']
   },
@@ -181,7 +183,7 @@ const investmentCategories: InvestmentCategory[] = [
     icon: Wallet,
     return: 8.2,
     risk: 'Moderate',
-    minInvestment: 5000,
+    minInvestment: 100,
     description: 'Stable dividend-paying stocks',
     features: ['Regular dividends', 'Stable companies', 'Income generation']
   },
@@ -191,7 +193,7 @@ const investmentCategories: InvestmentCategory[] = [
     icon: Building2,
     return: 4.5,
     risk: 'Low',
-    minInvestment: 10000,
+    minInvestment: 500,
     description: 'Tax-advantaged government bonds',
     features: ['Tax benefits', 'Government backed', 'Stable returns']
   },
@@ -201,7 +203,7 @@ const investmentCategories: InvestmentCategory[] = [
     icon: BarChart,
     return: 11.2,
     risk: 'Moderate',
-    minInvestment: 2000,
+    minInvestment: 200,
     description: 'Diversified commodity exposure',
     features: ['Inflation hedge', 'Portfolio diversification', 'Global exposure']
   },
@@ -211,7 +213,7 @@ const investmentCategories: InvestmentCategory[] = [
     icon: Brain,
     return: 28.5,
     risk: 'Very High',
-    minInvestment: 25000,
+    minInvestment: 5000,
     description: 'Early-stage technology companies',
     features: ['Innovation focus', 'High growth potential', 'Direct ownership']
   },
@@ -221,7 +223,7 @@ const investmentCategories: InvestmentCategory[] = [
     icon: Building2,
     return: 10.5,
     risk: 'Moderate',
-    minInvestment: 5000,
+    minInvestment: 250,
     description: 'Real Estate Investment Trusts',
     features: ['Property portfolio', 'Regular income', 'Liquidity']
   }
@@ -885,6 +887,50 @@ export function InvestmentPage() {
             </div>
           )
         )}
+      </div>
+
+      {/* Collective Capital Circles Section */}
+      <div className="container mx-auto px-4 py-8">
+        <Tabs defaultValue="traditional" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-8">
+            <TabsTrigger value="traditional">Traditional Investments</TabsTrigger>
+            <TabsTrigger value="collective">Collective Capital Circles</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="traditional">
+            <div className="text-center py-12">
+              <h3 className="text-2xl font-bold mb-4">Traditional Investment Options</h3>
+              <p className="text-gray-600 mb-6">
+                Explore our curated selection of traditional investment opportunities
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {investmentCategories.slice(0, 3).map((category) => (
+                  <Card key={category.id} className="hover:shadow-lg transition-shadow">
+                    <CardHeader>
+                      <div className="flex items-center space-x-2">
+                        <category.icon className="h-5 w-5 text-blue-600" />
+                        <CardTitle className="text-lg">{category.title}</CardTitle>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-gray-600 mb-4">{category.description}</p>
+                      <div className="flex justify-between items-center">
+                        <span className="text-2xl font-bold text-green-600">
+                          {category.return}%
+                        </span>
+                        <Badge variant="outline">{category.risk}</Badge>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="collective">
+            <CollectiveCapitalCircles />
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Investment Modal */}

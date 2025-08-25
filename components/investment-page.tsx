@@ -31,7 +31,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useMarketData } from '@/hooks/useMarketData';
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/contexts/AuthContext';
 import { MarketQuote } from '@/types/market';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sidebar-layout';
@@ -294,7 +294,7 @@ export function InvestmentPage() {
     addToast({ title: "Withdraw", description: `Mock withdraw of $${amount}` });
   });
 
-  const { data: session, status } = useSession()
+  const { user, loading } = useAuth()
   const { fetchStockQuote, isLoading: marketDataLoading } = useMarketData()
 
   // Redirect if not authenticated (unless bypass is enabled)
@@ -306,10 +306,10 @@ export function InvestmentPage() {
       return;
     }
 
-    if (status === 'unauthenticated') {
+    if (!user && !loading) {
       router.push('/signin')
     }
-  }, [status, router])
+  }, [user, loading, router])
 
   // Security check simulation
   useEffect(() => {
@@ -325,7 +325,7 @@ export function InvestmentPage() {
       return;
     }
 
-    if (session?.user) {
+    if (user) {
       // Simulate security checks
       setTimeout(() => {
         setSecurityChecks({
@@ -335,7 +335,7 @@ export function InvestmentPage() {
         })
       }, 1000)
     }
-  }, [session])
+  }, [user])
 
   const validateInvestment = (data: any) => {
     try {

@@ -45,8 +45,8 @@ export default function TestEmailPage() {
           <div className="bg-blue-50 p-4 rounded-lg">
             <h2 className="text-lg font-semibold text-blue-800 mb-2">About This Page</h2>
             <p className="text-blue-700 text-sm">
-              This page allows you to test your Mailgun email configuration. When you click the button below, 
-              a test email will be sent to the recipient configured in your environment variables.
+              This page allows you to test your email configuration. When you click the button below,
+              a test email will be sent using the development email service.
             </p>
           </div>
           
@@ -63,7 +63,7 @@ export default function TestEmailPage() {
                 disabled={true}
               />
               <p className="text-sm text-gray-500 mt-1">
-                Using recipient from environment variables. To change, update MAILGUN_RECIPIENT in .env.local
+                Using development email service (emails are logged to console)
               </p>
             </div>
             
@@ -97,14 +97,14 @@ export default function TestEmailPage() {
           )}
           
           <div className="bg-gray-50 p-4 rounded-lg">
-            <h2 className="text-lg font-semibold mb-2">Mailgun Sandbox Instructions</h2>
+            <h2 className="text-lg font-semibold mb-2">Development Email Service</h2>
             <p className="text-sm text-gray-600 mb-2">
-              When using a Mailgun sandbox domain:
+              This application uses a development email service:
             </p>
             <ol className="list-decimal list-inside text-sm text-gray-600 space-y-1">
-              <li>You can only send to authorized recipients</li>
-              <li>Go to your Mailgun dashboard and add authorized recipients</li>
-              <li>Make sure to add your API key to the .env.local file</li>
+              <li>Emails are logged to the console instead of being sent</li>
+              <li>Check the browser console or server logs to see email content</li>
+              <li>Perfect for development and testing without external email services</li>
             </ol>
           </div>
         </div>

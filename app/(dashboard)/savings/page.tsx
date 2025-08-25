@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ui/use-toast'
 import { useSavings } from '@/hooks/useSavings'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -36,7 +36,7 @@ interface SavingsAnalytics {
 }
 
 export default function SavingsPage() {
-  const { data: session } = useSession()
+  const { user } = useAuth()
   const { addToast } = useToast()
   const {
     savingsGoals,
@@ -75,10 +75,10 @@ export default function SavingsPage() {
   })
 
   useEffect(() => {
-    if (session?.user) {
+    if (user) {
       fetchSavingsGoals()
     }
-  }, [session, fetchSavingsGoals])
+  }, [user, fetchSavingsGoals])
 
   // Calculate analytics when savings goals change
   useEffect(() => {

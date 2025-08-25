@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 <<<<<<< HEAD
 import { useRouter } from 'next/navigation'
 import { navigation } from '@/lib/navigation'
@@ -53,7 +53,7 @@ import Link from 'next/link'
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth'
 import { sendWelcomeEmail } from '@/lib/web3forms-email'
 
-export function CheckEmailPage() {
+function VerifyEmailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { addToast } = useToast();
@@ -373,5 +373,13 @@ export function CheckEmailPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export function CheckEmailPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div>Loading...</div></div>}>
+      <VerifyEmailContent />
+    </Suspense>
   );
 }

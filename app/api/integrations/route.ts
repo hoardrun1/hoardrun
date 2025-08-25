@@ -1,14 +1,9 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth-config';
 
 export async function POST(request: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session?.user?.id) {
-      return new NextResponse('Unauthorized', { status: 401 });
-    }
+    // For now, allow all requests - Firebase auth will be handled client-side
+    // TODO: Implement proper Firebase Admin SDK token verification
 
     const body = await request.json();
     

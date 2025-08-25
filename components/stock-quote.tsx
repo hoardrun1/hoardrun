@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/contexts/AuthContext';
 import { useMarketData } from '@/hooks/useMarketData';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,14 +11,14 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { MarketQuote } from '@/types/market';
 
 export default function StockQuote() {
-  const { data: session, status } = useSession();
+  const { user, loading } = useAuth();
   const [symbol, setSymbol] = useState('');
   const [quote, setQuote] = useState<MarketQuote | null>(null);
   const { fetchStockQuote, isLoading, error } = useMarketData();
 
   // Handle unauthenticated state (unless bypass is enabled)
   const bypassAuth = process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true';
-  if (!bypassAuth && status === 'unauthenticated') {
+  if (!bypassAuth && !user && !loading) {
     return (
       <Alert variant="destructive">
         <AlertDescription>
@@ -28,8 +28,8 @@ export default function StockQuote() {
     );
   }
 
-  // Handle loading session state
-  if (status === 'loading') {
+  // Handle loading auth state
+  if (loading) {
     return <StockQuoteSkeleton />;
   }
 

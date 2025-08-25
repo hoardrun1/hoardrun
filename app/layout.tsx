@@ -22,6 +22,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="font-sans">
+        {/* NextAuth provider restored to prevent client errors */}
         <NextAuthProvider>
           <ClientAuthProvider>
             <FinanceProvider>

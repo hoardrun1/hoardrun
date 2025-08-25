@@ -1,4 +1,4 @@
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
@@ -7,18 +7,18 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { status } = useSession();
+  const { user, loading } = useAuth();
   const router = useRouter();
 
   // Check if auth bypass is enabled
   const bypassAuth = process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true';
 
   if (bypassAuth) {
-    console.log('Auth bypass enabled - skipping NextAuth session check');
+    console.log('Auth bypass enabled - skipping Firebase auth check');
     return <>{children}</>;
   }
 
-  if (status === 'loading') {
+  if (loading) {
     return (
       <div className="p-4">
         <div className="animate-pulse">
@@ -30,7 +30,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
 
-  if (status === 'unauthenticated') {
+  if (!user) {
     router.push('/signin');
     return (
       <Alert variant="destructive">

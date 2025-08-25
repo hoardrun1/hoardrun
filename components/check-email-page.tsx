@@ -1,9 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-<<<<<<< HEAD
-import { useRouter } from 'next/navigation'
-=======
+import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 >>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
 import { navigation } from '@/lib/navigation'
@@ -12,13 +9,9 @@ import { Button } from '@/components/ui/button'
 import { Loader2, Mail, CheckCircle } from 'lucide-react'
 import Link from 'next/link'
 <<<<<<< HEAD
-
-export function CheckEmailPage() {
-  const router = useRouter();
-=======
 import { sendVerificationEmail, generateVerificationToken, generateVerificationLink } from '@/lib/web3forms-email'
 
-export function CheckEmailPage() {
+function CheckEmailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 >>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
@@ -556,5 +549,13 @@ export function CheckEmailPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export function CheckEmailPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div>Loading...</div></div>}>
+      <CheckEmailContent />
+    </Suspense>
   );
 }

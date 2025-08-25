@@ -16,7 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Image from "next/image"
 import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { useAuth } from "@/contexts/AuthContext"
+import { useAwsCognitoAuth } from "@/hooks/useAwsCognitoAuth"
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),

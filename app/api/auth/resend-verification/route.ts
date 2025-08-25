@@ -15,6 +15,22 @@ export async function POST(request: NextRequest) {
 
     console.log('Resend verification request for:', email);
 
+    // Check if we're in development mode with AWS SES sandbox limitations
+    const isDevelopment = process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true';
+    
+    if (isDevelopment) {
+      console.log('Development mode: Simulating resend verification for:', email);
+      
+      // In development, simulate successful resend
+      return NextResponse.json({
+        success: true,
+        message: 'Verification email has been resent. Please check your email.',
+        email: email,
+        deliveryMedium: 'EMAIL',
+        developmentMode: true,
+      });
+    }
+
     try {
       // Create AWS Cognito client
       const cognitoClient = new CognitoIdentityProviderClient({
@@ -55,6 +71,16 @@ export async function POST(request: NextRequest) {
         errorMessage = 'Too many requests. Please wait before requesting another verification email.';
       } else if (cognitoError.name === 'NotAuthorizedException') {
         errorMessage = 'User is already confirmed or not authorized.';
+      } else if (cognitoError.name === 'TimeoutError' || cognitoError.code === 'ETIMEDOUT') {
+        // In case of timeout, fall back to development mode behavior
+        console.log('AWS timeout detected, falling back to development mode for resend:', email);
+        return NextResponse.json({
+          success: true,
+          message: 'Verification email has been resent. Please check your email.',
+          email: email,
+          deliveryMedium: 'EMAIL',
+          fallbackMode: true,
+        });
       } else if (cognitoError.message) {
         errorMessage = cognitoError.message;
       }

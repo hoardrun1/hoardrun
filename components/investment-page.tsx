@@ -501,16 +501,16 @@ export function InvestmentPage() {
         <LayoutWrapper className="min-h-screen bg-white pt-16 pb-4 px-4 sm:pt-20 sm:pb-6 sm:px-6">
       {/* Investment Overview */}
       <div className="bg-black text-white py-8">
-        <div className="container mx-auto px-4 ml-16">
-          <div className="flex justify-between items-center mb-6">
-            <div>
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+            <div className="flex-1">
               <h1 className="text-3xl font-bold">Smart Investments</h1>
               <p className="text-white/60">AI-Powered Portfolio Management</p>
             </div>
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 shrink-0">
               <Button
                 onClick={() => router.push('/startupregistration')}
-                className="bg-black text-white hover:bg-black/90"
+                className="bg-black text-white hover:bg-black/90 border border-white/20"
                 disabled={marketDataLoading}
               >
                 <Building2 className="w-4 h-4 mr-2" />

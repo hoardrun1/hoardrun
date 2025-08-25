@@ -55,13 +55,25 @@ export async function POST(request: NextRequest) {
       });
 
       // Set the auth token as a secure cookie
+      // Try a more compatible approach for Vercel
       response.cookies.set('auth-token', mockToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: true, // Always secure in production
         sameSite: 'lax',
         maxAge: 60 * 60 * 24 * 7, // 7 days
         path: '/'
       });
+
+      // Also set a debug cookie to help troubleshoot
+      response.cookies.set('auth-debug', 'token-set-' + Date.now(), {
+        httpOnly: false, // Allow client-side access for debugging
+        secure: true,
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 7,
+        path: '/'
+      });
+
+      console.log('Setting auth cookie with token:', mockToken);
 
       return response;
     }

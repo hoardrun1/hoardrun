@@ -18,9 +18,18 @@ export function middleware(request: NextRequest) {
 
   // Get the token from cookies
   const token = request.cookies.get('auth-token')?.value;
+  
+  // Debug logging for production
+  console.log('Middleware Debug:', {
+    path: request.nextUrl.pathname,
+    hasToken: !!token,
+    tokenValue: token ? 'present' : 'missing',
+    allCookies: Object.fromEntries(request.cookies.getAll().map(c => [c.name, c.value ? 'present' : 'empty']))
+  });
 
   // If user is authenticated and trying to access signin page, redirect to home
   if (token && request.nextUrl.pathname === '/signin') {
+    console.log('Redirecting authenticated user from signin to home');
     const callbackUrl = request.nextUrl.searchParams.get('callbackUrl')
     const redirectUrl = new URL(callbackUrl || '/home', request.url)
     return NextResponse.redirect(redirectUrl)

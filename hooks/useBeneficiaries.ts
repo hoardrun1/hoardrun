@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ui/use-toast'
 
 interface Beneficiary {
@@ -26,7 +26,7 @@ interface CreateBeneficiaryData {
 }
 
 export function useBeneficiaries() {
-  const { data: session } = useSession()
+  const { user } = useAuth()
   const { toast } = useToast()
   const [beneficiaries, setBeneficiaries] = useState<Beneficiary[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -41,7 +41,7 @@ export function useBeneficiaries() {
   })
 
   const fetchBeneficiaries = useCallback(async () => {
-    if (!session?.user) return
+    if (!user) return
 
     setIsLoading(true)
     setError(null)
@@ -62,10 +62,10 @@ export function useBeneficiaries() {
     } finally {
       setIsLoading(false)
     }
-  }, [session, toast])
+  }, [user, toast])
 
   const createBeneficiary = useCallback(async (data: CreateBeneficiaryData) => {
-    if (!session?.user) return
+    if (!user) return
 
     setIsLoading(true)
     setError(null)
@@ -104,10 +104,10 @@ export function useBeneficiaries() {
     } finally {
       setIsLoading(false)
     }
-  }, [session, toast])
+  }, [user, toast])
 
   const updateBeneficiary = useCallback(async (id: string, data: Partial<CreateBeneficiaryData>) => {
-    if (!session?.user) return
+    if (!user) return
 
     setIsLoading(true)
     setError(null)
@@ -148,10 +148,10 @@ export function useBeneficiaries() {
     } finally {
       setIsLoading(false)
     }
-  }, [session, toast])
+  }, [user, toast])
 
   const deleteBeneficiary = useCallback(async (id: string) => {
-    if (!session?.user) return
+    if (!user) return
 
     setIsLoading(true)
     setError(null)
@@ -183,7 +183,7 @@ export function useBeneficiaries() {
     } finally {
       setIsLoading(false)
     }
-  }, [session, toast])
+  }, [user, toast])
 
   const getBeneficiaryById = useCallback((id: string) => {
     return beneficiaries.find(beneficiary => beneficiary.id === id)
@@ -232,4 +232,4 @@ export function useBeneficiaries() {
     getFrequentBeneficiaries,
     getRecentBeneficiaries,
   }
-} 
+}

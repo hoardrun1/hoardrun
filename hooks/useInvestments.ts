@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ui/use-toast'
 
 interface Investment {
@@ -24,14 +24,14 @@ interface CreateInvestmentData {
 }
 
 export function useInvestments() {
-  const { data: session } = useSession()
+  const { user } = useAuth()
   const { toast } = useToast()
   const [investments, setInvestments] = useState<Investment[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const fetchInvestments = useCallback(async () => {
-    if (!session?.user) return
+    if (!user) return
 
     setIsLoading(true)
     setError(null)
@@ -52,10 +52,10 @@ export function useInvestments() {
     } finally {
       setIsLoading(false)
     }
-  }, [session, toast])
+  }, [user, toast])
 
   const createInvestment = useCallback(async (data: CreateInvestmentData) => {
-    if (!session?.user) return
+    if (!user) return
 
     setIsLoading(true)
     setError(null)
@@ -94,10 +94,10 @@ export function useInvestments() {
     } finally {
       setIsLoading(false)
     }
-  }, [session, toast])
+  }, [user, toast])
 
   const completeInvestment = useCallback(async (id: string) => {
-    if (!session?.user) return
+    if (!user) return
 
     setIsLoading(true)
     setError(null)
@@ -138,10 +138,10 @@ export function useInvestments() {
     } finally {
       setIsLoading(false)
     }
-  }, [session, toast])
+  }, [user, toast])
 
   const cancelInvestment = useCallback(async (id: string) => {
-    if (!session?.user) return
+    if (!user) return
 
     setIsLoading(true)
     setError(null)
@@ -182,7 +182,7 @@ export function useInvestments() {
     } finally {
       setIsLoading(false)
     }
-  }, [session, toast])
+  }, [user, toast])
 
   const getInvestmentById = useCallback((id: string) => {
     return investments.find(investment => investment.id === id)
@@ -238,4 +238,4 @@ export function useInvestments() {
     getActiveInvestments,
     getCompletedInvestments,
   }
-} 
+}

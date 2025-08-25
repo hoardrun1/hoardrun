@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ui/use-toast'
 
 interface Transaction {
@@ -23,14 +23,14 @@ interface CreateTransactionData {
 }
 
 export function useTransactions() {
-  const { data: session } = useSession()
+  const { user } = useAuth()
   const { toast } = useToast()
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const fetchTransactions = useCallback(async () => {
-    if (!session?.user) {
+    if (!user) {
       throw new Error('Authentication required');
     }
 
@@ -58,10 +58,10 @@ export function useTransactions() {
     } finally {
       setIsLoading(false);
     }
-  }, [session, toast])
+  }, [user, toast])
 
   const createTransaction = useCallback(async (data: CreateTransactionData) => {
-    if (!session?.user) return
+    if (!user) return
 
     setIsLoading(true)
     setError(null)
@@ -100,7 +100,7 @@ export function useTransactions() {
     } finally {
       setIsLoading(false)
     }
-  }, [session, toast])
+  }, [user, toast])
 
   const getTransactionById = useCallback((id: string) => {
     return transactions.find(transaction => transaction.id === id)
@@ -127,4 +127,4 @@ export function useTransactions() {
     getTransactionsByType,
     getTransactionsByDateRange,
   }
-} 
+}

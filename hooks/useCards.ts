@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ui/use-toast'
 
 interface Card {
@@ -27,7 +27,7 @@ interface CreateCardData {
 }
 
 export function useCards() {
-  const { data: session } = useSession()
+  const { user } = useAuth()
   const { toast } = useToast()
   const [cards, setCards] = useState<Card[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -36,7 +36,7 @@ export function useCards() {
   const fetchCards = useCallback(async () => {
     const bypassAuth = process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true';
 
-    if (!bypassAuth && !session?.user) return
+    if (!bypassAuth && !user) return
 
     setIsLoading(true)
     setError(null)
@@ -93,10 +93,10 @@ export function useCards() {
     } finally {
       setIsLoading(false)
     }
-  }, [session, toast])
+  }, [user, toast])
 
   const createCard = useCallback(async (data: CreateCardData) => {
-    if (!session?.user) return
+    if (!user) return
 
     setIsLoading(true)
     setError(null)
@@ -135,10 +135,10 @@ export function useCards() {
     } finally {
       setIsLoading(false)
     }
-  }, [session, toast])
+  }, [user, toast])
 
   const updateCard = useCallback(async (id: string, data: Partial<Omit<CreateCardData, 'number' | 'cvv'>>) => {
-    if (!session?.user) return
+    if (!user) return
 
     setIsLoading(true)
     setError(null)
@@ -179,10 +179,10 @@ export function useCards() {
     } finally {
       setIsLoading(false)
     }
-  }, [session, toast])
+  }, [user, toast])
 
   const deleteCard = useCallback(async (id: string) => {
-    if (!session?.user) return
+    if (!user) return
 
     setIsLoading(true)
     setError(null)
@@ -214,7 +214,7 @@ export function useCards() {
     } finally {
       setIsLoading(false)
     }
-  }, [session, toast])
+  }, [user, toast])
 
   const getCardById = useCallback((id: string) => {
     return cards.find(card => card.id === id)
@@ -257,4 +257,4 @@ export function useCards() {
     calculateTotalLimit,
     calculateUtilization,
   }
-} 
+}

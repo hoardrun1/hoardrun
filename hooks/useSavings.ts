@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ui/use-toast'
 import { mockSavingsGoals } from '@/lib/mock-data/savings'
 
@@ -41,14 +41,14 @@ interface UpdateSavingsGoalData {
 }
 
 export function useSavings() {
-  const { data: session } = useSession()
+  const { user } = useAuth()
   const { toast } = useToast()
   const [savingsGoals, setSavingsGoals] = useState<SavingsGoal[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const fetchSavingsGoals = useCallback(async () => {
-    if (!bypassAuth && !session?.user) return
+    if (!bypassAuth && !user) return
 
     setIsLoading(true)
     setError(null)
@@ -80,10 +80,10 @@ export function useSavings() {
     } finally {
       setIsLoading(false)
     }
-  }, [session, toast])
+  }, [user, toast])
 
   const createSavingsGoal = useCallback(async (data: CreateSavingsGoalData) => {
-    if (!session?.user) return
+    if (!user) return
 
     setIsLoading(true)
     setError(null)
@@ -155,10 +155,10 @@ export function useSavings() {
     } finally {
       setIsLoading(false)
     }
-  }, [session, toast])
+  }, [user, toast])
 
   const updateSavingsGoal = useCallback(async (id: string, data: UpdateSavingsGoalData) => {
-    if (!session?.user) return
+    if (!user) return
 
     setIsLoading(true)
     setError(null)
@@ -199,10 +199,10 @@ export function useSavings() {
     } finally {
       setIsLoading(false)
     }
-  }, [session, toast])
+  }, [user, toast])
 
   const deleteSavingsGoal = useCallback(async (id: string) => {
-    if (!session?.user) return
+    if (!user) return
 
     setIsLoading(true)
     setError(null)
@@ -234,10 +234,10 @@ export function useSavings() {
     } finally {
       setIsLoading(false)
     }
-  }, [session, toast])
+  }, [user, toast])
 
   const contributeToGoal = useCallback(async (id: string, amount: number, type: string = 'MANUAL') => {
-    if (!session?.user) return
+    if (!user) return
 
     setIsLoading(true)
     setError(null)
@@ -278,7 +278,7 @@ export function useSavings() {
     } finally {
       setIsLoading(false)
     }
-  }, [session, toast])
+  }, [user, toast])
 
   const calculateProgress = useCallback((goal: SavingsGoal) => {
     return Math.min(Math.round((goal.currentAmount / goal.targetAmount) * 100), 100)

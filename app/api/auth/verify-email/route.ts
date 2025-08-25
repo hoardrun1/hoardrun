@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { CognitoIdentityProviderClient, ResendConfirmationCodeCommand } from '@aws-sdk/client-cognito-identity-provider';
+import { CognitoIdentityProviderClient, ConfirmSignUpCommand } from '@aws-sdk/client-cognito-identity-provider';
 
 const cognitoClient = new CognitoIdentityProviderClient({
   region: process.env.AWS_REGION || 'us-east-1',
@@ -12,38 +12,41 @@ const cognitoClient = new CognitoIdentityProviderClient({
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email } = body;
+    const { email, code } = body;
 
-    if (!email) {
+    if (!email || !code) {
       return NextResponse.json({
         error: 'Missing required fields',
-        message: 'Email is required.'
+        message: 'Email and verification code are required.'
       }, { status: 400 });
     }
 
-    // Resend confirmation code with AWS Cognito
-    const resendCommand = new ResendConfirmationCodeCommand({
+    // Confirm sign up with AWS Cognito
+    const confirmSignUpCommand = new ConfirmSignUpCommand({
       ClientId: process.env.COGNITO_CLIENT_ID || process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID,
       Username: email,
+      ConfirmationCode: code,
     });
 
-    await cognitoClient.send(resendCommand);
+    await cognitoClient.send(confirmSignUpCommand);
 
     return NextResponse.json({
       success: true,
-      message: 'Verification code has been resent to your email.',
+      message: 'Email verified successfully. You can now sign in.',
     });
 
   } catch (error: any) {
-    console.error('Resend verification API error:', error);
+    console.error('Email verification API error:', error);
     
-    let errorMessage = 'Failed to resend verification code';
-    if (error.name === 'UserNotFoundException') {
+    let errorMessage = 'Email verification failed';
+    if (error.name === 'CodeMismatchException') {
+      errorMessage = 'Invalid verification code';
+    } else if (error.name === 'ExpiredCodeException') {
+      errorMessage = 'Verification code has expired';
+    } else if (error.name === 'UserNotFoundException') {
       errorMessage = 'User not found';
-    } else if (error.name === 'InvalidParameterException') {
+    } else if (error.name === 'NotAuthorizedException') {
       errorMessage = 'User is already confirmed';
-    } else if (error.name === 'LimitExceededException') {
-      errorMessage = 'Too many requests. Please wait before trying again.';
     } else if (error.message) {
       errorMessage = error.message;
     }
@@ -57,6 +60,6 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   return NextResponse.json({
-    message: 'Resend verification endpoint - use POST method'
+    message: 'Email verification endpoint - use POST method'
   });
 }

@@ -82,7 +82,7 @@ export function Sidebar({ className, onAddMoney }: SidebarProps) {
   const sidebarRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const pathname = usePathname();
-  const { user, signOutFromFirebase } = useAuth();
+  const { user, signOut } = useAuth();
 
   // Check if device is mobile
   useEffect(() => {
@@ -164,7 +164,7 @@ export function Sidebar({ className, onAddMoney }: SidebarProps) {
 
   const handleLogout = async () => {
     try {
-      await signOutFromFirebase();
+      await signOut();
       router.push('/signin');
     } catch (error) {
       console.error('Logout error:', error);

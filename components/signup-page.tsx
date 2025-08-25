@@ -50,7 +50,8 @@ export function SignupPage() {
 
     try {
       // Use AWS Cognito Hosted UI for Google OAuth
-      await signUp('', '', '') // This will redirect to Cognito Hosted UI
+      // The signUp function will redirect to Cognito Hosted UI
+      await signUp('dummy@example.com', 'dummypassword', 'Dummy Name')
     } catch (error) {
       console.error('Failed to initiate Cognito sign-up:', error)
       setError(error instanceof Error ? error.message : 'Failed to start sign-up. Please try again.')
@@ -77,76 +78,39 @@ export function SignupPage() {
     }
 
     try {
-      console.log("Submitting signup form:", {
-        name: formData.name,
-        email: formData.email,
-        password: "********", // Don't log actual password
-      })
-
-      // Call the sign-up API
+      // Use the custom signup API route instead of Cognito Hosted UI
       const response = await fetch('/api/sign-up', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name: formData.name,
           email: formData.email,
           password: formData.password,
+          name: formData.name,
         }),
       })
 
-      const result = await response.json()
+      const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(result.error || 'Signup failed')
+        throw new Error(data.error || data.message || 'Signup failed')
       }
 
-      // Generate verification token and link
-      const verificationToken = generateVerificationToken(formData.email)
-      const verificationLink = generateVerificationLink(formData.email, verificationToken)
+      // Success - redirect to email verification page
+      addToast({
+        title: "Account Created!",
+        description: "Please check your email for verification instructions.",
+      })
 
-      // Send verification email using Web3Forms
-      console.log('Sending verification email via Web3Forms...')
-      const emailResult = await sendVerificationEmail(formData.email, formData.name, verificationLink)
+      // Redirect to check email page with the user's email
+      router.push(`/check-email?email=${encodeURIComponent(formData.email)}`)
 
-      if (emailResult.success) {
-        // Show success message
-        addToast({
-          title: "Success",
-          description: "Account created successfully! Welcome to HoardRun.",
-        })
-
-        // Redirect to home page
-        router.push('/home')
-      } else {
-        // Account created but email failed
-        addToast({
-          title: "Account Created",
-          description: "Account created successfully! Welcome to HoardRun.",
-        })
-        router.push('/home')
-      }
     } catch (error) {
       let errorMessage = "Signup failed"
 
       if (error instanceof Error) {
         errorMessage = error.message
-
-        // Handle specific error cases
-        if (error.message.includes("User already exists") || error.message.includes("already exists")) {
-          errorMessage = "An account with this email already exists. Please sign in instead."
-          setError(errorMessage)
-
-          // Show a toast with helpful message
-          addToast({
-            title: "Account Already Exists",
-            description: "An account with this email already exists. Please sign in instead.",
-            variant: "destructive",
-          })
-          setLoading(false)
-          return // Exit early to avoid showing the generic error
-        }
       }
 
       setError(errorMessage)

@@ -7,12 +7,15 @@ export async function GET(request: NextRequest) {
     const state = searchParams.get('state');
     const error = searchParams.get('error');
     const error_description = searchParams.get('error_description');
+    
+    // Get the origin once at the beginning to avoid redeclaration
+    const origin = new URL(request.url).origin;
 
     // Handle OAuth errors
     if (error) {
       console.error('OAuth error:', error, error_description);
       return NextResponse.redirect(
-        new URL(`/signin?error=${encodeURIComponent(error_description || error)}`, request.url)
+        new URL(`/signin?error=${encodeURIComponent(error_description || error)}`, origin)
       );
     }
 
@@ -20,17 +23,17 @@ export async function GET(request: NextRequest) {
     if (!code) {
       console.error('No authorization code received');
       return NextResponse.redirect(
-        new URL('/signin?error=No authorization code received', request.url)
+        new URL('/signin?error=No authorization code received', origin)
       );
     }
 
     // Exchange authorization code for tokens
-    const tokenResponse = await exchangeCodeForTokens(code);
+    const tokenResponse = await exchangeCodeForTokens(code, origin);
     
     if (!tokenResponse.success) {
       console.error('Token exchange failed:', tokenResponse.error);
       return NextResponse.redirect(
-        new URL(`/signin?error=${encodeURIComponent(tokenResponse.error || 'Token exchange failed')}`, request.url)
+        new URL(`/signin?error=${encodeURIComponent(tokenResponse.error || 'Token exchange failed')}`, origin)
       );
     }
 
@@ -40,15 +43,21 @@ export async function GET(request: NextRequest) {
     if (!userInfo.success) {
       console.error('Failed to get user info:', userInfo.error);
       return NextResponse.redirect(
-        new URL(`/signin?error=${encodeURIComponent(userInfo.error || 'Failed to get user info')}`, request.url)
+        new URL(`/signin?error=${encodeURIComponent(userInfo.error || 'Failed to get user info')}`, origin)
       );
     }
 
     // Create session or JWT token
     const sessionToken = await createUserSession(userInfo.data);
 
-    // Set session cookie and redirect to success page
-    const response = NextResponse.redirect(new URL('/auth/success', request.url));
+    // Check if user's email is verified in Cognito
+    const isEmailVerified = userInfo.data.email_verified === 'true' || userInfo.data.email_verified === true;
+    
+    // Set session cookie
+    const response = isEmailVerified 
+      ? NextResponse.redirect(new URL('/home', origin))
+      : NextResponse.redirect(new URL(`/check-email?email=${encodeURIComponent(userInfo.data.email)}`, origin));
+    
     response.cookies.set('auth-token', sessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -60,20 +69,24 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Callback error:', error);
+    // Use the current request's origin to maintain the correct port
+    const origin = new URL(request.url).origin;
     return NextResponse.redirect(
-      new URL('/signin?error=Authentication failed', request.url)
+      new URL('/signin?error=Authentication failed', origin)
     );
   }
 }
 
-async function exchangeCodeForTokens(code: string) {
+async function exchangeCodeForTokens(code: string, currentOrigin: string) {
   try {
     const cognitoDomain = process.env.COGNITO_DOMAIN || process.env.NEXT_PUBLIC_COGNITO_DOMAIN;
     const clientId = process.env.COGNITO_CLIENT_ID || process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID;
     const clientSecret = process.env.COGNITO_CLIENT_SECRET;
-    const redirectUri = process.env.COGNITO_REDIRECT_URI || process.env.NEXT_PUBLIC_COGNITO_REDIRECT_URI;
+    
+    // Use the current request's origin to construct the redirect URI dynamically
+    const redirectUri = `${currentOrigin}/api/auth/flexible-callback`;
 
-    if (!cognitoDomain || !clientId || !redirectUri) {
+    if (!cognitoDomain || !clientId) {
       throw new Error('Missing Cognito configuration');
     }
 

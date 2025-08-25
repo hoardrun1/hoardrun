@@ -121,11 +121,13 @@ export function useAwsCognitoAuth(): CognitoAuthHook {
       // Use Cognito hosted UI for sign up
       const cognitoDomain = process.env.NEXT_PUBLIC_COGNITO_DOMAIN;
       const clientId = process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID;
-      const redirectUri = process.env.NEXT_PUBLIC_COGNITO_REDIRECT_URI;
       
-      if (!cognitoDomain || !clientId || !redirectUri) {
+      if (!cognitoDomain || !clientId) {
         throw new Error('Cognito configuration missing');
       }
+
+      // Construct redirect URI dynamically based on current origin
+      const redirectUri = `${window.location.origin}/api/auth/flexible-callback`;
 
       // Redirect to Cognito hosted UI for sign up
       const signUpUrl = `https://${cognitoDomain}/signup?client_id=${clientId}&response_type=code&scope=email+openid+profile&redirect_uri=${encodeURIComponent(redirectUri)}`;
@@ -146,11 +148,13 @@ export function useAwsCognitoAuth(): CognitoAuthHook {
       // Use Cognito hosted UI for sign in
       const cognitoDomain = process.env.NEXT_PUBLIC_COGNITO_DOMAIN;
       const clientId = process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID;
-      const redirectUri = process.env.NEXT_PUBLIC_COGNITO_REDIRECT_URI;
       
-      if (!cognitoDomain || !clientId || !redirectUri) {
+      if (!cognitoDomain || !clientId) {
         throw new Error('Cognito configuration missing');
       }
+
+      // Construct redirect URI dynamically based on current origin
+      const redirectUri = `${window.location.origin}/api/auth/flexible-callback`;
 
       // Redirect to Cognito hosted UI for sign in
       const signInUrl = `https://${cognitoDomain}/login?client_id=${clientId}&response_type=code&scope=email+openid+profile&redirect_uri=${encodeURIComponent(redirectUri)}`;
@@ -168,32 +172,36 @@ export function useAwsCognitoAuth(): CognitoAuthHook {
     setError(null);
     
     try {
+      console.log('Starting logout process...');
+      
       // Clear local storage
       localStorage.removeItem('cognito_access_token');
       localStorage.removeItem('cognito_id_token');
       localStorage.removeItem('cognito_refresh_token');
       
-      // Clear user state
+      // Clear cookies
+      document.cookie = 'auth-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      document.cookie = 'cognito-session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      
+      // Clear user state immediately
       setUser(null);
+      setLoading(false);
       
-      // Redirect to Cognito logout
-      const cognitoDomain = process.env.NEXT_PUBLIC_COGNITO_DOMAIN;
-      const clientId = process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID;
-      const logoutUri = window.location.origin;
+      console.log('User state cleared, redirecting to signin...');
       
-      if (cognitoDomain && clientId) {
-        const logoutUrl = `https://${cognitoDomain}/logout?client_id=${clientId}&logout_uri=${encodeURIComponent(logoutUri)}`;
-        window.location.href = logoutUrl;
-      } else {
-        // Fallback: just redirect to home
-        window.location.href = '/';
-      }
+      // For now, just redirect to signin page without Cognito logout
+      // This ensures the logout works reliably
+      window.location.href = `${window.location.origin}/signin`;
       
     } catch (err) {
+      console.error('Logout error:', err);
       const errorMessage = err instanceof Error ? err.message : 'Sign out failed';
       setError(errorMessage);
-    } finally {
+      
+      // Clear user state and redirect even if there's an error
+      setUser(null);
       setLoading(false);
+      window.location.href = `${window.location.origin}/signin`;
     }
   }, []);
 

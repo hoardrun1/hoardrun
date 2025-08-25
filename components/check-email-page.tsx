@@ -2,44 +2,36 @@
 
 import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { navigation } from '@/lib/navigation'
 import { useToast } from '@/components/ui/use-toast'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Loader2, Mail, CheckCircle } from 'lucide-react'
 import Link from 'next/link'
-import { sendVerificationEmail, generateVerificationToken, generateVerificationLink } from '@/lib/web3forms-email'
 
 function CheckEmailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { addToast } = useToast();
   const [email, setEmail] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [showCodeInput, setShowCodeInput] = useState(false);
 
   useEffect(() => {
     setMounted(true);
 
-    // Get email from URL params (Web3Forms flow) or navigation data (legacy flow)
+    // Get email from URL params
     const emailFromParams = searchParams?.get('email');
     if (emailFromParams) {
       setEmail(emailFromParams);
       return;
     }
 
-    // Fallback to navigation data for legacy flow
-    if (!navigation.isValidTransition('signup', 'check-email')) {
-      router.push('/signup');
-      return;
-    }
-
-    const data = navigation.getData('check-email');
-    if (!data?.email) {
-      router.push('/signup');
-      return;
-    }
-
-    setEmail(data.email);
+    // If no email, redirect to signup
+    router.push('/signup');
   }, [router, searchParams]);
 
   const handleResendEmail = async () => {
@@ -47,24 +39,24 @@ function CheckEmailContent() {
 
     setIsLoading(true);
     try {
-      // Generate new verification token and link
-      const verificationToken = generateVerificationToken(email);
-      const verificationLink = generateVerificationLink(email, verificationToken);
+      const response = await fetch('/api/auth/resend-verification', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
 
-      // Extract name from email (simple approach)
-      const userName = email.split('@')[0];
+      const data = await response.json();
 
-      // Send verification email using Web3Forms
-      const emailResult = await sendVerificationEmail(email, userName, verificationLink);
-
-      if (emailResult.success) {
-        addToast({
-          title: "Success",
-          description: "Verification email has been resent"
-        });
-      } else {
-        throw new Error(emailResult.message);
+      if (!response.ok) {
+        throw new Error(data.error || data.message || 'Failed to resend verification email');
       }
+
+      addToast({
+        title: "Success",
+        description: "Verification code has been resent to your email"
+      });
     } catch (error) {
       addToast({
         title: "Error",
@@ -73,6 +65,48 @@ function CheckEmailContent() {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleVerifyCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !verificationCode) return;
+
+    setIsVerifying(true);
+    try {
+      const response = await fetch('/api/auth/verify-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          email, 
+          code: verificationCode 
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || data.message || 'Email verification failed');
+      }
+
+      addToast({
+        title: "Success!",
+        description: "Your email has been verified. You can now sign in."
+      });
+
+      // Redirect to signin page
+      router.push('/signin?verified=true');
+
+    } catch (error) {
+      addToast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Email verification failed",
+        variant: "destructive"
+      });
+    } finally {
+      setIsVerifying(false);
     }
   };
 
@@ -267,20 +301,79 @@ function CheckEmailContent() {
                     Click the button below if you need us to resend the verification email.
                   </p>
                   
-                  <Button
-                    onClick={handleResendEmail}
-                    className="w-full bg-white hover:bg-gray-100 text-black py-2.5 sm:py-3 text-sm font-semibold rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 mb-3 sm:mb-4"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        <span className="text-xs sm:text-sm">Resending...</span>
-                      </>
-                    ) : (
-                      <span className="text-xs sm:text-sm">Resend verification email</span>
-                    )}
-                  </Button>
+                  {!showCodeInput ? (
+                    <>
+                      <Button
+                        onClick={handleResendEmail}
+                        className="w-full bg-white hover:bg-gray-100 text-black py-2.5 sm:py-3 text-sm font-semibold rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 mb-3 sm:mb-4"
+                        disabled={isLoading}
+                      >
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            <span className="text-xs sm:text-sm">Resending...</span>
+                          </>
+                        ) : (
+                          <span className="text-xs sm:text-sm">Resend verification email</span>
+                        )}
+                      </Button>
+
+                      <Button
+                        onClick={() => setShowCodeInput(true)}
+                        variant="outline"
+                        className="w-full bg-transparent border-white text-white hover:bg-white/10 py-2.5 sm:py-3 text-sm font-semibold rounded-lg transition-all duration-300 mb-3 sm:mb-4"
+                      >
+                        <span className="text-xs sm:text-sm">Enter verification code</span>
+                      </Button>
+                    </>
+                  ) : (
+                    <form onSubmit={handleVerifyCode} className="space-y-4">
+                      <div>
+                        <Label htmlFor="verificationCode" className="text-white text-sm font-medium mb-2 block">
+                          Verification Code
+                        </Label>
+                        <Input
+                          id="verificationCode"
+                          type="text"
+                          placeholder="Enter 6-digit code"
+                          value={verificationCode}
+                          onChange={(e) => setVerificationCode(e.target.value)}
+                          className="w-full bg-white/10 border-white/30 text-white placeholder-white/60 focus:border-white focus:bg-white/20"
+                          maxLength={6}
+                          required
+                        />
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        <Button
+                          type="submit"
+                          className="flex-1 bg-white hover:bg-gray-100 text-black py-2.5 sm:py-3 text-sm font-semibold rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
+                          disabled={isVerifying || verificationCode.length !== 6}
+                        >
+                          {isVerifying ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              <span className="text-xs sm:text-sm">Verifying...</span>
+                            </>
+                          ) : (
+                            <span className="text-xs sm:text-sm">Verify Code</span>
+                          )}
+                        </Button>
+                        
+                        <Button
+                          type="button"
+                          onClick={() => {
+                            setShowCodeInput(false);
+                            setVerificationCode('');
+                          }}
+                          variant="outline"
+                          className="bg-transparent border-white text-white hover:bg-white/10 py-2.5 sm:py-3 text-sm font-semibold rounded-lg transition-all duration-300"
+                        >
+                          <span className="text-xs sm:text-sm">Cancel</span>
+                        </Button>
+                      </div>
+                    </form>
+                  )}
 
                   <div className="text-center text-white text-xs sm:text-sm">
                     <p>

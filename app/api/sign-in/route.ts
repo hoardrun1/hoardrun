@@ -46,12 +46,24 @@ export async function POST(request: NextRequest) {
 
       const mockToken = 'mock-jwt-token-' + Date.now();
 
-      return NextResponse.json({
+      // Create response with token as cookie
+      const response = NextResponse.json({
         success: true,
         message: 'Sign in successful',
         user: mockUser,
         token: mockToken
       });
+
+      // Set the auth token as a secure cookie
+      response.cookies.set('auth-token', mockToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24 * 7, // 7 days
+        path: '/'
+      });
+
+      return response;
     }
 
     return NextResponse.json(

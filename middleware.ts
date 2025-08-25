@@ -37,6 +37,13 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(redirectUrl)
   }
 
+  // If user is authenticated and trying to access signin page, redirect to home
+  if (token && request.nextUrl.pathname === '/signin') {
+    const callbackUrl = request.nextUrl.searchParams.get('callbackUrl')
+    const redirectUrl = new URL(callbackUrl || '/home', request.url)
+    return NextResponse.redirect(redirectUrl)
+  }
+
   return NextResponse.next();
 }
 

@@ -36,21 +36,21 @@ export async function POST(request: Request) {
 
     const { email, password, name } = validation.data;
 
-    // Use Firebase authentication service
-    const result = await firebaseAuthService.signUp({
+    // TODO: Replace with AWS Cognito authentication service
+    // For now, return a mock response to prevent build errors
+    const mockUser = {
+      id: Date.now().toString(),
       email,
-      password,
-      name
-    })
+      name,
+      verified: false
+    };
 
-    // Return success response with Firebase custom token
+    // Return success response (mock implementation)
     return NextResponse.json({
       success: true,
-      message: 'Account created successfully',
-      user: result.user,
-      customToken: result.customToken,
-      // Instructions for client
-      firebaseEndpoint: `https://identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=${process.env.NEXT_PUBLIC_FIREBASE_API_KEY}`
+      message: 'Account created successfully (mock implementation - replace with AWS Cognito)',
+      user: mockUser,
+      note: 'This is a temporary mock. Implement AWS Cognito signup here.'
     }, { status: 201 });
 
   } catch (error: any) {

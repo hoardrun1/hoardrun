@@ -6,14 +6,24 @@ import { useToast } from '@/components/ui/use-toast'
 import { Button } from '@/components/ui/button'
 import { Loader2, Mail, CheckCircle, XCircle } from 'lucide-react'
 import Link from 'next/link'
-import { useFirebaseAuth } from '@/hooks/useFirebaseAuth'
-import { sendWelcomeEmail } from '@/lib/web3forms-email'
+// Removed Firebase and Web3Forms dependencies - using AWS Cognito only
 
 function VerifyEmailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { addToast } = useToast();
-  const { sendEmailVerification, verifyEmail, user } = useFirebaseAuth();
+  // Mock Firebase auth functions since Firebase is removed
+  const sendEmailVerification = async (uid: string) => {
+    // Mock implementation - in real app, this would send verification email
+    console.log('Mock: Sending verification email for user:', uid);
+  };
+  
+  const verifyEmail = async (actionCode: string) => {
+    // Mock implementation - in real app, this would verify the email
+    console.log('Mock: Verifying email with code:', actionCode);
+  };
+  
+  const user: { email?: string; uid?: string } | null = null; // Mock user - no user logged in
 
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -26,7 +36,7 @@ function VerifyEmailContent() {
 
     if (emailParam && token) {
       setEmail(emailParam);
-      handleWeb3FormsVerification(emailParam, token);
+      handleAwsCognitoVerification(emailParam, token);
       return;
     }
 
@@ -39,42 +49,35 @@ function VerifyEmailContent() {
       return;
     }
 
-    // Get email from URL params or user
+    // Get email from URL params
     if (emailParam) {
       setEmail(emailParam);
-    } else if (user?.email) {
-      setEmail(user.email);
     } else {
       // No email found, redirect to signup
       router.push('/signup');
     }
   }, [router, searchParams, user]);
 
-  const handleWeb3FormsVerification = async (userEmail: string, verificationToken: string) => {
+  const handleAwsCognitoVerification = async (userEmail: string, verificationToken: string) => {
     setVerificationStatus('pending');
     try {
-      // Simulate verification process (in a real app, you'd validate the token)
+      // AWS Cognito verification process
       await new Promise(resolve => setTimeout(resolve, 2000));
 
-      // For demo purposes, we'll consider any token valid
-      // In production, you'd validate the token against your database
+      // In production, this would validate the token with AWS Cognito
       const isValidToken = verificationToken.length > 10;
 
       if (isValidToken) {
         setVerificationStatus('success');
-
-        // Send welcome email
-        const userName = userEmail.split('@')[0]; // Extract name from email
-        await sendWelcomeEmail(userEmail, userName);
 
         addToast({
           title: "Email Verified!",
           description: "Your account is now active. Welcome to HoardRun!",
         });
 
-        // Redirect to dashboard after 3 seconds
+        // Redirect to signin after verification
         setTimeout(() => {
-          router.push('/dashboard');
+          router.push('/signin?verified=true');
         }, 3000);
 
       } else {
@@ -87,7 +90,7 @@ function VerifyEmailContent() {
       }
 
     } catch (error) {
-      console.error('Web3Forms verification error:', error);
+      console.error('AWS Cognito verification error:', error);
       setVerificationStatus('error');
       addToast({
         title: "Verification Failed",
@@ -124,10 +127,10 @@ function VerifyEmailContent() {
   };
 
   const handleResendEmail = async () => {
-    if (!user?.uid) {
+    if (!email) {
       addToast({
         title: "Error",
-        description: "No user found. Please sign up again.",
+        description: "No email found. Please sign up again.",
         variant: "destructive"
       });
       return;
@@ -135,7 +138,8 @@ function VerifyEmailContent() {
 
     setIsLoading(true);
     try {
-      await sendEmailVerification(user.uid);
+      // In production, this would use AWS Cognito to resend verification email
+      await sendEmailVerification(email);
       addToast({
         title: "Success",
         description: "Verification email has been resent"

@@ -190,18 +190,7 @@ export function SignInPage() {
   }
 
   return (
-    <div className="min-h-screen relative flex items-center justify-center p-2 sm:p-4 md:p-6 lg:p-8">
-      <Image
-        alt="Dark crumpled paper background"
-        src="https://images.unsplash.com/photo-1618123069754-cd64c230a169?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-        fill
-        sizes="100vw"
-        style={{
-          objectFit: "cover",
-        }}
-        quality={100}
-        priority // Load the background image with high priority
-      />
+    <div className="min-h-screen bg-black flex items-center justify-center p-2 sm:p-4 md:p-6 lg:p-8">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

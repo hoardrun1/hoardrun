@@ -1,4 +1,5 @@
 import CredentialsProvider from 'next-auth/providers/credentials'
+import GoogleProvider from 'next-auth/providers/google'
 import bcrypt from 'bcryptjs'
 import { AuthOptions } from 'next-auth'
 
@@ -12,6 +13,17 @@ const mockUser = {
 
 export const authOptions: AuthOptions = {
   providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      authorization: {
+        params: {
+          prompt: "consent",
+          access_type: "offline",
+          response_type: "code"
+        }
+      }
+    }),
     CredentialsProvider({
       name: 'Credentials',
       credentials: {

@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "setup:google-oauth": "node scripts/setup-google-oauth.js",
     "build:render": "chmod +x scripts/build.sh && scripts/build.sh",
     "start:render": "npx prisma migrate deploy && npm start",
     "postinstall": "npx prisma generate"
@@ -66,7 +67,7 @@
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.454.0",
     "next": "^14.2.16",
-    "next-auth": "^4.24.10",
+    "next-auth": "^4.24.11",
     "next-themes": "^0.4.4",
     "nodemailer": "^6.10.0",
     "oauth-1.0a": "^2.2.6",

@@ -1,12 +1,9 @@
 import { prisma } from './prisma'
 import { customAlphabet } from 'nanoid'
-<<<<<<< HEAD
-import { TransactionType, TransactionStatus } from '@prisma/client'
-=======
-// import { TransactionType, TransactionStatus } from '@prisma/client'
-type TransactionType = 'SEND' | 'RECEIVE' | 'DEPOSIT' | 'WITHDRAWAL' | 'TRANSFER'
-type TransactionStatus = 'PENDING' | 'COMPLETED' | 'FAILED' | 'CANCELLED'
->>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
+
+// Define transaction types - compatible with Prisma schema
+export type TransactionType = 'SEND' | 'RECEIVE' | 'DEPOSIT' | 'WITHDRAWAL' | 'TRANSFER' | 'PAYMENT' | 'REFUND' | 'FEE'
+export type TransactionStatus = 'PENDING' | 'COMPLETED' | 'FAILED' | 'CANCELLED'
 
 // Generate account number using nanoid
 const generateNumericId = customAlphabet('0123456789', 10)

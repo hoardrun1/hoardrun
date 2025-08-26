@@ -57,7 +57,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useFinance } from '@/contexts/FinanceContext'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/contexts/AuthContext'
 import { useSavings } from '@/hooks/useSavings'
 import { formatCurrency } from '@/lib/banking'
 import { format } from 'date-fns'
@@ -221,7 +221,7 @@ interface AIBehaviorInsight {
 export function SavingsPageComponent() {
   const router = useRouter()
   const { toast } = useToast()
-  const { data: session } = useSession()
+  const { user } = useAuth()
   const {
     savingsGoals,
     isLoading,
@@ -251,11 +251,11 @@ export function SavingsPageComponent() {
   })
 
   useEffect(() => {
-    if (session?.user) {
+    if (user) {
       fetchSavingsGoals()
       fetchAnalytics()
     }
-  }, [session])
+  }, [user])
 
   const fetchAnalytics = async () => {
     try {

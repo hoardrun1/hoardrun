@@ -1,0 +1,123 @@
+{
+  "success": false,
+  "results": {
+    "configuration": {
+      "success": false,
+      "error": "Missing required environment variables"
+    },
+    "signup": {
+      "success": false,
+      "error": ""
+    },
+    "resend": {
+      "success": false,
+      "error": ""
+    },
+    "apiEndpoints": {
+      "success": false,
+      "error": "Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON"
+    }
+  },
+  "logs": [
+    {
+      "timestamp": "2025-08-25T13:32:37.102Z",
+      "message": "🚀 Starting AWS Cognito Email Verification Tests",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-08-25T13:32:37.104Z",
+      "message": "============================================================",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-08-25T13:32:37.105Z",
+      "message": "🧪 Testing Email Delivery Configuration...",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-08-25T13:32:37.105Z",
+      "message": "❌ Missing environment variables: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION, COGNITO_CLIENT_ID",
+      "type": "error"
+    },
+    {
+      "timestamp": "2025-08-25T13:32:37.113Z",
+      "message": "🧪 Testing AWS Cognito Signup Email Sending...",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-08-25T13:32:45.574Z",
+      "message": "❌ Signup failed: ",
+      "type": "error"
+    },
+    {
+      "timestamp": "2025-08-25T13:32:45.575Z",
+      "message": "Error details: {\n  \"code\": \"ETIMEDOUT\",\n  \"name\": \"TimeoutError\",\n  \"$metadata\": {\n    \"attempts\": 3,\n    \"totalRetryDelay\": 47\n  }\n}",
+      "type": "error"
+    },
+    {
+      "timestamp": "2025-08-25T13:32:45.578Z",
+      "message": "🧪 Testing Resend Verification Email...",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-08-25T13:32:54.580Z",
+      "message": "❌ Resend verification failed: ",
+      "type": "error"
+    },
+    {
+      "timestamp": "2025-08-25T13:32:54.582Z",
+      "message": "🧪 Testing API Endpoints...",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-08-25T13:32:54.583Z",
+      "message": "Testing /api/sign-up endpoint...",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-08-25T13:33:44.964Z",
+      "message": "❌ API endpoint test failed: Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON",
+      "type": "error"
+    },
+    {
+      "timestamp": "2025-08-25T13:33:44.968Z",
+      "message": "============================================================",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-08-25T13:33:44.970Z",
+      "message": "📊 Test Results Summary:",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-08-25T13:33:44.970Z",
+      "message": "configuration: ❌ FAIL",
+      "type": "error"
+    },
+    {
+      "timestamp": "2025-08-25T13:33:44.971Z",
+      "message": "signup: ❌ FAIL",
+      "type": "error"
+    },
+    {
+      "timestamp": "2025-08-25T13:33:44.971Z",
+      "message": "resend: ❌ FAIL",
+      "type": "error"
+    },
+    {
+      "timestamp": "2025-08-25T13:33:44.972Z",
+      "message": "apiEndpoints: ❌ FAIL",
+      "type": "error"
+    },
+    {
+      "timestamp": "2025-08-25T13:33:44.972Z",
+      "message": "🧹 Cleaning up test users...",
+      "type": "info"
+    },
+    {
+      "timestamp": "2025-08-25T13:33:44.973Z",
+      "message": "\n🎯 Overall Test Result: ❌ SOME TESTS FAILED",
+      "type": "error"
+    }
+  ]
+}

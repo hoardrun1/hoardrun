@@ -3,7 +3,6 @@ import type { Metadata } from 'next'
 // import { Inter } from 'next/font/google'
 import './globals.css'
 import ClientAuthProvider from '../components/client-auth-provider'
-import NextAuthProvider from '../components/next-auth-provider'
 import { NavigationProvider } from '@/providers/NavigationProvider'
 import { FinanceProvider } from '@/contexts/FinanceContext'
 
@@ -22,16 +21,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="font-sans">
-        {/* NextAuth provider restored to prevent client errors */}
-        <NextAuthProvider>
-          <ClientAuthProvider>
-            <FinanceProvider>
-              <NavigationProvider>
-                {children}
-              </NavigationProvider>
-            </FinanceProvider>
-          </ClientAuthProvider>
-        </NextAuthProvider>
+        {/* Using AWS Cognito authentication instead of NextAuth */}
+        <ClientAuthProvider>
+          <FinanceProvider>
+            <NavigationProvider>
+              {children}
+            </NavigationProvider>
+          </FinanceProvider>
+        </ClientAuthProvider>
       </body>
     </html>
   )

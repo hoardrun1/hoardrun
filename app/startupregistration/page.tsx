@@ -29,7 +29,7 @@ import { Progress } from "@/components/ui/progress"
 import { Checkbox } from "@/components/ui/checkbox"
 
 import { z } from "zod"
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/contexts/AuthContext'
 
 const businessTypes = [
   { value: 'tech', label: 'Technology', icon: '💻' },
@@ -76,7 +76,7 @@ const formSchema = z.object({
 })
 
 export default function StartupRegistration() {
-  const { data: session, status } = useSession()
+  const { user, loading } = useAuth()
   const router = useRouter()
   const { addToast } = useToast()
 
@@ -104,10 +104,10 @@ export default function StartupRegistration() {
       console.log('Auth bypass enabled globally for startup registration');
       return;
     }
-    if (status === 'unauthenticated') {
+    if (!loading && !user) {
       router.push('/signin')
     }
-  }, [status, router])
+  }, [loading, user, router])
 
   useEffect(() => {
     const bypassAuth = process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true';
@@ -119,7 +119,7 @@ export default function StartupRegistration() {
       });
       return;
     }
-    if (session?.user) {
+    if (user) {
       setTimeout(() => {
         setSecurityChecks({
           isEmailVerified: true,
@@ -128,7 +128,7 @@ export default function StartupRegistration() {
         })
       }, 1000)
     }
-  }, [session])
+  }, [user])
 
   const [formData, setFormData] = useState({
     companyName: '',
@@ -319,7 +319,7 @@ export default function StartupRegistration() {
         }
       })
 
-      submitData.append('userId', session?.user?.id || '')
+      submitData.append('userId', user?.id || '')
       submitData.append('timestamp', new Date().toISOString())
 
       addToast({

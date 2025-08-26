@@ -82,11 +82,7 @@ export function Sidebar({ className, onAddMoney }: SidebarProps) {
   const sidebarRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const pathname = usePathname();
-<<<<<<< HEAD
-  const { user, logout } = useAuth();
-=======
-  const { user, signOutFromFirebase } = useAuth();
->>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
+  const { user, signOut } = useAuth();
 
   // Check if device is mobile
   useEffect(() => {
@@ -168,11 +164,7 @@ export function Sidebar({ className, onAddMoney }: SidebarProps) {
 
   const handleLogout = async () => {
     try {
-<<<<<<< HEAD
-      await logout();
-=======
-      await signOutFromFirebase();
->>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
+      await signOut();
       router.push('/signin');
     } catch (error) {
       console.error('Logout error:', error);
@@ -358,22 +350,14 @@ export function Sidebar({ className, onAddMoney }: SidebarProps) {
                   <div className="relative">
                     <div className="bg-white w-12 h-12 rounded-2xl flex items-center justify-center shadow-xl">
                       <span className="text-black font-bold text-lg">
-<<<<<<< HEAD
                         {user?.name?.charAt(0) || 'U'}
-=======
-                        {user?.displayName?.charAt(0) || 'U'}
->>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
                       </span>
                     </div>
                     <div className="absolute -inset-1 bg-gradient-to-r from-white/30 to-white/10 rounded-2xl -z-10 blur-md"></div>
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-white font-bold text-base truncate">
-<<<<<<< HEAD
                       {user?.name || 'User'}
-=======
-                      {user?.displayName || 'User'}
->>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
                     </p>
                     <p className="text-gray-400 text-sm truncate font-medium">
                       {user?.email || 'user@example.com'}

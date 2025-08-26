@@ -14,6 +14,10 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useToast } from "@/components/ui/use-toast"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useAuth } from "@/contexts/AuthContext"
+
+// Firebase removed - using simple authentication without Firebase dependencies
+import { sendVerificationEmail, generateVerificationToken, generateVerificationLink } from '@/lib/web3forms-email'
 import { signIn } from "next-auth/react"
 import { GoogleSignInButton } from "./GoogleSignInButton"
 
@@ -32,7 +36,8 @@ type SignupFormData = z.infer<typeof signupSchema>
 
 export function SignupPage() {
   const router = useRouter()
-  const { toast } = useToast()
+  const { addToast } = useToast()
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -45,6 +50,7 @@ export function SignupPage() {
     password: "",
     confirmPassword: "",
   })
+  const { signUp } = useAuth()
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -60,6 +66,76 @@ export function SignupPage() {
     setError(null)
 
     try {
+      // Use AWS Cognito Hosted UI for Google OAuth
+      // The signUp function will redirect to Cognito Hosted UI
+      await signUp('dummy@example.com', 'dummypassword', 'Dummy Name')
+    } catch (error) {
+      console.error('Failed to initiate Cognito sign-up:', error)
+      setError(error instanceof Error ? error.message : 'Failed to start sign-up. Please try again.')
+      setGoogleLoading(false)
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError(null)
+    setLoading(true)
+
+    // Validation
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match")
+      setLoading(false)
+      return
+    }
+
+    if (formData.password.length < 8) {
+      setError("Password must be at least 8 characters")
+      setLoading(false)
+      return
+    }
+
+    try {
+      // Use the custom signup API route instead of Cognito Hosted UI
+      const response = await fetch('/api/sign-up', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          name: formData.name,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || data.message || 'Signup failed')
+      }
+
+      // Check if we need to use Cognito Hosted UI
+      if (data.useHostedUI) {
+        addToast({
+          title: "Redirecting...",
+          description: "Taking you to the secure signup page.",
+        })
+
+        // Use the existing signUp function which redirects to Cognito Hosted UI
+        await signUp(formData.email, formData.password, formData.name)
+        return
+      }
+
+      // Success - redirect to email verification page
+      addToast({
+        title: "Account Created!",
+        description: "Please check your email for verification instructions.",
+      })
+
+      // Redirect to check email page with the user's email
+      router.push(`/check-email?email=${encodeURIComponent(formData.email)}`)
+
+    } catch (error) {
       // Validate form data
       const validatedData = signupSchema.parse(formData)
 

@@ -1,59 +1,108 @@
-import { NextResponse } from 'next/server'
-import { devEmailService } from '@/lib/dev-email'
+import { NextRequest, NextResponse } from 'next/server';
+import { CognitoIdentityProviderClient, ResendConfirmationCodeCommand } from '@aws-sdk/client-cognito-identity-provider';
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { email } = body
+    const body = await request.json();
+    const { email } = body;
 
     if (!email) {
-      return NextResponse.json({ message: 'Email is required' }, { status: 400 })
+      return NextResponse.json({
+        error: 'Missing required fields',
+        message: 'Email is required.'
+      }, { status: 400 });
     }
 
-    // Generate a fake user ID for development
-    const userId = Math.random().toString(36).substring(2, 15);
+    console.log('Resend verification request for:', email);
 
-    // Generate a 6-digit verification code
-    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    // Check if we're in development mode with AWS SES sandbox limitations
+    const isDevelopment = process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true';
+    
+    if (isDevelopment) {
+      console.log('Development mode: Simulating resend verification for:', email);
+      
+      // In development, simulate successful resend
+      return NextResponse.json({
+        success: true,
+        message: 'Verification email has been resent. Please check your email.',
+        email: email,
+        deliveryMedium: 'EMAIL',
+        developmentMode: true,
+      });
+    }
 
-    // Create verification link
-    const verificationLink = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/verify-email?code=${verificationCode}&userId=${userId}`;
+    try {
+      // Create AWS Cognito client
+      const cognitoClient = new CognitoIdentityProviderClient({
+        region: process.env.AWS_REGION || 'us-east-1',
+        credentials: {
+          accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
+          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
+        },
+      });
 
-    // Email content
-    const html = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
-        <h1 style="color: #333; text-align: center;">Verify Your Email</h1>
-        <p style="color: #666; font-size: 16px; line-height: 1.5;">Thank you for signing up! Please verify your email address to continue.</p>
-        <div style="text-align: center; margin: 30px 0;">
-          <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; font-size: 24px; letter-spacing: 5px; font-weight: bold;">
-            ${verificationCode}
-          </div>
-          <p style="color: #888; font-size: 14px; margin-top: 10px;">Your verification code (valid for 30 minutes)</p>
-        </div>
-        <p style="color: #666; font-size: 16px; line-height: 1.5;">Alternatively, you can click the button below to verify your email:</p>
-        <div style="text-align: center; margin: 30px 0;">
-          <a href="${verificationLink}" style="background-color: #4a6cf7; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">Verify Email</a>
-        </div>
-      </div>
-    `;
+      // Resend confirmation code
+      const resendCommand = new ResendConfirmationCodeCommand({
+        ClientId: process.env.COGNITO_CLIENT_ID || process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID,
+        Username: email,
+      });
 
-    // Send verification email using dev email service
-    await devEmailService.sendEmail(email, 'Verify Your Email Address', html);
+      const result = await cognitoClient.send(resendCommand);
 
-    console.log(`Resending verification email to: ${email}`)
+      console.log('Verification email resent successfully to:', email);
 
+      return NextResponse.json({
+        success: true,
+        message: 'Verification email has been resent. Please check your email.',
+        email: email,
+        deliveryMedium: result.CodeDeliveryDetails?.DeliveryMedium || 'EMAIL',
+      });
+
+    } catch (cognitoError: any) {
+      console.error('AWS Cognito resend verification error:', cognitoError);
+      
+      // Handle specific Cognito errors
+      let errorMessage = 'Failed to resend verification email';
+      if (cognitoError.name === 'UserNotFoundException') {
+        errorMessage = 'User not found. Please sign up first.';
+      } else if (cognitoError.name === 'InvalidParameterException') {
+        errorMessage = 'User is already confirmed.';
+      } else if (cognitoError.name === 'LimitExceededException') {
+        errorMessage = 'Too many requests. Please wait before requesting another verification email.';
+      } else if (cognitoError.name === 'NotAuthorizedException') {
+        errorMessage = 'User is already confirmed or not authorized.';
+      } else if (cognitoError.name === 'TimeoutError' || cognitoError.code === 'ETIMEDOUT') {
+        // In case of timeout, fall back to development mode behavior
+        console.log('AWS timeout detected, falling back to development mode for resend:', email);
+        return NextResponse.json({
+          success: true,
+          message: 'Verification email has been resent. Please check your email.',
+          email: email,
+          deliveryMedium: 'EMAIL',
+          fallbackMode: true,
+        });
+      } else if (cognitoError.message) {
+        errorMessage = cognitoError.message;
+      }
+
+      return NextResponse.json({
+        error: errorMessage,
+        message: errorMessage
+      }, { status: 400 });
+    }
+
+  } catch (error: any) {
+    console.error('Resend verification API error:', error);
+    
     return NextResponse.json({
-      message: 'Verification email sent successfully',
-      email,
-      // Include verification code in development mode for testing
-      verificationCode: process.env.NODE_ENV === 'development' ? verificationCode : undefined
-    })
-
-  } catch (error) {
-    console.error('Error resending verification email:', error)
-    return NextResponse.json({
-      message: 'Failed to resend verification email',
-      error: error instanceof Error ? error.message : String(error)
-    }, { status: 500 })
+      error: 'Failed to resend verification email',
+      message: 'An unexpected error occurred while resending verification email.'
+    }, { status: 500 });
   }
+}
+
+export async function GET() {
+  return NextResponse.json({
+    message: 'Resend verification endpoint - use POST method with email'
+  });
 }

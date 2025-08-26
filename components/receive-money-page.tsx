@@ -32,7 +32,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { formatCurrency } from '@/lib/banking'
 import { MomoClient } from '@/lib/momo-client'
 import { MastercardClient } from '@/lib/mastercard-client'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ui/use-toast'
 import { Loader2 } from 'lucide-react'
 import { VisaClient } from '@/lib/visa-client'
@@ -77,7 +77,7 @@ export function ReceiveMoneyPageComponent() {
   const [phoneNumber, setPhoneNumber] = useState('')
   const [copied, setCopied] = useState(false)
   const [qrVisible, setQrVisible] = useState(false)
-  const { data: session } = useSession()
+  const { user } = useAuth()
   const [momoPhone, setMomoPhone] = useState('')
   const [isGeneratingLink, setIsGeneratingLink] = useState(false)
   const [isGeneratingCardLink, setIsGeneratingCardLink] = useState(false)
@@ -122,7 +122,7 @@ export function ReceiveMoneyPageComponent() {
         body: JSON.stringify({
           amount: parseFloat(amount),
           phone: momoPhone,
-          userId: session?.user?.id,
+          userId: user?.id,
         }),
       })
 
@@ -674,12 +674,3 @@ export function ReceiveMoneyPageComponent() {
     </LayoutWrapper>
   )
 }
-
-
-
-
-
-
-
-
-

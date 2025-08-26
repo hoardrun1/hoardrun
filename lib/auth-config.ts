@@ -1,3 +1,7 @@
+import { NextAuthOptions } from 'next-auth';
+
+// Mock auth configuration since the actual auth system is not fully implemented
+export const authOptions: NextAuthOptions = {
 import CredentialsProvider from 'next-auth/providers/credentials'
 import GoogleProvider from 'next-auth/providers/google'
 import bcrypt from 'bcryptjs'
@@ -74,15 +78,22 @@ export const authOptions: AuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id
+        token.id = user.id;
       }
-      return token
+      return token;
     },
     async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.id as string
+      if (token) {
+        session.user.id = token.id as string;
       }
-      return session
-    }
-  }
-}
+      return session;
+    },
+  },
+  pages: {
+    signIn: '/signin',
+  },
+  session: {
+    strategy: 'jwt',
+  },
+  secret: process.env.NEXTAUTH_SECRET,
+};

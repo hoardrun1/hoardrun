@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ui/use-toast'
 
 interface FinanceContextType {
@@ -18,14 +18,14 @@ interface FinanceContextType {
 const FinanceContext = createContext<FinanceContextType | undefined>(undefined)
 
 export function FinanceProvider({ children }: { children: ReactNode }) {
-  const { data: session } = useSession()
+  const { user } = useAuth()
   const { toast } = useToast()
   const [balance, setBalance] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const refreshBalance = useCallback(async () => {
-    if (!session?.user) return
+    if (!user) return
 
     setIsLoading(true)
     setError(null)
@@ -46,10 +46,10 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false)
     }
-  }, [session, toast])
+  }, [user, toast])
 
   const transferToSavings = useCallback(async (amount: number) => {
-    if (!session?.user) return
+    if (!user) return
 
     setIsLoading(true)
     setError(null)
@@ -90,10 +90,10 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false)
     }
-  }, [session, toast, refreshBalance])
+  }, [user, toast, refreshBalance])
 
   const transferToInvestment = useCallback(async (amount: number) => {
-    if (!session?.user) return
+    if (!user) return
 
     setIsLoading(true)
     setError(null)
@@ -134,10 +134,10 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false)
     }
-  }, [session, toast, refreshBalance])
+  }, [user, toast, refreshBalance])
 
   const depositFunds = useCallback(async (amount: number) => {
-    if (!session?.user) return
+    if (!user) return
 
     setIsLoading(true)
     setError(null)
@@ -178,10 +178,10 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false)
     }
-  }, [session, toast, refreshBalance])
+  }, [user, toast, refreshBalance])
 
   const withdrawFunds = useCallback(async (amount: number) => {
-    if (!session?.user) return
+    if (!user) return
 
     setIsLoading(true)
     setError(null)
@@ -222,7 +222,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false)
     }
-  }, [session, toast, refreshBalance])
+  }, [user, toast, refreshBalance])
 
   return (
     <FinanceContext.Provider
@@ -248,4 +248,4 @@ export function useFinance() {
     throw new Error('useFinance must be used within a FinanceProvider')
   }
   return context
-} 
+}

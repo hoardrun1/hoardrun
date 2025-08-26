@@ -1,10 +1,9 @@
 'use client'
 
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { useCognitoAuth } from '@/hooks/useCognitoAuth';
-import { User as FirebaseUser } from 'firebase/auth';
+import React, { createContext, useContext, ReactNode } from 'react';
+import { useAwsCognitoAuth } from '@/hooks/useAwsCognitoAuth';
 
-// Unified User interface that works with both Firebase and Cognito
+// Define a simple user type for AWS Cognito
 interface User {
   id: string;
   email: string;
@@ -18,21 +17,9 @@ interface AuthContextType {
   token: string | null;
   loading: boolean;
   error: string | null;
-  isAuthenticated: boolean;
-  authMethod: 'jwt' | 'firebase' | 'cognito' | null;
-
-  // Generic auth methods
-  login: (token: string, user: User) => void;
-  logout: () => Promise<void>;
-  clearError: () => void;
-
-  // JWT/Traditional auth
-  signup: (email: string, password: string, name?: string) => Promise<void>;
-
-  // Firebase auth methods
-  signUpWithFirebase: (email: string, password: string, name?: string) => Promise<void>;
-  signInWithFirebase: (email: string, password: string) => Promise<void>;
-  signOutFromFirebase: () => Promise<void>;
+  signUp: (email: string, password: string, name?: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<void>;
+  signOut: () => Promise<void>;
   sendEmailVerification: (userId: string) => Promise<void>;
   verifyEmail: (actionCode: string) => Promise<void>;
 

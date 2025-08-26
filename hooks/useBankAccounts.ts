@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ui/use-toast'
 
 interface BankAccount {
@@ -19,14 +19,14 @@ interface CreateAccountData {
 }
 
 export function useBankAccounts() {
-  const { data: session } = useSession()
+  const { user } = useAuth()
   const { toast } = useToast()
   const [accounts, setAccounts] = useState<BankAccount[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const fetchAccounts = useCallback(async () => {
-    if (!session?.user) return
+    if (!user) return
 
     setIsLoading(true)
     setError(null)
@@ -47,10 +47,10 @@ export function useBankAccounts() {
     } finally {
       setIsLoading(false)
     }
-  }, [session, toast])
+  }, [user, toast])
 
   const createAccount = useCallback(async (data: CreateAccountData) => {
-    if (!session?.user) return
+    if (!user) return
 
     setIsLoading(true)
     setError(null)
@@ -89,10 +89,10 @@ export function useBankAccounts() {
     } finally {
       setIsLoading(false)
     }
-  }, [session, toast])
+  }, [user, toast])
 
   const closeAccount = useCallback(async (id: string) => {
-    if (!session?.user) return
+    if (!user) return
 
     setIsLoading(true)
     setError(null)
@@ -130,7 +130,7 @@ export function useBankAccounts() {
     } finally {
       setIsLoading(false)
     }
-  }, [session, toast])
+  }, [user, toast])
 
   const getAccountById = useCallback((id: string) => {
     return accounts.find(account => account.id === id)
@@ -165,4 +165,4 @@ export function useBankAccounts() {
     getActiveAccounts,
     calculateTotalBalance,
   }
-} 
+}

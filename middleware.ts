@@ -9,11 +9,6 @@ export function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const routeName = path.split('/')[1];
 
-  // Allow public routes
-  if (publicRoutes.includes(path)) {
-    return NextResponse.next();
-  }
-
   // Check if we should bypass auth globally (not just in development)
   const bypassAuth = process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true';
   if (bypassAuth) {
@@ -23,6 +18,27 @@ export function middleware(request: NextRequest) {
 
   // Get the token from cookies
   const token = request.cookies.get('auth-token')?.value;
+  
+  // Debug logging for production
+  console.log('Middleware Debug:', {
+    path: request.nextUrl.pathname,
+    hasToken: !!token,
+    tokenValue: token ? 'present' : 'missing',
+    allCookies: Object.fromEntries(request.cookies.getAll().map(c => [c.name, c.value ? 'present' : 'empty']))
+  });
+
+  // If user is authenticated and trying to access signin page, redirect to home
+  if (token && request.nextUrl.pathname === '/signin') {
+    console.log('Redirecting authenticated user from signin to home');
+    const callbackUrl = request.nextUrl.searchParams.get('callbackUrl')
+    const redirectUrl = new URL(callbackUrl || '/home', request.url)
+    return NextResponse.redirect(redirectUrl)
+  }
+
+  // Allow public routes for unauthenticated users
+  if (publicRoutes.includes(path) && !token) {
+    return NextResponse.next();
+  }
 
   // Protect these routes
   const protectedPaths = ['/home', '/finance', '/cards', '/investment', '/settings',

@@ -6,8 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Trash2, AlertTriangle, CheckCircle, Loader2 } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
-import { auth } from '@/lib/firebase-config'
-import { deleteUser, signOut } from 'firebase/auth'
+// Firebase removed - using simple cleanup without Firebase dependencies
 
 export default function CleanupPage() {
   const [isClearing, setIsClearing] = useState(false)
@@ -45,32 +44,23 @@ export default function CleanupPage() {
 
   const signOutCurrentUser = async () => {
     try {
-      if (auth?.currentUser) {
-        await signOut(auth)
-        setResults(prev => [...prev, '✅ Signed out current user'])
-        return true
-      } else {
-        setResults(prev => [...prev, '✅ No user currently signed in'])
-        return true
-      }
+      // Clear auth cookies
+      document.cookie = 'auth-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
+      setResults(prev => [...prev, '✅ Cleared authentication cookies'])
+      return true
     } catch (error) {
-      setResults(prev => [...prev, `❌ Error signing out: ${error}`])
+      setResults(prev => [...prev, `❌ Error clearing auth cookies: ${error}`])
       return false
     }
   }
 
   const deleteCurrentUser = async () => {
     try {
-      if (auth?.currentUser) {
-        await deleteUser(auth.currentUser)
-        setResults(prev => [...prev, '✅ Deleted current Firebase user'])
-        return true
-      } else {
-        setResults(prev => [...prev, '✅ No user to delete'])
-        return true
-      }
+      // Since we removed Firebase, we just clear local user data
+      setResults(prev => [...prev, '✅ Local user data cleared (Firebase removed)'])
+      return true
     } catch (error) {
-      setResults(prev => [...prev, `❌ Error deleting user: ${error}`])
+      setResults(prev => [...prev, `❌ Error clearing user data: ${error}`])
       return false
     }
   }

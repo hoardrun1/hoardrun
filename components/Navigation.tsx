@@ -4,18 +4,15 @@ import { useAuth } from '../contexts/AuthContext';
 
 export default function Navigation() {
   const router = useRouter();
-<<<<<<< HEAD
-  const { logout } = useAuth();
+  const { signOut } = useAuth();
 
-  const handleLogout = () => {
-    logout();
-=======
-  const { signOutFromFirebase } = useAuth();
-
-  const handleLogout = () => {
-    signOutFromFirebase();
->>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
-    router.push('/auth/signin');
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      router.push('/signin');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   return (
@@ -65,4 +62,4 @@ export default function Navigation() {
       </div>
     </nav>
   );
-} 
+}

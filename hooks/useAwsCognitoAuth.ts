@@ -33,48 +33,35 @@ export function useAwsCognitoAuth(): CognitoAuthHook {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Initialize auth state
+  // Initialize auth state - check session via API since cookie is httpOnly
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        // Check if user is already authenticated
-        const authToken = localStorage.getItem('cognito_access_token');
-        const sessionToken = document.cookie
-          .split('; ')
-          .find(row => row.startsWith('auth-token='))
-          ?.split('=')[1];
+        // Since the auth-token cookie is httpOnly, we need to check session via API
+        const response = await fetch('/api/auth/session', {
+          method: 'GET',
+          credentials: 'include', // Include httpOnly cookies
+        });
 
-        if (authToken || sessionToken) {
-          // Validate token and get user info
-          const userInfo = await validateToken(authToken || sessionToken);
-          if (userInfo) {
-            setUser(userInfo);
-          } else {
-            // Clear invalid tokens
-            localStorage.removeItem('cognito_access_token');
-            localStorage.removeItem('cognito_id_token');
-            localStorage.removeItem('cognito_refresh_token');
-            document.cookie = 'auth-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        if (response.ok) {
+          const sessionData = await response.json();
+          if (sessionData.user) {
+            setUser(sessionData.user);
           }
+        } else if (response.status === 401) {
+          // Session expired or invalid, clear any client-side state
+          setUser(null);
         }
 
         // Check for URL parameters (callback from Cognito)
         const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get('code');
         const error = urlParams.get('error');
-
         if (error) {
           setError(decodeURIComponent(error));
-        } else if (code) {
-          // Code will be handled by the callback route
-          console.log('Authorization code received, processing...');
         }
       } catch (err) {
         console.error('Auth initialization error:', err);
-        // Clear all auth data on error
-        localStorage.removeItem('cognito_access_token');
-        localStorage.removeItem('cognito_id_token');
-        localStorage.removeItem('cognito_refresh_token');
+        setUser(null);
       } finally {
         setLoading(false);
       }
@@ -130,7 +117,7 @@ export function useAwsCognitoAuth(): CognitoAuthHook {
       const redirectUri = `${window.location.origin}/api/auth/flexible-callback`;
 
       // Redirect to Cognito hosted UI for sign up
-      const signUpUrl = `https://${cognitoDomain}/signup?client_id=${clientId}&response_type=code&scope=email+openid+profile&redirect_uri=${encodeURIComponent(redirectUri)}`;
+      const signUpUrl = `https://${cognitoDomain}/signup?client_id=${clientId}&response_type=code&scope=email+openid&redirect_uri=${encodeURIComponent(redirectUri)}`;
       window.location.href = signUpUrl;
       
     } catch (err) {
@@ -157,7 +144,7 @@ export function useAwsCognitoAuth(): CognitoAuthHook {
       const redirectUri = `${window.location.origin}/api/auth/flexible-callback`;
 
       // Redirect to Cognito hosted UI for sign in
-      const signInUrl = `https://${cognitoDomain}/login?client_id=${clientId}&response_type=code&scope=email+openid+profile&redirect_uri=${encodeURIComponent(redirectUri)}`;
+      const signInUrl = `https://${cognitoDomain}/login?client_id=${clientId}&response_type=code&scope=email+openid&redirect_uri=${encodeURIComponent(redirectUri)}`;
       window.location.href = signInUrl;
       
     } catch (err) {
@@ -174,14 +161,16 @@ export function useAwsCognitoAuth(): CognitoAuthHook {
     try {
       console.log('Starting logout process...');
       
+      // Call server-side logout to clear httpOnly cookies
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      
       // Clear local storage
       localStorage.removeItem('cognito_access_token');
       localStorage.removeItem('cognito_id_token');
       localStorage.removeItem('cognito_refresh_token');
-      
-      // Clear cookies
-      document.cookie = 'auth-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-      document.cookie = 'cognito-session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
       
       // Clear user state immediately
       setUser(null);
@@ -189,8 +178,7 @@ export function useAwsCognitoAuth(): CognitoAuthHook {
       
       console.log('User state cleared, redirecting to signin...');
       
-      // For now, just redirect to signin page without Cognito logout
-      // This ensures the logout works reliably
+      // Redirect to signin page
       window.location.href = `${window.location.origin}/signin`;
       
     } catch (err) {

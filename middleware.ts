@@ -7,32 +7,20 @@ const protectedRoutes = ['home', 'dashboard', 'create-profile', 'verify-email'];
 
 export function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
-  const routeName = path.split('/')[1];
 
   // Check if we should bypass auth globally (not just in development)
   const bypassAuth = process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true';
   if (bypassAuth) {
-    console.log('Auth bypass enabled globally');
     return NextResponse.next();
   }
 
-  // Get the token from cookies
+  // Get the token from cookies - optimized single operation
   const token = request.cookies.get('auth-token')?.value;
-  
-  // Debug logging for production
-  console.log('Middleware Debug:', {
-    path: request.nextUrl.pathname,
-    hasToken: !!token,
-    tokenValue: token ? 'present' : 'missing',
-    allCookies: Object.fromEntries(request.cookies.getAll().map(c => [c.name, c.value ? 'present' : 'empty']))
-  });
 
   // If user is authenticated and trying to access signin page, redirect to home
-  if (token && request.nextUrl.pathname === '/signin') {
-    console.log('Redirecting authenticated user from signin to home');
+  if (token && path === '/signin') {
     const callbackUrl = request.nextUrl.searchParams.get('callbackUrl')
-    const redirectUrl = new URL(callbackUrl || '/home', request.url)
-    return NextResponse.redirect(redirectUrl)
+    return NextResponse.redirect(new URL(callbackUrl || '/home', request.url))
   }
 
   // Allow public routes for unauthenticated users
@@ -40,16 +28,13 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Protect these routes
+  // Protect these routes - optimized check
   const protectedPaths = ['/home', '/finance', '/cards', '/investment', '/settings',
                          '/send-money', '/receive-money', '/savings', '/startupregistration']
-  const isProtectedPath = protectedPaths.some(path =>
-    request.nextUrl.pathname.startsWith(path)
-  )
-
-  if (isProtectedPath && !token) {
+  
+  if (!token && protectedPaths.some(protectedPath => path.startsWith(protectedPath))) {
     const redirectUrl = new URL('/signin', request.url)
-    redirectUrl.searchParams.set('callbackUrl', request.nextUrl.pathname)
+    redirectUrl.searchParams.set('callbackUrl', path)
     return NextResponse.redirect(redirectUrl)
   }
 

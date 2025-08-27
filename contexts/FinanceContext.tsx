@@ -38,15 +38,11 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
       setBalance(data.balance)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch balance')
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch balance',
-        variant: 'destructive',
-      })
+      // Remove toast for better performance - let components handle error display
     } finally {
       setIsLoading(false)
     }
-  }, [user, toast])
+  }, [user])
 
   const transferToSavings = useCallback(async (amount: number) => {
     if (!user) return

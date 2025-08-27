@@ -87,7 +87,7 @@ export const InvestmentAnalytics: React.FC<InvestmentAnalyticsProps> = ({
                 <div className="flex justify-between items-center">
                   <span className="font-medium">{metric.period}</span>
                   <div className="text-right">
-                    <div className={`font-semibold ${metric.return >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    <div className={`font-semibold ${metric.return >= 0 ? 'text-gray-600' : 'text-gray-600'}`}>
                       {metric.return >= 0 ? '+' : ''}{metric.return.toFixed(1)}%
                     </div>
                     <div className="text-sm text-gray-500">
@@ -101,7 +101,7 @@ export const InvestmentAnalytics: React.FC<InvestmentAnalyticsProps> = ({
                     <div className="text-xs text-gray-500 mb-1">Your Return</div>
                     <Progress 
                       value={Math.abs(metric.return)} 
-                      className={`h-2 ${metric.return >= 0 ? '' : 'bg-red-100'}`}
+                      className={`h-2 ${metric.return >= 0 ? '' : 'bg-gray-100'}`}
                     />
                   </div>
                   <div>
@@ -114,7 +114,7 @@ export const InvestmentAnalytics: React.FC<InvestmentAnalyticsProps> = ({
                 </div>
                 
                 <div className="text-xs text-center">
-                  <span className={metric.return > metric.benchmark ? 'text-green-600' : 'text-red-600'}>
+                  <span className={metric.return > metric.benchmark ? 'text-gray-600' : 'text-gray-600'}>
                     {metric.return > metric.benchmark ? 'Outperforming' : 'Underperforming'} by{' '}
                     {Math.abs(metric.return - metric.benchmark).toFixed(1)}%
                   </span>

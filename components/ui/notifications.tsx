@@ -105,12 +105,12 @@ export function Notifications({ isOpen, onClose, onMarkAllRead }: NotificationsP
 
   const getNotificationColor = (type: string) => {
     switch (type) {
-      case 'transaction': return 'text-green-600 bg-green-100 dark:bg-green-900 dark:text-green-400';
-      case 'success': return 'text-green-600 bg-green-100 dark:bg-green-900 dark:text-green-400';
-      case 'warning': return 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900 dark:text-yellow-400';
-      case 'error': return 'text-red-600 bg-red-100 dark:bg-red-900 dark:text-red-400';
-      case 'security': return 'text-purple-600 bg-purple-100 dark:bg-purple-900 dark:text-purple-400';
-      case 'info': return 'text-blue-600 bg-blue-100 dark:bg-blue-900 dark:text-blue-400';
+      case 'transaction': return 'text-gray-800 bg-gray-100 dark:bg-gray-800 dark:text-gray-200';
+      case 'success': return 'text-gray-800 bg-gray-100 dark:bg-gray-800 dark:text-gray-200';
+      case 'warning': return 'text-gray-900 bg-gray-200 dark:bg-gray-700 dark:text-gray-100';
+      case 'error': return 'text-black bg-gray-300 dark:bg-gray-600 dark:text-white';
+      case 'security': return 'text-gray-700 bg-gray-150 dark:bg-gray-750 dark:text-gray-300';
+      case 'info': return 'text-gray-800 bg-gray-100 dark:bg-gray-800 dark:text-gray-200';
       default: return 'text-gray-600 bg-gray-100 dark:bg-gray-900 dark:text-gray-400';
     }
   };
@@ -185,7 +185,7 @@ export function Notifications({ isOpen, onClose, onMarkAllRead }: NotificationsP
           <div className="p-6 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <Bell className="h-6 w-6 text-blue-600" />
+                <Bell className="h-6 w-6 text-gray-800 dark:text-gray-200" />
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white">
                   Notifications
                 </h2>
@@ -235,7 +235,7 @@ export function Notifications({ isOpen, onClose, onMarkAllRead }: NotificationsP
                       className={`p-4 rounded-lg border transition-all duration-200 hover:shadow-md ${
                         notification.read
                           ? 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'
-                          : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
+                          : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600'
                       }`}
                     >
                       <div className="flex items-start gap-3">
@@ -268,7 +268,7 @@ export function Notifications({ isOpen, onClose, onMarkAllRead }: NotificationsP
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-6 w-6 text-red-500 hover:text-red-700"
+                                className="h-6 w-6 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
                                 onClick={() => deleteNotification(notification.id)}
                               >
                                 <Trash2 className="h-3 w-3" />
@@ -299,8 +299,8 @@ export function Notifications({ isOpen, onClose, onMarkAllRead }: NotificationsP
                             {notification.amount && (
                               <span className={`text-sm font-medium ${
                                 notification.type === 'transaction'
-                                  ? 'text-green-600 dark:text-green-400'
-                                  : 'text-blue-600 dark:text-blue-400'
+                                  ? 'text-gray-800 dark:text-gray-200'
+                                  : 'text-gray-700 dark:text-gray-300'
                               }`}>
                                 {notification.type === 'transaction' ? '+' : ''}${notification.amount.toFixed(2)}
                               </span>

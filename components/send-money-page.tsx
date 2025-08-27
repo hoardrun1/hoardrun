@@ -578,9 +578,9 @@ export function SendMoneyPage() {
                           rotate: [0, 360]
                         }}
                         transition={{ duration: 0.6 }}
-                        className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4"
+                        className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4"
                       >
-                        <Check className="w-8 h-8 text-green-600" />
+                        <Check className="w-8 h-8 text-gray-600" />
                       </motion.div>
                       <h3 className="text-xl font-semibold text-black mb-2">Success!</h3>
                       <p className="text-gray-600">Your money has been sent</p>

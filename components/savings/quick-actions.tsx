@@ -26,21 +26,21 @@ export function QuickActionsPanel({ onAction, recentActivities }: {
       icon: Zap,
       label: 'Quick Save',
       description: 'Instantly add to your savings',
-      color: 'bg-blue-500'
+      color: 'bg-gray-500'
     },
     {
       id: 'auto-save',
       icon: Repeat,
       label: 'Auto-Save',
       description: 'Set up recurring savings',
-      color: 'bg-green-500'
+      color: 'bg-gray-500'
     },
     {
       id: 'round-up',
       icon: PiggyBank,
       label: 'Round-Up',
       description: 'Save your spare change',
-      color: 'bg-purple-500'
+      color: 'bg-gray-500'
     }
   ]
 

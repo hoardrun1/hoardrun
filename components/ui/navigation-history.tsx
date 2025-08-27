@@ -15,7 +15,7 @@ export const NavigationHistory = () => {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 text-sm text-gray-500 hover:text-blue-600 transition-colors"
+        className="flex items-center space-x-2 text-sm text-gray-500 hover:text-gray-600 transition-colors"
       >
         <Clock className="h-4 w-4" />
         <span>Recent Pages</span>

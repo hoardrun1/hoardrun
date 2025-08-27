@@ -38,7 +38,7 @@ export function SavingsHeader({
                     <motion.div
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
-                      className="flex items-center text-green-600"
+                      className="flex items-center text-gray-600"
                     >
                       <TrendingUp className="h-5 w-5 mr-1" />
                       <span>+{monthlyGrowth}%</span>
@@ -47,7 +47,7 @@ export function SavingsHeader({
                     <motion.div
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
-                      className="flex items-center text-red-600"
+                      className="flex items-center text-gray-600"
                     >
                       <TrendingDown className="h-5 w-5 mr-1" />
                       <span>{monthlyGrowth}%</span>

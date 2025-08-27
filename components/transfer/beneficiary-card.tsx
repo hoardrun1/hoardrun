@@ -81,7 +81,7 @@ export function BeneficiaryCard({
                 )}
               </DropdownMenuItem>
               <DropdownMenuItem
-                className="text-red-600"
+                className="text-gray-600"
                 onClick={() => onDelete(beneficiary.id)}
               >
                 Delete beneficiary

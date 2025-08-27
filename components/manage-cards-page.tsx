@@ -104,7 +104,7 @@ export function ManageCardsPageComponent() {
               </div>
               <Button variant="ghost" size="icon" className="relative">
                 <Bell className="h-5 w-5" />
-                <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full" />
+                <span className="absolute top-1 right-1 h-2 w-2 bg-gray-500 rounded-full" />
               </Button>
               <Button variant="ghost" size="icon">
                 <Settings className="h-5 w-5" />
@@ -229,24 +229,24 @@ export function ManageCardsPageComponent() {
               <div className="grid grid-cols-3 gap-4">
                 <Card className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors">
                   <div className="flex flex-col items-center text-center">
-                    <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center mb-2">
-                      <Wallet className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                    <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-900 flex items-center justify-center mb-2">
+                      <Wallet className="h-5 w-5 text-gray-600 dark:text-gray-400" />
                     </div>
                     <span className="text-sm font-medium">Add Money</span>
                   </div>
                 </Card>
                 <Card className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors">
                   <div className="flex flex-col items-center text-center">
-                    <div className="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center mb-2">
-                      <Shield className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                    <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-900 flex items-center justify-center mb-2">
+                      <Shield className="h-5 w-5 text-gray-600 dark:text-gray-400" />
                     </div>
                     <span className="text-sm font-medium">Security</span>
                   </div>
                 </Card>
                 <Card className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors">
                   <div className="flex flex-col items-center text-center">
-                    <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center mb-2">
-                      <Sliders className="h-5 w-5 text-green-600 dark:text-green-400" />
+                    <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-900 flex items-center justify-center mb-2">
+                      <Sliders className="h-5 w-5 text-gray-600 dark:text-gray-400" />
                     </div>
                     <span className="text-sm font-medium">Limits</span>
                   </div>
@@ -281,7 +281,7 @@ export function ManageCardsPageComponent() {
                       >
                         <div className="flex items-center gap-3">
                           <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                            transaction.amount > 0 ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
+                            transaction.amount > 0 ? 'bg-gray-100 text-gray-600' : 'bg-gray-100 text-gray-600'
                           }`}>
                             <DollarSign className="h-5 w-5" />
                           </div>
@@ -292,7 +292,7 @@ export function ManageCardsPageComponent() {
                         </div>
                         <div className="text-right">
                           <div className={`font-medium ${
-                            transaction.amount > 0 ? 'text-green-600' : 'text-red-600'
+                            transaction.amount > 0 ? 'text-gray-600' : 'text-gray-600'
                           }`}>
                             {transaction.amount > 0 ? '+' : ''}{transaction.amount.toLocaleString()}
                           </div>
@@ -319,7 +319,7 @@ export function ManageCardsPageComponent() {
                     </div>
                     <div className="w-full h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
                       <div 
-                        className="h-full bg-blue-600 rounded-full" 
+                        className="h-full bg-gray-600 rounded-full" 
                         style={{ width: '65%' }}
                       />
                     </div>

@@ -215,7 +215,7 @@ export function FaceVerificationPageComponent() {
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <Loader2 className="h-8 w-8 animate-spin text-gray-600" />
       </div>
     )
   }
@@ -223,7 +223,7 @@ export function FaceVerificationPageComponent() {
   if (isModelLoading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center space-y-4">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <Loader2 className="h-8 w-8 animate-spin text-gray-600" />
         <p className="text-sm text-gray-600">Loading face detection models...</p>
       </div>
     )
@@ -233,7 +233,7 @@ export function FaceVerificationPageComponent() {
     <div className="min-h-screen w-full flex flex-col items-center justify-center bg-gray-50 p-4 sm:p-6 md:p-8">
       <Card className="w-full max-w-[95%] sm:max-w-[440px] md:max-w-[480px] lg:max-w-[520px] overflow-hidden">
         <CardHeader className="text-center p-4 sm:p-6">
-          <Link href="/" className="inline-block mb-4 sm:mb-6 md:mb-8">
+          <Link href="/home" className="inline-block mb-4 sm:mb-6 md:mb-8">
             <span className="text-xl sm:text-2xl font-bold">
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-600">Hoard</span>
               <span className="text-gray-900">run</span>
@@ -247,7 +247,7 @@ export function FaceVerificationPageComponent() {
 
         <CardContent className="p-4 sm:p-6">
           {error && (
-            <div className="mb-4 p-3 text-sm text-red-600 bg-red-50 rounded-lg flex items-center">
+            <div className="mb-4 p-3 text-sm text-gray-600 bg-gray-50 rounded-lg flex items-center">
               <AlertCircle className="h-4 w-4 mr-2 flex-shrink-0" />
               <span>{error}</span>
             </div>
@@ -289,7 +289,7 @@ export function FaceVerificationPageComponent() {
               {!cameraActive ? (
                 <Button 
                   onClick={startCamera}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-sm sm:text-base py-2 sm:py-3"
+                  className="w-full bg-gray-600 hover:bg-gray-700 text-sm sm:text-base py-2 sm:py-3"
                 >
                   Start Camera
                 </Button>
@@ -297,7 +297,7 @@ export function FaceVerificationPageComponent() {
                 <Button 
                   onClick={startVerification}
                   disabled={isLoading || !faceDetected || countdown !== null} 
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-sm sm:text-base py-2 sm:py-3"
+                  className="w-full bg-gray-600 hover:bg-gray-700 text-sm sm:text-base py-2 sm:py-3"
                 >
                   {isLoading ? (
                     <>
@@ -314,13 +314,13 @@ export function FaceVerificationPageComponent() {
             </>
           ) : (
             <div className="text-center space-y-4">
-              <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-green-100">
-                <CheckCircle2 className="h-6 w-6 sm:h-8 sm:w-8 text-green-600" />
+              <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gray-100">
+                <CheckCircle2 className="h-6 w-6 sm:h-8 sm:w-8 text-gray-600" />
               </div>
               <p className="text-base sm:text-lg font-medium">Face Verification Successful</p>
               <Button 
                 onClick={handleContinue}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-sm sm:text-base py-2 sm:py-3"
+                className="w-full bg-gray-600 hover:bg-gray-700 text-sm sm:text-base py-2 sm:py-3"
               >
                 Continue to Home
               </Button>
@@ -332,7 +332,7 @@ export function FaceVerificationPageComponent() {
           <Button 
             variant="ghost"
             onClick={handleSkip}
-            className="text-sm text-gray-600 hover:text-blue-500 transition-colors duration-300"
+            className="text-sm text-gray-600 hover:text-gray-500 transition-colors duration-300"
           >
             Skip verification for now
           </Button>
@@ -343,7 +343,7 @@ export function FaceVerificationPageComponent() {
         <Button 
           variant="ghost" 
           onClick={startCamera} 
-          className="mt-4 text-blue-600 hover:text-blue-700 text-sm sm:text-base"
+          className="mt-4 text-gray-600 hover:text-gray-700 text-sm sm:text-base"
         >
           <RefreshCw className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
           Retake Photo

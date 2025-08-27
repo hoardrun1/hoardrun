@@ -189,7 +189,7 @@ export default function VerifySigninPage() {
             <Link href="/">
               <motion.h1 
                 className={`text-sm sm:text-base md:text-lg font-bold ${
-                  theme === 'dark' ? 'text-blue-400' : 'text-blue-600'
+                  theme === 'dark' ? 'text-gray-400' : 'text-gray-600'
                 }`}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -217,7 +217,7 @@ export default function VerifySigninPage() {
             transition={{ delay: 0.3 }}
           >
             <motion.div 
-              className="h-full bg-blue-600"
+              className="h-full bg-gray-600"
               initial={{ width: '0%' }}
               animate={{ width: `${verificationProgress}%` }}
               transition={{ duration: 0.3 }}
@@ -278,7 +278,7 @@ export default function VerifySigninPage() {
 
             <Button
               type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700"
+              className="w-full bg-gray-600 hover:bg-gray-700"
               disabled={isLoading || verificationCode.some(digit => !digit)}
             >
               {isLoading ? (

@@ -19,7 +19,7 @@ export function Toast({ title, description, variant = 'default', onClose }: Toas
       className={cn(
         'pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-md border p-6 pr-8 shadow-lg transition-all',
         variant === 'default' && 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700',
-        variant === 'destructive' && 'bg-red-600 text-white border-red-600 dark:border-red-600'
+        variant === 'destructive' && 'bg-gray-600 text-white border-red-600 dark:border-red-600'
       )}
     >
       <div className="grid gap-1">

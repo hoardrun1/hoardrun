@@ -61,7 +61,7 @@ export function RightSidebar({ isOpen, onClose }: RightSidebarProps) {
       current: 3500,
       target: 5000,
       progress: 70,
-      color: 'bg-blue-500'
+      color: 'bg-gray-500'
     },
     {
       id: 2,
@@ -69,7 +69,7 @@ export function RightSidebar({ isOpen, onClose }: RightSidebarProps) {
       current: 1200,
       target: 2000,
       progress: 60,
-      color: 'bg-green-500'
+      color: 'bg-gray-500'
     },
     {
       id: 3,
@@ -77,7 +77,7 @@ export function RightSidebar({ isOpen, onClose }: RightSidebarProps) {
       current: 8500,
       target: 15000,
       progress: 57,
-      color: 'bg-purple-500'
+      color: 'bg-gray-500'
     }
   ]
 
@@ -147,16 +147,16 @@ export function RightSidebar({ isOpen, onClose }: RightSidebarProps) {
               >
                 <div className="flex items-start space-x-3">
                   <div className={`p-1.5 rounded-full ${
-                    notification.type === 'transaction' ? 'bg-green-100' :
-                    notification.type === 'goal' ? 'bg-blue-100' :
-                    'bg-orange-100'
+                    notification.type === 'transaction' ? 'bg-gray-100' :
+                    notification.type === 'goal' ? 'bg-gray-100' :
+                    'bg-gray-100'
                   }`}>
                     {notification.type === 'transaction' ? (
-                      <DollarSign className="h-3 w-3 text-green-600" />
+                      <DollarSign className="h-3 w-3 text-gray-600" />
                     ) : notification.type === 'goal' ? (
-                      <Target className="h-3 w-3 text-blue-600" />
+                      <Target className="h-3 w-3 text-gray-600" />
                     ) : (
-                      <AlertCircle className="h-3 w-3 text-orange-600" />
+                      <AlertCircle className="h-3 w-3 text-gray-600" />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -204,12 +204,12 @@ export function RightSidebar({ isOpen, onClose }: RightSidebarProps) {
               <div key={bill.id} className="flex items-center justify-between p-3 bg-black/5 rounded-lg">
                 <div className="flex items-center space-x-3">
                   <div className={`p-1.5 rounded-full ${
-                    bill.status === 'paid' ? 'bg-green-100' : 'bg-orange-100'
+                    bill.status === 'paid' ? 'bg-gray-100' : 'bg-gray-100'
                   }`}>
                     {bill.status === 'paid' ? (
-                      <CheckCircle className="h-3 w-3 text-green-600" />
+                      <CheckCircle className="h-3 w-3 text-gray-600" />
                     ) : (
-                      <Clock className="h-3 w-3 text-orange-600" />
+                      <Clock className="h-3 w-3 text-gray-600" />
                     )}
                   </div>
                   <div>
@@ -225,8 +225,8 @@ export function RightSidebar({ isOpen, onClose }: RightSidebarProps) {
                     variant="secondary" 
                     className={`text-xs ${
                       bill.status === 'paid' 
-                        ? 'bg-green-100 text-green-700' 
-                        : 'bg-orange-100 text-orange-700'
+                        ? 'bg-gray-100 text-gray-700' 
+                        : 'bg-gray-100 text-gray-700'
                     }`}
                   >
                     {bill.status}
@@ -242,12 +242,12 @@ export function RightSidebar({ isOpen, onClose }: RightSidebarProps) {
           <h3 className="text-sm font-medium text-black mb-3">This Month</h3>
           <div className="grid grid-cols-2 gap-3">
             <div className="p-3 bg-black/5 rounded-lg text-center">
-              <ArrowUpRight className="h-4 w-4 text-green-600 mx-auto mb-1" />
+              <ArrowUpRight className="h-4 w-4 text-gray-600 mx-auto mb-1" />
               <p className="text-xs text-black/60">Income</p>
               <p className="text-sm font-semibold text-black">$5,200</p>
             </div>
             <div className="p-3 bg-black/5 rounded-lg text-center">
-              <ArrowDownLeft className="h-4 w-4 text-red-600 mx-auto mb-1" />
+              <ArrowDownLeft className="h-4 w-4 text-gray-600 mx-auto mb-1" />
               <p className="text-xs text-black/60">Expenses</p>
               <p className="text-sm font-semibold text-black">$3,150</p>
             </div>

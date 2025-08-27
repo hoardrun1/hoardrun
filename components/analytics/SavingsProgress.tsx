@@ -65,7 +65,7 @@ export const SavingsProgress: React.FC<SavingsProgressProps> = ({
                   <span className="text-gray-600">
                     ${goal.currentAmount.toLocaleString()} of ${goal.targetAmount.toLocaleString()}
                   </span>
-                  <span className="font-medium text-green-600">
+                  <span className="font-medium text-gray-600">
                     {progress.toFixed(1)}%
                   </span>
                 </div>

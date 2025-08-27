@@ -80,7 +80,7 @@ export default function StockQuote() {
             </div>
             <div>
               <h3 className="text-sm font-medium text-gray-500">Change</h3>
-              <p className={`text-lg font-semibold ${quote.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <p className={`text-lg font-semibold ${quote.change >= 0 ? 'text-gray-600' : 'text-gray-600'}`}>
                 {quote.change.toFixed(2)} ({quote.changePercent.toFixed(2)}%)
               </p>
             </div>

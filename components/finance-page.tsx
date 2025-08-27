@@ -255,7 +255,7 @@ export function FinancePageComponent() {
               </div>
               <Button variant="ghost" size="icon" className="relative">
                 <Bell className="h-5 w-5" />
-                <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full" />
+                <span className="absolute top-1 right-1 h-2 w-2 bg-gray-500 rounded-full" />
               </Button>
               <Button variant="ghost" size="icon">
                 <Settings className="h-5 w-5" />
@@ -277,7 +277,7 @@ export function FinancePageComponent() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Brain className="h-5 w-5 text-blue-500" />
+                    <Brain className="h-5 w-5 text-gray-500" />
                     <CardTitle>Financial Insights</CardTitle>
                   </div>
                   <Button
@@ -371,7 +371,7 @@ export function FinancePageComponent() {
               >
                 <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-blue-100">
+                    <CardTitle className="text-sm font-medium text-gray-100">
                       Total Balance
                     </CardTitle>
                   </CardHeader>
@@ -379,7 +379,7 @@ export function FinancePageComponent() {
                     <div className="text-2xl font-bold">
                       ${metrics?.totalBalance.toLocaleString()}
                     </div>
-                    <div className="flex items-center mt-1 text-blue-100">
+                    <div className="flex items-center mt-1 text-gray-100">
                       <ArrowUpRight className="h-4 w-4 mr-1" />
                       <span className="text-sm">
                         +{metrics?.trends.balance}% from last month
@@ -396,11 +396,11 @@ export function FinancePageComponent() {
               >
                 <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-green-100">Monthly Income</CardTitle>
+                    <CardTitle className="text-sm font-medium text-gray-100">Monthly Income</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">$5,800.00</div>
-                    <div className="flex items-center mt-1 text-green-100">
+                    <div className="flex items-center mt-1 text-gray-100">
                       <ArrowUpRight className="h-4 w-4 mr-1" />
                       <span className="text-sm">+12% from last month</span>
                     </div>
@@ -415,11 +415,11 @@ export function FinancePageComponent() {
               >
                 <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-orange-100">Monthly Expenses</CardTitle>
+                    <CardTitle className="text-sm font-medium text-gray-100">Monthly Expenses</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">$3,700.00</div>
-                    <div className="flex items-center mt-1 text-orange-100">
+                    <div className="flex items-center mt-1 text-gray-100">
                       <ArrowUpRight className="h-4 w-4 mr-1" />
                       <span className="text-sm">+5% from last month</span>
                     </div>
@@ -434,11 +434,11 @@ export function FinancePageComponent() {
               >
                 <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-purple-100">Savings Rate</CardTitle>
+                    <CardTitle className="text-sm font-medium text-gray-100">Savings Rate</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">36.2%</div>
-                    <div className="flex items-center mt-1 text-purple-100">
+                    <div className="flex items-center mt-1 text-gray-100">
                       <ArrowUpRight className="h-4 w-4 mr-1" />
                       <span className="text-sm">+2.5% from last month</span>
                     </div>
@@ -480,12 +480,12 @@ export function FinancePageComponent() {
                 <AreaChart data={chartData || []}>
                   <defs>
                     <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#22c55e" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#22c55e" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#6b7280" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#6b7280" stopOpacity={0}/>
                     </linearGradient>
                     <linearGradient id="colorExpenses" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#374151" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#374151" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
                   <XAxis dataKey="date" />
@@ -495,7 +495,7 @@ export function FinancePageComponent() {
                   <Area 
                     type="monotone" 
                     dataKey="income" 
-                    stroke="#22c55e" 
+                    stroke="#6b7280" 
                     fillOpacity={1} 
                     fill="url(#colorIncome)" 
                     name="Income"
@@ -503,7 +503,7 @@ export function FinancePageComponent() {
                   <Area 
                     type="monotone" 
                     dataKey="expenses" 
-                    stroke="#ef4444" 
+                    stroke="#374151" 
                     fillOpacity={1} 
                     fill="url(#colorExpenses)" 
                     name="Expenses"
@@ -573,7 +573,7 @@ export function FinancePageComponent() {
                         <span className="text-sm font-medium">{category.percentage}%</span>
                         <span className={cn(
                           "text-xs",
-                          category.trend > 0 ? "text-green-500" : "text-red-500"
+                          category.trend > 0 ? "text-gray-500" : "text-gray-500"
                         )}>
                           {category.trend > 0 ? '+' : ''}{category.trend}%
                         </span>
@@ -645,8 +645,8 @@ export function FinancePageComponent() {
                               <div className={cn(
                                 "w-10 h-10 rounded-full flex items-center justify-center",
                                 transaction.type === 'income' 
-                                  ? 'bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-400'
-                                  : 'bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-400'
+                                  ? 'bg-gray-100 text-gray-600 dark:bg-gray-900 dark:text-gray-400'
+                                  : 'bg-gray-100 text-gray-600 dark:bg-gray-900 dark:text-gray-400'
                               )}>
                                 {transaction.type === 'income' ? (
                                   <ArrowUpRight className="h-5 w-5" />
@@ -667,8 +667,8 @@ export function FinancePageComponent() {
                               <div className={cn(
                                 "font-medium",
                                 transaction.type === 'income' 
-                                  ? 'text-green-600 dark:text-green-400'
-                                  : 'text-red-600 dark:text-red-400'
+                                  ? 'text-gray-600 dark:text-gray-400'
+                                  : 'text-gray-600 dark:text-gray-400'
                               )}>
                                 {transaction.type === 'income' ? '+' : '-'}
                                 ${transaction.amount.toLocaleString()}

@@ -208,7 +208,7 @@ export default function AuthPage() {
 
                     <Button 
                       type="submit"
-                      className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+                      className="w-full h-11 bg-gray-600 hover:bg-gray-700 text-white transition-colors"
                       disabled={isLoading}
                     >
                       {isLoading ? (
@@ -313,7 +313,7 @@ export default function AuthPage() {
 
                     <Button
                       type="submit"
-                      className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+                      className="w-full h-11 bg-gray-600 hover:bg-gray-700 text-white transition-colors"
                       disabled={isLoading}
                     >
                       {isLoading ? (
@@ -370,11 +370,11 @@ export default function AuthPage() {
 
             <div className="mt-6 text-center text-sm text-gray-500">
               By continuing, you agree to our{' '}
-              <a href="/terms" className="text-blue-600 hover:text-blue-500 transition-colors">
+              <a href="/terms" className="text-gray-600 hover:text-gray-500 transition-colors">
                 Terms of Service
               </a>{' '}
               and{' '}
-              <a href="/privacy" className="text-blue-600 hover:text-blue-500 transition-colors">
+              <a href="/privacy" className="text-gray-600 hover:text-gray-500 transition-colors">
                 Privacy Policy
               </a>
             </div>

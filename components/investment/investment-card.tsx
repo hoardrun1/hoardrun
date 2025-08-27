@@ -32,19 +32,19 @@ export function InvestmentCard({
   const getRiskColor = (risk: string) => {
     switch (risk) {
       case 'LOW':
-        return 'bg-green-100 text-green-600'
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
       case 'MEDIUM': // Fixed from MODERATE to match Prisma RiskLevel enum
-        return 'bg-yellow-100 text-yellow-600'
+        return 'bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-100'
       case 'HIGH':
-        return 'bg-orange-100 text-orange-600'
+        return 'bg-gray-300 text-black dark:bg-gray-600 dark:text-white'
       default:
         return 'bg-gray-100 text-gray-600'
     }
   }
 
   const getReturnColor = (returnValue: number) => {
-    if (returnValue > 0) return 'text-green-600'
-    if (returnValue < 0) return 'text-red-600'
+    if (returnValue > 0) return 'text-gray-800 dark:text-gray-200'
+    if (returnValue < 0) return 'text-gray-600 dark:text-gray-400'
     return 'text-gray-600'
   }
 
@@ -57,7 +57,7 @@ export function InvestmentCard({
       onClick={() => onSelect?.(investment)}
       className={cn(
         'cursor-pointer transition-all duration-200',
-        isSelected && 'ring-2 ring-blue-500',
+        isSelected && 'ring-2 ring-gray-400 dark:ring-gray-600',
         className
       )}
     >
@@ -106,14 +106,14 @@ export function InvestmentCard({
                   <AreaChart data={investment.performance}>
                     <defs>
                       <linearGradient id={`gradient-${investment.id}`} x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor={investment.return > 0 ? '#22c55e' : '#ef4444'} stopOpacity={0.2} />
-                        <stop offset="100%" stopColor={investment.return > 0 ? '#22c55e' : '#ef4444'} stopOpacity={0} />
+                        <stop offset="0%" stopColor={investment.return > 0 ? '#6b7280' : '#374151'} stopOpacity={0.2} />
+                        <stop offset="100%" stopColor={investment.return > 0 ? '#6b7280' : '#374151'} stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <Area
                       type="monotone"
                       dataKey="value"
-                      stroke={investment.return > 0 ? '#22c55e' : '#ef4444'}
+                      stroke={investment.return > 0 ? '#6b7280' : '#374151'}
                       fill={`url(#gradient-${investment.id})`}
                       strokeWidth={2}
                     />
@@ -217,4 +217,4 @@ export function InvestmentCardSkeleton() {
       </CardContent>
     </Card>
   )
-} 
+}

@@ -409,9 +409,9 @@ export function Sidebar({ className, onAddMoney }: SidebarProps) {
                   <Button
                     variant="ghost"
                     onClick={handleLogout}
-                    className="w-full justify-start text-gray-400 hover:text-red-400 hover:bg-red-500/10 font-semibold py-3 px-4 rounded-xl transition-all duration-300 group"
+                    className="w-full justify-start text-gray-400 hover:text-gray-400 hover:bg-gray-500/10 font-semibold py-3 px-4 rounded-xl transition-all duration-300 group"
                   >
-                    <div className="p-2 rounded-xl bg-gray-800/50 group-hover:bg-red-500/20 transition-colors duration-300 mr-3">
+                    <div className="p-2 rounded-xl bg-gray-800/50 group-hover:bg-gray-500/20 transition-colors duration-300 mr-3">
                       <LogOut className="h-4 w-4" />
                     </div>
                     Sign Out

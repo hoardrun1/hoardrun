@@ -253,7 +253,7 @@ export function ReceiveMoneyPageComponent() {
   };
 
   return (
-    <LayoutWrapper className="bg-gray-50 dark:bg-gray-900 min-h-screen">
+    <LayoutWrapper className="bg-gray-50 dark:bg-gray-900 min-h-screen" showBreadcrumbs={false}>
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="container mx-auto px-4">
@@ -272,7 +272,7 @@ export function ReceiveMoneyPageComponent() {
             <div className="flex items-center gap-3">
               <Button variant="ghost" size="icon" className="relative">
                 <Bell className="h-5 w-5" />
-                <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full" />
+                <span className="absolute top-1 right-1 h-2 w-2 bg-gray-500 rounded-full" />
               </Button>
               <Button variant="ghost" size="icon">
                 <Settings className="h-5 w-5" />
@@ -298,7 +298,7 @@ export function ReceiveMoneyPageComponent() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{formatCurrency(stat.amount)}</div>
-                  <div className="flex items-center mt-1 text-blue-100">
+                  <div className="flex items-center mt-1 text-gray-100">
                     <ArrowUpRight className="h-4 w-4 mr-1" />
                     <span className="text-sm">{stat.change > 0 ? '+' : ''}{stat.change}% from last month</span>
                   </div>
@@ -361,15 +361,15 @@ export function ReceiveMoneyPageComponent() {
             <CardContent>
               <Tabs defaultValue="wallet" className="w-full">
                 <TabsList className="grid w-full grid-cols-3 mb-8">
-                  <TabsTrigger value="wallet" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+                  <TabsTrigger value="wallet" className="data-[state=active]:bg-gray-600 data-[state=active]:text-white">
                     <Wallet className="h-4 w-4 mr-2" />
                     Wallet
                   </TabsTrigger>
-                  <TabsTrigger value="bank" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+                  <TabsTrigger value="bank" className="data-[state=active]:bg-gray-600 data-[state=active]:text-white">
                     <Building2 className="h-4 w-4 mr-2" />
                     Bank
                   </TabsTrigger>
-                  <TabsTrigger value="mobile" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+                  <TabsTrigger value="mobile" className="data-[state=active]:bg-gray-600 data-[state=active]:text-white">
                     <Phone className="h-4 w-4 mr-2" />
                     Mobile
                   </TabsTrigger>
@@ -385,7 +385,7 @@ export function ReceiveMoneyPageComponent() {
                             <Button 
                               variant="ghost" 
                               size="sm"
-                              className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                              className="text-gray-600 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
                             >
                               <Info className="h-4 w-4 mr-1" />
                               View Details
@@ -420,7 +420,7 @@ export function ReceiveMoneyPageComponent() {
                           className="min-w-[40px]"
                         >
                           {copied ? (
-                            <CheckCircle2 className="h-4 w-4 text-green-500" />
+                            <CheckCircle2 className="h-4 w-4 text-gray-500" />
                           ) : (
                             <Copy className="h-4 w-4" />
                           )}
@@ -664,7 +664,7 @@ export function ReceiveMoneyPageComponent() {
           transition={{ duration: 0.3, delay: 0.6 }}
         >
           <Button 
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white h-12 text-lg font-semibold"
+            className="w-full bg-gray-600 hover:bg-gray-700 text-white h-12 text-lg font-semibold"
             onClick={() => {}}
           >
             Generate Payment Link

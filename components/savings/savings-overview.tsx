@@ -26,21 +26,21 @@ export function SavingsOverview({ analytics, className }: SavingsOverviewProps) 
       title: 'Total Progress',
       value: analytics?.overallProgress || 0,
       icon: Target,
-      color: 'text-blue-500',
+      color: 'text-gray-500',
       format: (value: number) => `${value}%`
     },
     {
       title: 'Monthly Growth',
       value: analytics?.monthlyGrowth || 0,
       icon: TrendingUp,
-      color: 'text-green-500',
+      color: 'text-gray-500',
       format: (value: number) => `${value}%`
     },
     {
       title: 'Next Milestone',
       value: analytics?.nextMilestone || 0,
       icon: Calendar,
-      color: 'text-purple-500',
+      color: 'text-gray-500',
       format: (value: number) => formatCurrency(value)
     }
   ]
@@ -72,7 +72,7 @@ export function SavingsOverview({ analytics, className }: SavingsOverviewProps) 
                 {stat.title === 'Total Progress' && (
                   <div className="mt-4 h-2 bg-gray-100 rounded-full overflow-hidden">
                     <motion.div
-                      className="h-full bg-blue-500"
+                      className="h-full bg-gray-500"
                       initial={{ width: 0 }}
                       animate={{ width: `${stat.value}%` }}
                       transition={{ duration: 1, ease: "easeOut" }}

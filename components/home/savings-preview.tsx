@@ -15,7 +15,7 @@ const sampleGoals = [
     name: 'Emergency Fund',
     description: 'For unexpected expenses',
     icon: PiggyBank,
-    color: 'bg-blue-500',
+    color: 'bg-gray-500',
     progress: 75,
     amount: 7500,
     target: 10000,
@@ -25,7 +25,7 @@ const sampleGoals = [
     name: 'Vacation',
     description: 'Summer trip to Europe',
     icon: Target,
-    color: 'bg-purple-500',
+    color: 'bg-gray-500',
     progress: 45,
     amount: 2250,
     target: 5000,
@@ -59,7 +59,7 @@ export function SavingsPreview() {
         <Button
           variant="ghost"
           size="sm"
-          className="text-blue-400 hover:text-blue-300"
+          className="text-gray-400 hover:text-gray-300"
           onClick={handleNavigateToSavings}
         >
           View All

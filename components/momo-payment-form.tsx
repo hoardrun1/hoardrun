@@ -91,7 +91,7 @@ export function MomoPaymentForm() {
           {...register('amount', { valueAsNumber: true })}
         />
         {errors.amount && (
-          <p className="text-sm text-red-500">{errors.amount.message}</p>
+          <p className="text-sm text-gray-500">{errors.amount.message}</p>
         )}
       </div>
 
@@ -102,7 +102,7 @@ export function MomoPaymentForm() {
           {...register('phone')}
         />
         {errors.phone && (
-          <p className="text-sm text-red-500">{errors.phone.message}</p>
+          <p className="text-sm text-gray-500">{errors.phone.message}</p>
         )}
       </div>
 
@@ -113,7 +113,7 @@ export function MomoPaymentForm() {
           {...register('message')}
         />
         {errors.message && (
-          <p className="text-sm text-red-500">{errors.message.message}</p>
+          <p className="text-sm text-gray-500">{errors.message.message}</p>
         )}
       </div>
 

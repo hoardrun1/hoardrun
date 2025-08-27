@@ -19,9 +19,9 @@ export function AuthBypassStatus() {
 
   const getStatusIcon = (condition: boolean) => {
     return condition ? (
-      <CheckCircle className="h-4 w-4 text-green-500" />
+      <CheckCircle className="h-4 w-4 text-gray-800 dark:text-gray-200" />
     ) : (
-      <XCircle className="h-4 w-4 text-red-500" />
+      <XCircle className="h-4 w-4 text-gray-600 dark:text-gray-400" />
     )
   }
 
@@ -88,34 +88,34 @@ export function AuthBypassStatus() {
             {bypassEnabled ? (
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <CheckCircle className="h-3 w-3 text-green-500" />
+                  <CheckCircle className="h-3 w-3 text-gray-800 dark:text-gray-200" />
                   Authentication bypass is active
                 </div>
                 <div className="flex items-center gap-2">
-                  <CheckCircle className="h-3 w-3 text-green-500" />
+                  <CheckCircle className="h-3 w-3 text-gray-500" />
                   All protected routes are accessible
                 </div>
                 <div className="flex items-center gap-2">
-                  <CheckCircle className="h-3 w-3 text-green-500" />
+                  <CheckCircle className="h-3 w-3 text-gray-500" />
                   Mock user data is being provided
                 </div>
                 <div className="flex items-center gap-2">
-                  <AlertCircle className="h-3 w-3 text-yellow-500" />
+                  <AlertCircle className="h-3 w-3 text-gray-600 dark:text-gray-400" />
                   Remember to disable in production
                 </div>
               </div>
             ) : (
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <XCircle className="h-3 w-3 text-red-500" />
+                  <XCircle className="h-3 w-3 text-gray-500 dark:text-gray-500" />
                   Authentication bypass is disabled
                 </div>
                 <div className="flex items-center gap-2">
-                  <AlertCircle className="h-3 w-3 text-yellow-500" />
+                  <AlertCircle className="h-3 w-3 text-gray-500" />
                   Normal authentication flow is active
                 </div>
                 <div className="flex items-center gap-2">
-                  <AlertCircle className="h-3 w-3 text-yellow-500" />
+                  <AlertCircle className="h-3 w-3 text-gray-500" />
                   Protected routes require signin
                 </div>
               </div>
@@ -126,7 +126,7 @@ export function AuthBypassStatus() {
         {bypassEnabled && (
           <div className="border-t pt-4">
             <div className="text-sm font-medium mb-2">Mock Data Being Used:</div>
-            <div className="text-xs space-y-1 bg-blue-50 dark:bg-blue-900/20 p-2 rounded">
+            <div className="text-xs space-y-1 bg-gray-50 dark:bg-gray-900/20 p-2 rounded">
               <div><strong>Mock User ID:</strong> {mockUser.id}</div>
               <div><strong>Mock Email:</strong> {mockUser.email}</div>
               <div><strong>Mock Name:</strong> {mockUser.name}</div>

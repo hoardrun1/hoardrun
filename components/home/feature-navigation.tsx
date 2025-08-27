@@ -21,14 +21,14 @@ export function FeatureNavigation() {
       title: 'Savings',
       description: 'Create personalized savings goals with AI-powered recommendations',
       icon: PiggyBank,
-      color: 'bg-blue-500',
+      color: 'bg-gray-500',
       path: 'savings'
     },
     {
       title: 'Investments',
       description: 'Grow your wealth with smart investment opportunities',
       icon: TrendingUp,
-      color: 'bg-green-500',
+      color: 'bg-gray-500',
       path: 'investment'
     }
   ];
@@ -51,14 +51,14 @@ export function FeatureNavigation() {
                     <feature.icon className="w-6 h-6 text-white" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-xl font-semibold mb-2 text-white group-hover:text-blue-400 transition-colors duration-300">
+                    <h3 className="text-xl font-semibold mb-2 text-white group-hover:text-gray-400 transition-colors duration-300">
                       {feature.title}
                     </h3>
                     <p className="text-gray-300 mb-4 group-hover:text-gray-200 transition-colors duration-300">
                       {feature.description}
                     </p>
                     <div className="flex justify-end">
-                      <Button variant="ghost" className="text-blue-400 group-hover:text-blue-300 p-0 h-auto">
+                      <Button variant="ghost" className="text-gray-400 group-hover:text-gray-300 p-0 h-auto">
                         <span className="mr-1">Explore</span>
                         <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform duration-300" />
                       </Button>

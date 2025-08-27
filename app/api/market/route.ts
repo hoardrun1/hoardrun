@@ -1,17 +1,16 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth-config'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs';
 import { alphaVantageAPI } from '@/lib/alpha-vantage-client';
 import { RateLimiter } from '@/lib/rate-limiter';
+import { getCustomSession } from '@/lib/auth-session'
 // import { AppError, ErrorCode } from '@/lib/error-handling';
 
 export async function GET(request: Request) {
   try {
     // Check authentication
-    const session = await getServerSession(authOptions);
+    const session = await getCustomSession();
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: 'Unauthorized' },

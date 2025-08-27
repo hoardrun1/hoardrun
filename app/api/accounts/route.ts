@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth-config'
+import { getCustomSession } from '@/lib/auth-session'
 import { generateAccountNumber } from '@/lib/banking'
 
 // Define account types as a constant for better maintainability
@@ -16,7 +15,7 @@ const createAccountSchema = z.object({
 
 export async function POST(request: Request) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getCustomSession()
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -64,7 +63,7 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getCustomSession()
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -116,4 +115,4 @@ export async function GET(request: Request) {
       { status: 500 }
     )
   }
-} 
+}

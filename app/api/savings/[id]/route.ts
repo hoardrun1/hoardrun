@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth/next'
 import { prisma } from '@/lib/prisma'
-import { authOptions } from '@/lib/auth-config'
 import { z } from 'zod'
+import { getCustomSession } from '@/lib/auth-session'
 
 const updateSavingsGoalSchema = z.object({
   name: z.string().min(1, 'Name is required').optional(),
@@ -19,7 +18,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getCustomSession()
 
     if (!session?.user?.id) {
       return new NextResponse('Unauthorized', { status: 401 })
@@ -56,7 +55,7 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getCustomSession()
 
     if (!session?.user?.id) {
       return new NextResponse('Unauthorized', { status: 401 })
@@ -98,7 +97,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getCustomSession()
 
     if (!session?.user?.id) {
       return new NextResponse('Unauthorized', { status: 401 })

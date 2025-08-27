@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { MomoClient } from '@/lib/momo-client';
@@ -8,7 +7,7 @@ import { MomoError, momoErrorCodes } from '@/lib/error-handling/momo-errors';
 import { MomoLogger } from '@/lib/logger/momo-logger';
 import { CurrencyConverter } from '@/lib/currency/currency-converter';
 import { TransactionMonitor } from '@/lib/monitoring/transaction-monitor';
-import { authOptions } from '@/lib/auth-config';
+import { getCustomSession } from '@/lib/auth-session'
 
 const sendSchema = z.object({
   amount: z.number().positive(),
@@ -20,7 +19,7 @@ const sendSchema = z.object({
 
 export async function POST(request: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getCustomSession();
     if (!session?.user?.id) {
       throw new MomoError(momoErrorCodes.USER_NOT_FOUND, 'Unauthorized', 401);
     }

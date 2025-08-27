@@ -1,13 +1,12 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
 import { z } from 'zod';
 import { MastercardClient } from '@/lib/mastercard-client';
-import { authOptions } from '@/lib/auth-config';
 import { enforcePaymentRateLimit } from '@/lib/rate-limiter';
 import { handlePaymentError } from '@/lib/error-handling';
 import { logger } from '@/lib/logger';
 import { COUNTRY_CODES, type CountryCode } from '@/lib/constants/country-codes';
 import { prisma } from '@/lib/prisma';
+import { getCustomSession } from '@/lib/auth-session'
 
 const paymentSchema = z.object({
   amount: z.number().positive(),
@@ -22,7 +21,7 @@ const paymentSchema = z.object({
 export async function POST(request: Request) {
   try {
     // Auth check
-    const session = await getServerSession(authOptions);
+    const session = await getCustomSession();
     if (!session?.user?.id) {
       return new NextResponse('Unauthorized', { status: 401 });
     }

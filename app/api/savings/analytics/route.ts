@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth/next'
-import { authOptions } from '@/lib/auth-config'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 import { calculateSavingsProjection, calculateInterestRate } from '@/lib/banking'
+import { getCustomSession } from '@/lib/auth-session'
 
 // Import prisma only on the server side
 let prisma;
@@ -15,7 +14,7 @@ if (typeof window === 'undefined') {
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getCustomSession()
 
     if (!session?.user?.id) {
       return new NextResponse('Unauthorized', { status: 401 })

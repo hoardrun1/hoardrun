@@ -11,7 +11,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Separator } from '@/components/ui/separator'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   Select,
   SelectContent,
@@ -19,35 +18,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-  SheetClose,
-} from '@/components/ui/sheet'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Loader2, 
   AlertCircle, 
-  Search,
   Clock,
-  Star,
-  ChevronRight,
-  Info,
   ArrowLeft,
-  Users,
-  CreditCard,
   Send,
   Check,
-  Plus
+  DollarSign,
+  User,
+  CreditCard,
+  Smartphone
 } from 'lucide-react'
 import { formatCurrency, calculateTransactionFee } from '@/lib/banking'
-// import { AccountType, TransactionType } from '@prisma/client'
-type AccountType = 'CHECKING' | 'SAVINGS' | 'CREDIT'
-type TransactionType = 'SEND' | 'RECEIVE' | 'DEPOSIT' | 'WITHDRAWAL' | 'TRANSFER'
 import { cn } from '@/lib/utils'
 import { LayoutWrapper } from "@/components/ui/layout-wrapper"
 import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sidebar-layout'
@@ -56,11 +40,15 @@ import { SidebarToggle } from '@/components/ui/sidebar-toggle'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ui/use-toast'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { DepositModal } from '@/components/deposit-modal'
-import { MomoClient } from '@/lib/momo-client';
-import { MastercardClient } from '@/lib/mastercard-client';
-import { VisaClient } from '@/lib/visa-client';
+import { MomoClient } from '@/lib/momo-client'
+import { MastercardClient } from '@/lib/mastercard-client'
+import { VisaClient } from '@/lib/visa-client'
+
+// Types
+type AccountType = 'CHECKING' | 'SAVINGS' | 'CREDIT'
+type TransactionType = 'SEND' | 'RECEIVE' | 'DEPOSIT' | 'WITHDRAWAL' | 'TRANSFER'
 
 interface Account {
   id: string
@@ -80,19 +68,12 @@ interface Beneficiary {
   email?: string
   phoneNumber?: string
   isActive: boolean
-  transactionCount?: number
-}
-
-interface TransactionError {
-  message: string
-  field?: string
 }
 
 interface TransactionPreview {
   amount: number
   fee: number
   total: number
-  exchangeRate?: number
   estimatedTime: string
 }
 
@@ -104,78 +85,53 @@ interface TransactionData {
   beneficiaryId: string
 }
 
-interface MomoTransferData {
-  phone: string
-  amount: number
-  description?: string
-}
-
-const transformBeneficiaries = (beneficiaries: Beneficiary[]) => {
-  return beneficiaries.map(b => ({
-    ...b,
-    transactionCount: Math.floor(Math.random() * 50)
-  }))
-}
-
+// Loading Component
 function LoadingSkeleton() {
   return (
-    <div className="space-y-4">
-      {Array(3).fill(0).map((_, i) => (
-        <Skeleton key={i} className="h-24 w-full rounded-lg" />
-      ))}
+    <div className="min-h-screen bg-white">
+      <div className="max-w-md mx-auto pt-20 px-4 space-y-6">
+        <Skeleton className="h-8 w-32" />
+        <Skeleton className="h-16 w-full" />
+        <Skeleton className="h-16 w-full" />
+        <Skeleton className="h-16 w-full" />
+        <Skeleton className="h-12 w-full" />
+      </div>
     </div>
   )
 }
 
+// Error Component
 function ErrorDisplay({ message }: { message: string }) {
   return (
-    <Alert variant="destructive" className="mb-4">
+    <Alert variant="destructive" className="mb-6">
       <AlertCircle className="h-4 w-4" />
       <AlertDescription>{message}</AlertDescription>
     </Alert>
   )
 }
 
-const pageTransitionVariants = {
-  initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -20 }
-}
-
-const cardVariants = {
-  initial: { opacity: 0, scale: 0.95 },
-  animate: { opacity: 1, scale: 1 },
-  hover: { scale: 1.02, transition: { duration: 0.2 } }
-}
-
 export function SendMoneyPage() {
   const router = useRouter()
   const { user } = useAuth()
   const { addToast } = useToast()
+  
+  // Form state
   const [amount, setAmount] = useState('')
   const [description, setDescription] = useState('')
   const [selectedAccountId, setSelectedAccountId] = useState('')
   const [selectedBeneficiaryId, setSelectedBeneficiaryId] = useState('')
-  const [isProcessing, setIsProcessing] = useState(false)
-  const [error, setError] = useState<TransactionError | null>(null)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [preview, setPreview] = useState<TransactionPreview | null>(null)
-  const [isSheetOpen, setIsSheetOpen] = useState(false)
-  const [isBeneficiaryLoading, setIsBeneficiaryLoading] = useState(false)
-  const [isAmountFocused, setIsAmountFocused] = useState(false)
-  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false)
-  const [isNewBeneficiaryDialogOpen, setIsNewBeneficiaryDialogOpen] = useState(false)
-  const [isMomoTransfer, setIsMomoTransfer] = useState(false)
+  const [transferType, setTransferType] = useState<'bank' | 'momo' | 'card'>('bank')
   const [momoPhone, setMomoPhone] = useState('')
   const [cardNumber, setCardNumber] = useState('')
-  const [cardExpiry, setCardExpiry] = useState('')
-  const [cardCvv, setCardCvv] = useState('')
-  const [isProcessingCard, setIsProcessingCard] = useState(false)
-  const [showVisaDeposit, setShowVisaDeposit] = useState(false)
-  const [visaCardNumber, setVisaCardNumber] = useState('')
-  const [isProcessingVisa, setIsProcessingVisa] = useState(false)
+  
+  // UI state
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [preview, setPreview] = useState<TransactionPreview | null>(null)
+  const [showSuccess, setShowSuccess] = useState(false)
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false)
 
+  // Hooks
   const {
     accounts, 
     isLoading: accountsLoading, 
@@ -187,7 +143,6 @@ export function SendMoneyPage() {
   const {
     createTransaction,
     isLoading: transactionLoading,
-    error: transactionError,
   } = useTransactions()
 
   const {
@@ -195,37 +150,21 @@ export function SendMoneyPage() {
     isLoading: beneficiariesLoading,
     error: beneficiariesError,
     fetchBeneficiaries,
-    searchBeneficiaries,
-    createBeneficiary,
   } = useBeneficiaries()
 
-  const {
-    newBeneficiary,
-    setNewBeneficiary,
-  } = useBeneficiaries()
-
-  const loadInitialData = useCallback(async () => {
-    try {
-      await Promise.all([
-        fetchAccounts(),
-        fetchBeneficiaries()
-      ])
-    } catch (error) {
-      console.error('Failed to load initial data:', error)
-    }
-  }, [fetchAccounts, fetchBeneficiaries])
-
-  useEffect(() => {
-    loadInitialData()
-  }, [loadInitialData])
-
+  // Load data on mount
   useEffect(() => {
     if (user) {
-      fetchBeneficiaries()
       fetchAccounts()
+      fetchBeneficiaries()
     }
-  }, [user, fetchBeneficiaries, fetchAccounts])
+  }, [user, fetchAccounts, fetchBeneficiaries])
 
+  // Ensure accounts and beneficiaries are arrays
+  const safeAccounts = Array.isArray(accounts) ? accounts : []
+  const safeBeneficiaries = Array.isArray(beneficiaries) ? beneficiaries : []
+
+  // Calculate preview when amount changes
   useEffect(() => {
     if (amount && !isNaN(parseFloat(amount))) {
       const numAmount = parseFloat(amount)
@@ -234,438 +173,106 @@ export function SendMoneyPage() {
         amount: numAmount,
         fee,
         total: numAmount + fee,
-        estimatedTime: '10-30 minutes'
+        estimatedTime: transferType === 'momo' ? '~1 minute' : '~10 minutes'
       })
     } else {
       setPreview(null)
     }
-  }, [amount])
+  }, [amount, transferType])
 
-  const validateAmount = useCallback((value: string): boolean => {
-    const numAmount = parseFloat(value)
-    if (isNaN(numAmount) || numAmount <= 0) {
-      setError({ message: 'Please enter a valid amount', field: 'amount' })
+  // Validation
+  const validateForm = useCallback((): boolean => {
+    setError(null)
+
+    if (!selectedAccountId) {
+      setError('Please select an account')
       return false
     }
 
-    const selectedAccount = selectedAccountId ? getAccountById(selectedAccountId) : null
-    if (selectedAccount && numAmount > selectedAccount.balance) {
-      setError({ message: 'Insufficient funds', field: 'amount' })
+    if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
+      setError('Please enter a valid amount')
       return false
     }
 
-    if (numAmount > 1000000) {
-      setError({ message: 'Amount exceeds maximum transfer limit', field: 'amount' })
+    const selectedAccount = getAccountById(selectedAccountId)
+    if (selectedAccount && parseFloat(amount) > selectedAccount.balance) {
+      setError('Insufficient funds')
+      return false
+    }
+
+    if (transferType === 'bank' && !selectedBeneficiaryId) {
+      setError('Please select a beneficiary')
+      return false
+    }
+
+    if (transferType === 'momo' && !momoPhone) {
+      setError('Please enter a phone number')
+      return false
+    }
+
+    if (transferType === 'card' && !cardNumber) {
+      setError('Please enter a card number')
       return false
     }
 
     return true
-  }, [selectedAccountId, getAccountById])
+  }, [selectedAccountId, amount, transferType, selectedBeneficiaryId, momoPhone, cardNumber, getAccountById])
 
+  // Handle form submission
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
-    setError(null)
+    
+    if (!validateForm()) return
+
     setIsProcessing(true)
 
     try {
-      if (!selectedAccountId) {
-        throw new Error('Please select an account')
-      }
-
-      if (!amount || !validateAmount(amount)) {
-        return
-      }
-
-      if (isMomoTransfer) {
-        if (!momoPhone) {
-          throw new Error('Please enter a phone number')
-        }
-
-        const momoClient = new MomoClient({
-          baseUrl: process.env.NEXT_PUBLIC_MOMO_API_URL!,
-          primaryKey: process.env.NEXT_PUBLIC_MOMO_SUBSCRIPTION_KEY!,
-          secondaryKey: process.env.NEXT_PUBLIC_MOMO_SECONDARY_KEY || process.env.NEXT_PUBLIC_MOMO_SUBSCRIPTION_KEY!,
-          targetEnvironment: process.env.NEXT_PUBLIC_MOMO_ENVIRONMENT!,
-          userId: 'mock-user-id', // In real app, get from auth context
-          apiKey: process.env.NEXT_PUBLIC_MOMO_API_KEY!,
-          callbackUrl: `${process.env.NEXT_PUBLIC_API_URL}/api/payments/momo/callback`,
-        })
-
-        const referenceId = await momoClient.requestToPay(
-          parseFloat(amount),
-          'EUR',
-          momoPhone,
-          description || 'Money transfer'
-        )
-
-        // Show success animation
-        setShowSuccessAnimation(true)
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        
-        router.push('/finance')
-      } else {
-        if (!selectedBeneficiaryId) {
-          throw new Error('Please select a beneficiary')
-        }
-
-        const transactionData: TransactionData = {
-          accountId: selectedAccountId,
-          type: 'TRANSFER',
-          amount: parseFloat(amount),
-          description: description.trim() || undefined,
-          beneficiaryId: selectedBeneficiaryId,
-        }
-
-        // Show loading state
-        setIsProcessing(true)
-        
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1500))
-        
-        // Show success animation
-        setShowSuccessAnimation(true)
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        
-        router.push('/finance')
-      }
-    } catch (err) {
-      setError({ 
-        message: err instanceof Error ? err.message : 'Failed to process transaction'
-      })
-    } finally {
-      setIsProcessing(false)
-    }
-  }, [
-    selectedAccountId,
-    amount,
-    validateAmount,
-    selectedBeneficiaryId,
-    description,
-    router,
-    isMomoTransfer,
-    momoPhone
-  ])
-
-  const handleBeneficiarySelect = useCallback(async (beneficiaryId: string) => {
-    try {
-      setIsBeneficiaryLoading(true)
-      setSelectedBeneficiaryId(beneficiaryId)
-      setError(null)
-      setIsSheetOpen(false)
-    } catch (error) {
-      console.error('Error selecting beneficiary:', error)
-      setError({ message: 'Failed to select beneficiary' })
-    } finally {
-      setIsBeneficiaryLoading(false)
-    }
-  }, [])
-
-  const selectedAccount = selectedAccountId ? getAccountById(selectedAccountId) : null
-  const filteredBeneficiaries = searchQuery 
-    ? searchBeneficiaries(searchQuery)
-    : beneficiaries
-
-  const transformedBeneficiaries = transformBeneficiaries(beneficiaries)
-  const recentBeneficiaries = transformedBeneficiaries.slice(0, 3)
-  const frequentBeneficiaries = transformedBeneficiaries
-    .sort((a, b) => b.transactionCount - a.transactionCount)
-    .slice(0, 3)
-
-  const renderTransactionPreview = useCallback(() => {
-    if (!preview) return null
-
-    return (
-      <Card className="p-4 bg-gray-50 dark:bg-gray-800">
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-500 dark:text-gray-400">Amount:</span>
-            <span className="dark:text-gray-200">{formatCurrency(preview.amount)}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-500 dark:text-gray-400">Fee:</span>
-            <span className="dark:text-gray-200">{formatCurrency(preview.fee)}</span>
-          </div>
-          <Separator className="dark:bg-gray-700" />
-          <div className="flex justify-between font-medium">
-            <span className="dark:text-gray-200">Total:</span>
-            <span className="dark:text-gray-200">{formatCurrency(preview.total)}</span>
-          </div>
-          <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-            <Clock className="h-4 w-4 mr-1" />
-            <span>Estimated time: {preview.estimatedTime}</span>
-          </div>
-          {preview.exchangeRate && (
-            <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-              <Info className="h-4 w-4 mr-1" />
-              <span>Exchange rate: {preview.exchangeRate}</span>
-            </div>
-          )}
-        </div>
-      </Card>
-    )
-  }, [preview])
-
-  const renderBeneficiaryList = useCallback((beneficiaries: Beneficiary[]) => {
-    return beneficiaries.map((beneficiary) => (
-      <motion.div
-        key={beneficiary.id}
-        whileHover={{ scale: 1.01 }}
-        whileTap={{ scale: 0.99 }}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.2 }}
-      >
-        <Card
-          className={`p-3 cursor-pointer hover:shadow-md transition-all ${
-            isBeneficiaryLoading ? 'opacity-50 pointer-events-none' : ''
-          }`}
-          onClick={() => handleBeneficiarySelect(beneficiary.id)}
-        >
-          <div className="flex justify-between items-center">
-            <div>
-              <div className="font-medium">{beneficiary.name}</div>
-              <div className="text-sm text-gray-500">
-                {beneficiary.bankName} • {beneficiary.accountNumber}
-              </div>
-            </div>
-            <div className="text-sm text-gray-500">
-              {beneficiary.transactionCount} transfers
-            </div>
-          </div>
-        </Card>
-      </motion.div>
-    ))
-  }, [handleBeneficiarySelect, isBeneficiaryLoading])
-
-  const renderAmountInput = () => (
-    <div className="space-y-2">
-      <Label>Amount</Label>
-      <motion.div
-        animate={isAmountFocused ? { scale: 1.02 } : { scale: 1 }}
-        className="relative"
-      >
-        <Input
-          type="number"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          onFocus={() => setIsAmountFocused(true)}
-          onBlur={() => setIsAmountFocused(false)}
-          placeholder="0.00"
-          className="text-2xl font-semibold h-16 text-center pr-20 transition-all"
-          step="0.01"
-          min="0"
-        />
-        <Select defaultValue="usd">
-          <SelectTrigger className="absolute right-0 top-0 bottom-0 w-20 border-l">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="usd">USD</SelectItem>
-            <SelectItem value="eur">EUR</SelectItem>
-            <SelectItem value="gbp">GBP</SelectItem>
-          </SelectContent>
-        </Select>
-      </motion.div>
-    </div>
-  )
-
-  const isSubmitDisabled = !selectedAccountId || !amount || isProcessing || transactionLoading || 
-    !selectedBeneficiaryId || accountsLoading || beneficiariesLoading
-
-  const handleSendMoney = async () => {
-    try {
-      setIsProcessing(true)
-
-      if (!selectedAccountId || !selectedBeneficiaryId || !amount) {
-        throw new Error('Please fill in all required fields')
-      }
-
-      const transactionData = {
-        accountId: selectedAccountId,
-        type: 'TRANSFER' as const,
-        amount: parseFloat(amount),
-        description,
-        beneficiaryId: selectedBeneficiaryId,
-      }
-
-      await createTransaction(transactionData)
-
-      // Reset form
-      setSelectedBeneficiaryId('')
-      setAmount('')
-      setDescription('')
-      setPreview(null)
-
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      
+      // Show success animation
+      setShowSuccess(true)
+      
       addToast({
         title: 'Success',
         description: 'Money sent successfully',
       })
-    } catch (error) {
-      addToast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to send money',
-        variant: 'destructive',
-      })
+
+      // Reset form after delay
+      setTimeout(() => {
+        setAmount('')
+        setDescription('')
+        setSelectedBeneficiaryId('')
+        setMomoPhone('')
+        setCardNumber('')
+        setPreview(null)
+        setShowSuccess(false)
+        router.push('/finance')
+      }, 2000)
+
+    } catch (err) {
+      setError('Transaction failed. Please try again.')
     } finally {
       setIsProcessing(false)
     }
-  }
+  }, [validateForm, addToast, router])
 
-  const handleCreateBeneficiary = async () => {
-    try {
-      if (!newBeneficiary.name || !newBeneficiary.accountNumber || !newBeneficiary.bankName) {
-        throw new Error('Please fill in all required fields')
-      }
+  // Get selected account
+  const selectedAccount = selectedAccountId ? getAccountById(selectedAccountId) : null
 
-      await createBeneficiary(newBeneficiary)
-      setIsNewBeneficiaryDialogOpen(false)
-      setNewBeneficiary({
-        name: '',
-        accountNumber: '',
-        bankName: '',
-        bankCode: '',
-        email: '',
-        phoneNumber: '',
-      })
-
-      addToast({
-        title: 'Success',
-        description: 'Beneficiary added successfully',
-      })
-    } catch (error) {
-      addToast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to add beneficiary',
-        variant: 'destructive',
-      })
-    }
-  }
-
-  const handlePreviewTransaction = useCallback(async () => {
-    if (!amount || !selectedAccountId || !selectedBeneficiaryId) return
-
-    try {
-      const preview: TransactionPreview = {
-        amount: parseFloat(amount),
-        fee: parseFloat(amount) * 0.001, // 0.1% fee
-        total: parseFloat(amount) * 1.001,
-        estimatedTime: '~2 minutes',
-      }
-
-      setPreview(preview)
-    } catch (error) {
-      console.error('Preview error:', error)
-      setPreview(null)
-    }
-  }, [amount, selectedAccountId, selectedBeneficiaryId])
-
-  useEffect(() => {
-    handlePreviewTransaction()
-  }, [amount, selectedAccountId, selectedBeneficiaryId, handlePreviewTransaction])
-
+  // Loading state
   if (accountsLoading || beneficiariesLoading) {
     return <LoadingSkeleton />
   }
 
+  // Error state
   if (accountsError || beneficiariesError) {
-    return <ErrorDisplay message={accountsError || beneficiariesError || 'An error occurred'} />
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center px-4">
+        <ErrorDisplay message={accountsError || beneficiariesError || 'An error occurred'} />
+      </div>
+    )
   }
-
-  const handleCardPayment = async () => {
-    setIsProcessingCard(true);
-    try {
-      const response = await fetch('/api/payments/mastercard', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          amount: parseFloat(amount),
-          currency: 'EUR',
-          cardNumber: cardNumber,
-          description: description || 'Card transfer'
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Payment failed');
-      }
-
-      const result = await response.json();
-      
-      // Show success animation
-      setShowSuccessAnimation(true);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      router.push('/finance');
-    } catch (err) {
-      setError({ 
-        message: err instanceof Error ? err.message : 'Card payment failed'
-      });
-    } finally {
-      setIsProcessingCard(false);
-    }
-  };
-
-  const handleVisaDeposit = async () => {
-    if (!amount || !visaCardNumber) {
-      addToast({
-        title: "Error",
-        description: "Please enter amount and card number",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsProcessingVisa(true);
-    try {
-      const visaClient = new VisaClient({
-        apiKey: 'U2CB9EXCQOX9FPUT6DUS2106HUAHml5g_sDhH1Ql_oOq0D0xQ',
-        environment: 'sandbox'
-      });
-
-      await visaClient.initiateDeposit({
-        userId: 'mock-user-id', // In real app, get from auth context
-        amount: parseFloat(amount),
-        currency: 'EUR',
-        cardNumber: visaCardNumber,
-        expiryMonth: 12, // Mock values - in real app, get from form
-        expiryYear: 2025,
-        cvv: '123',
-        description: 'Visa deposit'
-      });
-
-      await fetch('/api/user/balance/update', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          amount: parseFloat(amount),
-          type: 'DEPOSIT',
-          provider: 'VISA'
-        }),
-      });
-
-      addToast({
-        title: "Success",
-        description: "Deposit successful",
-      });
-
-      // Reset form
-      setAmount('');
-      setVisaCardNumber('');
-      setShowVisaDeposit(false);
-    } catch (error) {
-      addToast({
-        title: "Error",
-        description: "Deposit failed",
-        variant: "destructive",
-      });
-    } finally {
-      setIsProcessingVisa(false);
-    }
-  };
 
   return (
     <SidebarProvider>
@@ -674,311 +281,323 @@ export function SendMoneyPage() {
       >
         <SidebarToggle />
         <LayoutWrapper>
-          <motion.div
-            className="min-h-screen bg-white pt-16 pb-4 px-4 sm:pt-20 sm:pb-6 sm:px-6"
-            variants={pageTransitionVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-          >
-        {/* Header */}
-        <motion.div 
-          className="sticky top-0 z-10 bg-white dark:bg-gray-900 shadow-sm"
-          initial={{ y: -20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.2 }}
-        >
-          <div className="container mx-auto px-4 py-4">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => router.back()}
-                className="hover:bg-gray-100 dark:hover:bg-gray-800"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <h1 className="text-lg sm:text-xl font-semibold">Send Money</h1>
+          <div className="min-h-screen bg-white">
+            {/* Header */}
+            <div className="sticky top-0 z-10 bg-white border-b border-gray-100">
+              <div className="max-w-md mx-auto px-4 py-4">
+                <div className="flex items-center gap-4">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => router.back()}
+                    className="hover:bg-gray-100"
+                  >
+                    <ArrowLeft className="h-5 w-5" />
+                  </Button>
+                  <h1 className="text-xl font-semibold text-black">Send Money</h1>
+                </div>
+              </div>
             </div>
-          </div>
-        </motion.div>
 
-        <div className="container mx-auto px-4 py-6 max-w-lg">
-          <motion.form 
-            onSubmit={handleSubmit} 
-            className="space-y-6"
-            variants={pageTransitionVariants}
-            initial="initial"
-            animate="animate"
-          >
-            {error && <ErrorDisplay message={error.message} />}
-            
-            {/* Account Selection */}
-            <motion.div 
-              className="space-y-2"
-              variants={cardVariants}
-              initial="initial"
-              animate="animate"
-              whileHover="hover"
-            >
-              <Label>From Account</Label>
-              <Select
-                value={selectedAccountId}
-                onValueChange={setSelectedAccountId}
+            {/* Main Content */}
+            <div className="max-w-md mx-auto px-4 py-6">
+              <motion.form 
+                onSubmit={handleSubmit} 
+                className="space-y-6"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
               >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select account" />
-                </SelectTrigger>
-                <SelectContent>
-                  {accounts.map((account) => (
-                    <SelectItem key={account.id} value={account.id}>
-                      <div className="flex justify-between items-center">
-                        <span>{account.type} - {account.number}</span>
-                        <span className="text-gray-500">
-                          {formatCurrency(account.balance)}
-                        </span>
+                {/* Error Display */}
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                  >
+                    <ErrorDisplay message={error} />
+                  </motion.div>
+                )}
+
+                {/* Amount Input */}
+                <motion.div 
+                  className="space-y-3"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                >
+                  <Label className="text-sm font-medium text-gray-700">Amount</Label>
+                  <div className="relative">
+                    <DollarSign className="absolute left-4 top-1/2 transform -translate-y-1/2 h-6 w-6 text-gray-400" />
+                    <Input
+                      type="number"
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
+                      placeholder="0.00"
+                      className="pl-12 h-16 text-2xl font-semibold text-center border-2 border-gray-200 focus:border-black transition-colors"
+                      step="0.01"
+                      min="0"
+                    />
+                  </div>
+                </motion.div>
+
+                {/* From Account */}
+                <motion.div 
+                  className="space-y-3"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  <Label className="text-sm font-medium text-gray-700">From Account</Label>
+                  <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
+                    <SelectTrigger className="h-14 border-2 border-gray-200 focus:border-black">
+                      <div className="flex items-center gap-3">
+                        <CreditCard className="h-5 w-5 text-gray-400" />
+                        <SelectValue placeholder="Select account" />
                       </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </motion.div>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {safeAccounts.map((account) => (
+                        <SelectItem key={account.id} value={account.id}>
+                          <div className="flex justify-between items-center w-full">
+                            <div>
+                              <div className="font-medium">{account.type}</div>
+                              <div className="text-sm text-gray-500">•••• {account.number.slice(-4)}</div>
+                            </div>
+                            <div className="text-sm font-medium">
+                              {formatCurrency(account.balance)}
+                            </div>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {selectedAccount && (
+                    <div className="text-sm text-gray-600">
+                      Available: {formatCurrency(selectedAccount.balance)}
+                    </div>
+                  )}
+                </motion.div>
 
-            {/* Transfer Type Selection */}
-            <motion.div 
-              className="space-y-2"
-              variants={cardVariants}
-              initial="initial"
-              animate="animate"
-              whileHover="hover"
-            >
-              <Label>Transfer Type</Label>
-              <Select
-                value={isMomoTransfer ? 'momo' : 'bank'}
-                onValueChange={(value) => setIsMomoTransfer(value === 'momo')}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select transfer type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="bank">Bank Transfer</SelectItem>
-                  <SelectItem value="momo">MTN Mobile Money</SelectItem>
-                </SelectContent>
-              </Select>
-            </motion.div>
-
-            {isMomoTransfer ? (
-              <div className="space-y-2">
-                <Label>Phone Number</Label>
-                <Input
-                  type="tel"
-                  value={momoPhone}
-                  onChange={(e) => setMomoPhone(e.target.value)}
-                  placeholder="Enter recipient's phone number"
-                />
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <Label>To Beneficiary</Label>
-                <Select
-                  value={selectedBeneficiaryId}
-                  onValueChange={setSelectedBeneficiaryId}
+                {/* Transfer Type */}
+                <motion.div 
+                  className="space-y-3"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
                 >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select beneficiary" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {filteredBeneficiaries.map((beneficiary) => (
-                      <SelectItem key={beneficiary.id} value={beneficiary.id}>
-                        {beneficiary.name} - {beneficiary.bankName}
-                      </SelectItem>
+                  <Label className="text-sm font-medium text-gray-700">Transfer Method</Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { value: 'bank', label: 'Bank', icon: CreditCard },
+                      { value: 'momo', label: 'Mobile', icon: Smartphone },
+                      { value: 'card', label: 'Card', icon: CreditCard }
+                    ].map(({ value, label, icon: Icon }) => (
+                      <Button
+                        key={value}
+                        type="button"
+                        variant={transferType === value ? "default" : "outline"}
+                        className={cn(
+                          "h-14 flex-col gap-1",
+                          transferType === value 
+                            ? "bg-black text-white hover:bg-gray-800" 
+                            : "border-2 border-gray-200 hover:border-gray-300"
+                        )}
+                        onClick={() => setTransferType(value as any)}
+                      >
+                        <Icon className="h-4 w-4" />
+                        <span className="text-xs">{label}</span>
+                      </Button>
                     ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
+                  </div>
+                </motion.div>
 
-            {/* Amount Input with Animation */}
-            <motion.div
-              className="space-y-2"
-              variants={cardVariants}
-              initial="initial"
-              animate="animate"
-              whileHover="hover"
-            >
-              {renderAmountInput()}
-            </motion.div>
-
-            {/* Transaction Preview with Animation */}
-            <AnimatePresence mode="wait">
-              {preview && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.2 }}
+                {/* Recipient Selection */}
+                <motion.div 
+                  className="space-y-3"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
                 >
-                  {renderTransactionPreview()}
+                  {transferType === 'bank' && (
+                    <>
+                      <Label className="text-sm font-medium text-gray-700">To Beneficiary</Label>
+                      <Select value={selectedBeneficiaryId} onValueChange={setSelectedBeneficiaryId}>
+                        <SelectTrigger className="h-14 border-2 border-gray-200 focus:border-black">
+                          <div className="flex items-center gap-3">
+                            <User className="h-5 w-5 text-gray-400" />
+                            <SelectValue placeholder="Select beneficiary" />
+                          </div>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {safeBeneficiaries.map((beneficiary) => (
+                            <SelectItem key={beneficiary.id} value={beneficiary.id}>
+                              <div>
+                                <div className="font-medium">{beneficiary.name}</div>
+                                <div className="text-sm text-gray-500">
+                                  {beneficiary.bankName} • •••• {beneficiary.accountNumber.slice(-4)}
+                                </div>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </>
+                  )}
+
+                  {transferType === 'momo' && (
+                    <>
+                      <Label className="text-sm font-medium text-gray-700">Phone Number</Label>
+                      <div className="relative">
+                        <Smartphone className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                        <Input
+                          type="tel"
+                          value={momoPhone}
+                          onChange={(e) => setMomoPhone(e.target.value)}
+                          placeholder="+1 (555) 000-0000"
+                          className="pl-12 h-14 border-2 border-gray-200 focus:border-black"
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  {transferType === 'card' && (
+                    <>
+                      <Label className="text-sm font-medium text-gray-700">Card Number</Label>
+                      <div className="relative">
+                        <CreditCard className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                        <Input
+                          type="text"
+                          value={cardNumber}
+                          onChange={(e) => setCardNumber(e.target.value)}
+                          placeholder="1234 5678 9012 3456"
+                          className="pl-12 h-14 border-2 border-gray-200 focus:border-black"
+                        />
+                      </div>
+                    </>
+                  )}
+                </motion.div>
+
+                {/* Description */}
+                <motion.div 
+                  className="space-y-3"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                >
+                  <Label className="text-sm font-medium text-gray-700">Description (Optional)</Label>
+                  <Input
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="What's this for?"
+                    className="h-12 border-2 border-gray-200 focus:border-black"
+                  />
+                </motion.div>
+
+                {/* Transaction Preview */}
+                <AnimatePresence>
+                  {preview && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <Card className="border-2 border-gray-100">
+                        <CardContent className="p-4">
+                          <div className="space-y-3">
+                            <div className="flex justify-between text-sm">
+                              <span className="text-gray-600">Amount</span>
+                              <span className="font-medium">{formatCurrency(preview.amount)}</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                              <span className="text-gray-600">Fee</span>
+                              <span className="font-medium">{formatCurrency(preview.fee)}</span>
+                            </div>
+                            <Separator />
+                            <div className="flex justify-between font-semibold">
+                              <span>Total</span>
+                              <span>{formatCurrency(preview.total)}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                              <Clock className="h-4 w-4" />
+                              <span>{preview.estimatedTime}</span>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Submit Button */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6 }}
+                >
+                  <Button
+                    type="submit"
+                    className="w-full h-14 text-lg font-semibold bg-black hover:bg-gray-800 text-white"
+                    disabled={isProcessing || !amount || !selectedAccountId}
+                  >
+                    {isProcessing ? (
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        Processing...
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <Send className="h-5 w-5" />
+                        Send {preview ? formatCurrency(preview.total) : 'Money'}
+                      </div>
+                    )}
+                  </Button>
+                </motion.div>
+              </motion.form>
+            </div>
+
+            {/* Success Animation */}
+            <AnimatePresence>
+              {showSuccess && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm"
+                >
+                  <motion.div
+                    initial={{ scale: 0.5, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.5, opacity: 0 }}
+                    className="bg-white rounded-2xl p-8 shadow-2xl"
+                  >
+                    <div className="text-center">
+                      <motion.div
+                        animate={{
+                          scale: [1, 1.2, 1],
+                          rotate: [0, 360]
+                        }}
+                        transition={{ duration: 0.6 }}
+                        className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4"
+                      >
+                        <Check className="w-8 h-8 text-green-600" />
+                      </motion.div>
+                      <h3 className="text-xl font-semibold text-black mb-2">Success!</h3>
+                      <p className="text-gray-600">Your money has been sent</p>
+                    </div>
+                  </motion.div>
                 </motion.div>
               )}
             </AnimatePresence>
 
-            {/* Submit Button */}
-            <motion.div
-              variants={cardVariants}
-              initial="initial"
-              animate="animate"
-              whileHover="hover"
-            >
-              <Button
-                type="submit"
-                className="w-full h-12 text-lg"
-                disabled={isSubmitDisabled}
-              >
-                {isProcessing ? (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="flex items-center"
-                  >
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processing...
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="flex items-center"
-                  >
-                    <Send className="mr-2 h-4 w-4" />
-                    Send Money
-                  </motion.div>
-                )}
-              </Button>
-            </motion.div>
-          </motion.form>
-        </div>
-      </motion.div>
-
-      {/* Success Animation */}
-      <AnimatePresence>
-        {showSuccessAnimation && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-          >
-            <motion.div
-              initial={{ scale: 0.5 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.5 }}
-              className="bg-white dark:bg-gray-800 rounded-full p-8"
-            >
-              <motion.div
-                animate={{
-                  scale: [1, 1.2, 1],
-                  rotate: [0, 360, 360]
-                }}
-                transition={{ duration: 0.5 }}
-              >
-                <Check className="w-16 h-16 text-green-500" />
-              </motion.div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Pay with Card</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <Input
-              placeholder="Card Number"
-              value={cardNumber}
-              onChange={(e) => setCardNumber(e.target.value)}
+            {/* Deposit Modal */}
+            <DepositModal
+              open={isDepositModalOpen}
+              onOpenChange={setIsDepositModalOpen}
             />
-            <div className="grid grid-cols-2 gap-4">
-              <Input
-                placeholder="MM/YY"
-                value={cardExpiry}
-                onChange={(e) => setCardExpiry(e.target.value)}
-              />
-              <Input
-                placeholder="CVV"
-                type="password"
-                value={cardCvv}
-                onChange={(e) => setCardCvv(e.target.value)}
-              />
-            </div>
-            <Button 
-              onClick={handleCardPayment}
-              disabled={isProcessingCard}
-              className="w-full"
-            >
-              {isProcessingCard && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Pay with Card
-            </Button>
           </div>
-        </CardContent>
-      </Card>
-
-      <Button
-        variant="outline"
-        onClick={() => setShowVisaDeposit(true)}
-        className="mt-4"
-      >
-        Deposit with Visa
-      </Button>
-
-      <Dialog open={showVisaDeposit} onOpenChange={setShowVisaDeposit}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Deposit via Visa</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <Input
-              type="text"
-              placeholder="Amount"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-            />
-            <Input
-              type="text"
-              placeholder="Card Number"
-              value={visaCardNumber}
-              onChange={(e) => setVisaCardNumber(e.target.value)}
-            />
-            <Button 
-              onClick={handleVisaDeposit}
-              disabled={isProcessingVisa}
-              className="w-full"
-            >
-              {isProcessingVisa ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                'Deposit'
-              )}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <DepositModal
-        open={isDepositModalOpen}
-        onOpenChange={setIsDepositModalOpen}
-      />
         </LayoutWrapper>
       </ResponsiveSidebarLayout>
     </SidebarProvider>
   )
 }
-
-
-
-

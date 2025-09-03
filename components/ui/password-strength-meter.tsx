@@ -48,11 +48,11 @@ export function PasswordStrengthMeter({ password, className }: PasswordStrengthM
   }, [password, requirements])
 
   const getStrengthColor = () => {
-    if (strength <= 20) return "bg-red-500"
-    if (strength <= 40) return "bg-orange-500"
-    if (strength <= 60) return "bg-yellow-500"
-    if (strength <= 80) return "bg-blue-500"
-    return "bg-green-500"
+    if (strength <= 20) return "bg-gray-300"
+    if (strength <= 40) return "bg-gray-400"
+    if (strength <= 60) return "bg-gray-500"
+    if (strength <= 80) return "bg-gray-600"
+    return "bg-gray-800"
   }
 
   return (
@@ -68,11 +68,11 @@ export function PasswordStrengthMeter({ password, className }: PasswordStrengthM
             className="flex items-center text-sm"
           >
             {req.validator(password) ? (
-              <CheckCircle2 className="h-4 w-4 text-green-500 mr-2" />
+              <CheckCircle2 className="h-4 w-4 text-gray-800 dark:text-gray-200 mr-2" />
             ) : (
               <XCircle className="h-4 w-4 text-gray-300 mr-2" />
             )}
-            <span className={req.validator(password) ? "text-green-700" : "text-gray-500"}>
+            <span className={req.validator(password) ? "text-gray-800 dark:text-gray-200" : "text-gray-500"}>
               {req.label}
             </span>
           </div>
@@ -80,4 +80,4 @@ export function PasswordStrengthMeter({ password, className }: PasswordStrengthM
       </div>
     </div>
   )
-} 
+}

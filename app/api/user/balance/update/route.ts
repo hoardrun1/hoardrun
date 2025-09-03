@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
-import { authOptions } from '@/lib/auth-config';
+import { getCustomSession } from '@/lib/auth-session'
 
 const updateSchema = z.object({
   amount: z.number().positive(),
@@ -12,7 +11,7 @@ const updateSchema = z.object({
 
 export async function POST(request: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getCustomSession();
     if (!session?.user?.id) {
       return new NextResponse('Unauthorized', { status: 401 });
     }

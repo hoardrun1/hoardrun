@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
 import { z } from 'zod';
 import { MastercardClient } from '@/lib/mastercard-client';
-import { authOptions } from '@/lib/auth-config';
 import { COUNTRY_CODES, type CountryCode } from '@/lib/constants/country-codes';
 import { prisma } from '@/lib/prisma';
+import { getCustomSession } from '@/lib/auth-session'
 
 const linkSchema = z.object({
   amount: z.number().positive(),
@@ -17,7 +16,7 @@ const linkSchema = z.object({
 
 export async function POST(request: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getCustomSession();
     if (!session?.user?.id) {
       return new NextResponse('Unauthorized', { status: 401 });
     }

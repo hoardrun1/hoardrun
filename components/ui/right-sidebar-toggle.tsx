@@ -39,7 +39,7 @@ export function RightSidebarToggle({
         </motion.div>
         {!isOpen && notificationCount > 0 && (
           <Badge 
-            className="absolute -top-2 -right-2 h-4 w-4 p-0 text-xs bg-red-500 text-white border-2 border-white"
+            className="absolute -top-2 -right-2 h-4 w-4 p-0 text-xs bg-gray-500 text-white border-2 border-white"
           >
             {notificationCount > 9 ? '9+' : notificationCount}
           </Badge>

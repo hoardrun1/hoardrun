@@ -107,7 +107,7 @@ export function ApiTest() {
         </div>
         
         {error && (
-          <div className="p-4 bg-red-50 text-red-700 rounded-md">
+          <div className="p-4 bg-gray-50 text-gray-700 rounded-md">
             <h3 className="font-bold">Error:</h3>
             <p>{error}</p>
           </div>

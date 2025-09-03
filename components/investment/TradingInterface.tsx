@@ -117,7 +117,7 @@ export const TradingInterface: React.FC<TradingInterfaceProps> = ({
 
       <Button
         onClick={() => handlePlaceOrder(action)}
-        className={`w-full ${action === 'buy' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}`}
+        className={`w-full ${action === 'buy' ? 'bg-black hover:bg-gray-800 text-white' : 'bg-gray-800 hover:bg-gray-700 text-white'}`}
         disabled={!order.symbol || order.quantity <= 0 || (order.orderType === 'limit' && !order.price)}
       >
         {action === 'buy' ? 'Buy' : 'Sell'} {order.symbol || 'Stock'}
@@ -133,8 +133,8 @@ export const TradingInterface: React.FC<TradingInterfaceProps> = ({
       <CardContent>
         <Tabs defaultValue="buy" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="buy" className="text-green-600">Buy</TabsTrigger>
-            <TabsTrigger value="sell" className="text-red-600">Sell</TabsTrigger>
+            <TabsTrigger value="buy" className="text-black dark:text-white">Buy</TabsTrigger>
+            <TabsTrigger value="sell" className="text-gray-600 dark:text-gray-400">Sell</TabsTrigger>
           </TabsList>
           
           <TabsContent value="buy" className="mt-4">

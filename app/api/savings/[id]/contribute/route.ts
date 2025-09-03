@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth/next'
 import { prisma } from '@/lib/prisma'
-import { authOptions } from '@/lib/auth-config'
 import { z } from 'zod'
+import { getCustomSession } from '@/lib/auth-session'
 
 const contributionSchema = z.object({
   amount: z.number().min(1, 'Amount must be greater than 0'),
@@ -15,7 +14,7 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getCustomSession()
 
     if (!session?.user?.id) {
       return new NextResponse('Unauthorized', { status: 401 })

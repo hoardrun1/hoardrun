@@ -54,7 +54,7 @@ export function SettingsPageComponent() {
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-14 items-center">
           <div className="mr-4 hidden md:flex">
-            <Link href="/" className="mr-6 flex items-center space-x-2">
+            <Link href="/home" className="mr-6 flex items-center space-x-2">
               <motion.span
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -64,11 +64,11 @@ export function SettingsPageComponent() {
               </motion.span>
             </Link>
             <nav className="flex items-center space-x-6 text-sm font-medium">
-              <Link href="/" className="transition-colors hover:text-blue-600">Home</Link>
-              <Link href="/finance" className="transition-colors hover:text-blue-600">Finance</Link>
-              <Link href="/cards" className="transition-colors hover:text-blue-600">Cards</Link>
-              <Link href="/investment" className="transition-colors hover:text-blue-600">Investment</Link>
-              <Link href="/settings" className="text-blue-600">Settings</Link>
+              <Link href="/home" className="transition-colors hover:text-gray-600">Home</Link>
+              <Link href="/finance" className="transition-colors hover:text-gray-600">Finance</Link>
+              <Link href="/cards" className="transition-colors hover:text-gray-600">Cards</Link>
+              <Link href="/investment" className="transition-colors hover:text-gray-600">Investment</Link>
+              <Link href="/settings" className="text-gray-600">Settings</Link>
             </nav>
           </div>
           <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
@@ -117,7 +117,7 @@ export function SettingsPageComponent() {
                   <Lock className="mr-2 h-4 w-4" />
                   Settings
                 </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer text-red-600">
+                <DropdownMenuItem className="cursor-pointer text-gray-600">
                   <LogOut className="mr-2 h-4 w-4" />
                   Log out
                 </DropdownMenuItem>
@@ -155,11 +155,11 @@ export function SettingsPageComponent() {
 
           <Tabs defaultValue="account" className="w-full">
             <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 gap-2">
-              <TabsTrigger value="account" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">Account</TabsTrigger>
-              <TabsTrigger value="security" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">Security</TabsTrigger>
-              <TabsTrigger value="notifications" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">Notifications</TabsTrigger>
-              <TabsTrigger value="billing" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">Billing</TabsTrigger>
-              <TabsTrigger value="support" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">Support</TabsTrigger>
+              <TabsTrigger value="account" className="data-[state=active]:bg-gray-600 data-[state=active]:text-white">Account</TabsTrigger>
+              <TabsTrigger value="security" className="data-[state=active]:bg-gray-600 data-[state=active]:text-white">Security</TabsTrigger>
+              <TabsTrigger value="notifications" className="data-[state=active]:bg-gray-600 data-[state=active]:text-white">Notifications</TabsTrigger>
+              <TabsTrigger value="billing" className="data-[state=active]:bg-gray-600 data-[state=active]:text-white">Billing</TabsTrigger>
+              <TabsTrigger value="support" className="data-[state=active]:bg-gray-600 data-[state=active]:text-white">Support</TabsTrigger>
             </TabsList>
 
             <AnimatePresence mode="wait">
@@ -229,7 +229,7 @@ export function SettingsPageComponent() {
           <div className="flex justify-end">
             <Button 
               variant="destructive"
-              className="group hover:bg-red-700 transition-colors"
+              className="group hover:bg-gray-700 transition-colors"
             >
               <LogOut className="mr-2 h-4 w-4 group-hover:rotate-180 transition-transform" />
               Log Out

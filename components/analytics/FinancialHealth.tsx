@@ -48,18 +48,18 @@ export const FinancialHealth: React.FC<FinancialHealthProps> = ({
 }) => {
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'good': return 'text-green-600';
-      case 'warning': return 'text-yellow-600';
-      case 'poor': return 'text-red-600';
+      case 'good': return 'text-gray-800 dark:text-gray-200';
+      case 'warning': return 'text-gray-600 dark:text-gray-400';
+      case 'poor': return 'text-gray-500 dark:text-gray-500';
       default: return 'text-gray-600';
     }
   };
 
   const getProgressColor = (status: string) => {
     switch (status) {
-      case 'good': return 'bg-green-500';
-      case 'warning': return 'bg-yellow-500';
-      case 'poor': return 'bg-red-500';
+      case 'good': return 'bg-gray-800';
+      case 'warning': return 'bg-gray-600';
+      case 'poor': return 'bg-gray-400';
       default: return 'bg-gray-500';
     }
   };
@@ -78,7 +78,7 @@ export const FinancialHealth: React.FC<FinancialHealthProps> = ({
         <div className="space-y-6">
           {/* Overall Score */}
           <div className="text-center p-4 bg-gray-50 rounded-lg">
-            <div className="text-3xl font-bold text-blue-600">{overallScore.toFixed(0)}</div>
+            <div className="text-3xl font-bold text-gray-800 dark:text-gray-200">{overallScore.toFixed(0)}</div>
             <div className="text-sm text-gray-600">Overall Health Score</div>
             <div className="mt-2">
               <Progress value={overallScore} className="h-2" />

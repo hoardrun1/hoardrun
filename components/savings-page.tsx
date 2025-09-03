@@ -284,9 +284,9 @@ export function SavingsPageComponent() {
   }
 
   const getProgressColor = (progress: number) => {
-    if (progress >= 80) return 'bg-green-500'
-    if (progress >= 50) return 'bg-yellow-500'
-    return 'bg-blue-500'
+    if (progress >= 80) return 'bg-gray-500'
+    if (progress >= 50) return 'bg-gray-500'
+    return 'bg-gray-500'
   }
 
   const renderGoalCard = (goal: SavingsGoal) => (
@@ -556,14 +556,14 @@ export function SavingsPageComponent() {
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center gap-4">
               <h1 className="text-xl font-semibold dark:text-white">Savings</h1>
-              <Badge variant="secondary" className="bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-400">
+              <Badge variant="secondary" className="bg-gray-100 text-gray-600 dark:bg-gray-900 dark:text-gray-400">
                 {savingsGoals.length} Goals
               </Badge>
             </div>
             <div className="flex items-center gap-3">
               <Button variant="ghost" size="icon" className="relative">
                 <Bell className="h-5 w-5" />
-                <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full" />
+                <span className="absolute top-1 right-1 h-2 w-2 bg-gray-500 rounded-full" />
               </Button>
               <Button variant="ghost" size="icon">
                 <Settings className="h-5 w-5" />
@@ -583,7 +583,7 @@ export function SavingsPageComponent() {
           <Card className="border-2 border-blue-500/20">
             <CardHeader>
               <div className="flex items-center gap-2">
-                <Brain className="h-5 w-5 text-blue-500" />
+                <Brain className="h-5 w-5 text-gray-500" />
                 <CardTitle>AI Insights</CardTitle>
               </div>
               <CardDescription>Personalized recommendations for your savings</CardDescription>
@@ -609,7 +609,7 @@ export function SavingsPageComponent() {
                         <CardContent className="p-4">
                           <div className="flex justify-between items-start">
                             <div>
-                              <h3 className="font-medium text-blue-600 dark:text-blue-400">
+                              <h3 className="font-medium text-gray-600 dark:text-gray-400">
                                 {rec.title}
                               </h3>
                               <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
@@ -631,7 +631,7 @@ export function SavingsPageComponent() {
                               <Button
                                 size="sm"
                                 onClick={() => handleInvestNow(rec.id)}
-                                className="bg-blue-500 hover:bg-blue-600"
+                                className="bg-gray-500 hover:bg-gray-600"
                               >
                                 Invest Now
                               </Button>
@@ -657,7 +657,7 @@ export function SavingsPageComponent() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Brain className="h-5 w-5 text-purple-500" />
+                  <Brain className="h-5 w-5 text-gray-500" />
                   <CardTitle>AI-Recommended Goals</CardTitle>
                 </div>
               </div>
@@ -679,7 +679,7 @@ export function SavingsPageComponent() {
                             <h3 className="font-medium text-lg">{recommendation.name}</h3>
                             <p className="text-sm text-gray-500">{recommendation.reason}</p>
                           </div>
-                          <Badge variant="outline" className="text-purple-500">
+                          <Badge variant="outline" className="text-gray-500">
                             {recommendation.confidence}% Match
                           </Badge>
                         </div>
@@ -713,7 +713,7 @@ export function SavingsPageComponent() {
                           <Button
                             size="sm"
                             onClick={() => handleCreateRecommendedGoal(recommendation)}
-                            className="bg-purple-500 hover:bg-purple-600 text-white"
+                            className="bg-gray-500 hover:bg-gray-600 text-white"
                           >
                             Create Goal
                           </Button>
@@ -736,7 +736,7 @@ export function SavingsPageComponent() {
           <Card className="border-2 border-blue-500/20">
             <CardHeader>
               <div className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-blue-500" />
+                <Sparkles className="h-5 w-5 text-gray-500" />
                 <CardTitle>Behavior Insights</CardTitle>
               </div>
               <CardDescription>AI-powered analysis of your saving and spending patterns</CardDescription>
@@ -756,15 +756,15 @@ export function SavingsPageComponent() {
           >
             <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white hover:shadow-lg transition-all duration-300">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-blue-100">Total Savings</CardTitle>
+                <CardTitle className="text-sm font-medium text-gray-100">Total Savings</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">${(24000).toLocaleString()}</div>
-                <div className="flex items-center mt-1 text-blue-100">
+                <div className="flex items-center mt-1 text-gray-100">
                   <ArrowUpRight className="h-4 w-4 mr-1" />
                   <span className="text-sm">+{analytics?.monthlyGrowth}% from last month</span>
                 </div>
-                <div className="mt-2 text-xs text-blue-100">
+                <div className="mt-2 text-xs text-gray-100">
                   Next milestone: ${analytics?.nextMilestone.toLocaleString()}
                 </div>
               </CardContent>
@@ -778,11 +778,11 @@ export function SavingsPageComponent() {
           >
             <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-green-100">Monthly Savings</CardTitle>
+                <CardTitle className="text-sm font-medium text-gray-100">Monthly Savings</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">$1,600.00</div>
-                <div className="flex items-center mt-1 text-green-100">
+                <div className="flex items-center mt-1 text-gray-100">
                   <ArrowUpRight className="h-4 w-4 mr-1" />
                   <span className="text-sm">+8% from last month</span>
                 </div>
@@ -797,11 +797,11 @@ export function SavingsPageComponent() {
           >
             <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-purple-100">Active Goals</CardTitle>
+                <CardTitle className="text-sm font-medium text-gray-100">Active Goals</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{savingsGoals.length}</div>
-                <div className="flex items-center mt-1 text-purple-100">
+                <div className="flex items-center mt-1 text-gray-100">
                   <Target className="h-4 w-4 mr-1" />
                   <span className="text-sm">On track</span>
                 </div>
@@ -816,11 +816,11 @@ export function SavingsPageComponent() {
           >
             <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-orange-100">Auto-Save</CardTitle>
+                <CardTitle className="text-sm font-medium text-gray-100">Auto-Save</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">$1,600.00</div>
-                <div className="flex items-center mt-1 text-orange-100">
+                <div className="flex items-center mt-1 text-gray-100">
                   <Clock className="h-4 w-4 mr-1" />
                   <span className="text-sm">Monthly</span>
                 </div>
@@ -864,8 +864,8 @@ export function SavingsPageComponent() {
                       <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
                     </linearGradient>
                     <linearGradient id="colorTarget" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#22c55e" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#22c55e" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#6b7280" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#6b7280" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
                   <XAxis dataKey="date" />
@@ -883,7 +883,7 @@ export function SavingsPageComponent() {
                   <Area 
                     type="monotone" 
                     dataKey="target" 
-                    stroke="#22c55e" 
+                    stroke="#6b7280" 
                     fillOpacity={1} 
                     fill="url(#colorTarget)" 
                     name="Target Amount"
@@ -992,7 +992,7 @@ export function SavingsPageComponent() {
           <Card>
             <CardHeader>
               <div className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-yellow-500" />
+                <Sparkles className="h-5 w-5 text-gray-500" />
                 <CardTitle>Smart Savings Tips</CardTitle>
               </div>
               <CardDescription>Expert advice to boost your savings</CardDescription>
@@ -1005,8 +1005,8 @@ export function SavingsPageComponent() {
                     <Card key={index} className="bg-gray-50 dark:bg-gray-800 border-0 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
                       <CardContent className="pt-6">
                         <div className="flex flex-col items-center text-center">
-                          <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center mb-4">
-                            <Icon className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                          <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-900 flex items-center justify-center mb-4">
+                            <Icon className="h-6 w-6 text-gray-600 dark:text-gray-400" />
                           </div>
                           <h3 className="font-medium mb-2 dark:text-white">{tip.title}</h3>
                           <p className="text-sm text-gray-500 dark:text-gray-400">{tip.description}</p>

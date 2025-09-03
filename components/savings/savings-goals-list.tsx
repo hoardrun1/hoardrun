@@ -65,8 +65,8 @@ export function SavingsGoalsList({
               <div className="p-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
-                    <div className="p-3 rounded-full bg-blue-100">
-                      <Target className="h-6 w-6 text-blue-500" />
+                    <div className="p-3 rounded-full bg-gray-100">
+                      <Target className="h-6 w-6 text-gray-500" />
                     </div>
                     <div>
                       <h3 className="font-semibold">{goal.name}</h3>
@@ -89,7 +89,7 @@ export function SavingsGoalsList({
                       </DropdownMenuItem>
                       <DropdownMenuItem 
                         onClick={() => onGoalDelete(goal.id)}
-                        className="text-red-600"
+                        className="text-gray-600"
                       >
                         <Trash2 className="h-4 w-4 mr-2" />
                         Delete
@@ -110,7 +110,7 @@ export function SavingsGoalsList({
                 </div>
 
                 {goal.isAutoSave && (
-                  <div className="mt-2 text-sm text-green-600 flex items-center">
+                  <div className="mt-2 text-sm text-gray-600 flex items-center">
                     <Repeat className="h-4 w-4 mr-1" />
                     Auto-save enabled
                   </div>

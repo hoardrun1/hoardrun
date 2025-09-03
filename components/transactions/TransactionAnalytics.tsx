@@ -37,10 +37,10 @@ export const TransactionAnalytics: React.FC<TransactionAnalyticsProps> = ({
     transactionCount: 47,
     averageTransaction: 115.32,
     categoryBreakdown: [
-      { category: 'Food & Dining', amount: 1200, percentage: 36.6, color: 'bg-blue-500' },
-      { category: 'Transportation', amount: 800, percentage: 24.4, color: 'bg-green-500' },
-      { category: 'Shopping', amount: 650, percentage: 19.8, color: 'bg-purple-500' },
-      { category: 'Entertainment', amount: 430, percentage: 13.1, color: 'bg-orange-500' },
+      { category: 'Food & Dining', amount: 1200, percentage: 36.6, color: 'bg-gray-500' },
+      { category: 'Transportation', amount: 800, percentage: 24.4, color: 'bg-gray-500' },
+      { category: 'Shopping', amount: 650, percentage: 19.8, color: 'bg-gray-500' },
+      { category: 'Entertainment', amount: 430, percentage: 13.1, color: 'bg-gray-500' },
       { category: 'Other', amount: 200, percentage: 6.1, color: 'bg-gray-500' }
     ],
     monthlyTrend: [
@@ -60,13 +60,13 @@ export const TransactionAnalytics: React.FC<TransactionAnalyticsProps> = ({
   };
 
   const getNetFlowColor = (netFlow: number) => {
-    return netFlow >= 0 ? 'text-green-600' : 'text-red-600';
+    return netFlow >= 0 ? 'text-gray-600' : 'text-gray-600';
   };
 
   const getNetFlowIcon = (netFlow: number) => {
     return netFlow >= 0 ? 
-      <TrendingUp className="h-4 w-4 text-green-600" /> : 
-      <TrendingDown className="h-4 w-4 text-red-600" />;
+      <TrendingUp className="h-4 w-4 text-gray-600" /> : 
+      <TrendingDown className="h-4 w-4 text-gray-600" />;
   };
 
   if (isLoading) {
@@ -95,11 +95,11 @@ export const TransactionAnalytics: React.FC<TransactionAnalyticsProps> = ({
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Income</p>
-                <p className="text-2xl font-bold text-green-600">
+                <p className="text-2xl font-bold text-gray-600">
                   {formatCurrency(data.totalIncome)}
                 </p>
               </div>
-              <TrendingUp className="h-8 w-8 text-green-600" />
+              <TrendingUp className="h-8 w-8 text-gray-600" />
             </div>
             <p className="text-xs text-gray-500 mt-2">{period}</p>
           </CardContent>
@@ -110,11 +110,11 @@ export const TransactionAnalytics: React.FC<TransactionAnalyticsProps> = ({
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Expenses</p>
-                <p className="text-2xl font-bold text-red-600">
+                <p className="text-2xl font-bold text-gray-600">
                   {formatCurrency(data.totalExpenses)}
                 </p>
               </div>
-              <TrendingDown className="h-8 w-8 text-red-600" />
+              <TrendingDown className="h-8 w-8 text-gray-600" />
             </div>
             <p className="text-xs text-gray-500 mt-2">{period}</p>
           </CardContent>
@@ -145,7 +145,7 @@ export const TransactionAnalytics: React.FC<TransactionAnalyticsProps> = ({
                   Avg: {formatCurrency(data.averageTransaction)}
                 </p>
               </div>
-              <Activity className="h-8 w-8 text-blue-600" />
+              <Activity className="h-8 w-8 text-gray-600" />
             </div>
             <p className="text-xs text-gray-500 mt-2">{period}</p>
           </CardContent>
@@ -195,13 +195,13 @@ export const TransactionAnalytics: React.FC<TransactionAnalyticsProps> = ({
                 <div className="flex items-center space-x-4">
                   <div className="text-right">
                     <div className="text-sm text-gray-500">Income</div>
-                    <div className="font-semibold text-green-600">
+                    <div className="font-semibold text-gray-600">
                       {formatCurrency(month.income)}
                     </div>
                   </div>
                   <div className="text-right">
                     <div className="text-sm text-gray-500">Expenses</div>
-                    <div className="font-semibold text-red-600">
+                    <div className="font-semibold text-gray-600">
                       {formatCurrency(month.expenses)}
                     </div>
                   </div>

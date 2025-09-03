@@ -66,11 +66,11 @@ export const TransactionList: React.FC<TransactionListProps> = ({
   const getTransactionIcon = (type: string) => {
     switch (type) {
       case 'DEPOSIT':
-        return <ArrowDownLeft className="h-4 w-4 text-green-600" />;
+        return <ArrowDownLeft className="h-4 w-4 text-gray-600" />;
       case 'WITHDRAWAL':
       case 'TRANSFER':
       case 'INVESTMENT':
-        return <ArrowUpRight className="h-4 w-4 text-red-600" />;
+        return <ArrowUpRight className="h-4 w-4 text-gray-600" />;
       default:
         return <MoreHorizontal className="h-4 w-4" />;
     }
@@ -79,11 +79,11 @@ export const TransactionList: React.FC<TransactionListProps> = ({
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'COMPLETED':
-        return 'bg-green-100 text-green-800';
+        return 'bg-gray-100 text-gray-800';
       case 'PENDING':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-gray-100 text-gray-800';
       case 'FAILED':
-        return 'bg-red-100 text-red-800';
+        return 'bg-gray-100 text-gray-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -93,7 +93,7 @@ export const TransactionList: React.FC<TransactionListProps> = ({
     const isNegative = amount < 0;
     const absAmount = Math.abs(amount);
     return (
-      <span className={isNegative ? 'text-red-600' : 'text-green-600'}>
+      <span className={isNegative ? 'text-gray-600' : 'text-gray-600'}>
         {isNegative ? '-' : '+'}${absAmount.toLocaleString()}
       </span>
     );

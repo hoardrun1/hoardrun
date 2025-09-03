@@ -185,7 +185,7 @@ export function CreateProfilePageComponent() {
               <div
                 key={step}
                 className={`w-1/3 h-2 rounded-full mx-1 ${
-                  step <= currentStep ? 'bg-blue-600' : 'bg-gray-200'
+                  step <= currentStep ? 'bg-gray-600' : 'bg-gray-200'
                 }`}
               />
             ))}
@@ -221,7 +221,7 @@ export function CreateProfilePageComponent() {
                         required
                       />
                       {errors.fullName && (
-                        <p className="text-sm text-red-500">{errors.fullName}</p>
+                        <p className="text-sm text-gray-500">{errors.fullName}</p>
                       )}
                     </div>
 
@@ -243,7 +243,7 @@ export function CreateProfilePageComponent() {
                         {isUsernameAvailable !== null && (
                           <Badge
                             className={`absolute right-2 top-2 ${
-                              isUsernameAvailable ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                              isUsernameAvailable ? 'bg-gray-100 text-gray-800' : 'bg-gray-100 text-gray-800'
                             }`}
                           >
                             {isUsernameAvailable ? 'Available' : 'Taken'}
@@ -361,7 +361,7 @@ export function CreateProfilePageComponent() {
                   type="button"
                   onClick={handleNext}
                   disabled={isLoading}
-                  className="ml-auto bg-blue-600 hover:bg-blue-700"
+                  className="ml-auto bg-gray-600 hover:bg-gray-700"
                 >
                   Next
                 </Button>
@@ -369,7 +369,7 @@ export function CreateProfilePageComponent() {
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="ml-auto bg-blue-600 hover:bg-blue-700"
+                  className="ml-auto bg-gray-600 hover:bg-gray-700"
                 >
                   Complete Profile
                 </Button>

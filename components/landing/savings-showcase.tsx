@@ -12,21 +12,21 @@ const sampleGoals = [
     name: 'Emergency Fund',
     description: 'Build a safety net for unexpected expenses',
     icon: PiggyBank,
-    color: 'bg-blue-500',
+    color: 'bg-gray-500',
     progress: 75,
   },
   {
     name: 'Dream Vacation',
     description: 'Save for that perfect getaway',
     icon: Target,
-    color: 'bg-purple-500',
+    color: 'bg-gray-500',
     progress: 45,
   },
   {
     name: 'New Car',
     description: 'Save up for your next vehicle purchase',
     icon: Clock,
-    color: 'bg-green-500',
+    color: 'bg-gray-500',
     progress: 30,
   },
 ];
@@ -126,8 +126,8 @@ export function SavingsShowcase() {
                 viewport={{ once: true }}
                 className="flex flex-col items-center text-center"
               >
-                <div className="bg-blue-500/20 p-3 rounded-full mb-3">
-                  <tip.icon className="w-6 h-6 text-blue-400" />
+                <div className="bg-gray-500/20 p-3 rounded-full mb-3">
+                  <tip.icon className="w-6 h-6 text-gray-400" />
                 </div>
                 <h4 className="font-medium mb-1">{tip.title}</h4>
                 <p className="text-sm text-gray-400">{tip.description}</p>
@@ -144,7 +144,7 @@ export function SavingsShowcase() {
           viewport={{ once: true }}
         >
           <Link href="/signup">
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full text-lg">
+            <Button className="bg-gray-600 hover:bg-gray-700 text-white px-8 py-3 rounded-full text-lg">
               Start Saving Today
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>

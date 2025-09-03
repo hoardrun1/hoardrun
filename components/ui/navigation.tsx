@@ -34,7 +34,7 @@ export function Navigation() {
                 href={item.href}
                 className={`${
                   isActive
-                    ? "text-blue-400 font-medium bg-[#2c2d33]"
+                    ? "text-gray-400 font-medium bg-[#2c2d33]"
                     : "text-gray-400 hover:text-gray-200 hover:bg-[#2c2d33]"
                 } px-3 py-2 rounded-md text-sm transition-colors`}
               >

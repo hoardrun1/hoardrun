@@ -28,9 +28,9 @@ export const CardList: React.FC<CardListProps> = ({
 }) => {
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'bg-green-100 text-green-800';
+      case 'active': return 'bg-gray-100 text-gray-800';
       case 'inactive': return 'bg-gray-100 text-gray-800';
-      case 'blocked': return 'bg-red-100 text-red-800';
+      case 'blocked': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -75,7 +75,7 @@ export const CardList: React.FC<CardListProps> = ({
                   variant="outline"
                   size="sm"
                   onClick={() => onToggleLock(card.id)}
-                  className={card.isLocked ? 'text-red-600' : 'text-green-600'}
+                  className={card.isLocked ? 'text-gray-600' : 'text-gray-600'}
                 >
                   {card.isLocked ? 'Unlock' : 'Lock'} Card
                 </Button>

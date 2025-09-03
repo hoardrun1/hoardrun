@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth-config';
+import { getCustomSession } from '@/lib/auth-session'
 
 // Mock data for development
 const mockSavingsGoals = [
@@ -39,7 +38,7 @@ const mockSavingsGoals = [
 // GET handler for savings goals
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getCustomSession();
     
     if (!session?.user?.id) {
       return new NextResponse('Unauthorized', { status: 401 });
@@ -56,7 +55,7 @@ export async function GET() {
 // POST handler for creating a savings goal
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getCustomSession();
     
     if (!session?.user?.id) {
       return new NextResponse('Unauthorized', { status: 401 });

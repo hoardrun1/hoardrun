@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth-config'
 import { prisma } from '@/lib/prisma'
+import { getCustomSession } from '@/lib/auth-session'
 // import { AppError, ErrorCode } from '@/lib/error-handling'
 
 // Payment validation schema
@@ -15,7 +14,7 @@ const paymentSchema = z.object({
 
 export async function POST(request: Request) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getCustomSession()
     if (!session?.user) {
       return new NextResponse('Unauthorized', { status: 401 })
     }
@@ -52,7 +51,7 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getCustomSession()
     if (!session?.user) {
       return new NextResponse('Unauthorized', { status: 401 })
     }

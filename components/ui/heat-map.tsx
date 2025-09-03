@@ -45,10 +45,10 @@ export const HeatMap: React.FC<HeatMapProps> = ({
     if (value === 0) return 'bg-gray-100';
     const intensity = Math.ceil((value / maxValue) * 4);
     switch (intensity) {
-      case 1: return 'bg-green-200';
-      case 2: return 'bg-green-400';
-      case 3: return 'bg-green-600';
-      case 4: return 'bg-green-800';
+      case 1: return 'bg-gray-200';
+      case 2: return 'bg-gray-400';
+      case 3: return 'bg-gray-600';
+      case 4: return 'bg-gray-800';
       default: return 'bg-gray-100';
     }
   };
@@ -111,10 +111,10 @@ export const HeatMap: React.FC<HeatMapProps> = ({
           <span>Less</span>
           <div className="flex space-x-1">
             <div className="w-3 h-3 bg-gray-100 rounded-sm" />
-            <div className="w-3 h-3 bg-green-200 rounded-sm" />
-            <div className="w-3 h-3 bg-green-400 rounded-sm" />
-            <div className="w-3 h-3 bg-green-600 rounded-sm" />
-            <div className="w-3 h-3 bg-green-800 rounded-sm" />
+            <div className="w-3 h-3 bg-gray-200 rounded-sm" />
+            <div className="w-3 h-3 bg-gray-400 rounded-sm" />
+            <div className="w-3 h-3 bg-gray-600 rounded-sm" />
+            <div className="w-3 h-3 bg-gray-800 rounded-sm" />
           </div>
           <span>More</span>
         </div>

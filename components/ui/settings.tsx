@@ -359,14 +359,14 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
               onClick={() => updateSetting('theme', value)}
               className={`p-4 rounded-lg border-2 transition-all ${
                 settings.theme === value
-                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                  ? 'border-blue-500 bg-gray-50 dark:bg-gray-900/20'
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >
               <Icon className="h-6 w-6 mx-auto mb-2" />
               <p className="text-sm font-medium">{label}</p>
               {settings.theme === value && (
-                <Check className="h-4 w-4 text-blue-500 mx-auto mt-1" />
+                <Check className="h-4 w-4 text-gray-500 mx-auto mt-1" />
               )}
             </button>
           ))}
@@ -461,7 +461,7 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
           <div className="w-48 border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
             <div className="p-4 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center gap-2">
-                <SettingsIcon className="h-5 w-5 text-blue-600" />
+                <SettingsIcon className="h-5 w-5 text-gray-600" />
                 <h2 className="font-semibold text-gray-900 dark:text-white">Settings</h2>
               </div>
             </div>
@@ -475,7 +475,7 @@ export function Settings({ isOpen, onClose }: SettingsProps) {
                       onClick={() => setActiveSection(section.id)}
                       className={`w-full flex items-center gap-3 p-3 rounded-lg text-left transition-all ${
                         activeSection === section.id
-                          ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                          ? 'bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-300'
                           : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                       }`}
                     >

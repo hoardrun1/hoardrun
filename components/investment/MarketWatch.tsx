@@ -109,11 +109,11 @@ export const MarketWatch: React.FC<MarketWatchProps> = ({
                 <div className="flex items-center space-x-1">
                   <Badge 
                     variant={stock.change >= 0 ? "default" : "destructive"}
-                    className={`text-xs ${stock.change >= 0 ? "bg-green-100 text-green-800" : ""}`}
+                    className={`text-xs ${stock.change >= 0 ? "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200" : "bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-100"}`}
                   >
                     {stock.change >= 0 ? '+' : ''}${stock.change.toFixed(2)}
                   </Badge>
-                  <span className={`text-xs ${stock.changePercent >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <span className={`text-xs ${stock.changePercent >= 0 ? 'text-gray-600 dark:text-gray-400' : 'text-gray-800 dark:text-gray-200'}`}>
                     ({stock.changePercent >= 0 ? '+' : ''}{stock.changePercent.toFixed(2)}%)
                   </span>
                 </div>

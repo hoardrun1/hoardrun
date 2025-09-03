@@ -71,13 +71,13 @@ export const InvestmentPerformance: React.FC<InvestmentPerformanceProps> = ({
               </div>
               <div>
                 <div className="text-sm text-gray-600">Total Gain/Loss</div>
-                <div className={`text-lg font-semibold ${totalGain >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <div className={`text-lg font-semibold ${totalGain >= 0 ? 'text-gray-600' : 'text-gray-600'}`}>
                   {totalGain >= 0 ? '+' : ''}${totalGain.toLocaleString()}
                 </div>
               </div>
               <div>
                 <div className="text-sm text-gray-600">Return</div>
-                <div className={`text-lg font-semibold ${totalGainPercent >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <div className={`text-lg font-semibold ${totalGainPercent >= 0 ? 'text-gray-600' : 'text-gray-600'}`}>
                   {totalGainPercent >= 0 ? '+' : ''}{totalGainPercent.toFixed(2)}%
                 </div>
               </div>
@@ -94,7 +94,7 @@ export const InvestmentPerformance: React.FC<InvestmentPerformanceProps> = ({
                 </div>
                 <div className="text-right">
                   <div className="font-semibold">${investment.currentValue.toLocaleString()}</div>
-                  <div className={`text-sm ${investment.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <div className={`text-sm ${investment.change >= 0 ? 'text-gray-600' : 'text-gray-600'}`}>
                     {investment.change >= 0 ? '+' : ''}${investment.change.toLocaleString()} ({investment.changePercent >= 0 ? '+' : ''}{investment.changePercent.toFixed(2)}%)
                   </div>
                 </div>

@@ -70,13 +70,13 @@ export const PortfolioOverview: React.FC<PortfolioOverviewProps> = ({
             </div>
             <div className="text-center">
               <div className="text-sm text-gray-600">Total Gain/Loss</div>
-              <div className={`text-xl font-bold ${totalGain >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <div className={`text-xl font-bold ${totalGain >= 0 ? 'text-gray-600' : 'text-gray-600'}`}>
                 {totalGain >= 0 ? '+' : ''}${totalGain.toLocaleString()}
               </div>
             </div>
             <div className="text-center">
               <div className="text-sm text-gray-600">Return</div>
-              <div className={`text-xl font-bold ${totalGainPercent >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <div className={`text-xl font-bold ${totalGainPercent >= 0 ? 'text-gray-600' : 'text-gray-600'}`}>
                 {totalGainPercent >= 0 ? '+' : ''}{totalGainPercent.toFixed(2)}%
               </div>
             </div>
@@ -104,11 +104,11 @@ export const PortfolioOverview: React.FC<PortfolioOverviewProps> = ({
                 <div className="text-right">
                   <Badge 
                     variant={item.gain >= 0 ? "default" : "destructive"}
-                    className={item.gain >= 0 ? "bg-green-100 text-green-800" : ""}
+                    className={item.gain >= 0 ? "bg-gray-100 text-gray-800" : ""}
                   >
                     {item.gain >= 0 ? '+' : ''}${item.gain.toLocaleString()}
                   </Badge>
-                  <div className={`text-sm ${item.gainPercent >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <div className={`text-sm ${item.gainPercent >= 0 ? 'text-gray-600' : 'text-gray-600'}`}>
                     {item.gainPercent >= 0 ? '+' : ''}{item.gainPercent.toFixed(2)}%
                   </div>
                 </div>

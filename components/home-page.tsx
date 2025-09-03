@@ -377,7 +377,7 @@ export function HomePageComponent() {
         sidebar={<SidebarContent onAddMoney={() => setShowDepositModal(true)} />}
       >
         <SidebarToggle />
-        <LayoutWrapper className="bg-white min-h-screen">
+        <LayoutWrapper className="bg-white min-h-screen" showBreadcrumbs={false}>
 
       {/* Header */}
       <header className="sticky top-0 z-30 bg-white dark:bg-black border-b border-gray-200 dark:border-gray-800 shadow-sm">

@@ -63,7 +63,7 @@ export function InvestmentPreview() {
         <Button 
           variant="ghost" 
           size="sm" 
-          className="text-blue-400 hover:text-blue-300"
+          className="text-gray-400 hover:text-gray-300"
           onClick={handleNavigateToInvestments}
         >
           View All
@@ -86,7 +86,7 @@ export function InvestmentPreview() {
                     {investment.type}
                   </Badge>
                 </div>
-                <div className={`flex items-center ${investment.positive ? 'text-green-400' : 'text-red-400'}`}>
+                <div className={`flex items-center ${investment.positive ? 'text-gray-400' : 'text-gray-400'}`}>
                   {investment.positive ? (
                     <ArrowUpRight className="w-4 h-4 mr-1" />
                   ) : (
@@ -109,7 +109,7 @@ export function InvestmentPreview() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.1 + 0.2 }}
-                className="bg-blue-900/30 border border-blue-800/50 rounded-lg p-4"
+                className="bg-gray-900/30 border border-blue-800/50 rounded-lg p-4"
               >
                 <div className="flex justify-between items-start mb-2">
                   <div>
@@ -123,14 +123,14 @@ export function InvestmentPreview() {
                       </span>
                     </div>
                   </div>
-                  <div className="text-green-400 flex items-center">
+                  <div className="text-gray-400 flex items-center">
                     <TrendingUp className="w-4 h-4 mr-1" />
                     <span>{investment.expectedReturn}%</span>
                   </div>
                 </div>
                 <Button 
                   size="sm" 
-                  className="mt-2 w-full bg-blue-600 hover:bg-blue-700"
+                  className="mt-2 w-full bg-gray-600 hover:bg-gray-700"
                   onClick={handleNavigateToInvestments}
                 >
                   Invest Now

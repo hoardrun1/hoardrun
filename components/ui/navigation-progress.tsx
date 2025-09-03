@@ -31,7 +31,7 @@ export const NavigationProgress = () => {
       exit={{ opacity: 0 }}
     >
       <motion.div
-        className="h-full bg-blue-600"
+        className="h-full bg-gray-600"
         initial={{ width: 0 }}
         animate={{ width: `${progress}%` }}
         transition={{

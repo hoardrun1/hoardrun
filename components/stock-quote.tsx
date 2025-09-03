@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useAuth } from '@/contexts/NextAuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useMarketData } from '@/hooks/useMarketData';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

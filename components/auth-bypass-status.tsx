@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { CheckCircle, XCircle, AlertCircle } from 'lucide-react'
 import { isAuthBypassEnabled, mockUser } from '@/lib/auth-bypass'
-import { useAuth } from '@/contexts/NextAuthContext'
+import { useAuth } from '@/contexts/AuthContext'
 
 export function AuthBypassStatus() {
   const [bypassEnabled, setBypassEnabled] = useState(false)

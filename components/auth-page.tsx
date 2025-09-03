@@ -18,7 +18,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useToast } from "@/components/ui/use-toast"
-import { useAuth } from '@/contexts/NextAuthContext'
+import { useAuth } from '@/contexts/AuthContext'
 
 interface AuthPageProps {
   mode: 'signin' | 'signup'
@@ -64,19 +64,15 @@ export function AuthPage({ mode }: AuthPageProps) {
     try {
       setIsLoading(true)
       setError(null)
-      
-      const result = await signIn('google', { 
-        callbackUrl: '/home',
-        redirect: false 
+
+      // For now, show a message that Google OAuth needs to be configured
+      toast({
+        title: "Google OAuth Not Configured",
+        description: "Please use email/password authentication or configure Google OAuth credentials.",
+        variant: "destructive",
       })
-      
-      if (result?.error) {
-        throw new Error(result.error)
-      }
-      
-      if (result?.url) {
-        router.push(result.url)
-      }
+
+      setError('Google OAuth not configured. Please use email/password authentication.')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Google authentication failed')
       toast({
@@ -124,16 +120,8 @@ export function AuthPage({ mode }: AuthPageProps) {
         
         router.push('/signin')
       } else {
-        // For signin, use NextAuth credentials
-        const result = await signIn('credentials', {
-          email: formData.email,
-          password: formData.password,
-          redirect: false,
-        })
-
-        if (result?.error) {
-          throw new Error(result.error)
-        }
+        // For signin, use the AuthContext signIn method
+        await signIn(formData.email, formData.password)
 
         toast({
           title: "Success!",

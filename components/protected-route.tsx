@@ -1,4 +1,4 @@
-import { useAuth } from '@/contexts/NextAuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 

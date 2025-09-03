@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 // Context for sidebar state management
@@ -8,6 +8,7 @@ interface SidebarContextType {
   isOpen: boolean
   setIsOpen: (open: boolean) => void
   toggle: () => void
+  isLargeScreen: boolean
 }
 
 const SidebarContext = createContext<SidebarContextType | undefined>(undefined)
@@ -26,11 +27,41 @@ interface SidebarProviderProps {
 
 export function SidebarProvider({ children }: SidebarProviderProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const [isLargeScreen, setIsLargeScreen] = useState(false)
 
-  const toggle = () => setIsOpen(!isOpen)
+  // Check screen size and set sidebar state accordingly
+  useEffect(() => {
+    const checkScreenSize = () => {
+      const isLg = window.innerWidth >= 1024 // lg breakpoint
+      setIsLargeScreen(isLg)
+      
+      // On large screens, sidebar should be open by default
+      // On smaller screens, it should be closed by default
+      if (isLg) {
+        setIsOpen(true)
+      } else {
+        setIsOpen(false)
+      }
+    }
+
+    // Check on mount
+    checkScreenSize()
+
+    // Listen for resize events
+    window.addEventListener('resize', checkScreenSize)
+    return () => window.removeEventListener('resize', checkScreenSize)
+  }, [])
+
+  const toggle = () => {
+    // Only allow toggling on smaller screens
+    // On large screens, sidebar should remain fixed
+    if (!isLargeScreen) {
+      setIsOpen(!isOpen)
+    }
+  }
 
   return (
-    <SidebarContext.Provider value={{ isOpen, setIsOpen, toggle }}>
+    <SidebarContext.Provider value={{ isOpen, setIsOpen, toggle, isLargeScreen }}>
       {children}
     </SidebarContext.Provider>
   )
@@ -106,84 +137,56 @@ export function SidebarLayout({ children, sidebar, className = '' }: SidebarLayo
   )
 }
 
-// Mobile responsive version
+// Mobile responsive version with fixed sidebar on large screens
 export function ResponsiveSidebarLayout({ children, sidebar, className = '' }: SidebarLayoutProps) {
-  const { isOpen, setIsOpen } = useSidebar()
+  const { isOpen, setIsOpen, isLargeScreen } = useSidebar()
 
   const handleMobileOverlayClick = () => {
-    setIsOpen(false)
+    // Only close on mobile/tablet, not on large screens
+    if (!isLargeScreen) {
+      setIsOpen(false)
+    }
   }
 
   return (
     <div className={`flex min-h-screen bg-white ${className}`}>
-      {/* Sidebar Container */}
-      <div className="relative">
-        {/* Desktop Sidebar */}
-        <motion.div
-          initial={false}
-          animate={{
-            width: isOpen ? 360 : 0,
-            opacity: isOpen ? 1 : 0
-          }}
-          transition={{
-            duration: 0.3,
-            ease: [0.23, 1, 0.320, 1]
-          }}
-          className="hidden md:block fixed left-0 top-0 h-full z-50 overflow-hidden"
-        >
-          <div className="w-[360px] h-full">
-            {sidebar}
-          </div>
-        </motion.div>
-
-        {/* Mobile Sidebar */}
-        <AnimatePresence>
-          {isOpen && (
-            <>
-              {/* Mobile Overlay */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 md:hidden"
-                onClick={handleMobileOverlayClick}
-              />
-              
-              {/* Mobile Sidebar */}
-              <motion.div
-                initial={{ x: -360 }}
-                animate={{ x: 0 }}
-                exit={{ x: -360 }}
-                transition={{
-                  duration: 0.3,
-                  ease: [0.23, 1, 0.320, 1]
-                }}
-                className="fixed left-0 top-0 h-full w-[360px] z-50 md:hidden"
-              >
-                {sidebar}
-              </motion.div>
-            </>
-          )}
-        </AnimatePresence>
+      {/* Fixed Sidebar for Large Screens (lg+) */}
+      <div className="hidden lg:block w-[360px] h-screen fixed left-0 top-0 z-50">
+        {sidebar}
       </div>
 
-      {/* Main Content */}
-      <motion.div
-        initial={false}
-        animate={{
-          marginLeft: isOpen ? 360 : 0
-        }}
-        transition={{
-          duration: 0.3,
-          ease: [0.23, 1, 0.320, 1]
-        }}
-        className="flex-1 min-w-0 relative hidden md:block"
-      >
-        {children}
-      </motion.div>
+      {/* Mobile/Tablet Sidebar Overlay */}
+      <AnimatePresence>
+        {isOpen && !isLargeScreen && (
+          <>
+            {/* Mobile Overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 lg:hidden"
+              onClick={handleMobileOverlayClick}
+            />
+            
+            {/* Mobile Sidebar */}
+            <motion.div
+              initial={{ x: -280 }}
+              animate={{ x: 0 }}
+              exit={{ x: -280 }}
+              transition={{
+                duration: 0.3,
+                ease: [0.23, 1, 0.320, 1]
+              }}
+              className="fixed left-0 top-0 h-full w-[280px] lg:w-[360px] z-50 lg:hidden"
+            >
+              {sidebar}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
-      {/* Mobile Content (no margin) */}
-      <div className="flex-1 min-w-0 relative md:hidden">
+      {/* Main Content */}
+      <div className={`flex-1 min-w-0 relative ${isLargeScreen ? 'lg:ml-[360px]' : ''}`}>
         {children}
       </div>
     </div>

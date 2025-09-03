@@ -107,10 +107,10 @@ export function RightSidebar({ isOpen, onClose }: RightSidebarProps) {
 
   return (
     <motion.div
-      initial={{ x: 320 }}
-      animate={{ x: isOpen ? 0 : 320 }}
+      initial={{ x: '100%' }}
+      animate={{ x: isOpen ? 0 : '100%' }}
       transition={{ duration: 0.3, ease: [0.23, 1, 0.320, 1] }}
-      className="fixed right-0 top-0 h-full w-80 bg-white border-l border-black/10 shadow-2xl z-50 overflow-hidden"
+      className="fixed right-0 top-0 h-full w-full sm:w-96 md:w-80 bg-white border-l border-black/10 shadow-2xl z-50 overflow-hidden"
     >
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-black/10">

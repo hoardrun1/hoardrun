@@ -437,68 +437,150 @@ export function HomePageComponent() {
       </header>
 
       <main className="container mx-auto px-4 lg:px-6 py-6 max-w-7xl ml-16">
-        {/* Quick Actions Bar */}
+        {/* Balance Display */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="mb-8"
+          className="text-center mb-8"
         >
-          <Card className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 border-gray-200 dark:border-gray-700">
-            <CardContent className="p-6">
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="flex items-center gap-4">
-                  <div className="bg-gray-100 dark:bg-gray-800 p-3 rounded-full">
-                    <Sparkles className="h-6 w-6 text-black dark:text-white" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-semibold text-black dark:text-white">
-                      Quick Actions
-                    </h2>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Manage your finances with one click
-                    </p>
-                  </div>
-                </div>
-                <div className="flex flex-wrap gap-3">
-                  <Button
-                    onClick={() => setShowDepositModal(true)}
-                    className="bg-black hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-200 text-white dark:text-black"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Money
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="border-gray-300 dark:border-gray-600 text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
-                    onClick={() => {
-                      console.log('Transfer button clicked!');
-                      setIsTransferModalOpen(true);
-                    }}
-                  >
-                    <ArrowUpRight className="h-4 w-4 mr-2" />
-                    Transfer
-                  </Button>
-                  <Button variant="outline" className="border-gray-300 dark:border-gray-600 text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800">
-                    <Target className="h-4 w-4 mr-2" />
-                    Set Goal
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Total Balance</p>
+          <h1 className="text-4xl lg:text-5xl font-bold text-black dark:text-white mb-1">
+            ${balance.toLocaleString()}
+          </h1>
+          <div className="flex items-center justify-center gap-1 text-gray-600 dark:text-gray-400">
+            <ArrowUpRight className="h-4 w-4" />
+            <span className="text-sm font-medium">+2.5% this month</span>
+          </div>
         </motion.div>
 
-        {/* Financial Overview Cards */}
+        {/* Quick Actions Section - Now in place of Financial Overview Cards */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.1 }}
           className="mb-8"
         >
+          {/* Primary Quick Actions */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            <motion.button
+              whileHover={{ scale: 1.02, y: -2 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setShowDepositModal(true)}
+              className="bg-black dark:bg-white text-white dark:text-black p-8 rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-500 group border-2 border-transparent hover:border-gray-300 dark:hover:border-gray-700"
+            >
+              <div className="flex flex-col items-center gap-4">
+                <div className="bg-white/10 dark:bg-black/10 p-4 rounded-2xl group-hover:bg-white/20 dark:group-hover:bg-black/20 transition-all duration-300 group-hover:scale-110">
+                  <Plus className="h-8 w-8" />
+                </div>
+                <div className="text-center">
+                  <p className="font-bold text-lg">Add Money</p>
+                  <p className="text-sm opacity-70 mt-1">Top up instantly</p>
+                </div>
+              </div>
+            </motion.button>
+
+            <motion.button
+              whileHover={{ scale: 1.02, y: -2 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setIsTransferModalOpen(true)}
+              className="bg-white dark:bg-black text-black dark:text-white p-8 rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-500 group border-2 border-gray-200 dark:border-gray-800 hover:border-gray-400 dark:hover:border-gray-600"
+            >
+              <div className="flex flex-col items-center gap-4">
+                <div className="bg-black/10 dark:bg-white/10 p-4 rounded-2xl group-hover:bg-black/20 dark:group-hover:bg-white/20 transition-all duration-300 group-hover:scale-110">
+                  <Send className="h-8 w-8" />
+                </div>
+                <div className="text-center">
+                  <p className="font-bold text-lg">Send Money</p>
+                  <p className="text-sm opacity-70 mt-1">Transfer funds</p>
+                </div>
+              </div>
+            </motion.button>
+
+            <motion.button
+              whileHover={{ scale: 1.02, y: -2 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => router.push('/savings')}
+              className="bg-gray-100 dark:bg-gray-900 text-black dark:text-white p-8 rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-500 group border-2 border-gray-200 dark:border-gray-800 hover:border-gray-400 dark:hover:border-gray-600"
+            >
+              <div className="flex flex-col items-center gap-4">
+                <div className="bg-black/10 dark:bg-white/10 p-4 rounded-2xl group-hover:bg-black/20 dark:group-hover:bg-white/20 transition-all duration-300 group-hover:scale-110">
+                  <PiggyBank className="h-8 w-8" />
+                </div>
+                <div className="text-center">
+                  <p className="font-bold text-lg">Save</p>
+                  <p className="text-sm opacity-70 mt-1">Set goals</p>
+                </div>
+              </div>
+            </motion.button>
+
+            <motion.button
+              whileHover={{ scale: 1.02, y: -2 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => router.push('/investment')}
+              className="bg-gray-200 dark:bg-gray-800 text-black dark:text-white p-8 rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-500 group border-2 border-gray-300 dark:border-gray-700 hover:border-gray-500 dark:hover:border-gray-500"
+            >
+              <div className="flex flex-col items-center gap-4">
+                <div className="bg-black/10 dark:bg-white/10 p-4 rounded-2xl group-hover:bg-black/20 dark:group-hover:bg-white/20 transition-all duration-300 group-hover:scale-110">
+                  <TrendingUp className="h-8 w-8" />
+                </div>
+                <div className="text-center">
+                  <p className="font-bold text-lg">Invest</p>
+                  <p className="text-sm opacity-70 mt-1">Grow wealth</p>
+                </div>
+              </div>
+            </motion.button>
+          </div>
+
+          {/* Secondary Quick Actions */}
+          <div className="grid grid-cols-4 lg:grid-cols-8 gap-4">
+            {[
+              { icon: Wallet, label: 'Cards', onClick: () => router.push('/cards') },
+              { icon: ArrowUpRight, label: 'History', onClick: () => router.push('/transactions') },
+              { icon: Target, label: 'Budget', onClick: () => router.push('/budget') },
+              { icon: Brain, label: 'Insights', onClick: () => router.push('/analytics') },
+              { icon: Settings, label: 'Settings', onClick: () => setShowSettings(true) },
+              { icon: RefreshCcw, label: 'Help', onClick: () => router.push('/help') },
+              { icon: Download, label: 'Export', onClick: () => router.push('/profile') },
+              { icon: Bell, label: 'Alerts', onClick: () => setShowNotifications(true), hasNotification: true },
+            ].map((item, index) => (
+              <motion.button
+                key={item.label}
+                whileHover={{ scale: 1.05, y: -1 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={item.onClick}
+                className="bg-white dark:bg-black border-2 border-gray-200 dark:border-gray-800 p-4 rounded-2xl hover:shadow-lg transition-all duration-300 group hover:border-gray-400 dark:hover:border-gray-600 relative"
+              >
+                <div className="flex flex-col items-center gap-3">
+                  <div className="bg-gray-100 dark:bg-gray-900 p-3 rounded-xl group-hover:bg-gray-200 dark:group-hover:bg-gray-800 transition-all duration-300 group-hover:scale-110">
+                    <item.icon className="h-5 w-5 text-black dark:text-white" />
+                  </div>
+                  <span className="text-xs font-semibold text-black dark:text-white">{item.label}</span>
+                  {item.hasNotification && notificationCount > 0 && (
+                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-black dark:bg-white text-white dark:text-black text-xs rounded-full flex items-center justify-center font-bold">
+                      {notificationCount}
+                    </div>
+                  )}
+                </div>
+              </motion.button>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Financial Overview Cards - Moved to a different location */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.2 }}
+          className="mb-8"
+        >
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold text-black dark:text-white mb-2">Financial Overview</h2>
+            <p className="text-gray-600 dark:text-gray-400">Your financial performance this month</p>
+          </div>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {/* Total Balance Card */}
-            <Card className="bg-gradient-to-br from-black to-gray-800 dark:from-white dark:to-gray-200 text-white dark:text-black border-0 shadow-lg">
+            <Card className="bg-black dark:bg-white text-white dark:text-black border-0 shadow-xl hover:shadow-2xl transition-all duration-300 group">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -509,7 +591,7 @@ export function HomePageComponent() {
                       <span className="text-gray-400 dark:text-gray-500 text-sm">+2.5% from last month</span>
                     </div>
                   </div>
-                  <div className="bg-gray-700 dark:bg-gray-300 p-3 rounded-full">
+                  <div className="bg-white/10 dark:bg-black/10 p-3 rounded-2xl group-hover:scale-110 transition-transform duration-300">
                     <Wallet className="h-6 w-6 text-white dark:text-black" />
                   </div>
                 </div>
@@ -517,7 +599,7 @@ export function HomePageComponent() {
             </Card>
 
             {/* Monthly Income Card */}
-            <Card className="bg-gradient-to-br from-gray-800 to-gray-900 dark:from-gray-200 dark:to-gray-300 text-white dark:text-black border-0 shadow-lg">
+            <Card className="bg-gray-900 dark:bg-gray-100 text-white dark:text-black border-0 shadow-xl hover:shadow-2xl transition-all duration-300 group">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -528,7 +610,7 @@ export function HomePageComponent() {
                       <span className="text-gray-400 dark:text-gray-500 text-sm">+8.2% this month</span>
                     </div>
                   </div>
-                  <div className="bg-gray-700 dark:bg-gray-300 p-3 rounded-full">
+                  <div className="bg-white/10 dark:bg-black/10 p-3 rounded-2xl group-hover:scale-110 transition-transform duration-300">
                     <TrendingUp className="h-6 w-6 text-white dark:text-black" />
                   </div>
                 </div>
@@ -536,7 +618,7 @@ export function HomePageComponent() {
             </Card>
 
             {/* Monthly Expenses Card */}
-            <Card className="bg-gradient-to-br from-gray-700 to-gray-800 dark:from-gray-300 dark:to-gray-400 text-white dark:text-black border-0 shadow-lg">
+            <Card className="bg-gray-800 dark:bg-gray-200 text-white dark:text-black border-0 shadow-xl hover:shadow-2xl transition-all duration-300 group">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -547,7 +629,7 @@ export function HomePageComponent() {
                       <span className="text-gray-400 dark:text-gray-500 text-sm">-3.1% this month</span>
                     </div>
                   </div>
-                  <div className="bg-gray-600 dark:bg-gray-200 p-3 rounded-full">
+                  <div className="bg-white/10 dark:bg-black/10 p-3 rounded-2xl group-hover:scale-110 transition-transform duration-300">
                     <ArrowDownRight className="h-6 w-6 text-white dark:text-black" />
                   </div>
                 </div>
@@ -555,7 +637,7 @@ export function HomePageComponent() {
             </Card>
 
             {/* Savings Goal Card */}
-            <Card className="bg-gradient-to-br from-gray-600 to-gray-700 dark:from-gray-400 dark:to-gray-500 text-white dark:text-black border-0 shadow-lg">
+            <Card className="bg-gray-700 dark:bg-gray-300 text-white dark:text-black border-0 shadow-xl hover:shadow-2xl transition-all duration-300 group">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -566,7 +648,7 @@ export function HomePageComponent() {
                       <span className="text-gray-400 dark:text-gray-500 text-sm">$7,500 of $10,000</span>
                     </div>
                   </div>
-                  <div className="bg-gray-500 dark:bg-gray-200 p-3 rounded-full">
+                  <div className="bg-white/10 dark:bg-black/10 p-3 rounded-2xl group-hover:scale-110 transition-transform duration-300">
                     <PiggyBank className="h-6 w-6 text-white dark:text-black" />
                   </div>
                 </div>

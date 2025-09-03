@@ -10,7 +10,7 @@ function VerificationContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [countdown, setCountdown] = useState(5);
-  const email = searchParams.get('email') || '';
+  const email = searchParams?.get('email') || '';
 
   useEffect(() => {
     // Redirect to signin page after 5 seconds

@@ -3,23 +3,32 @@
 import { motion } from 'framer-motion'
 import { useAppNavigation } from '@/hooks/useAppNavigation'
 import { useEffect, useState } from 'react'
+import { usePathname } from 'next/navigation'
 
 export const NavigationProgress = () => {
-  const { isTransitioning } = useAppNavigation()
+  const { currentPage } = useAppNavigation()
+  const pathname = usePathname()
   const [progress, setProgress] = useState(0)
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
-    if (isTransitioning) {
+    // Show progress when navigation starts
+    if (currentPage !== pathname) {
       setVisible(true)
-      setProgress(90) // Set to 90% immediately for faster perceived performance
-    } else {
-      setProgress(100)
-      // Hide immediately for faster navigation
-      setVisible(false)
-      setProgress(0)
+      setProgress(90)
+      
+      // Hide progress after a short delay
+      const timer = setTimeout(() => {
+        setProgress(100)
+        setTimeout(() => {
+          setVisible(false)
+          setProgress(0)
+        }, 200)
+      }, 500)
+      
+      return () => clearTimeout(timer)
     }
-  }, [isTransitioning])
+  }, [currentPage, pathname])
 
   if (!visible) return null
 
@@ -42,4 +51,4 @@ export const NavigationProgress = () => {
       />
     </motion.div>
   )
-} 
+}

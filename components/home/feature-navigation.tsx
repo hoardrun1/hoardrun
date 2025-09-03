@@ -12,7 +12,6 @@ export function FeatureNavigation() {
   const router = useRouter();
 
   const handleNavigate = (path: string) => {
-    // Use direct router.push for faster navigation
     router.push(`/${path}`);
   };
 

@@ -64,15 +64,14 @@ export function AuthPage({ mode }: AuthPageProps) {
     try {
       setIsLoading(true)
       setError(null)
-
-      // For now, show a message that Google OAuth needs to be configured
+      
+      // For now, Google auth is not implemented in the custom AuthContext
+      // This would need to be implemented separately
       toast({
-        title: "Google OAuth Not Configured",
-        description: "Please use email/password authentication or configure Google OAuth credentials.",
+        title: "Not Implemented",
+        description: "Google authentication is not yet implemented. Please use email authentication.",
         variant: "destructive",
       })
-
-      setError('Google OAuth not configured. Please use email/password authentication.')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Google authentication failed')
       toast({
@@ -120,7 +119,7 @@ export function AuthPage({ mode }: AuthPageProps) {
         
         router.push('/signin')
       } else {
-        // For signin, use the AuthContext signIn method
+        // For signin, use AuthContext signIn method
         await signIn(formData.email, formData.password)
 
         toast({

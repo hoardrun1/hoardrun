@@ -155,7 +155,6 @@ export function Sidebar({ className, onAddMoney }: SidebarProps) {
   }, [isOpen]);
 
   const handleNavigation = (item: MenuItem) => {
-    navigation.connect('home', item.id);
     router.push(item.href);
     if (isMobile) {
       setIsOpen(false);
@@ -172,7 +171,7 @@ export function Sidebar({ className, onAddMoney }: SidebarProps) {
   };
 
   const isActiveRoute = (href: string) => {
-    return pathname === href || (href !== '/home' && pathname.startsWith(href));
+    return pathname === href || (href !== '/home' && pathname?.startsWith(href));
   };
 
   const renderMenuSection = (category: string, title: string) => {

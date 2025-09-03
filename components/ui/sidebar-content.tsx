@@ -118,7 +118,7 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
   const isActiveRoute = (href: string) => {
     if (href === '/home') return pathname === '/home' || pathname === '/'
     if (href === '/overview') return pathname === '/overview'
-    return pathname.startsWith(href)
+    return pathname?.startsWith(href) || false
   }
 
   const handleNavigation = (href: string) => {

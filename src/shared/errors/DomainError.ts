@@ -54,24 +54,18 @@ export class ForbiddenError extends DomainError {
 
 // Specific Domain Errors
 export class UserAlreadyExistsError extends ConflictError {
-  readonly code = 'USER_ALREADY_EXISTS'
-  
   constructor(email: string) {
     super(`User with email ${email} already exists`, { email })
   }
 }
 
 export class UserNotFoundError extends NotFoundError {
-  readonly code = 'USER_NOT_FOUND'
-  
   constructor(identifier: string) {
     super(`User not found: ${identifier}`, { identifier })
   }
 }
 
 export class InsufficientFundsError extends BusinessRuleViolationError {
-  readonly code = 'INSUFFICIENT_FUNDS'
-  
   constructor(available: number, required: number, currency: string) {
     super(`Insufficient funds: ${available} ${currency} available, ${required} ${currency} required`, {
       available,
@@ -82,24 +76,18 @@ export class InsufficientFundsError extends BusinessRuleViolationError {
 }
 
 export class InvalidCurrencyError extends ValidationError {
-  readonly code = 'INVALID_CURRENCY'
-  
   constructor(currency: string) {
     super(`Invalid currency: ${currency}`, { currency })
   }
 }
 
 export class InvalidEmailError extends ValidationError {
-  readonly code = 'INVALID_EMAIL'
-  
   constructor(email: string) {
     super(`Invalid email format: ${email}`, { email })
   }
 }
 
 export class EmailAlreadyVerifiedError extends BusinessRuleViolationError {
-  readonly code = 'EMAIL_ALREADY_VERIFIED'
-  
   constructor() {
     super('Email is already verified')
   }

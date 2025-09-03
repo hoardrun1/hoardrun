@@ -32,13 +32,6 @@ import {
   Smartphone
 } from 'lucide-react'
 import { formatCurrency, calculateTransactionFee } from '@/lib/banking'
-<<<<<<< HEAD
-import { AccountType, TransactionType } from '@prisma/client'
-=======
-// import { AccountType, TransactionType } from '@prisma/client'
-type AccountType = 'CHECKING' | 'SAVINGS' | 'CREDIT'
-type TransactionType = 'SEND' | 'RECEIVE' | 'DEPOSIT' | 'WITHDRAWAL' | 'TRANSFER'
->>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
 import { cn } from '@/lib/utils'
 import { LayoutWrapper } from "@/components/ui/layout-wrapper"
 import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sidebar-layout'
@@ -120,7 +113,7 @@ function ErrorDisplay({ message }: { message: string }) {
 export function SendMoneyPage() {
   const router = useRouter()
   const { user } = useAuth()
-  const { addToast } = useToast()
+  const { toast } = useToast()
   
   // Form state
   const [amount, setAmount] = useState('')
@@ -240,7 +233,7 @@ export function SendMoneyPage() {
       // Show success animation
       setShowSuccess(true)
       
-      addToast({
+      toast({
         title: 'Success',
         description: 'Money sent successfully',
       })
@@ -262,7 +255,7 @@ export function SendMoneyPage() {
     } finally {
       setIsProcessing(false)
     }
-  }, [validateForm, addToast, router])
+  }, [validateForm, toast, router])
 
   // Get selected account
   const selectedAccount = selectedAccountId ? getAccountById(selectedAccountId) : null

@@ -25,8 +25,8 @@ function ResetPasswordContent() {
   const [validToken, setValidToken] = useState<boolean | null>(null)
 
   useEffect(() => {
-    const tokenParam = searchParams.get('token')
-    const emailParam = searchParams.get('email')
+    const tokenParam = searchParams?.get('token')
+    const emailParam = searchParams?.get('email')
 
     if (!tokenParam || !emailParam) {
       setValidToken(false)

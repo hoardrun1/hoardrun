@@ -8,7 +8,7 @@ interface NavigationContextType {
   isReady: boolean
   isLoading: boolean
   previousPage: string | null
-  currentPage: string
+  currentPage: string | null
 }
 
 const NavigationContext = createContext<NavigationContextType>({
@@ -26,15 +26,12 @@ interface NavigationProviderProps {
 
 export const NavigationProvider: React.FC<NavigationProviderProps> = ({ children }) => {
   const pathname = usePathname()
-
-  // Simplified context value for better performance
   const contextValue = {
     isReady: true,
     isLoading: false,
     previousPage: null,
     currentPage: pathname
   }
-
   return (
     <NavigationContext.Provider value={contextValue}>
       <div className="min-h-screen">

@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Trash2, AlertTriangle, CheckCircle, Loader2 } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
-// Firebase removed - using simple cleanup without Firebase dependencies
 
 export default function CleanupPage() {
   const [isClearing, setIsClearing] = useState(false)
@@ -15,7 +14,6 @@ export default function CleanupPage() {
 
   const clearLocalStorage = () => {
     try {
-      // Clear all auth-related data from localStorage
       const keysToRemove = [
         'token',
         'refresh_token', 
@@ -29,7 +27,6 @@ export default function CleanupPage() {
         localStorage.removeItem(key)
       })
       
-      // Clear sessionStorage too
       keysToRemove.forEach(key => {
         sessionStorage.removeItem(key)
       })
@@ -44,7 +41,6 @@ export default function CleanupPage() {
 
   const signOutCurrentUser = async () => {
     try {
-      // Clear auth cookies
       document.cookie = 'auth-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
       setResults(prev => [...prev, '✅ Cleared authentication cookies'])
       return true
@@ -56,8 +52,7 @@ export default function CleanupPage() {
 
   const deleteCurrentUser = async () => {
     try {
-      // Since we removed Firebase, we just clear local user data
-      setResults(prev => [...prev, '✅ Local user data cleared (Firebase removed)'])
+      setResults(prev => [...prev, '✅ Local user data cleared'])
       return true
     } catch (error) {
       setResults(prev => [...prev, `❌ Error clearing user data: ${error}`])
@@ -67,7 +62,6 @@ export default function CleanupPage() {
 
   const clearBrowserData = () => {
     try {
-      // Clear cookies (limited by same-origin policy)
       document.cookie.split(";").forEach(function(c) { 
         document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
       });
@@ -87,16 +81,12 @@ export default function CleanupPage() {
     try {
       setResults(['🧹 Starting cleanup process...'])
       
-      // Step 1: Sign out current user
       await signOutCurrentUser()
       
-      // Step 2: Clear local storage
       clearLocalStorage()
       
-      // Step 3: Clear browser data
       clearBrowserData()
       
-      // Step 4: Try to delete current user (might fail if already signed out)
       try {
         await deleteCurrentUser()
       } catch (error) {
@@ -132,7 +122,7 @@ export default function CleanupPage() {
           <CardHeader>
             <CardTitle className="text-2xl font-bold text-white flex items-center gap-2">
               <Trash2 className="h-6 w-6 text-red-500" />
-              Firebase Cleanup Utility
+              Cleanup Utility
             </CardTitle>
             <CardDescription className="text-gray-300">
               Clear all authentication data and local storage for fresh testing
@@ -151,11 +141,11 @@ export default function CleanupPage() {
             <div className="space-y-3">
               <h3 className="text-lg font-semibold text-white">What will be cleared:</h3>
               <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside">
-                <li>Current Firebase authentication session</li>
+                <li>Current authentication session</li>
                 <li>Local storage (tokens, user data)</li>
                 <li>Session storage</li>
                 <li>Browser cookies</li>
-                <li>Current Firebase user account (if possible)</li>
+                <li>Current user account (if possible)</li>
               </ul>
             </div>
 

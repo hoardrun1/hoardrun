@@ -2,7 +2,6 @@
 
 import { SessionProvider } from 'next-auth/react'
 import { AuthProvider as CognitoAuthProvider } from '@/contexts/AuthContext'
-import { AuthProvider as NextAuthProvider } from '@/contexts/NextAuthContext'
 
 export default function HybridAuthProvider({
   children,
@@ -12,9 +11,7 @@ export default function HybridAuthProvider({
   return (
     <SessionProvider>
       <CognitoAuthProvider>
-        <NextAuthProvider>
-          {children}
-        </NextAuthProvider>
+        {children}
       </CognitoAuthProvider>
     </SessionProvider>
   )
@@ -26,21 +23,6 @@ export function ConditionalAuthProvider({
 }: {
   children: React.ReactNode
 }) {
-  // Use NextAuth for production (Google OAuth for clients)
-  // Use Cognito for development/enterprise features
-  const useNextAuth = process.env.NODE_ENV === 'production' || 
-                      process.env.NEXT_PUBLIC_USE_NEXTAUTH === 'true'
-
-  if (useNextAuth) {
-    return (
-      <SessionProvider>
-        <NextAuthProvider>
-          {children}
-        </NextAuthProvider>
-      </SessionProvider>
-    )
-  }
-
-  // Fallback to Cognito system
+  // Use Cognito for all authentication now that Firebase is removed
   return <CognitoAuthProvider>{children}</CognitoAuthProvider>
 }

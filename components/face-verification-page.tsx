@@ -1,12 +1,11 @@
 'use client'
 
-
 import { useState, useRef, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useRouter } from 'next/navigation'
 import { Camera, CheckCircle2, Loader2, RefreshCw, AlertCircle } from 'lucide-react'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '@/contexts/AuthContext'
 import Link from 'next/link'
 import * as faceapi from 'face-api.js'
 
@@ -174,11 +173,7 @@ export function FaceVerificationPageComponent() {
         },
         body: JSON.stringify({
           image: imageData,
-<<<<<<< HEAD
-          userId: user?.id 
-=======
-          userId: user?.uid
->>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
+          userId: user?.id
         }),
       })
 

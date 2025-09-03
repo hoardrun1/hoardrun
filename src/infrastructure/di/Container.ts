@@ -94,9 +94,9 @@ export class Container {
   createChild(): Container {
     const child = new Container()
     // Copy parent registrations
-    for (const [token, registration] of this.services) {
+    this.services.forEach((registration, token) => {
       child.services.set(token, { ...registration })
-    }
+    })
     return child
   }
 }

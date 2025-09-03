@@ -27,7 +27,6 @@ import {
   Heart, GraduationCap, Plane
 } from 'lucide-react'
 
-// Mock data for budget categories
 const budgetCategories = [
   { id: 'housing', name: 'Housing', icon: Home, color: '#000000', budgeted: 2000, spent: 1850, percentage: 92.5 },
   { id: 'food', name: 'Food & Dining', icon: Utensils, color: '#333333', budgeted: 800, spent: 720, percentage: 90 },
@@ -39,7 +38,6 @@ const budgetCategories = [
   { id: 'travel', name: 'Travel', icon: Plane, color: '#777777', budgeted: 250, spent: 0, percentage: 0 }
 ]
 
-// Monthly spending trend data
 const monthlyTrend = [
   { month: 'Jan', budgeted: 4600, spent: 4200 },
   { month: 'Feb', budgeted: 4600, spent: 4350 },
@@ -57,14 +55,11 @@ export default function BudgetPage() {
   const [totalBudget, setTotalBudget] = useState(4600)
   const [totalSpent] = useState(3970)
 
-  // Calculate budget summary
   const remainingBudget = totalBudget - totalSpent
   const budgetProgress = (totalSpent / totalBudget) * 100
 
-  // Get categories that are over budget
   const overBudgetCategories = budgetData.filter(cat => cat.percentage > 100)
 
-  // Prepare pie chart data
   const pieChartData = budgetData.map(cat => ({
     name: cat.name,
     value: cat.spent,
@@ -76,7 +71,7 @@ export default function BudgetPage() {
       const newCat = {
         id: newCategory.name.toLowerCase().replace(/\s+/g, '-'),
         name: newCategory.name,
-        icon: ShoppingCart, // Default icon
+        icon: ShoppingCart,
         color: '#' + Math.floor(Math.random()*16777215).toString(16),
         budgeted: parseFloat(newCategory.budget),
         spent: 0,
@@ -97,7 +92,6 @@ export default function BudgetPage() {
         <SidebarToggle />
         <div className="min-h-screen bg-white pt-16 pb-4 px-4 sm:pt-20 sm:pb-6 sm:px-6">
           <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-black">
@@ -144,7 +138,6 @@ export default function BudgetPage() {
           </Dialog>
         </div>
 
-        {/* Budget Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -199,7 +192,6 @@ export default function BudgetPage() {
           </Card>
         </div>
 
-        {/* Budget Progress */}
         <Card>
           <CardHeader>
             <CardTitle>Overall Budget Progress</CardTitle>
@@ -227,7 +219,6 @@ export default function BudgetPage() {
           </TabsList>
 
           <TabsContent value="categories" className="space-y-6">
-            {/* Category Breakdown */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
@@ -274,7 +265,6 @@ export default function BudgetPage() {
               </Card>
             </div>
 
-            {/* Category Details */}
             <Card>
               <CardHeader>
                 <CardTitle>Category Details</CardTitle>
@@ -406,7 +396,6 @@ export default function BudgetPage() {
           </div>
         </div>
 
-        {/* Deposit Modal */}
         <DepositModal
           open={isDepositModalOpen}
           onOpenChange={setIsDepositModalOpen}

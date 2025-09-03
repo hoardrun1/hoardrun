@@ -187,16 +187,8 @@ class EmailVerificationTester {
 
   async cleanup() {
     this.log('🧹 Cleaning up test users...', 'info');
-    
     for (const email of this.createdUsers) {
-      try {
-        // Note: DeleteUserCommand requires the user to be authenticated
-        // In a real test environment, you might want to use AdminDeleteUserCommand
-        // with appropriate IAM permissions
-        this.log(`⚠️  Manual cleanup required for user: ${email}`, 'warning');
-      } catch (error) {
-        this.log(`❌ Failed to cleanup user ${email}: ${error.message}`, 'error');
-      }
+      this.log(`⚠️  Manual cleanup required for user: ${email}`, 'warning');
     }
   }
 

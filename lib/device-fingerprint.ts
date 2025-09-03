@@ -1,6 +1,5 @@
 import { cache } from './cache'
 import { logger } from './logger'
-// import { APIError } from '@/middleware/error-handler'
 import { createHash } from 'crypto'
 import geoip from 'geoip-lite'
 import UAParser from 'ua-parser-js'
@@ -377,4 +376,4 @@ export class DeviceFingerprintService {
 
 // Export singleton instance
 export const deviceFingerprint = new DeviceFingerprintService()
-export default deviceFingerprint 
+export default deviceFingerprint

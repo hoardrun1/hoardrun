@@ -12,14 +12,13 @@ const db = {
       targetAmount: 10000,
       currentAmount: 7500,
       monthlyContribution: 500,
-      category: 'Emergency',
+      category: 'EMERGENCY_FUND',
       deadline: new Date(Date.now() + 5 * 30 * 24 * 60 * 60 * 1000).toISOString(),
       isAutoSave: true,
       isCompleted: false,
       progress: 75,
       createdAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
-      updatedAt: new Date().toISOString(),
-      daysLeft: 150
+      updatedAt: new Date().toISOString()
     },
     {
       id: '2',
@@ -27,14 +26,13 @@ const db = {
       targetAmount: 5000,
       currentAmount: 2250,
       monthlyContribution: 250,
-      category: 'Travel',
+      category: 'TRAVEL',
       deadline: new Date(Date.now() + 11 * 30 * 24 * 60 * 60 * 1000).toISOString(),
       isAutoSave: true,
       isCompleted: false,
       progress: 45,
       createdAt: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(),
-      updatedAt: new Date().toISOString(),
-      daysLeft: 330
+      updatedAt: new Date().toISOString()
     }
   ],
   analytics: {

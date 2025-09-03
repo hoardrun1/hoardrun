@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
-  Award, Crown, Star, Zap, Gift, Trophy,
-  Target, TrendingUp, Calendar, Coins,
-  Medal, Sparkles, Flame, Diamond
+  Award, Crown, Zap, Gift, Trophy,
+  Target, TrendingUp, Coins,
+  Sparkles, Flame
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"

@@ -76,11 +76,6 @@ export class CardService {
     // Mock implementation
     return { success: true, limit }
   }
-
-  static async updateLimit(cardId: string, limit: number) {
-    // Alias for updateSpendingLimit
-    return this.updateSpendingLimit(cardId, limit)
-  }
 }
 
 export class InvestmentService {

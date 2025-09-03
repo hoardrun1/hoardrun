@@ -1,8 +1,6 @@
 import { cache } from './cache'
 import { logger } from './logger'
-// import { APIError } from '@/middleware/error-handler'
 import { createHash } from 'crypto'
-// import { gzip, ungzip } from 'node-gzip'
 import { performance as perfHooks } from 'perf_hooks'
 
 interface CacheConfig {
@@ -350,4 +348,4 @@ export class PerformanceService {
 
 // Export singleton instance
 export const performance = new PerformanceService()
-export default performance 
+export default performance

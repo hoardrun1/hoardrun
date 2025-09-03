@@ -19,7 +19,6 @@ export default function CleanupPage() {
         'refresh_token', 
         'user',
         'auth_token',
-        'firebase_user',
         'verification_token'
       ]
       

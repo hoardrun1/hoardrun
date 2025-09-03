@@ -10,17 +10,22 @@ interface SidebarToggleProps {
 }
 
 export function SidebarToggle({ className = '' }: SidebarToggleProps) {
-  const { isOpen, toggle } = useSidebar()
+  const { isOpen, toggle, isLargeScreen } = useSidebar()
+
+  // Hide toggle button on large screens since sidebar is fixed
+  if (isLargeScreen) {
+    return null
+  }
 
   return (
     <Button
       variant="ghost"
       size="icon"
       onClick={toggle}
-      className={`fixed left-4 top-4 z-[60] w-9 h-9 rounded-xl border-2 backdrop-blur-xl transition-all duration-500 shadow-2xl ${
+      className={`fixed z-[60] w-8 h-8 rounded-lg border-2 backdrop-blur-xl transition-all duration-500 shadow-2xl lg:hidden ${
         isOpen
-          ? 'bg-white border-black hover:bg-white text-black shadow-black/20'
-          : 'bg-black border-white hover:bg-black text-white shadow-white/20'
+          ? 'right-4 top-4 bg-white border-black hover:bg-white text-black shadow-black/20'
+          : 'left-4 top-4 bg-black border-white hover:bg-black text-white shadow-white/20'
       } ${className}`}
       title={isOpen ? "Close sidebar" : "Open sidebar"}
     >

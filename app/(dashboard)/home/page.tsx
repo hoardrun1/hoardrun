@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { motion, AnimatePresence } from 'framer-motion'
 import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sidebar-layout'
 import { SidebarContent } from '@/components/ui/sidebar-content'
 import { SidebarToggle } from '@/components/ui/sidebar-toggle'
@@ -10,6 +11,7 @@ import { RightSidebarToggle } from '@/components/ui/right-sidebar-toggle'
 import { DepositModal } from '@/components/deposit-modal'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { useNotifications } from '@/contexts/NotificationContext'
 import {
   DollarSign,
   TrendingUp,
@@ -19,13 +21,35 @@ import {
   ArrowDownLeft,
   PiggyBank,
   Target,
-  Calendar
+  Calendar,
+  Bell
 } from 'lucide-react'
 
 export default function HomePage() {
   const router = useRouter()
+  const { addNotification } = useNotifications()
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false)
   const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false)
+  const [showWelcomeAnimation, setShowWelcomeAnimation] = useState(true)
+  const [hasSeenWelcome, setHasSeenWelcome] = useState(false)
+
+  // Check if user has already seen the welcome animation (persists across refreshes)
+  useEffect(() => {
+    const hasSeenWelcomePermanently = localStorage.getItem('hasSeenWelcome')
+    if (hasSeenWelcomePermanently) {
+      setShowWelcomeAnimation(false)
+      setHasSeenWelcome(true)
+    } else {
+      // Show welcome animation for 3 seconds, then show main content
+      const timer = setTimeout(() => {
+        setShowWelcomeAnimation(false)
+        setHasSeenWelcome(true)
+        localStorage.setItem('hasSeenWelcome', 'true')
+      }, 3000)
+
+      return () => clearTimeout(timer)
+    }
+  }, [])
 
   // Mock data for the dashboard
   const stats = {
@@ -52,11 +76,50 @@ export default function HomePage() {
     }
   }
 
+  // Demo function to test notifications
+  const testNotifications = () => {
+    const notifications = [
+      {
+        type: 'transaction' as const,
+        title: 'Payment Received',
+        message: 'You received $500.00 from Sarah Johnson'
+      },
+      {
+        type: 'warning' as const,
+        title: 'Budget Alert',
+        message: 'You\'ve exceeded your monthly dining budget by $50'
+      },
+      {
+        type: 'success' as const,
+        title: 'Goal Achieved',
+        message: 'Congratulations! You\'ve reached your vacation savings goal'
+      },
+      {
+        type: 'security' as const,
+        title: 'Security Alert',
+        message: 'New login detected from iPhone in New York'
+      },
+      {
+        type: 'info' as const,
+        title: 'Investment Update',
+        message: 'Your portfolio gained 3.2% this week'
+      }
+    ]
+
+    // Pick a random notification
+    const randomNotification = notifications[Math.floor(Math.random() * notifications.length)]
+    addNotification(randomNotification)
+  }
+
   const quickActions = [
     { label: 'Send Money', href: '/send', icon: ArrowUpRight, color: 'bg-black' },
     { label: 'Add Money', action: () => setIsDepositModalOpen(true), icon: ArrowDownLeft, color: 'bg-black' },
     { label: 'View Cards', href: '/cards', icon: CreditCard, color: 'bg-black' },
-    { label: 'Savings Goals', href: '/savings', icon: Target, color: 'bg-black' }
+    { label: 'Savings Goals', href: '/savings', icon: Target, color: 'bg-black' },
+    { label: 'Investments', href: '/investment', icon: TrendingUp, color: 'bg-black' },
+    { label: 'Analytics', href: '/analytics', icon: DollarSign, color: 'bg-black' },
+    { label: 'Test Notifications', action: testNotifications, icon: Bell, color: 'bg-black' },
+    { label: 'Help & Support', href: '/help', icon: Calendar, color: 'bg-black' }
   ]
 
   return (
@@ -70,152 +133,422 @@ export default function HomePage() {
           onToggle={() => setIsRightSidebarOpen(!isRightSidebarOpen)}
           notificationCount={2}
         />
-        <div className={`min-h-screen bg-white pt-12 sm:pt-16 md:pt-20 pb-2 sm:pb-4 md:pb-6 px-2 sm:px-4 md:px-6 transition-all duration-300 ${
-          isRightSidebarOpen ? 'lg:mr-80' : ''
-        }`}>
-          <div className="max-w-full sm:max-w-5xl md:max-w-6xl mx-auto space-y-2 sm:space-y-4 md:space-y-6">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-              <div>
-                <h1 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-black">
-                  Welcome back!
-                </h1>
-                <p className="text-black/60 mt-0.5 sm:mt-1 text-xs sm:text-sm md:text-base">
-                  Here's what's happening with your money today
-                </p>
+
+        {/* Welcome Animation Overlay */}
+        <AnimatePresence>
+          {showWelcomeAnimation && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.5 }}
+              className="fixed inset-0 bg-gradient-to-br from-white via-gray-50 to-gray-100 z-[100] flex items-center justify-center overflow-hidden"
+            >
+              {/* Animated Background Particles */}
+              <div className="absolute inset-0">
+                {[...Array(20)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    className="absolute w-1 h-1 bg-black/10 rounded-full"
+                    initial={{ 
+                      x: Math.random() * window.innerWidth,
+                      y: Math.random() * window.innerHeight,
+                      scale: 0
+                    }}
+                    animate={{ 
+                      x: Math.random() * window.innerWidth,
+                      y: Math.random() * window.innerHeight,
+                      scale: [0, 1, 0],
+                      opacity: [0, 0.6, 0]
+                    }}
+                    transition={{
+                      duration: 3,
+                      repeat: Infinity,
+                      delay: i * 0.1,
+                      ease: "easeInOut"
+                    }}
+                  />
+                ))}
               </div>
-              <div className="flex items-center space-x-2 text-xs sm:text-sm text-black/60">
-                <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">{new Date().toLocaleDateString('en-US', {
-                  weekday: 'long',
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                })}</span>
-                <span className="sm:hidden">{new Date().toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric'
-                })}</span>
-              </div>
-            </div>
 
-            {/* Stats Cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4 lg:gap-6">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2 p-2 sm:p-4 md:p-6">
-                  <CardTitle className="text-xs sm:text-sm font-medium">Total Balance</CardTitle>
-                  <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 text-black/60" />
-                </CardHeader>
-                <CardContent className="p-2 sm:p-4 md:p-6 pt-0">
-                  <div className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-black">
-                    ${stats.totalBalance.toLocaleString()}
-                  </div>
-                  <p className="text-xs text-black/60">
-                    +2.5% from last month
-                  </p>
-                </CardContent>
-              </Card>
+              {/* Main Content Container */}
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 1.1, opacity: 0 }}
+                transition={{ 
+                  duration: 0.8,
+                  ease: [0.23, 1, 0.320, 1]
+                }}
+                className="relative text-center space-y-8 z-10"
+              >
+                {/* Glowing Ring Effect */}
+                <motion.div
+                  className="absolute -inset-20 rounded-full"
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ 
+                    scale: [0, 1.2, 1],
+                    opacity: [0, 0.3, 0.1]
+                  }}
+                  transition={{
+                    duration: 2,
+                    ease: "easeOut"
+                  }}
+                  style={{
+                    background: 'radial-gradient(circle, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.05) 50%, transparent 70%)',
+                    filter: 'blur(20px)'
+                  }}
+                />
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Monthly Income</CardTitle>
-                  <TrendingUp className="h-4 w-4 text-black/60" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-black">
-                    ${stats.monthlyIncome.toLocaleString()}
-                  </div>
-                  <p className="text-xs text-black/60">
-                    +12% from last month
-                  </p>
-                </CardContent>
-              </Card>
+                {/* Text Content */}
+                <motion.div
+                  initial={{ y: 30, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.3, duration: 0.8 }}
+                  className="space-y-6"
+                >
+                  {/* Main Title with LED-like effect */}
+                  <motion.div className="relative">
+                    <motion.h1 
+                      className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-black via-gray-800 to-black"
+                      initial={{ letterSpacing: "0.1em" }}
+                      animate={{ 
+                        letterSpacing: ["0.1em", "0.05em", "0.02em"],
+                      }}
+                      transition={{ duration: 1.5, ease: "easeOut" }}
+                    >
+                      Welcome
+                    </motion.h1>
+                    
+                    {/* Glowing underline effect */}
+                    <motion.div
+                      className="absolute -bottom-2 left-1/2 h-1 bg-gradient-to-r from-transparent via-black to-transparent"
+                      initial={{ width: 0, x: "-50%" }}
+                      animate={{ width: "100%" }}
+                      transition={{ delay: 0.8, duration: 1, ease: "easeOut" }}
+                    />
+                  </motion.div>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Monthly Expenses</CardTitle>
-                  <TrendingDown className="h-4 w-4 text-black/60" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-black">
-                    ${stats.monthlyExpenses.toLocaleString()}
-                  </div>
-                  <p className="text-xs text-black/60">
-                    -5% from last month
-                  </p>
-                </CardContent>
-              </Card>
+                  <motion.h2 
+                    className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-800"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 1, duration: 0.6 }}
+                  >
+                    back!
+                  </motion.h2>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Savings</CardTitle>
-                  <PiggyBank className="h-4 w-4 text-black/60" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-black">
-                    ${stats.savings.toLocaleString()}
-                  </div>
-                  <p className="text-xs text-black/60">
-                    +8% from last month
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-              {/* Quick Actions */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base sm:text-lg">Quick Actions</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                    {quickActions.map((action, index) => (
-                      <Button
-                        key={index}
-                        variant="outline"
-                        className="h-16 sm:h-20 flex flex-col items-center justify-center space-y-1 sm:space-y-2 border-black/10 hover:bg-black hover:text-white transition-colors"
-                        onClick={() => handleQuickAction(action)}
+                  {/* Subtitle with typewriter effect */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 1.5, duration: 0.8 }}
+                    className="relative space-y-4"
+                  >
+                    <p className="text-lg sm:text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+                      Here's what's happening with your money today
+                    </p>
+                    
+                    {/* Date display with elegant styling */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 2, duration: 0.6 }}
+                      className="flex items-center justify-center space-x-3 text-gray-500"
+                    >
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: 2.2, duration: 0.4, type: "spring" }}
                       >
-                        <action.icon className="h-4 w-4 sm:h-5 sm:w-5" />
-                        <span className="text-xs text-center">{action.label}</span>
-                      </Button>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+                        <Calendar className="h-5 w-5" />
+                      </motion.div>
+                      <motion.span
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 2.3, duration: 0.5 }}
+                        className="text-base sm:text-lg font-medium"
+                      >
+                        {new Date().toLocaleDateString('en-US', {
+                          weekday: 'long',
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })}
+                      </motion.span>
+                    </motion.div>
+                    
+                    {/* Blinking cursor effect */}
+                    <motion.span
+                      className="inline-block w-0.5 h-6 bg-black ml-1"
+                      animate={{ opacity: [1, 0, 1] }}
+                      transition={{ duration: 0.8, repeat: Infinity }}
+                    />
+                  </motion.div>
+                </motion.div>
+                
+                {/* Enhanced Icon with LED-like glow */}
+                <motion.div
+                  initial={{ scale: 0, rotate: -180 }}
+                  animate={{ 
+                    scale: 1, 
+                    rotate: 0,
+                  }}
+                  transition={{ 
+                    delay: 2,
+                    duration: 0.8,
+                    type: "spring",
+                    stiffness: 200,
+                    damping: 15
+                  }}
+                  className="relative mx-auto w-20 h-20"
+                >
+                  {/* Outer glow rings */}
+                  <motion.div
+                    className="absolute inset-0 rounded-full border-2 border-black/20"
+                    animate={{ 
+                      scale: [1, 1.3, 1],
+                      opacity: [0.3, 0.1, 0.3]
+                    }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  />
+                  <motion.div
+                    className="absolute inset-2 rounded-full border border-black/30"
+                    animate={{ 
+                      scale: [1, 1.2, 1],
+                      opacity: [0.5, 0.2, 0.5]
+                    }}
+                    transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
+                  />
+                  
+                  {/* Main icon container */}
+                  <motion.div
+                    className="relative w-full h-full bg-gradient-to-br from-gray-900 via-black to-gray-800 rounded-full flex items-center justify-center shadow-2xl"
+                    animate={{ 
+                      boxShadow: [
+                        "0 0 20px rgba(0,0,0,0.3)",
+                        "0 0 40px rgba(0,0,0,0.5)",
+                        "0 0 20px rgba(0,0,0,0.3)"
+                      ]
+                    }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                    >
+                      <DollarSign className="h-10 w-10 text-white" />
+                    </motion.div>
+                    
+                    {/* Inner highlight */}
+                    <div className="absolute inset-2 rounded-full bg-gradient-to-br from-white/20 to-transparent" />
+                  </motion.div>
+                </motion.div>
+
+                {/* Loading dots */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 2.5, duration: 0.5 }}
+                  className="flex justify-center space-x-2 mt-8"
+                >
+                  {[0, 1, 2].map((i) => (
+                    <motion.div
+                      key={i}
+                      className="w-2 h-2 bg-black rounded-full"
+                      animate={{ 
+                        scale: [1, 1.5, 1],
+                        opacity: [0.3, 1, 0.3]
+                      }}
+                      transition={{
+                        duration: 1,
+                        repeat: Infinity,
+                        delay: i * 0.2
+                      }}
+                    />
+                  ))}
+                </motion.div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Main Content - Only show after welcome animation */}
+        <AnimatePresence>
+          {!showWelcomeAnimation && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: [0.23, 1, 0.320, 1] }}
+              className={`relative min-h-screen bg-cover bg-center bg-no-repeat pt-12 sm:pt-16 md:pt-20 lg:pt-0 pb-2 sm:pb-4 md:pb-6 lg:pb-0 px-2 sm:px-4 md:px-6 lg:px-0 transition-all duration-300 ${
+                isRightSidebarOpen ? 'lg:mr-80' : ''
+              }`}
+              style={{
+                backgroundImage: 'url(https://images.unsplash.com/photo-1615800098779-1be32e60cca3?q=80&w=710&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D)'
+              }}
+            >
+              {/* Background overlay for better readability */}
+              <div className="absolute inset-0 bg-white/80 backdrop-blur-sm"></div>
+              
+              {/* Content container with relative positioning */}
+              <div className="relative z-10 max-w-full sm:max-w-5xl md:max-w-6xl lg:max-w-none mx-auto lg:mx-0 space-y-8 sm:space-y-10 md:space-y-12 lg:space-y-10 lg:p-2">
+
+            {/* Balance Card - Prominent like Cash App */}
+            <Card className="bg-gradient-to-br from-black to-gray-900 text-white shadow-xl">
+              <CardContent className="p-4 sm:p-6">
+                <div className="text-center space-y-2">
+                  <p className="text-sm text-gray-300">Total Balance</p>
+                  <h1 className="text-3xl sm:text-4xl font-bold">${stats.totalBalance.toLocaleString()}</h1>
+                  <p className="text-sm text-gray-400">+2.5% from last month</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Primary Actions - Black and White Design */}
+            <div className="space-y-3">
+              <h2 className="text-lg font-semibold text-gray-900 px-1 text-center lg:text-center">Quick Actions</h2>
+              <div className="flex overflow-x-auto lg:justify-center gap-3 pb-2 px-1">
+                {[
+                  { label: 'Send', href: '/send', icon: ArrowUpRight, color: 'bg-black' },
+                  { label: 'Add Money', action: () => setIsDepositModalOpen(true), icon: ArrowDownLeft, color: 'bg-gray-800' },
+                  { label: 'Cards', href: '/cards', icon: CreditCard, color: 'bg-gray-700' },
+                  { label: 'Invest', href: '/investment', icon: TrendingUp, color: 'bg-gray-600' },
+                  { label: 'Save', href: '/savings', icon: Target, color: 'bg-gray-500' }
+                ].map((action, index) => (
+                  <Button
+                    key={index}
+                    className={`${action.color} hover:bg-black hover:opacity-90 text-white border-0 min-w-[80px] h-16 flex flex-col items-center justify-center space-y-1 rounded-xl shadow-lg transition-all duration-200`}
+                    onClick={() => handleQuickAction(action)}
+                  >
+                    <action.icon className="h-5 w-5" />
+                    <span className="text-xs font-medium">{action.label}</span>
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            {/* Secondary Actions - More compact */}
+            <Card className="bg-white border-gray-200">
+              <CardContent className="p-3">
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { label: 'Analytics', href: '/analytics', icon: DollarSign },
+                    { label: 'Notifications', action: testNotifications, icon: Bell },
+                    { label: 'Help', href: '/help', icon: Calendar }
+                  ].map((action, index) => (
+                    <Button
+                      key={index}
+                      variant="ghost"
+                      className="h-14 flex flex-col items-center justify-center space-y-1 text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                      onClick={() => handleQuickAction(action)}
+                    >
+                      <action.icon className="h-4 w-4" />
+                      <span className="text-xs">{action.label}</span>
+                    </Button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Financial Overview and Recent Transactions - Side by side grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-3">
+              {/* Financial Overview */}
+              <div className="space-y-2 sm:space-y-3">
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900 text-center md:text-left">Financial Overview</h2>
+                <div className="grid grid-cols-2 gap-1 sm:gap-2">
+                  <Card className="bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2 p-2 sm:p-4">
+                      <CardTitle className="text-xs sm:text-sm font-medium text-gray-700">Total Balance</CardTitle>
+                      <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 text-gray-600" />
+                    </CardHeader>
+                    <CardContent className="p-2 sm:p-4 pt-0">
+                      <div className="text-sm sm:text-base md:text-lg font-bold text-gray-900">
+                        ${stats.totalBalance.toLocaleString()}
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        +2.5% from last month
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2 p-2 sm:p-4">
+                      <CardTitle className="text-xs sm:text-sm font-medium text-gray-700">Total Savings</CardTitle>
+                      <PiggyBank className="h-3 w-3 sm:h-4 sm:w-4 text-gray-600" />
+                    </CardHeader>
+                    <CardContent className="p-2 sm:p-4 pt-0">
+                      <div className="text-sm sm:text-base md:text-lg font-bold text-gray-900">
+                        ${stats.savings.toLocaleString()}
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        +8% from last month
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2 p-2 sm:p-4">
+                      <CardTitle className="text-xs sm:text-sm font-medium text-gray-700">Net Worth</CardTitle>
+                      <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-gray-600" />
+                    </CardHeader>
+                    <CardContent className="p-2 sm:p-4 pt-0">
+                      <div className="text-sm sm:text-base md:text-lg font-bold text-gray-900">
+                        ${(stats.totalBalance + stats.investments).toLocaleString()}
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        +15% from last month
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2 p-2 sm:p-4">
+                      <CardTitle className="text-xs sm:text-sm font-medium text-gray-700">Portfolio Value</CardTitle>
+                      <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-gray-600" />
+                    </CardHeader>
+                    <CardContent className="p-2 sm:p-4 pt-0">
+                      <div className="text-sm sm:text-base md:text-lg font-bold text-gray-900">
+                        ${stats.investments.toLocaleString()}
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        +12.5% from last month
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
 
               {/* Recent Transactions */}
-              <Card className="lg:col-span-2">
-                <CardHeader>
-                  <CardTitle className="text-base sm:text-lg">Recent Transactions</CardTitle>
+              <Card className="bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300">
+                <CardHeader className="bg-gradient-to-r from-gray-900 to-gray-800 text-white rounded-t-lg">
+                  <CardTitle className="text-base sm:text-lg font-bold text-center md:text-left">Recent Transactions</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-3 sm:space-y-4">
+                <CardContent className="p-2 sm:p-3">
+                  <div className="space-y-2 sm:space-y-3">
                     {recentTransactions.map((transaction) => (
                       <div
                         key={transaction.id}
-                        className="flex items-center justify-between p-2 sm:p-3 border border-black/10 rounded-lg"
+                        className="flex items-center justify-between p-2 sm:p-3 border border-gray-200 rounded-lg bg-white shadow-sm hover:shadow-md transition-all duration-200"
                       >
-                        <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
-                          <div className={`p-1.5 sm:p-2 rounded-full ${
+                        <div className="flex items-center space-x-3 sm:space-x-4 flex-1 min-w-0">
+                          <div className={`p-2 sm:p-3 rounded-full ${
                             transaction.type === 'income'
-                              ? 'bg-black/10'
-                              : 'bg-black/10'
+                              ? 'bg-gray-100 border border-gray-200'
+                              : 'bg-gray-100 border border-gray-200'
                           }`}>
                             {transaction.type === 'income' ? (
-                              <ArrowDownLeft className="h-3 w-3 sm:h-4 sm:w-4 text-black" />
+                              <ArrowDownLeft className="h-4 w-4 sm:h-5 sm:w-5 text-gray-700" />
                             ) : (
-                              <ArrowUpRight className="h-3 w-3 sm:h-4 sm:w-4 text-black" />
+                              <ArrowUpRight className="h-4 w-4 sm:h-5 sm:w-5 text-gray-700" />
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium text-black text-sm sm:text-base truncate">{transaction.description}</p>
-                            <p className="text-xs sm:text-sm text-black/60">{transaction.date}</p>
+                            <p className="font-semibold text-gray-900 text-sm sm:text-base truncate">{transaction.description}</p>
+                            <p className="text-xs sm:text-sm text-gray-500">{transaction.date}</p>
                           </div>
                         </div>
                         <div className={`font-bold text-sm sm:text-base ${
-                          transaction.type === 'income' ? 'text-black' : 'text-black'
+                          transaction.type === 'income' ? 'text-gray-900' : 'text-gray-900'
                         } ml-2`}>
                           {transaction.type === 'income' ? '+' : ''}${Math.abs(transaction.amount).toLocaleString()}
                         </div>
@@ -227,53 +560,55 @@ export default function HomePage() {
             </div>
 
             {/* Financial Health */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Financial Health</CardTitle>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-3">
+              <Card className="bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300">
+                <CardHeader className="bg-gradient-to-r from-gray-900 to-gray-800 text-white rounded-t-lg">
+                  <CardTitle className="text-base sm:text-lg font-bold text-center md:text-left">Financial Health</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
+                <CardContent className="p-2 sm:p-3">
+                  <div className="space-y-2 sm:space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-black/60">Credit Score</span>
-                      <span className="font-bold text-black">{stats.creditScore}</span>
+                      <span className="text-sm text-gray-600">Credit Score</span>
+                      <span className="font-bold text-gray-900">{stats.creditScore}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-black/60">Debt-to-Income</span>
-                      <span className="font-bold text-black">15%</span>
+                      <span className="text-sm text-gray-600">Debt-to-Income</span>
+                      <span className="font-bold text-gray-900">15%</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-black/60">Savings Rate</span>
-                      <span className="font-bold text-black">25%</span>
+                      <span className="text-sm text-gray-600">Savings Rate</span>
+                      <span className="font-bold text-gray-900">25%</span>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Investment Performance</CardTitle>
+              <Card className="bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300">
+                <CardHeader className="bg-gradient-to-r from-gray-900 to-gray-800 text-white rounded-t-lg">
+                  <CardTitle className="text-base sm:text-lg font-bold text-center md:text-left">Investment Performance</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
+                <CardContent className="p-2 sm:p-3">
+                  <div className="space-y-2 sm:space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-black/60">Total Invested</span>
-                      <span className="font-bold text-black">${stats.investments.toLocaleString()}</span>
+                      <span className="text-sm text-gray-600">Total Invested</span>
+                      <span className="font-bold text-gray-900">${stats.investments.toLocaleString()}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-black/60">Total Return</span>
-                      <span className="font-bold text-black">+12.5%</span>
+                      <span className="text-sm text-gray-600">Total Return</span>
+                      <span className="font-bold text-gray-900">+12.5%</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-black/60">This Month</span>
-                      <span className="font-bold text-black">+2.1%</span>
+                      <span className="text-sm text-gray-600">This Month</span>
+                      <span className="font-bold text-gray-900">+2.1%</span>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
           </div>
-        </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <DepositModal
           open={isDepositModalOpen}

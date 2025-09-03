@@ -17,8 +17,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuth } from "@/contexts/AuthContext"
 
 // Firebase removed - using simple authentication without Firebase dependencies
-import { sendVerificationEmail, generateVerificationToken, generateVerificationLink } from '@/lib/web3forms-email'
-import { signIn } from "next-auth/react"
 import { GoogleSignInButton } from "./GoogleSignInButton"
 
 // Validation schema
@@ -36,7 +34,7 @@ type SignupFormData = z.infer<typeof signupSchema>
 
 export function SignupPage() {
   const router = useRouter()
-  const { addToast } = useToast()
+  const { toast } = useToast()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -72,7 +70,7 @@ export function SignupPage() {
     } catch (error) {
       console.error('Failed to initiate Cognito sign-up:', error)
       setError(error instanceof Error ? error.message : 'Failed to start sign-up. Please try again.')
-      setGoogleLoading(false)
+      setIsLoading(false)
     }
   }
 
@@ -95,16 +93,19 @@ export function SignupPage() {
     }
 
     try {
-      // Use the custom signup API route instead of Cognito Hosted UI
+      // Validate form data
+      const validatedData = signupSchema.parse(formData)
+
+      // Use the custom signup API route
       const response = await fetch('/api/sign-up', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-          name: formData.name,
+          email: validatedData.email,
+          password: validatedData.password,
+          name: validatedData.name,
         }),
       })
 
@@ -116,7 +117,7 @@ export function SignupPage() {
 
       // Check if we need to use Cognito Hosted UI
       if (data.useHostedUI) {
-        addToast({
+        toast({
           title: "Redirecting...",
           description: "Taking you to the secure signup page.",
         })
@@ -127,46 +128,13 @@ export function SignupPage() {
       }
 
       // Success - redirect to email verification page
-      addToast({
+      toast({
         title: "Account Created!",
         description: "Please check your email for verification instructions.",
       })
 
       // Redirect to check email page with the user's email
       router.push(`/check-email?email=${encodeURIComponent(formData.email)}`)
-
-    } catch (error) {
-      // Validate form data
-      const validatedData = signupSchema.parse(formData)
-
-      // For now, we'll create a simple signup API call
-      // In a real app, you'd want to create a user in your database first
-      const response = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: validatedData.name,
-          email: validatedData.email,
-          password: validatedData.password,
-        }),
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || 'Signup failed')
-      }
-
-      const result = await response.json()
-
-      toast({
-        title: "Account Created!",
-        description: "Your account has been created successfully. Please sign in.",
-      })
-
-      // Redirect to signin page
-      router.push('/signin?message=Account created successfully')
 
     } catch (err) {
       console.error('Signup error:', err)
@@ -185,7 +153,7 @@ export function SignupPage() {
         variant: "destructive",
       })
     } finally {
-      setIsLoading(false)
+      setLoading(false)
     }
   }
 

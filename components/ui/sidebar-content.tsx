@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
-import { motion } from 'framer-motion'
+import { useEffect, useRef, useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter, usePathname } from 'next/navigation'
 import {
   Home,
@@ -23,7 +23,12 @@ import {
   ChevronRight,
   Plus,
   Calculator,
-  Layout
+  Layout,
+  Sparkles,
+  Star,
+  Crown,
+  Zap,
+  Circle
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -43,31 +48,33 @@ interface MenuItem {
   href: string
   badge?: string
   description?: string
+  color?: string
+  premium?: boolean
 }
 
 const menuSections = {
   main: [
-    { id: 'home', label: 'Home', icon: Layout, href: '/home', description: 'Main dashboard' },
-    { id: 'overview', label: 'Overview', icon: BarChart3, href: '/overview', description: 'Financial overview' },
-    { id: 'budget', label: 'Budget', icon: Calculator, href: '/budget', description: 'Track spending' },
-    { id: 'savings', label: 'Savings', icon: PiggyBank, href: '/savings', description: 'Goals & plans' },
-    { id: 'investment', label: 'Investment', icon: TrendingUp, href: '/investment', description: 'Grow wealth' },
+    { id: 'home', label: 'Home', icon: Layout, href: '/home', description: 'Main dashboard', color: 'from-white to-gray-100' },
+    { id: 'overview', label: 'Overview', icon: BarChart3, href: '/overview', description: 'Financial overview', color: 'from-white to-gray-100' },
+    { id: 'budget', label: 'Budget', icon: Calculator, href: '/budget', description: 'Track spending', color: 'from-white to-gray-100' },
+    { id: 'savings', label: 'Savings', icon: PiggyBank, href: '/savings', description: 'Goals & plans', color: 'from-white to-gray-100' },
+    { id: 'investment', label: 'Investment', icon: TrendingUp, href: '/investment', description: 'Grow wealth', color: 'from-white to-gray-100', premium: true },
   ],
   financial: [
-    { id: 'cards', label: 'Cards', icon: CreditCard, href: '/cards', description: 'Manage cards' },
-    { id: 'send', label: 'Send Money', icon: ArrowUpRight, href: '/send', description: 'Transfer funds' },
-    { id: 'transactions', label: 'Transactions', icon: Receipt, href: '/transactions', description: 'History' },
-    { id: 'analytics', label: 'Analytics', icon: BarChart3, href: '/analytics', description: 'Insights' },
+    { id: 'cards', label: 'Cards', icon: CreditCard, href: '/cards', description: 'Manage cards', color: 'from-white to-gray-100' },
+    { id: 'send', label: 'Send Money', icon: ArrowUpRight, href: '/send', description: 'Transfer funds', color: 'from-white to-gray-100' },
+    { id: 'transactions', label: 'Transactions', icon: Receipt, href: '/transactions', description: 'History', color: 'from-white to-gray-100' },
+    { id: 'analytics', label: 'Analytics', icon: BarChart3, href: '/analytics', description: 'Insights', color: 'from-white to-gray-100', premium: true },
   ],
   account: [
-    { id: 'profile', label: 'Profile', icon: User, href: '/profile', description: 'Personal info' },
-    { id: 'settings', label: 'Settings', icon: Settings, href: '/settings', description: 'Preferences' },
-    { id: 'security', label: 'Security', icon: Shield, href: '/security', description: 'Account safety' },
-    { id: 'notifications', label: 'Notifications', icon: Bell, href: '/notifications', badge: '3' },
+    { id: 'profile', label: 'Profile', icon: User, href: '/profile', description: 'Personal info', color: 'from-white to-gray-100' },
+    { id: 'settings', label: 'Settings', icon: Settings, href: '/settings', description: 'Preferences', color: 'from-white to-gray-100' },
+    { id: 'security', label: 'Security', icon: Shield, href: '/security', description: 'Account safety', color: 'from-white to-gray-100' },
+    { id: 'notifications', label: 'Notifications', icon: Bell, href: '/notifications', badge: '3', color: 'from-white to-gray-100' },
   ],
   support: [
-    { id: 'help', label: 'Help Center', icon: HelpCircle, href: '/help', description: 'Get support' },
-    { id: 'contact', label: 'Contact', icon: Phone, href: '/contact', description: 'Reach us' },
+    { id: 'help', label: 'Help Center', icon: HelpCircle, href: '/help', description: 'Get support', color: 'from-white to-gray-100' },
+    { id: 'contact', label: 'Contact', icon: Phone, href: '/contact', description: 'Reach us', color: 'from-white to-gray-100' },
   ]
 }
 
@@ -77,6 +84,36 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
   const { user } = useAuth()
   const { setIsOpen } = useSidebar()
   const sidebarRef = useRef<HTMLDivElement>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const [canScrollUp, setCanScrollUp] = useState(false)
+  const [canScrollDown, setCanScrollDown] = useState(false)
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null)
+
+  // Check scroll position
+  const checkScrollPosition = () => {
+    if (scrollRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = scrollRef.current
+      setCanScrollUp(scrollTop > 0)
+      setCanScrollDown(scrollTop < scrollHeight - clientHeight - 1)
+    }
+  }
+
+  useEffect(() => {
+    const scrollElement = scrollRef.current
+    if (scrollElement) {
+      checkScrollPosition()
+      scrollElement.addEventListener('scroll', checkScrollPosition)
+      
+      // Check on resize
+      const resizeObserver = new ResizeObserver(checkScrollPosition)
+      resizeObserver.observe(scrollElement)
+      
+      return () => {
+        scrollElement.removeEventListener('scroll', checkScrollPosition)
+        resizeObserver.disconnect()
+      }
+    }
+  }, [])
 
   const isActiveRoute = (href: string) => {
     if (href === '/home') return pathname === '/home' || pathname === '/'
@@ -99,67 +136,121 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
     setIsOpen(false)
   }
 
-  const renderMenuSection = (title: string, items: MenuItem[]) => {
-    return (
-    <div className="mb-8">
-      <h3 className="text-xs font-bold text-white/40 uppercase tracking-wider mb-4 px-2">
-        {title}
-      </h3>
-      <div className="space-y-1">
-        {items.map((item) => (
+  const renderMenuSection = (title: string, items: MenuItem[]) => (
+    <motion.div 
+      className="mb-4 lg:mb-8"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <div className="flex items-center gap-2 mb-3 lg:mb-4 px-1 lg:px-2">
+        <motion.div
+          className="w-1 h-4 bg-gradient-to-b from-white/60 to-white/20 rounded-full"
+          animate={{ scaleY: [1, 1.2, 1] }}
+          transition={{ duration: 2, repeat: Infinity }}
+        />
+        <h3 className="text-[10px] lg:text-xs font-bold text-white/60 uppercase tracking-wider">
+          {title}
+        </h3>
+        <div className="flex-1 h-px bg-gradient-to-r from-white/20 to-transparent" />
+      </div>
+      <div className="space-y-1 lg:space-y-2">
+        {items.map((item, index) => (
           <motion.button
             key={item.id}
             onClick={() => handleNavigation(item.href)}
-            className={`w-full flex items-center gap-4 p-3 rounded-xl transition-all duration-300 group relative overflow-hidden ${
+            onMouseEnter={() => setHoveredItem(item.id)}
+            onMouseLeave={() => setHoveredItem(null)}
+            className={`w-full flex items-center gap-3 lg:gap-4 p-2 lg:p-3 rounded-xl lg:rounded-2xl transition-all duration-500 group relative overflow-hidden ${
               isActiveRoute(item.href)
-                ? 'bg-white text-black shadow-lg'
-                : 'text-white/70 hover:bg-white/10 hover:text-white'
+                ? 'bg-gradient-to-r from-white/20 to-white/10 text-white shadow-2xl border border-white/30'
+                : 'text-white/70 hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 hover:text-white hover:shadow-xl'
             }`}
-            whileHover={{ scale: 1.02 }}
+            whileHover={{ scale: 1.02, x: 4 }}
             whileTap={{ scale: 0.98 }}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3, delay: index * 0.1 }}
           >
-            {/* Active indicator */}
+            {/* Animated background glow */}
+            <AnimatePresence>
+              {(isActiveRoute(item.href) || hoveredItem === item.id) && (
+                <motion.div
+                  layoutId={`glow-${item.id}`}
+                  className={`absolute inset-0 bg-gradient-to-r ${item.color || 'from-white/10 to-white/5'} opacity-20 rounded-xl lg:rounded-2xl`}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 0.3, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{ duration: 0.3 }}
+                />
+              )}
+            </AnimatePresence>
+
+            {/* Active indicator with gradient */}
             {isActiveRoute(item.href) && (
               <motion.div
                 layoutId="activeIndicator"
-                className="absolute left-0 top-0 w-1 h-full bg-black"
+                className={`absolute left-0 top-0 w-1 lg:w-1.5 h-full bg-gradient-to-b ${item.color || 'from-white to-white/50'} rounded-r-full`}
                 transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
               />
             )}
             
-            <div className={`p-2 rounded-xl transition-all duration-300 ${
+            {/* Icon container with enhanced styling */}
+            <div className={`relative p-2 lg:p-2.5 rounded-lg lg:rounded-xl transition-all duration-500 ${
               isActiveRoute(item.href)
-                ? 'bg-black shadow-lg'
-                : 'bg-white/10 group-hover:bg-white/20'
+                ? `bg-gradient-to-br ${item.color || 'from-white/20 to-white/10'} shadow-lg backdrop-blur-sm`
+                : 'bg-white/10 group-hover:bg-white/20 backdrop-blur-sm'
             }`}>
-              <item.icon className={`h-5 w-5 transition-colors duration-300 ${
-                isActiveRoute(item.href) ? 'text-white' : 'text-white/70 group-hover:text-white'
-              }`} />
+              {/* Premium badge */}
+              {item.premium && (
+                <motion.div
+                  className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-br from-white to-gray-200 rounded-full flex items-center justify-center border border-black"
+                  animate={{ rotate: [0, 10, -10, 0] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  <Crown className="w-1.5 h-1.5 text-black" />
+                </motion.div>
+              )}
+              
+              <motion.div
+                animate={isActiveRoute(item.href) ? { rotate: [0, 5, -5, 0] } : {}}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                <item.icon className={`h-4 w-4 lg:h-5 lg:w-5 transition-all duration-500 ${
+                  isActiveRoute(item.href) ? 'text-white drop-shadow-lg' : 'text-white/70 group-hover:text-white'
+                }`} />
+              </motion.div>
             </div>
             
+            {/* Content */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between">
-                <span className={`font-semibold text-sm transition-colors duration-300 ${
-                  isActiveRoute(item.href) ? 'text-black' : 'group-hover:text-white'
+                <span className={`font-semibold text-[11px] lg:text-sm transition-all duration-500 ${
+                  isActiveRoute(item.href) ? 'text-white drop-shadow-sm' : 'group-hover:text-white'
                 }`}>
                   {item.label}
                 </span>
                 {item.badge && (
-                  <Badge
-                    className={`ml-2 text-[10px] font-bold px-2 py-0.5 transition-colors duration-300 ${
-                      isActiveRoute(item.href)
-                        ? 'bg-black text-white'
-                        : 'bg-white/20 text-white/70 group-hover:bg-white/30 group-hover:text-white'
-                    }`}
+                  <motion.div
+                    animate={{ scale: [1, 1.1, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
                   >
-                    {item.badge}
-                  </Badge>
+                    <Badge
+                      className={`ml-2 text-[8px] lg:text-[10px] font-bold px-1.5 lg:px-2 py-0.5 transition-all duration-500 ${
+                        isActiveRoute(item.href)
+                          ? `bg-gradient-to-r ${item.color || 'from-white/30 to-white/20'} text-white border border-white/30`
+                          : 'bg-white/20 text-white/70 group-hover:bg-white/30 group-hover:text-white border border-white/20'
+                      }`}
+                    >
+                      {item.badge}
+                    </Badge>
+                  </motion.div>
                 )}
               </div>
               {item.description && (
-                <p className={`text-xs mt-1 transition-colors duration-300 ${
+                <p className={`text-[9px] lg:text-xs mt-0.5 lg:mt-1 transition-all duration-500 hidden lg:block ${
                   isActiveRoute(item.href)
-                    ? 'text-black/60'
+                    ? 'text-white/80'
                     : 'text-white/50 group-hover:text-white/70'
                 }`}>
                   {item.description}
@@ -167,100 +258,251 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
               )}
             </div>
             
+            {/* Arrow with enhanced animation */}
             <motion.div
               animate={{ 
                 x: isActiveRoute(item.href) ? 0 : -4,
-                opacity: isActiveRoute(item.href) ? 1 : 0.5
+                opacity: isActiveRoute(item.href) ? 1 : 0.5,
+                rotate: hoveredItem === item.id ? 90 : 0
               }}
               transition={{ duration: 0.3 }}
             >
-              <ChevronRight className={`h-4 w-4 transition-colors duration-300 ${
-                isActiveRoute(item.href) ? 'text-black' : 'text-white/50 group-hover:text-white/70'
+              <ChevronRight className={`h-3 w-3 lg:h-4 lg:w-4 transition-all duration-500 ${
+                isActiveRoute(item.href) ? 'text-white drop-shadow-sm' : 'text-white/50 group-hover:text-white/70'
               }`} />
             </motion.div>
+
+            {/* Sparkle effects for premium items */}
+            {item.premium && hoveredItem === item.id && (
+              <div className="absolute inset-0 pointer-events-none">
+                {[...Array(3)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    className="absolute w-1 h-1 bg-white rounded-full"
+                    style={{
+                      left: `${20 + i * 30}%`,
+                      top: `${30 + i * 20}%`,
+                    }}
+                    animate={{
+                      scale: [0, 1, 0],
+                      opacity: [0, 1, 0],
+                    }}
+                    transition={{
+                      duration: 1,
+                      repeat: Infinity,
+                      delay: i * 0.2,
+                    }}
+                  />
+                ))}
+              </div>
+            )}
           </motion.button>
         ))}
       </div>
-    </div>
-    );
-  };
+    </motion.div>
+  )
 
-  // Main component return
   return (
     <div
       ref={sidebarRef}
-      className="h-full w-full bg-black border-r border-white/20 overflow-hidden"
+      className="h-full w-full bg-gradient-to-b from-gray-900 via-black to-gray-900 border-r border-white/20 overflow-hidden relative"
     >
+      {/* Animated background pattern */}
+      <div className="absolute inset-0 opacity-5">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.1),transparent_50%)]" />
+        <motion.div
+          className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.02)_50%,transparent_75%)]"
+          animate={{ x: [-100, 100] }}
+          transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+        />
+      </div>
+
+      {/* Enhanced scroll indicators */}
+      <AnimatePresence>
+        {canScrollUp && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-black via-black/80 to-transparent z-10 flex items-center justify-center"
+          >
+            <motion.div
+              className="w-3 h-3 border-t-2 border-l-2 border-white/60 transform rotate-45 -translate-y-1"
+              animate={{ y: [-2, 2, -2] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+            />
+          </motion.div>
+        )}
+        {canScrollDown && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-black via-black/80 to-transparent z-10 flex items-center justify-center"
+          >
+            <motion.div
+              className="w-3 h-3 border-b-2 border-r-2 border-white/60 transform rotate-45 translate-y-1"
+              animate={{ y: [2, -2, 2] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Scrollable content */}
-      <div className="h-full overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-white/30 scrollbar-track-transparent">
-        {/* Header */}
-        <div className="pt-8 px-6 pb-8 border-b border-white/20 relative">
-          {/* Brand Identity */}
-          <div className="flex items-center gap-4 mb-6">
-            <div className="relative">
-              <div className="bg-white p-3 rounded-2xl shadow-2xl">
-                <Wallet className="h-7 w-7 text-black" />
+      <div 
+        ref={scrollRef}
+        className="h-full overflow-y-auto overflow-x-hidden sidebar-scrollbar pt-6 pb-6 relative z-0"
+        style={{
+          scrollbarWidth: 'thin',
+          scrollbarColor: '#000000 #000000'
+        }}
+      >
+        {/* Enhanced Header */}
+        <motion.div 
+          className="pt-4 px-4 pb-4 lg:pt-8 lg:px-6 lg:pb-8 border-b border-white/20 relative"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          {/* Brand Identity with enhanced styling */}
+          <div className="flex items-center gap-3 mb-4 lg:gap-4 lg:mb-6">
+            <motion.div 
+              className="relative"
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.2 }}
+            >
+              <div className="bg-gradient-to-br from-white via-gray-100 to-gray-200 p-2 lg:p-3 rounded-xl lg:rounded-2xl shadow-2xl border border-white/20">
+                <motion.div
+                  animate={{ rotate: [0, 5, -5, 0] }}
+                  transition={{ duration: 4, repeat: Infinity }}
+                >
+                  <Wallet className="h-5 w-5 lg:h-7 lg:w-7 text-black" />
+                </motion.div>
               </div>
-            </div>
+              {/* Glow effect */}
+              <div className="absolute inset-0 bg-white/20 rounded-xl lg:rounded-2xl blur-xl -z-10" />
+            </motion.div>
             <div>
-              <h1 className="text-2xl font-black text-white tracking-tight">HoardRun</h1>
-              <p className="text-sm text-white/60 font-medium">Premium Banking</p>
+              <motion.h1 
+                className="text-xl lg:text-2xl font-black text-white tracking-tight bg-gradient-to-r from-white to-gray-300 bg-clip-text"
+                animate={{ backgroundPosition: ['0%', '100%', '0%'] }}
+                transition={{ duration: 3, repeat: Infinity }}
+              >
+                HoardRun
+              </motion.h1>
+              <div className="flex items-center gap-2">
+                <p className="text-[10px] lg:text-sm text-white/60 font-medium">Premium Banking</p>
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                >
+                  <Sparkles className="h-3 w-3 text-white" />
+                </motion.div>
+              </div>
             </div>
           </div>
 
-          {/* User Profile */}
+          {/* Enhanced User Profile */}
           <motion.div
-            className="flex items-center gap-4 p-4 bg-white/10 rounded-2xl border border-white/20"
-            whileHover={{ scale: 1.02 }}
+            className="flex items-center gap-3 p-3 lg:gap-4 lg:p-4 bg-gradient-to-r from-white/10 to-white/5 rounded-xl lg:rounded-2xl border border-white/20 backdrop-blur-sm"
+            whileHover={{ scale: 1.02, y: -2 }}
             transition={{ duration: 0.2 }}
           >
             <div className="relative">
-              <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-xl">
-                <User className="h-6 w-6 text-black" />
-              </div>
-              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-white rounded-full border-2 border-black"></div>
+              <motion.div 
+                className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-white to-gray-200 rounded-xl lg:rounded-2xl flex items-center justify-center shadow-xl border border-white/30"
+                whileHover={{ rotate: 5 }}
+                transition={{ duration: 0.2 }}
+              >
+                <User className="h-5 w-5 lg:h-6 lg:w-6 text-black" />
+              </motion.div>
+              <motion.div 
+                className="absolute -bottom-1 -right-1 w-4 h-4 bg-gradient-to-br from-white to-gray-200 rounded-full border-2 border-black flex items-center justify-center"
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                <Circle className="w-1.5 h-1.5 text-black fill-current" />
+              </motion.div>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-bold text-white text-sm truncate">
+              <p className="font-bold text-white text-[11px] lg:text-sm truncate">
                 {user?.name || 'Demo User'}
               </p>
-              <p className="text-xs text-white/60 truncate">
+              <p className="text-[9px] lg:text-xs text-white/60 truncate">
                 {user?.email || 'user@example.com'}
               </p>
             </div>
+            <motion.div
+              animate={{ rotate: [0, 10, -10, 0] }}
+              transition={{ duration: 3, repeat: Infinity }}
+            >
+              <Star className="h-4 w-4 text-white" />
+            </motion.div>
           </motion.div>
-        </div>
+        </motion.div>
 
-        {/* Quick Action */}
-        <div className="px-6 py-6 border-b border-white/20">
+        {/* Enhanced Quick Action */}
+        <motion.div 
+          className="px-4 py-3 lg:px-6 lg:py-6 border-b border-white/20"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
           <Button
             onClick={onAddMoney}
-            className="w-full bg-white text-black font-bold py-4 rounded-2xl shadow-2xl hover:bg-white/90 transition-all duration-300 hover:scale-105"
+            className="w-full bg-gradient-to-r from-white to-gray-100 text-black font-bold py-3 lg:py-4 text-xs lg:text-sm rounded-xl lg:rounded-2xl shadow-2xl hover:from-gray-100 hover:to-white transition-all duration-500 hover:scale-105 hover:shadow-3xl border border-white/20 group relative overflow-hidden"
           >
-            <Plus className="h-5 w-5 mr-2" />
-            Add Money
+            {/* Animated background */}
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+              animate={{ x: [-100, 100] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            />
+            <motion.div
+              animate={{ rotate: [0, 180, 360] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            >
+              <Plus className="h-4 w-4 lg:h-5 lg:w-5 mr-2 relative z-10" />
+            </motion.div>
+            <span className="relative z-10">Add Money</span>
           </Button>
-        </div>
+        </motion.div>
 
-        {/* Navigation Menu */}
-        <div className="px-6 py-6">
+        {/* Enhanced Navigation Menu */}
+        <motion.div 
+          className="px-4 py-3 lg:px-6 lg:py-6"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+        >
           {renderMenuSection('Main', menuSections.main)}
           {renderMenuSection('Financial', menuSections.financial)}
           {renderMenuSection('Account', menuSections.account)}
           {renderMenuSection('Support', menuSections.support)}
-        </div>
+        </motion.div>
 
-        {/* Logout */}
-        <div className="px-6 py-6 border-t border-white/20">
+        {/* Enhanced Logout */}
+        <motion.div 
+          className="px-4 py-3 lg:px-6 lg:py-6 border-t border-white/20"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+        >
           <Button
             onClick={handleLogout}
             variant="ghost"
-            className="w-full justify-start text-white/60 hover:text-white hover:bg-white/10 rounded-xl p-3"
+            className="w-full justify-start text-white/60 hover:text-white hover:bg-gradient-to-r hover:from-red-500/20 hover:to-pink-500/20 rounded-xl lg:rounded-2xl p-3 lg:p-4 text-xs lg:text-sm transition-all duration-500 group border border-transparent hover:border-white/20"
           >
-            <LogOut className="h-5 w-5 mr-3" />
+            <motion.div
+              whileHover={{ rotate: 15 }}
+              transition={{ duration: 0.2 }}
+            >
+              <LogOut className="h-4 w-4 lg:h-5 lg:w-5 mr-3 group-hover:text-red-400 transition-colors duration-300" />
+            </motion.div>
             Sign Out
           </Button>
-        </div>
+        </motion.div>
       </div>
     </div>
   )

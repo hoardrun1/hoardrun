@@ -25,26 +25,13 @@ export function CircleCard({ circle, onJoin, onViewDetails, className }: CircleC
   const membershipProgress = (circle.currentMembers / circle.maxMembers) * 100
   
   const getCategoryColor = (category: string) => {
-    const colors = {
-      'GREEN_TECH': 'bg-green-100 text-green-800 border-green-200',
-      'CRYPTO': 'bg-purple-100 text-purple-800 border-purple-200',
-      'AI_TECH': 'bg-blue-100 text-blue-800 border-blue-200',
-      'REAL_ESTATE': 'bg-orange-100 text-orange-800 border-orange-200',
-      'HEALTHCARE': 'bg-red-100 text-red-800 border-red-200',
-      'ENERGY': 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      'STOCKS': 'bg-indigo-100 text-indigo-800 border-indigo-200',
-      'BONDS': 'bg-gray-100 text-gray-800 border-gray-200',
-      'COMMODITIES': 'bg-amber-100 text-amber-800 border-amber-200',
-      'STARTUPS': 'bg-pink-100 text-pink-800 border-pink-200'
-    }
-    return colors[category as keyof typeof colors] || 'bg-gray-100 text-gray-800 border-gray-200'
+    // All categories use black and white theme
+    return 'bg-white text-black border-black'
   }
 
   const getRiskColor = (score: number) => {
-    if (score <= 30) return 'text-green-600'
-    if (score <= 60) return 'text-yellow-600'
-    if (score <= 80) return 'text-orange-600'
-    return 'text-red-600'
+    // All risk levels use black color
+    return 'text-black'
   }
 
   const formatCurrency = (amount: number) => {
@@ -65,16 +52,16 @@ export function CircleCard({ circle, onJoin, onViewDetails, className }: CircleC
       transition={{ duration: 0.3 }}
       className={className}
     >
-      <Card className="h-full hover:shadow-lg transition-all duration-300 border-2 hover:border-blue-200 dark:hover:border-blue-800">
+      <Card className="h-full hover:shadow-lg transition-all duration-300 border-2 bg-white border-black hover:border-black">
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
-                <CardTitle className="text-lg font-bold line-clamp-1">
+                <CardTitle className="text-lg font-bold line-clamp-1 text-black">
                   {circle.name}
                 </CardTitle>
                 {circle.isPrivate && (
-                  <Lock className="h-4 w-4 text-gray-500" />
+                  <Lock className="h-4 w-4 text-black" />
                 )}
               </div>
               <Badge 
@@ -86,14 +73,14 @@ export function CircleCard({ circle, onJoin, onViewDetails, className }: CircleC
             </div>
             
             <div className="flex items-center gap-1">
-              <Sparkles className="h-4 w-4 text-yellow-500" />
-              <span className="text-sm font-semibold text-yellow-600">
+              <Sparkles className="h-4 w-4 text-black" />
+              <span className="text-sm font-semibold text-black">
                 {circle.averageReturn.toFixed(1)}%
               </span>
             </div>
           </div>
           
-          <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mt-2">
+          <p className="text-sm text-black/60 line-clamp-2 mt-2">
             {circle.description}
           </p>
         </CardHeader>
@@ -103,20 +90,20 @@ export function CircleCard({ circle, onJoin, onViewDetails, className }: CircleC
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
               <div className="flex items-center gap-1">
-                <DollarSign className="h-3 w-3 text-gray-500" />
-                <span className="text-xs text-gray-500">Pool Value</span>
+                <DollarSign className="h-3 w-3 text-black/60" />
+                <span className="text-xs text-black/60">Pool Value</span>
               </div>
-              <p className="font-semibold text-sm">
+              <p className="font-semibold text-sm text-black">
                 {formatCurrency(circle.totalPoolValue)}
               </p>
             </div>
             
             <div className="space-y-1">
               <div className="flex items-center gap-1">
-                <Target className="h-3 w-3 text-gray-500" />
-                <span className="text-xs text-gray-500">Min. Investment</span>
+                <Target className="h-3 w-3 text-black/60" />
+                <span className="text-xs text-black/60">Min. Investment</span>
               </div>
-              <p className="font-semibold text-sm">
+              <p className="font-semibold text-sm text-black">
                 {formatCurrency(circle.minimumContribution)}
               </p>
             </div>
@@ -126,10 +113,10 @@ export function CircleCard({ circle, onJoin, onViewDetails, className }: CircleC
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1">
-                <Users className="h-3 w-3 text-gray-500" />
-                <span className="text-xs text-gray-500">Members</span>
+                <Users className="h-3 w-3 text-black/60" />
+                <span className="text-xs text-black/60">Members</span>
               </div>
-              <span className="text-xs font-medium">
+              <span className="text-xs font-medium text-black">
                 {circle.currentMembers}/{circle.maxMembers}
               </span>
             </div>
@@ -139,8 +126,8 @@ export function CircleCard({ circle, onJoin, onViewDetails, className }: CircleC
           {/* Performance & Risk */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-green-600" />
-              <span className="text-sm font-medium text-green-600">
+              <TrendingUp className="h-4 w-4 text-black" />
+              <span className="text-sm font-medium text-black">
                 +{circle.totalReturns.toLocaleString()} returns
               </span>
             </div>
@@ -155,11 +142,11 @@ export function CircleCard({ circle, onJoin, onViewDetails, className }: CircleC
 
           {/* Blockchain Network */}
           <div className="flex items-center gap-2">
-            <Globe className="h-3 w-3 text-blue-500" />
-            <span className="text-xs text-blue-600 font-medium">
+            <Globe className="h-3 w-3 text-black" />
+            <span className="text-xs text-black font-medium">
               {circle.blockchainNetwork}
             </span>
-            <Badge variant="outline" className="text-xs">
+            <Badge variant="outline" className="text-xs bg-white text-black border-black">
               {circle.status}
             </Badge>
           </div>
@@ -170,7 +157,7 @@ export function CircleCard({ circle, onJoin, onViewDetails, className }: CircleC
               variant="outline"
               size="sm"
               onClick={onViewDetails}
-              className="flex-1 text-xs"
+              className="flex-1 text-xs bg-white text-black border-black hover:bg-black hover:text-white"
             >
               <Eye className="h-3 w-3 mr-1" />
               Details
@@ -179,7 +166,7 @@ export function CircleCard({ circle, onJoin, onViewDetails, className }: CircleC
             <Button
               size="sm"
               onClick={onJoin}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs"
+              className="flex-1 bg-black hover:bg-black/90 text-white text-xs"
               disabled={circle.currentMembers >= circle.maxMembers}
             >
               {circle.isPrivate ? (
@@ -197,15 +184,15 @@ export function CircleCard({ circle, onJoin, onViewDetails, className }: CircleC
           </div>
 
           {/* Recent Activity Indicator */}
-          <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-800">
+          <div className="flex items-center justify-between pt-2 border-t border-black">
             <div className="flex items-center gap-1">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="text-xs text-gray-500">Active</span>
+              <div className="w-2 h-2 bg-black rounded-full animate-pulse"></div>
+              <span className="text-xs text-black/60">Active</span>
             </div>
             
             <div className="flex items-center gap-1">
-              <Calendar className="h-3 w-3 text-gray-400" />
-              <span className="text-xs text-gray-400">
+              <Calendar className="h-3 w-3 text-black/60" />
+              <span className="text-xs text-black/60">
                 Created {new Date(circle.createdAt).toLocaleDateString()}
               </span>
             </div>
@@ -218,7 +205,7 @@ export function CircleCard({ circle, onJoin, onViewDetails, className }: CircleC
               animate={{ scale: 1 }}
               className="absolute top-2 right-2"
             >
-              <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs">
+              <Badge className="bg-black text-white text-xs">
                 <Sparkles className="h-3 w-3 mr-1" />
                 AI Pick
               </Badge>

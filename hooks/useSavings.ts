@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/contexts/NextAuthContext'
 import { useToast } from '@/components/ui/use-toast'
 import { mockSavingsGoals } from '@/lib/mock-data/savings'
 

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/contexts/NextAuthContext'
 import { useToast } from '@/components/ui/use-toast'
 import { useSavings } from '@/hooks/useSavings'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'

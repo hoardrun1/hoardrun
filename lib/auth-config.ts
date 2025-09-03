@@ -1,7 +1,3 @@
-import { NextAuthOptions } from 'next-auth';
-
-// Mock auth configuration since the actual auth system is not fully implemented
-export const authOptions: NextAuthOptions = {
 import CredentialsProvider from 'next-auth/providers/credentials'
 import GoogleProvider from 'next-auth/providers/google'
 import bcrypt from 'bcryptjs'
@@ -15,7 +11,7 @@ const mockUser = {
   password: '$2a$10$8VEZeIRjuUDQPRGiHv0Kv.Zr3jXHQNRPDxjUdyLh1Vr8HMJvQX9Vy', // hashed 'password123'
 }
 
-export const authOptions: AuthOptions = {
+export const authConfig: AuthOptions = {
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -88,12 +84,6 @@ export const authOptions: AuthOptions = {
       }
       return session;
     },
-  },
-  pages: {
-    signIn: '/signin',
-  },
-  session: {
-    strategy: 'jwt',
   },
   secret: process.env.NEXTAUTH_SECRET,
 };

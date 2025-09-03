@@ -13,17 +13,18 @@ import {
   UserIcon, 
   Loader2,
   Globe,
-  Facebook,
-  Apple,
   Lock
 } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useToast } from "@/components/ui/use-toast"
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/contexts/NextAuthContext'
 
-export default function AuthPage() {
-  const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin')
+interface AuthPageProps {
+  mode: 'signin' | 'signup'
+}
+
+export function AuthPage({ mode }: AuthPageProps) {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -31,417 +32,341 @@ export default function AuthPage() {
     confirmPassword: ''
   })
   const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState('social')
 
   const router = useRouter()
   const { toast } = useToast()
-  const { signUp, signIn } = useAuth()
-<<<<<<< HEAD
-  const { signup, login } = useAuth()
-=======
-  const { signUpWithFirebase, signInWithFirebase } = useAuth()
->>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
+  const { signIn } = useAuth()
 
   useEffect(() => {
     const validateEmail = async () => {
-      if (!formData.email || !EmailVerificationService.validateEmailFormat(formData.email)) {
-        setIsEmailAvailable(null);
-        return;
-      }
-
-      setIsCheckingEmail(true);
-      try {
-        const isAvailable = await EmailVerificationService.checkEmailAvailability(formData.email);
-        setIsEmailAvailable(isAvailable);
-      } catch (error) {
-        console.error('Email check error:', error);
-        setIsEmailAvailable(null);
+      const urlParams = new URLSearchParams(window.location.search)
+      const email = urlParams.get('email')
+      const verified = urlParams.get('verified')
+      
+      if (verified === 'true' && email) {
         toast({
-          title: "Error",
-          description: "Failed to check email availability",
-          variant: "destructive"
-        });
-      } finally {
-        setIsCheckingEmail(false);
+          title: "Email Verified!",
+          description: `Your email ${email} has been successfully verified. You can now sign in.`,
+        })
+        // Clean up URL
+        window.history.replaceState({}, document.title, window.location.pathname)
       }
-    };
-
-    const debounceTimeout = setTimeout(validateEmail, 500);
-    return () => clearTimeout(debounceTimeout);
-  }, [formData.email]);
-
-  const handleSocialAuth = async (provider: 'google' | 'facebook' | 'apple') => {
-    setIsLoading(true)
-    try {
-      // Implement social auth logic here
-      const response = await fetch(`/api/auth/${provider}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
-      })
-      
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.message)
-      
-      // Handle successful auth
-      router.push('/dashboard')
-      if (provider === 'google') {
-        // Use AWS Cognito Hosted UI for Google OAuth
-        await signUp('dummy@example.com', 'dummypassword', 'Dummy Name')
-      } else {
-        // Other providers not implemented yet
-        throw new Error(`${provider} authentication not implemented yet. Please use Google or email/password.`)
-      }
->>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Authentication failed')
-    } finally {
-      setIsLoading(false)
     }
-  }
 
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (isLoading) return
+    validateEmail()
+  }, [toast])
 
+  const handleGoogleAuth = async () => {
     try {
       setIsLoading(true)
       setError(null)
-
-      if (!formData.name.trim()) {
-        setError('Name is required')
-        return
+      
+      const result = await signIn('google', { 
+        callbackUrl: '/home',
+        redirect: false 
+      })
+      
+      if (result?.error) {
+        throw new Error(result.error)
       }
-
-      if (formData.password !== formData.confirmPassword) {
-        setError('Passwords do not match')
-        return
+      
+      if (result?.url) {
+        router.push(result.url)
       }
-
-      if (formData.password.length < 8) {
-        setError('Password must be at least 8 characters')
-        return
-      }
-
-      // Use AWS Cognito Hosted UI for signup
-      await signUp(formData.email.toLowerCase().trim(), formData.password, formData.name.trim())
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
-      console.error('Signup error:', err)
+      setError(err instanceof Error ? err.message : 'Google authentication failed')
+      toast({
+        title: "Error",
+        description: err instanceof Error ? err.message : 'Google authentication failed',
+        variant: "destructive",
+      })
     } finally {
       setIsLoading(false)
     }
   }
 
-  const handleSignIn = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (isLoading) return;
-
-    setIsLoading(true);
-    setError(null);
+  const handleEmailAuth = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoading(true)
+    setError(null)
 
     try {
-<<<<<<< HEAD
-      const response = await fetch('/api/sign-in', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: formData.email.toLowerCase().trim(),
-          password: formData.password
+      if (mode === 'signup') {
+        // For signup, we'd need to implement a signup API
+        if (formData.password !== formData.confirmPassword) {
+          throw new Error('Passwords do not match')
+        }
+        
+        // Call signup API
+        const response = await fetch('/api/auth/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: formData.name,
+            email: formData.email,
+            password: formData.password
+          })
         })
-      });
+        
+        if (!response.ok) {
+          const data = await response.json()
+          throw new Error(data.message || 'Signup failed')
+        }
+        
+        toast({
+          title: "Account Created!",
+          description: "Please sign in with your new account.",
+        })
+        
+        router.push('/signin')
+      } else {
+        // For signin, use NextAuth credentials
+        const result = await signIn('credentials', {
+          email: formData.email,
+          password: formData.password,
+          redirect: false,
+        })
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || 'Authentication failed');
+        if (result?.error) {
+          throw new Error(result.error)
+        }
 
-      await login(data.token, data.user);
-=======
-      await signIn(formData.email.toLowerCase().trim(), formData.password);
->>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
-      router.push('/home');
+        toast({
+          title: "Success!",
+          description: "You have been signed in successfully.",
+        })
+
+        router.push('/home')
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Authentication failed');
+      setError(err instanceof Error ? err.message : 'Authentication failed')
+      toast({
+        title: "Error",
+        description: err instanceof Error ? err.message : 'Authentication failed',
+        variant: "destructive",
+      })
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setFormData(prev => ({ ...prev, [name]: value }))
+  }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-      <div className="w-full max-w-md p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-xl">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md"
+      >
+        <div className="bg-white rounded-2xl shadow-xl p-8">
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-blue-700 bg-clip-text text-transparent">
-              Welcome to Hoardrun
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              {mode === 'signin' ? 'Welcome Back' : 'Create Account'}
             </h1>
-            <p className="text-gray-500 dark:text-gray-400 mt-2">
-              Your financial journey starts here
+            <p className="text-gray-600">
+              {mode === 'signin' 
+                ? 'Sign in to your HoardRun account' 
+                : 'Join HoardRun to start managing your finances'
+              }
             </p>
           </div>
 
-          <Tabs 
-            defaultValue={activeTab} 
-            onValueChange={(value) => setActiveTab(value as 'signin' | 'signup')}
-            className="space-y-6"
-          >
-            <TabsList className="grid grid-cols-2 w-full p-1 bg-gray-100 dark:bg-gray-700 rounded-lg">
-              <TabsTrigger 
-                value="signin"
-                className="rounded-md py-2.5 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-600 data-[state=active]:shadow-sm transition-all"
-              >
-                Sign In
+          {error && (
+            <Alert className="mb-6" variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsTrigger value="social" className="flex items-center gap-2">
+                <Globe className="w-4 h-4" />
+                Social
               </TabsTrigger>
-              <TabsTrigger 
-                value="signup"
-                className="rounded-md py-2.5 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-600 data-[state=active]:shadow-sm transition-all"
-              >
-                Sign Up
+              <TabsTrigger value="email" className="flex items-center gap-2">
+                <MailIcon className="w-4 h-4" />
+                Email
               </TabsTrigger>
             </TabsList>
 
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
+            <TabsContent value="social" className="space-y-4">
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full h-12 bg-white hover:bg-gray-50 text-gray-900 border-gray-300"
+                onClick={handleGoogleAuth}
+                disabled={isLoading}
               >
-                <Alert variant="destructive">
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              </motion.div>
-            )}
+                {isLoading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                  </svg>
+                )}
+                Continue with Google
+              </Button>
+              
+              <div className="text-center text-sm text-gray-500">
+                Quick and secure {mode === 'signin' ? 'sign-in' : 'sign-up'} with your Google account
+              </div>
+            </TabsContent>
 
-            <AnimatePresence mode="wait">
-              <TabsContent value="signin" className="space-y-6">
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                >
-                  <form onSubmit={handleSignIn} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="signin-email" className="text-sm font-medium">
-                        Email
-                      </Label>
-                      <div className="relative">
-                        <MailIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
-                        <Input
-                          id="signin-email"
-                          type="email"
-                          placeholder="you@example.com"
-                          value={formData.email}
-                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                          className="pl-10 h-11 bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 transition-all"
-                          required
-                        />
-                      </div>
+            <TabsContent value="email" className="space-y-4">
+              <form onSubmit={handleEmailAuth} className="space-y-4">
+                {mode === 'signup' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Full Name</Label>
+                    <div className="relative">
+                      <UserIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                      <Input
+                        id="name"
+                        name="name"
+                        type="text"
+                        placeholder="Enter your full name"
+                        value={formData.name}
+                        onChange={handleInputChange}
+                        className="pl-10 h-12"
+                        required
+                      />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="signin-password" className="text-sm font-medium">
-                        Password
-                      </Label>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
-                        <Input
-                          id="signin-password"
-                          type={showPassword ? "text" : "password"}
-                          value={formData.password}
-                          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                          className="pl-10 pr-10 h-11 bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 transition-all"
-                          required
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
-                        >
-                          {showPassword ? (
-                            <EyeOffIcon className="h-4 w-4" />
-                          ) : (
-                            <EyeIcon className="h-4 w-4" />
-                          )}
-                        </button>
-                      </div>
-                    </div>
+                  </div>
+                )}
 
-                    <Button 
-                      type="submit"
-                      className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white transition-colors"
-                      disabled={isLoading}
-                    >
-                      {isLoading ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Signing in...
-                        </>
-                      ) : (
-                        "Sign in"
-                      )}
-                    </Button>
-                  </form>
-                </motion.div>
-              </TabsContent>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <div className="relative">
+                    <MailIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      placeholder="Enter your email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      className="pl-10 h-12"
+                      required
+                    />
+                  </div>
+                </div>
 
-              <TabsContent value="signup" className="space-y-6">
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                >
-                  <form onSubmit={handleSignup} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="name" className="text-sm font-medium">Name</Label>
-                      <div className="relative">
-                        <UserIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
-                        <Input
-                          id="name"
-                          name="name"
-                          value={formData.name}
-                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                          placeholder="John Doe"
-                          className="pl-10 h-11 bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 transition-all"
-                          disabled={isLoading}
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="email" className="text-sm font-medium">Email</Label>
-                      <div className="relative">
-                        <MailIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
-                        <Input
-                          id="email"
-                          name="email"
-                          type="email"
-                          value={formData.email}
-                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                          placeholder="you@example.com"
-                          className="pl-10 h-11 bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 transition-all"
-                          disabled={isLoading}
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="password" className="text-sm font-medium">Password</Label>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
-                        <Input
-                          id="password"
-                          name="password"
-                          type={showPassword ? "text" : "password"}
-                          value={formData.password}
-                          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                          className="pl-10 pr-10 h-11 bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 transition-all"
-                          disabled={isLoading}
-                          required
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
-                        >
-                          {showPassword ? (
-                            <EyeOffIcon className="h-4 w-4" />
-                          ) : (
-                            <EyeIcon className="h-4 w-4" />
-                          )}
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="confirmPassword" className="text-sm font-medium">Confirm Password</Label>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
-                        <Input
-                          id="confirmPassword"
-                          name="confirmPassword"
-                          type={showPassword ? "text" : "password"}
-                          value={formData.confirmPassword}
-                          onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                          className="pl-10 h-11 bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 transition-all"
-                          disabled={isLoading}
-                          required
-                        />
-                      </div>
-                    </div>
-
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <Input
+                      id="password"
+                      name="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Enter your password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      className="pl-10 pr-10 h-12"
+                      required
+                    />
                     <Button
-                      type="submit"
-                      className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white transition-colors"
-                      disabled={isLoading}
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-12 px-3 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
                     >
-                      {isLoading ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Creating account...
-                        </>
+                      {showPassword ? (
+                        <EyeOffIcon className="h-4 w-4 text-gray-400" />
                       ) : (
-                        "Create account"
+                        <EyeIcon className="h-4 w-4 text-gray-400" />
                       )}
                     </Button>
-                  </form>
-                </motion.div>
-              </TabsContent>
-            </AnimatePresence>
+                  </div>
+                </div>
 
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200 dark:border-gray-600" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white dark:bg-gray-800 text-gray-500">
-                  Or continue with
-                </span>
-              </div>
-            </div>
+                {mode === 'signup' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPassword">Confirm Password</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                      <Input
+                        id="confirmPassword"
+                        name="confirmPassword"
+                        type={showConfirmPassword ? "text" : "password"}
+                        placeholder="Confirm your password"
+                        value={formData.confirmPassword}
+                        onChange={handleInputChange}
+                        className="pl-10 pr-10 h-12"
+                        required
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-12 px-3 hover:bg-transparent"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      >
+                        {showConfirmPassword ? (
+                          <EyeOffIcon className="h-4 w-4 text-gray-400" />
+                        ) : (
+                          <EyeIcon className="h-4 w-4 text-gray-400" />
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                )}
 
-            <div className="grid grid-cols-3 gap-3">
-              <Button
-                variant="outline"
-                onClick={() => handleSocialAuth('google')}
-                className="h-11 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 transition-all"
-                disabled={isLoading}
-              >
-                <Globe className="h-5 w-5" />
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => handleSocialAuth('facebook')}
-                className="h-11 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 transition-all"
-                disabled={isLoading}
-              >
-                <Facebook className="h-5 w-5" />
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => handleSocialAuth('apple')}
-                className="h-11 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 transition-all"
-                disabled={isLoading}
-              >
-                <Apple className="h-5 w-5" />
-              </Button>
-            </div>
-
-            <div className="mt-6 text-center text-sm text-gray-500">
-              By continuing, you agree to our{' '}
-              <a href="/terms" className="text-blue-600 hover:text-blue-500 transition-colors">
-                Terms of Service
-              </a>{' '}
-              and{' '}
-              <a href="/privacy" className="text-blue-600 hover:text-blue-500 transition-colors">
-                Privacy Policy
-              </a>
-            </div>
+                <Button
+                  type="submit"
+                  className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {mode === 'signin' ? 'Signing in...' : 'Creating account...'}
+                    </>
+                  ) : (
+                    mode === 'signin' ? 'Sign In' : 'Create Account'
+                  )}
+                </Button>
+              </form>
+            </TabsContent>
           </Tabs>
-        </motion.div>
-      </div>
+
+          <div className="mt-6 text-center text-sm text-gray-600">
+            {mode === 'signin' ? (
+              <>
+                Don't have an account?{" "}
+                <button
+                  onClick={() => router.push('/signup')}
+                  className="text-blue-600 hover:underline font-medium"
+                >
+                  Sign up here
+                </button>
+              </>
+            ) : (
+              <>
+                Already have an account?{" "}
+                <button
+                  onClick={() => router.push('/signin')}
+                  className="text-blue-600 hover:underline font-medium"
+                >
+                  Sign in here
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      </motion.div>
     </div>
   )
 }

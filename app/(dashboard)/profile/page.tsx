@@ -27,7 +27,7 @@ import {
   CreditCard,
   Bell
 } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/contexts/NextAuthContext'
 
 export default function ProfilePage() {
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false)

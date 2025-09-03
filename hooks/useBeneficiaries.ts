@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/contexts/NextAuthContext'
 import { useToast } from '@/components/ui/use-toast'
 
 interface Beneficiary {

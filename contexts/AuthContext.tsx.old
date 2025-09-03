@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, ReactNode } from 'react';
+import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 import { useAwsCognitoAuth } from '@/hooks/useAwsCognitoAuth';
 
 // Define a simple user type for AWS Cognito
@@ -43,10 +43,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [authMethod, setAuthMethod] = useState<'jwt' | 'firebase' | 'cognito' | null>(null);
+  const [authMethod, setAuthMethod] = useState<'jwt'| 'cognito' | null>(null);
 
   // Initialize auth hooks
-  const cognitoAuth = useCognitoAuth();
+  const cognitoAuth = useAwsCognitoAuth();
 
   useEffect(() => {
     // Check if auth bypass is enabled
@@ -80,7 +80,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // Check for stored auth data on mount
     const storedToken = localStorage.getItem('auth_token');
     const storedUser = localStorage.getItem('auth_user');
-    const storedMethod = localStorage.getItem('auth_method') as 'jwt' | 'firebase' | 'cognito' | null;
+    const storedMethod = localStorage.getItem('auth_method') as 'jwt' | 'cognito' | null;
 
     // Also check sessionStorage
     const sessionToken = sessionStorage.getItem('token');

@@ -37,7 +37,7 @@ import { Badge } from "@/components/ui/badge"
 
 import { LayoutWrapper } from "@/components/ui/layout-wrapper"
 
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/contexts/NextAuthContext'
 import { useNavigationContext } from '@/providers/NavigationProvider'
 import { DepositModal } from './deposit-modal'
 import { useFinance } from '@/contexts/FinanceContext'

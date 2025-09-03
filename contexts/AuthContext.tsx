@@ -1,7 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
-import { useAwsCognitoAuth } from '@/hooks/useAwsCognitoAuth';
+import { useCognitoAuth } from '@/hooks/useCognitoAuth';
 
 // Define a simple user type for AWS Cognito
 interface User {
@@ -17,9 +17,17 @@ interface AuthContextType {
   token: string | null;
   loading: boolean;
   error: string | null;
+  isAuthenticated: boolean;
+  authMethod: 'jwt' | 'firebase' | 'cognito' | null;
+
+  // Generic auth methods
   signUp: (email: string, password: string, name?: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
+  login: (newToken: string, newUser: User) => void;
+  logout: () => Promise<void>;
+  signup: (email: string, password: string, name?: string) => Promise<void>;
+  clearError: () => void;
   sendEmailVerification: (userId: string) => Promise<void>;
   verifyEmail: (actionCode: string) => Promise<void>;
 
@@ -43,10 +51,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [authMethod, setAuthMethod] = useState<'jwt'| 'cognito' | null>(null);
+  const [authMethod, setAuthMethod] = useState<'jwt' | 'firebase' | 'cognito' | null>(null);
 
   // Initialize auth hooks
-  const cognitoAuth = useAwsCognitoAuth();
+  const cognitoAuth = useCognitoAuth();
 
   useEffect(() => {
     // Check if auth bypass is enabled
@@ -80,7 +88,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // Check for stored auth data on mount
     const storedToken = localStorage.getItem('auth_token');
     const storedUser = localStorage.getItem('auth_user');
-    const storedMethod = localStorage.getItem('auth_method') as 'jwt' | 'cognito' | null;
+    const storedMethod = localStorage.getItem('auth_method') as 'jwt' | 'firebase' | 'cognito' | null;
 
     // Also check sessionStorage
     const sessionToken = sessionStorage.getItem('token');
@@ -313,12 +321,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
     authMethod,
 
     // Generic auth methods
+    signUp: signup,
+    signIn: signInWithCognito,
+    signOut: logout,
     login,
     logout,
-    clearError,
-
-    // JWT/Traditional auth
     signup,
+    clearError,
+    sendEmailVerification: async (userId: string) => {
+      // Placeholder implementation
+      console.log('Email verification not implemented for', userId);
+    },
+    verifyEmail: async (actionCode: string) => {
+      // Placeholder implementation
+      console.log('Email verification not implemented for', actionCode);
+    },
 
     // AWS Cognito auth methods
     signUpWithCognito,

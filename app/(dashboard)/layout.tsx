@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/NextAuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { FinanceProvider } from '@/contexts/FinanceContext';
 import { MockFinanceProvider } from '@/contexts/MockFinanceContext';
 import { Toaster } from '@/components/ui/toast';

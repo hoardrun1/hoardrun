@@ -99,37 +99,26 @@ export function AIRecommendationsPanel() {
   const getTypeIcon = (type: string) => {
     switch (type) {
       case 'INVESTMENT_OPPORTUNITY':
-        return <Target className="h-5 w-5 text-green-600" />
+        return <Target className="h-5 w-5 text-black" />
       case 'RISK_WARNING':
-        return <AlertTriangle className="h-5 w-5 text-red-600" />
+        return <AlertTriangle className="h-5 w-5 text-black" />
       case 'PORTFOLIO_OPTIMIZATION':
-        return <TrendingUp className="h-5 w-5 text-blue-600" />
+        return <TrendingUp className="h-5 w-5 text-black" />
       case 'MARKET_INSIGHT':
-        return <Brain className="h-5 w-5 text-purple-600" />
+        return <Brain className="h-5 w-5 text-black" />
       default:
-        return <Sparkles className="h-5 w-5 text-gray-600" />
+        return <Sparkles className="h-5 w-5 text-black" />
     }
   }
 
   const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'URGENT':
-        return 'bg-red-100 text-red-800 border-red-200'
-      case 'HIGH':
-        return 'bg-orange-100 text-orange-800 border-orange-200'
-      case 'MEDIUM':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200'
-      case 'LOW':
-        return 'bg-gray-100 text-gray-800 border-gray-200'
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200'
-    }
+    // All priorities use black and white theme
+    return 'bg-white text-black border-black'
   }
 
   const getConfidenceColor = (confidence: number) => {
-    if (confidence >= 80) return 'text-green-600'
-    if (confidence >= 60) return 'text-yellow-600'
-    return 'text-red-600'
+    // All confidence levels use black color
+    return 'text-black'
   }
 
   const filteredRecommendations = recommendations.filter(rec => {
@@ -149,11 +138,11 @@ export function AIRecommendationsPanel() {
     return (
       <div className="space-y-4">
         {[...Array(3)].map((_, i) => (
-          <Card key={i} className="animate-pulse">
+          <Card key={i} className="animate-pulse bg-white border-black">
             <CardContent className="p-6">
-              <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
-              <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
-              <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+              <div className="h-4 bg-black/20 rounded w-3/4 mb-4"></div>
+              <div className="h-3 bg-black/20 rounded w-full mb-2"></div>
+              <div className="h-3 bg-black/20 rounded w-2/3"></div>
             </CardContent>
           </Card>
         ))}
@@ -166,15 +155,15 @@ export function AIRecommendationsPanel() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-2xl font-bold flex items-center gap-2">
-            <Brain className="h-6 w-6 text-purple-600" />
+          <h3 className="text-2xl font-bold flex items-center gap-2 text-black">
+            <Brain className="h-6 w-6 text-black" />
             AI Investment Insights
           </h3>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-black/60">
             Personalized recommendations powered by advanced market analysis
           </p>
         </div>
-        <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+        <Badge className="bg-black text-white">
           <Zap className="h-3 w-3 mr-1" />
           AI Powered
         </Badge>
@@ -182,58 +171,58 @@ export function AIRecommendationsPanel() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
+        <Card className="bg-white border-black">
           <CardContent className="p-4 text-center">
-            <Target className="h-6 w-6 text-green-600 mx-auto mb-2" />
-            <div className="text-2xl font-bold">
+            <Target className="h-6 w-6 text-black mx-auto mb-2" />
+            <div className="text-2xl font-bold text-black">
               {recommendations.filter(r => r.type === 'INVESTMENT_OPPORTUNITY').length}
             </div>
-            <div className="text-xs text-gray-500">Opportunities</div>
+            <div className="text-xs text-black/60">Opportunities</div>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="bg-white border-black">
           <CardContent className="p-4 text-center">
-            <AlertTriangle className="h-6 w-6 text-red-600 mx-auto mb-2" />
-            <div className="text-2xl font-bold">
+            <AlertTriangle className="h-6 w-6 text-black mx-auto mb-2" />
+            <div className="text-2xl font-bold text-black">
               {recommendations.filter(r => r.type === 'RISK_WARNING').length}
             </div>
-            <div className="text-xs text-gray-500">Risk Alerts</div>
+            <div className="text-xs text-black/60">Risk Alerts</div>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="bg-white border-black">
           <CardContent className="p-4 text-center">
-            <Brain className="h-6 w-6 text-purple-600 mx-auto mb-2" />
-            <div className="text-2xl font-bold">
+            <Brain className="h-6 w-6 text-black mx-auto mb-2" />
+            <div className="text-2xl font-bold text-black">
               {recommendations.filter(r => r.type === 'MARKET_INSIGHT').length}
             </div>
-            <div className="text-xs text-gray-500">Market Insights</div>
+            <div className="text-xs text-black/60">Market Insights</div>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="bg-white border-black">
           <CardContent className="p-4 text-center">
-            <Star className="h-6 w-6 text-yellow-600 mx-auto mb-2" />
-            <div className="text-2xl font-bold">
+            <Star className="h-6 w-6 text-black mx-auto mb-2" />
+            <div className="text-2xl font-bold text-black">
               {Math.round(recommendations.reduce((acc, r) => acc + r.confidence, 0) / recommendations.length)}%
             </div>
-            <div className="text-xs text-gray-500">Avg Confidence</div>
+            <div className="text-xs text-black/60">Avg Confidence</div>
           </CardContent>
         </Card>
       </div>
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="all">All ({recommendations.length})</TabsTrigger>
-          <TabsTrigger value="opportunities">
+        <TabsList className="grid w-full grid-cols-4 bg-white border-black">
+          <TabsTrigger value="all" className="data-[state=active]:bg-black data-[state=active]:text-white text-black">All ({recommendations.length})</TabsTrigger>
+          <TabsTrigger value="opportunities" className="data-[state=active]:bg-black data-[state=active]:text-white text-black">
             Opportunities ({recommendations.filter(r => r.type === 'INVESTMENT_OPPORTUNITY').length})
           </TabsTrigger>
-          <TabsTrigger value="warnings">
+          <TabsTrigger value="warnings" className="data-[state=active]:bg-black data-[state=active]:text-white text-black">
             Warnings ({recommendations.filter(r => r.type === 'RISK_WARNING').length})
           </TabsTrigger>
-          <TabsTrigger value="insights">
+          <TabsTrigger value="insights" className="data-[state=active]:bg-black data-[state=active]:text-white text-black">
             Insights ({recommendations.filter(r => r.type === 'MARKET_INSIGHT' || r.type === 'PORTFOLIO_OPTIMIZATION').length})
           </TabsTrigger>
         </TabsList>
@@ -246,17 +235,13 @@ export function AIRecommendationsPanel() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: index * 0.1 }}
             >
-              <Card className={cn(
-                "hover:shadow-lg transition-all duration-300",
-                recommendation.priority === 'URGENT' && "border-red-200 dark:border-red-800",
-                recommendation.priority === 'HIGH' && "border-orange-200 dark:border-orange-800"
-              )}>
+              <Card className="hover:shadow-lg transition-all duration-300 bg-white border-black">
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-3">
                       {getTypeIcon(recommendation.type)}
                       <div>
-                        <CardTitle className="text-lg">{recommendation.title}</CardTitle>
+                        <CardTitle className="text-lg text-black">{recommendation.title}</CardTitle>
                         <div className="flex items-center gap-2 mt-1">
                           <Badge 
                             variant="outline" 
@@ -264,11 +249,11 @@ export function AIRecommendationsPanel() {
                           >
                             {recommendation.priority}
                           </Badge>
-                          <Badge variant="outline" className="text-xs">
+                          <Badge variant="outline" className="text-xs bg-white text-black border-black">
                             {recommendation.category.replace('_', ' ')}
                           </Badge>
                           {recommendation.actionRequired && (
-                            <Badge className="text-xs bg-blue-100 text-blue-800">
+                            <Badge className="text-xs bg-black text-white">
                               Action Required
                             </Badge>
                           )}
@@ -282,23 +267,23 @@ export function AIRecommendationsPanel() {
                       </div>
                       <Progress 
                         value={recommendation.confidence} 
-                        className="w-20 h-2 mt-1"
+                        className="w-20 h-2 mt-1 bg-gray-200"
                       />
                     </div>
                   </div>
                 </CardHeader>
 
                 <CardContent className="space-y-4">
-                  <p className="text-gray-600 dark:text-gray-400">
+                  <p className="text-black/70">
                     {recommendation.description}
                   </p>
 
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <Clock className="h-4 w-4" />
+                    <div className="flex items-center gap-2 text-sm text-black/60">
+                      <Clock className="h-4 w-4 text-black" />
                       {new Date(recommendation.createdAt).toLocaleDateString()}
                       {recommendation.expiresAt && (
-                        <span className="text-red-500">
+                        <span className="text-black font-medium">
                           • Expires {new Date(recommendation.expiresAt).toLocaleDateString()}
                         </span>
                       )}
@@ -309,6 +294,7 @@ export function AIRecommendationsPanel() {
                         variant="outline"
                         size="sm"
                         onClick={() => handleRecommendationAction(recommendation.id, 'dismiss')}
+                        className="bg-white text-black border-black hover:bg-black hover:text-white"
                       >
                         <ThumbsDown className="h-3 w-3 mr-1" />
                         Dismiss
@@ -318,7 +304,7 @@ export function AIRecommendationsPanel() {
                         <Button
                           size="sm"
                           onClick={() => handleRecommendationAction(recommendation.id, 'accept')}
-                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                          className="bg-black text-white hover:bg-gray-800"
                         >
                           <ArrowRight className="h-3 w-3 mr-1" />
                           Take Action
@@ -330,6 +316,7 @@ export function AIRecommendationsPanel() {
                           variant="outline"
                           size="sm"
                           onClick={() => handleRecommendationAction(recommendation.id, 'accept')}
+                          className="bg-white text-black border-black hover:bg-black hover:text-white"
                         >
                           <ThumbsUp className="h-3 w-3 mr-1" />
                           Helpful
@@ -344,11 +331,11 @@ export function AIRecommendationsPanel() {
 
           {filteredRecommendations.length === 0 && (
             <div className="text-center py-12">
-              <Brain className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              <Brain className="h-12 w-12 text-black/40 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-black mb-2">
                 No recommendations available
               </h3>
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="text-black/60">
                 AI is analyzing market data to provide personalized insights
               </p>
             </div>

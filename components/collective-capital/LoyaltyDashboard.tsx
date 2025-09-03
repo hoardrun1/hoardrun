@@ -165,32 +165,22 @@ export function LoyaltyDashboard() {
   }
 
   const getBadgeRarityColor = (rarity: string) => {
-    switch (rarity) {
-      case 'COMMON':
-        return 'border-gray-300 bg-gray-50'
-      case 'RARE':
-        return 'border-blue-300 bg-blue-50'
-      case 'EPIC':
-        return 'border-purple-300 bg-purple-50'
-      case 'LEGENDARY':
-        return 'border-yellow-300 bg-yellow-50'
-      default:
-        return 'border-gray-300 bg-gray-50'
-    }
+    // All badge rarities use black and white theme
+    return 'border-black bg-white'
   }
 
   const getRewardTypeIcon = (type: string) => {
     switch (type) {
       case 'DISCOUNT':
-        return <Gift className="h-5 w-5 text-green-600" />
+        return <Gift className="h-5 w-5 text-black" />
       case 'BONUS':
-        return <Zap className="h-5 w-5 text-blue-600" />
+        return <Zap className="h-5 w-5 text-black" />
       case 'EXCLUSIVE_ACCESS':
-        return <Crown className="h-5 w-5 text-purple-600" />
+        return <Crown className="h-5 w-5 text-black" />
       case 'CASHBACK':
-        return <Coins className="h-5 w-5 text-yellow-600" />
+        return <Coins className="h-5 w-5 text-black" />
       default:
-        return <Gift className="h-5 w-5 text-gray-600" />
+        return <Gift className="h-5 w-5 text-black" />
     }
   }
 
@@ -203,11 +193,11 @@ export function LoyaltyDashboard() {
     return (
       <div className="space-y-4">
         {[...Array(3)].map((_, i) => (
-          <Card key={i} className="animate-pulse">
+          <Card key={i} className="animate-pulse bg-white border-black">
             <CardContent className="p-6">
-              <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
-              <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
-              <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+              <div className="h-4 bg-black/20 rounded w-3/4 mb-4"></div>
+              <div className="h-3 bg-black/20 rounded w-full mb-2"></div>
+              <div className="h-3 bg-black/20 rounded w-2/3"></div>
             </CardContent>
           </Card>
         ))}
@@ -222,94 +212,94 @@ export function LoyaltyDashboard() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-2xl font-bold flex items-center gap-2">
-            <Trophy className="h-6 w-6 text-yellow-600" />
+          <h3 className="text-2xl font-bold flex items-center gap-2 text-black">
+            <Trophy className="h-6 w-6 text-black" />
             Loyalty Rewards
           </h3>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-black/60">
             Earn points and unlock exclusive benefits
           </p>
         </div>
-        <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-lg px-4 py-2">
+        <Badge className="bg-black text-white text-lg px-4 py-2">
           <Coins className="h-4 w-4 mr-2" />
           {stats.totalPoints.toLocaleString()} Points
         </Badge>
       </div>
 
       {/* Level Progress */}
-      <Card className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950">
+      <Card className="bg-white border-black">
         <CardContent className="p-6">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h4 className="text-xl font-bold text-blue-900 dark:text-blue-100">
+              <h4 className="text-xl font-bold text-black">
                 {stats.currentLevel}
               </h4>
-              <p className="text-blue-700 dark:text-blue-300">
+              <p className="text-black/70">
                 {stats.pointsToNextLevel} points to {stats.nextLevel}
               </p>
             </div>
             <div className="text-right">
-              <div className="text-2xl font-bold text-purple-900 dark:text-purple-100">
+              <div className="text-2xl font-bold text-black">
                 Level 4
               </div>
-              <div className="text-sm text-purple-700 dark:text-purple-300">
+              <div className="text-sm text-black/70">
                 Gold Tier
               </div>
             </div>
           </div>
-          <Progress value={getLevelProgress()} className="h-3" />
+          <Progress value={getLevelProgress()} className="h-3 bg-gray-200" />
         </CardContent>
       </Card>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card>
+        <Card className="bg-white border-black">
           <CardContent className="p-4 text-center">
-            <Award className="h-6 w-6 text-yellow-600 mx-auto mb-2" />
-            <div className="text-2xl font-bold">{stats.totalBadges}</div>
-            <div className="text-xs text-gray-500">Badges Earned</div>
+            <Award className="h-6 w-6 text-black mx-auto mb-2" />
+            <div className="text-2xl font-bold text-black">{stats.totalBadges}</div>
+            <div className="text-xs text-black/60">Badges Earned</div>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="bg-white border-black">
           <CardContent className="p-4 text-center">
-            <Target className="h-6 w-6 text-blue-600 mx-auto mb-2" />
-            <div className="text-2xl font-bold">{stats.circlesJoined}</div>
-            <div className="text-xs text-gray-500">Circles Joined</div>
+            <Target className="h-6 w-6 text-black mx-auto mb-2" />
+            <div className="text-2xl font-bold text-black">{stats.circlesJoined}</div>
+            <div className="text-xs text-black/60">Circles Joined</div>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="bg-white border-black">
           <CardContent className="p-4 text-center">
-            <TrendingUp className="h-6 w-6 text-green-600 mx-auto mb-2" />
-            <div className="text-2xl font-bold">{stats.successfulInvestments}</div>
-            <div className="text-xs text-gray-500">Successful Investments</div>
+            <TrendingUp className="h-6 w-6 text-black mx-auto mb-2" />
+            <div className="text-2xl font-bold text-black">{stats.successfulInvestments}</div>
+            <div className="text-xs text-black/60">Successful Investments</div>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="bg-white border-black">
           <CardContent className="p-4 text-center">
-            <Coins className="h-6 w-6 text-yellow-600 mx-auto mb-2" />
-            <div className="text-2xl font-bold">${(stats.totalReturns / 1000).toFixed(1)}K</div>
-            <div className="text-xs text-gray-500">Total Returns</div>
+            <Coins className="h-6 w-6 text-black mx-auto mb-2" />
+            <div className="text-2xl font-bold text-black">${(stats.totalReturns / 1000).toFixed(1)}K</div>
+            <div className="text-xs text-black/60">Total Returns</div>
           </CardContent>
         </Card>
       </div>
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="badges">Badges ({badges.length})</TabsTrigger>
-          <TabsTrigger value="rewards">Rewards</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3 bg-white border-black">
+          <TabsTrigger value="overview" className="data-[state=active]:bg-black data-[state=active]:text-white text-black">Overview</TabsTrigger>
+          <TabsTrigger value="badges" className="data-[state=active]:bg-black data-[state=active]:text-white text-black">Badges ({badges.length})</TabsTrigger>
+          <TabsTrigger value="rewards" className="data-[state=active]:bg-black data-[state=active]:text-white text-black">Rewards</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4 mt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
+            <Card className="bg-white border-black">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Flame className="h-5 w-5 text-red-500" />
+                <CardTitle className="flex items-center gap-2 text-black">
+                  <Flame className="h-5 w-5 text-black" />
                   Recent Achievements
                 </CardTitle>
               </CardHeader>
@@ -318,8 +308,8 @@ export function LoyaltyDashboard() {
                   <div key={badge.id} className="flex items-center gap-3">
                     <div className="text-2xl">{badge.icon}</div>
                     <div>
-                      <div className="font-medium">{badge.name}</div>
-                      <div className="text-sm text-gray-500">
+                      <div className="font-medium text-black">{badge.name}</div>
+                      <div className="text-sm text-black/60">
                         {new Date(badge.earnedAt).toLocaleDateString()}
                       </div>
                     </div>
@@ -328,10 +318,10 @@ export function LoyaltyDashboard() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="bg-white border-black">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Sparkles className="h-5 w-5 text-purple-500" />
+                <CardTitle className="flex items-center gap-2 text-black">
+                  <Sparkles className="h-5 w-5 text-black" />
                   Available Rewards
                 </CardTitle>
               </CardHeader>
@@ -341,8 +331,8 @@ export function LoyaltyDashboard() {
                     <div className="flex items-center gap-3">
                       <div className="text-xl">{reward.icon}</div>
                       <div>
-                        <div className="font-medium">{reward.name}</div>
-                        <div className="text-sm text-gray-500">
+                        <div className="font-medium text-black">{reward.name}</div>
+                        <div className="text-sm text-black/60">
                           {reward.pointsCost} points
                         </div>
                       </div>
@@ -351,6 +341,7 @@ export function LoyaltyDashboard() {
                       size="sm"
                       disabled={stats.totalPoints < reward.pointsCost}
                       onClick={() => claimReward(reward.id)}
+                      className="bg-black text-white hover:bg-gray-800 disabled:bg-gray-300 disabled:text-gray-500"
                     >
                       Claim
                     </Button>
@@ -373,13 +364,13 @@ export function LoyaltyDashboard() {
                 <Card className={cn("text-center", getBadgeRarityColor(badge.rarity))}>
                   <CardContent className="p-6">
                     <div className="text-4xl mb-3">{badge.icon}</div>
-                    <h4 className="font-bold mb-2">{badge.name}</h4>
-                    <p className="text-sm text-gray-600 mb-3">{badge.description}</p>
+                    <h4 className="font-bold mb-2 text-black">{badge.name}</h4>
+                    <p className="text-sm text-black/70 mb-3">{badge.description}</p>
                     <div className="flex items-center justify-between">
-                      <Badge variant="outline" className="text-xs">
+                      <Badge variant="outline" className="text-xs bg-white text-black border-black">
                         {badge.rarity}
                       </Badge>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-black/60">
                         {new Date(badge.earnedAt).toLocaleDateString()}
                       </span>
                     </div>
@@ -400,7 +391,7 @@ export function LoyaltyDashboard() {
                 transition={{ duration: 0.3, delay: index * 0.1 }}
               >
                 <Card className={cn(
-                  "transition-all duration-300",
+                  "transition-all duration-300 bg-white border-black",
                   reward.available ? "hover:shadow-lg" : "opacity-60"
                 )}>
                   <CardContent className="p-6">
@@ -408,19 +399,21 @@ export function LoyaltyDashboard() {
                       <div className="flex items-center gap-3">
                         {getRewardTypeIcon(reward.type)}
                         <div>
-                          <h4 className="font-bold">{reward.name}</h4>
-                          <p className="text-sm text-gray-600">{reward.description}</p>
+                          <h4 className="font-bold text-black">{reward.name}</h4>
+                          <p className="text-sm text-black/70">{reward.description}</p>
                         </div>
                       </div>
-                      <Badge variant="outline" className="text-xs">
+                      <Badge variant="outline" className="text-xs bg-white text-black border-black">
                         {reward.pointsCost} pts
                       </Badge>
                     </div>
                     
                     <div className="flex items-center justify-between">
                       <Badge 
-                        variant={reward.available ? "default" : "secondary"}
-                        className="text-xs"
+                        className={cn(
+                          "text-xs",
+                          reward.available ? "bg-black text-white" : "bg-gray-300 text-gray-600"
+                        )}
                       >
                         {reward.claimed ? "Claimed" : reward.available ? "Available" : "Locked"}
                       </Badge>
@@ -429,6 +422,7 @@ export function LoyaltyDashboard() {
                         size="sm"
                         disabled={!reward.available || reward.claimed || stats.totalPoints < reward.pointsCost}
                         onClick={() => claimReward(reward.id)}
+                        className="bg-black text-white hover:bg-gray-800 disabled:bg-gray-300 disabled:text-gray-500"
                       >
                         {reward.claimed ? "Claimed" : "Claim"}
                       </Button>

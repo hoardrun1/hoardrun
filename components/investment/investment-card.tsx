@@ -65,7 +65,7 @@ export function InvestmentCard({
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-lg">{investment.name}</CardTitle>
+              <CardTitle className="text-base">{investment.name}</CardTitle>
               <CardDescription>{investment.type}</CardDescription>
             </div>
             <Badge className={getRiskColor(investment.risk)}>
@@ -79,14 +79,14 @@ export function InvestmentCard({
             <div className="flex justify-between items-center">
               <div>
                 <div className="text-sm text-gray-500">Invested Amount</div>
-                <div className="text-lg font-semibold">
+                <div className="text-base font-semibold">
                   ${investment.amount.toLocaleString()}
                 </div>
               </div>
               <div className="text-right">
                 <div className="text-sm text-gray-500">Return</div>
                 <div className={cn(
-                  "text-lg font-semibold flex items-center gap-1",
+                  "text-base font-semibold flex items-center gap-1",
                   getReturnColor(investment.return)
                 )}>
                   {investment.return > 0 ? (

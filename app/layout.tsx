@@ -6,6 +6,7 @@ import ClientAuthProvider from '../components/client-auth-provider'
 import { NavigationProvider } from '@/providers/NavigationProvider'
 import { FinanceProvider } from '@/contexts/FinanceContext'
 import { NotificationProvider } from '@/contexts/NotificationContext'
+import { ThemeProvider } from '@/contexts/ThemeContext'
 import { FloatingNotificationBell } from '@/components/ui/floating-notification-bell'
 
 // const inter = Inter({ subsets: ['latin'] })
@@ -24,16 +25,18 @@ export default function RootLayout({
     <html lang="en">
       <body className="font-sans">
         {/* Using AWS Cognito authentication instead of NextAuth */}
-        <ClientAuthProvider>
-          <FinanceProvider>
-            <NavigationProvider>
-              <NotificationProvider>
-                {children}
-                <FloatingNotificationBell />
-              </NotificationProvider>
-            </NavigationProvider>
-          </FinanceProvider>
-        </ClientAuthProvider>
+        <ThemeProvider>
+          <ClientAuthProvider>
+            <FinanceProvider>
+              <NavigationProvider>
+                <NotificationProvider>
+                  {children}
+                  <FloatingNotificationBell />
+                </NotificationProvider>
+              </NavigationProvider>
+            </FinanceProvider>
+          </ClientAuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   )

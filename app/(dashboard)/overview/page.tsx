@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useRouter } from 'next/navigation';
 import {
   TrendingUp,
@@ -38,6 +39,7 @@ import { DepositModal } from '@/components/deposit-modal';
 import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sidebar-layout';
 import { SidebarContent } from '@/components/ui/sidebar-content';
 import { SidebarToggle } from '@/components/ui/sidebar-toggle';
+import { SectionFooter } from '@/components/ui/section-footer';
 
 interface FinancialSummary {
   totalBalance: number;
@@ -313,18 +315,18 @@ export default function OverviewPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white p-6">
+      <div className="min-h-screen bg-background p-6">
         <div className="max-w-7xl mx-auto">
           <div className="animate-pulse space-y-6">
-            <div className="h-8 bg-gray-200 rounded-lg w-1/4"></div>
+            <div className="h-8 bg-muted rounded-lg w-1/4"></div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="h-32 bg-gray-200 rounded-xl shadow-lg"></div>
+                <div key={i} className="h-32 bg-muted rounded-xl shadow-lg"></div>
               ))}
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="h-96 bg-gray-200 rounded-xl shadow-lg"></div>
-              <div className="h-96 bg-gray-200 rounded-xl shadow-lg"></div>
+              <div className="h-96 bg-muted rounded-xl shadow-lg"></div>
+              <div className="h-96 bg-muted rounded-xl shadow-lg"></div>
             </div>
           </div>
         </div>
@@ -338,30 +340,30 @@ export default function OverviewPage() {
         sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
       >
         <SidebarToggle />
-        <div className="min-h-screen bg-white pt-16 pb-4 px-4 sm:pt-20 sm:pb-6 sm:px-6">
-          <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
+        <div className="min-h-screen bg-background pt-16 pb-4 px-3 sm:pt-20 sm:pb-6 sm:px-4 mb-20">
+          <div className="max-w-7xl mx-auto space-y-3 sm:space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold bg-gradient-to-r from-black to-gray-700 bg-clip-text text-transparent">
+            <h1 className="text-xs sm:text-base font-bold text-foreground">
               Financial Overview
             </h1>
-            <p className="text-black/60 mt-2 text-lg">
+            <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
               Welcome back, {user?.name || 'User'}! Here's your financial snapshot.
             </p>
           </div>
           <Button 
             onClick={() => router.push('/home')}
-            className="bg-black hover:bg-gray-800 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-xs sm:text-sm px-2 py-1 h-auto"
           >
-            <BarChart3 className="h-4 w-4 mr-2" />
+            <BarChart3 className="h-3 w-3 mr-1" />
             View Dashboard
           </Button>
         </div>
 
         {/* Key Metrics */}
         {financialSummary && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -369,22 +371,22 @@ export default function OverviewPage() {
             >
               <Card className="border-0 shadow-xl bg-gradient-to-br from-black to-gray-900 text-white overflow-hidden relative">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-16 translate-x-16"></div>
-                <CardContent className="p-6 relative">
+                <CardContent className="p-3 sm:p-4 relative">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-gray-300 text-sm font-medium">Total Balance</p>
-                      <h3 className="text-sm sm:text-base md:text-lg lg:text-xl font-bold mt-1 sm:mt-2">
+                      <p className="text-gray-300 text-xs sm:text-sm font-medium">Total Balance</p>
+                      <h3 className="text-xs sm:text-base font-bold mt-1">
                         {formatCurrency(financialSummary.totalBalance)}
                       </h3>
-                      <div className={`flex items-center mt-3 ${getChangeColor(financialSummary.changePercentages.balance)}`}>
+                      <div className={`flex items-center mt-2 ${getChangeColor(financialSummary.changePercentages.balance)}`}>
                         {getChangeIcon(financialSummary.changePercentages.balance)}
-                        <span className="text-sm ml-1 font-medium">
+                        <span className="text-xs sm:text-sm ml-1 font-medium">
                           {Math.abs(financialSummary.changePercentages.balance)}% from last month
                         </span>
                       </div>
                     </div>
-                    <div className="p-4 rounded-full bg-white/10 backdrop-blur-sm">
-                      <DollarSign className="h-7 w-7 text-white" />
+                    <div className="p-2 sm:p-3 rounded-full bg-white/10 backdrop-blur-sm">
+                      <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                     </div>
                   </div>
                 </CardContent>
@@ -398,22 +400,22 @@ export default function OverviewPage() {
             >
               <Card className="border-0 shadow-xl bg-gradient-to-br from-white to-gray-50 overflow-hidden relative">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-black/5 rounded-full -translate-y-16 translate-x-16"></div>
-                <CardContent className="p-6 relative">
+                <CardContent className="p-3 sm:p-4 relative">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-gray-600 text-sm font-medium">Monthly Income</p>
-                      <h3 className="text-sm sm:text-base md:text-lg lg:text-xl font-bold mt-1 sm:mt-2 text-black">
+                      <p className="text-gray-600 text-xs sm:text-sm font-medium">Monthly Income</p>
+                      <h3 className="text-xs sm:text-base font-bold mt-1 text-black">
                         {formatCurrency(financialSummary.monthlyIncome)}
                       </h3>
-                      <div className={`flex items-center mt-3 ${getChangeColor(financialSummary.changePercentages.income)}`}>
+                      <div className={`flex items-center mt-2 ${getChangeColor(financialSummary.changePercentages.income)}`}>
                         {getChangeIcon(financialSummary.changePercentages.income)}
-                        <span className="text-sm ml-1 font-medium">
+                        <span className="text-xs sm:text-sm ml-1 font-medium">
                           {Math.abs(financialSummary.changePercentages.income)}% from last month
                         </span>
                       </div>
                     </div>
-                    <div className="p-4 rounded-full bg-black/10 backdrop-blur-sm">
-                      <TrendingUp className="h-7 w-7 text-black" />
+                    <div className="p-2 sm:p-3 rounded-full bg-black/10 backdrop-blur-sm">
+                      <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-black" />
                     </div>
                   </div>
                 </CardContent>
@@ -427,22 +429,22 @@ export default function OverviewPage() {
             >
               <Card className="border-0 shadow-xl bg-gradient-to-br from-gray-900 to-black text-white overflow-hidden relative">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-16 translate-x-16"></div>
-                <CardContent className="p-6 relative">
+                <CardContent className="p-3 sm:p-4 relative">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-gray-300 text-sm font-medium">Monthly Expenses</p>
-                      <h3 className="text-sm sm:text-base md:text-lg lg:text-xl font-bold mt-1 sm:mt-2">
+                      <p className="text-gray-300 text-xs sm:text-sm font-medium">Monthly Expenses</p>
+                      <h3 className="text-xs sm:text-base font-bold mt-1">
                         {formatCurrency(financialSummary.monthlyExpenses)}
                       </h3>
-                      <div className={`flex items-center mt-3 ${getChangeColor(-financialSummary.changePercentages.expenses)}`}>
+                      <div className={`flex items-center mt-2 ${getChangeColor(-financialSummary.changePercentages.expenses)}`}>
                         {getChangeIcon(-financialSummary.changePercentages.expenses)}
-                        <span className="text-sm ml-1 font-medium">
+                        <span className="text-xs sm:text-sm ml-1 font-medium">
                           {Math.abs(financialSummary.changePercentages.expenses)}% from last month
                         </span>
                       </div>
                     </div>
-                    <div className="p-4 rounded-full bg-white/10 backdrop-blur-sm">
-                      <TrendingDown className="h-7 w-7 text-white" />
+                    <div className="p-2 sm:p-3 rounded-full bg-white/10 backdrop-blur-sm">
+                      <TrendingDown className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                     </div>
                   </div>
                 </CardContent>
@@ -456,22 +458,22 @@ export default function OverviewPage() {
             >
               <Card className="border-0 shadow-xl bg-gradient-to-br from-gray-100 to-white overflow-hidden relative">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-black/5 rounded-full -translate-y-16 translate-x-16"></div>
-                <CardContent className="p-6 relative">
+                <CardContent className="p-3 sm:p-4 relative">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-gray-600 text-sm font-medium">Savings Rate</p>
-                      <h3 className="text-sm sm:text-base md:text-lg lg:text-xl font-bold mt-1 sm:mt-2 text-black">
+                      <p className="text-gray-600 text-xs sm:text-sm font-medium">Savings Rate</p>
+                      <h3 className="text-xs sm:text-base font-bold mt-1 text-black">
                         {financialSummary.savingsRate}%
                       </h3>
-                      <div className={`flex items-center mt-3 ${getChangeColor(financialSummary.changePercentages.savings)}`}>
+                      <div className={`flex items-center mt-2 ${getChangeColor(financialSummary.changePercentages.savings)}`}>
                         {getChangeIcon(financialSummary.changePercentages.savings)}
-                        <span className="text-sm ml-1 font-medium">
+                        <span className="text-xs sm:text-sm ml-1 font-medium">
                           {Math.abs(financialSummary.changePercentages.savings)}% from last month
                         </span>
                       </div>
                     </div>
-                    <div className="p-4 rounded-full bg-black/10 backdrop-blur-sm">
-                      <PiggyBank className="h-7 w-7 text-black" />
+                    <div className="p-2 sm:p-3 rounded-full bg-black/10 backdrop-blur-sm">
+                      <PiggyBank className="h-4 w-4 sm:h-5 sm:w-5 text-black" />
                     </div>
                   </div>
                 </CardContent>
@@ -481,7 +483,7 @@ export default function OverviewPage() {
         )}
 
         {/* Additional Stats and Recent Activity */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
           {/* Additional Financial Stats */}
           {overviewStats && (
             <motion.div
@@ -489,78 +491,78 @@ export default function OverviewPage() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.5 }}
             >
-              <Card className="border-0 shadow-xl bg-white">
-                <CardHeader className="pb-4">
-                  <CardTitle className="flex items-center gap-3 text-xl">
-                    <div className="p-2 rounded-lg bg-black">
-                      <BarChart3 className="h-5 w-5 text-white" />
+              <Card className="border-0 shadow-xl bg-card border-border">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-xs sm:text-base text-foreground">
+                    <div className="p-1 sm:p-2 rounded-lg bg-primary">
+                      <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4 text-primary-foreground" />
                     </div>
                     Asset Breakdown
                   </CardTitle>
-                  <CardDescription className="text-gray-600">
+                  <CardDescription className="text-muted-foreground text-xs sm:text-sm">
                     Your financial portfolio at a glance
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200 transition-all duration-300">
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 rounded-xl bg-black">
-                        <Wallet className="h-5 w-5 text-white" />
+                <CardContent className="space-y-3 sm:space-y-4">
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-muted hover:bg-muted/80 transition-all duration-300">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="p-2 rounded-xl bg-primary">
+                        <Wallet className="h-3 w-3 sm:h-4 sm:w-4 text-primary-foreground" />
                       </div>
                       <div>
-                        <p className="font-semibold text-black">Total Assets</p>
-                        <p className="text-sm text-gray-600">All accounts combined</p>
+                        <p className="font-semibold text-foreground text-xs sm:text-sm">Total Assets</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">All accounts combined</p>
                       </div>
                     </div>
-                    <span className="font-bold text-xl text-black">
+                    <span className="font-bold text-xs sm:text-base text-foreground">
                       {formatCurrency(overviewStats.totalAssets)}
                     </span>
                   </div>
 
-                  <Separator className="bg-gray-200" />
+                  <Separator className="bg-border" />
 
-                  <div className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200 transition-all duration-300">
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 rounded-xl bg-gray-800">
-                        <PiggyBank className="h-5 w-5 text-white" />
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-muted hover:bg-muted/80 transition-all duration-300">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="p-2 rounded-xl bg-secondary">
+                        <PiggyBank className="h-3 w-3 sm:h-4 sm:w-4 text-secondary-foreground" />
                       </div>
                       <div>
-                        <p className="font-semibold text-black">Savings</p>
-                        <p className="text-sm text-gray-600">Emergency & goals</p>
+                        <p className="font-semibold text-foreground text-xs sm:text-sm">Savings</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">Emergency & goals</p>
                       </div>
                     </div>
-                    <span className="font-bold text-xl text-black">
+                    <span className="font-bold text-xs sm:text-base text-foreground">
                       {formatCurrency(overviewStats.totalSavings)}
                     </span>
                   </div>
 
-                  <Separator className="bg-gray-200" />
+                  <Separator className="bg-border" />
 
-                  <div className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200 transition-all duration-300">
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 rounded-xl bg-black">
-                        <TrendingUp className="h-5 w-5 text-white" />
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-muted hover:bg-muted/80 transition-all duration-300">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <div className="p-2 rounded-xl bg-primary">
+                        <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-primary-foreground" />
                       </div>
                       <div>
-                        <p className="font-semibold text-black">Investments</p>
-                        <p className="text-sm text-gray-600">Stocks, bonds & funds</p>
+                        <p className="font-semibold text-foreground text-xs sm:text-sm">Investments</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">Stocks, bonds & funds</p>
                       </div>
                     </div>
-                    <span className="font-bold text-xl text-black">
+                    <span className="font-bold text-xs sm:text-base text-foreground">
                       {formatCurrency(overviewStats.totalInvestments)}
                     </span>
                   </div>
 
-                  <Separator className="bg-gray-200" />
+                  <Separator className="bg-border" />
 
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="font-semibold text-black">Budget Utilization</span>
-                      <span className="font-bold text-black">{overviewStats.budgetUtilization}%</span>
+                      <span className="font-semibold text-foreground text-xs sm:text-sm">Budget Utilization</span>
+                      <span className="font-bold text-foreground text-xs sm:text-sm">{overviewStats.budgetUtilization}%</span>
                     </div>
-                    <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+                    <div className="h-3 bg-muted rounded-full overflow-hidden">
                       <motion.div
-                        className="h-full bg-gradient-to-r from-black to-gray-700 rounded-full"
+                        className="h-full bg-gradient-to-r from-primary to-primary/80 rounded-full"
                         initial={{ width: 0 }}
                         animate={{ width: `${overviewStats.budgetUtilization}%` }}
                         transition={{ duration: 1, ease: "easeOut" }}
@@ -568,14 +570,14 @@ export default function OverviewPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="font-semibold text-black">Savings Goal Progress</span>
-                      <span className="font-bold text-black">{overviewStats.savingsGoalProgress}%</span>
+                      <span className="font-semibold text-foreground text-xs sm:text-sm">Savings Goal Progress</span>
+                      <span className="font-bold text-foreground text-xs sm:text-sm">{overviewStats.savingsGoalProgress}%</span>
                     </div>
-                    <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
+                    <div className="h-3 bg-muted rounded-full overflow-hidden">
                       <motion.div
-                        className="h-full bg-gradient-to-r from-gray-600 to-black rounded-full"
+                        className="h-full bg-gradient-to-r from-secondary to-primary rounded-full"
                         initial={{ width: 0 }}
                         animate={{ width: `${overviewStats.savingsGoalProgress}%` }}
                         transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
@@ -593,15 +595,15 @@ export default function OverviewPage() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.6 }}
           >
-            <Card className="border-0 shadow-xl bg-white">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center gap-3 text-xl">
-                  <div className="p-2 rounded-lg bg-black">
-                    <Clock className="h-5 w-5 text-white" />
+            <Card className="border-0 shadow-xl bg-card border-border">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-xs sm:text-base text-foreground">
+                  <div className="p-1 sm:p-2 rounded-lg bg-primary">
+                    <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-primary-foreground" />
                   </div>
                   Recent Activity
                 </CardTitle>
-                <CardDescription className="text-gray-600">
+                <CardDescription className="text-muted-foreground text-xs sm:text-sm">
                   Your latest financial activities
                 </CardDescription>
               </CardHeader>
@@ -613,27 +615,27 @@ export default function OverviewPage() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.7 + index * 0.1 }}
-                      className="flex items-center gap-4 p-4 rounded-xl border border-gray-100 hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 transition-all duration-300 hover:shadow-md"
+                      className="flex items-center gap-4 p-4 rounded-xl border border-border hover:bg-muted transition-all duration-300 hover:shadow-md"
                     >
-                      <div className="p-3 rounded-xl bg-gradient-to-r from-gray-100 to-gray-200">
+                      <div className="p-3 rounded-xl bg-muted">
                         {getActivityIcon(activity.type)}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
-                          <p className="font-semibold truncate text-black">{activity.title}</p>
+                          <p className="font-semibold truncate text-foreground text-xs sm:text-sm">{activity.title}</p>
                           {activity.amount && (
-                            <span className={`font-bold ${
-                              activity.amount > 0 ? 'text-black' : 'text-gray-600'
+                            <span className={`font-bold text-xs sm:text-sm ${
+                              activity.amount > 0 ? 'text-foreground' : 'text-muted-foreground'
                             }`}>
                               {activity.amount > 0 ? '+' : ''}{formatCurrency(Math.abs(activity.amount))}
                             </span>
                           )}
                         </div>
                         <div className="flex items-center justify-between mt-1">
-                          <p className="text-sm text-gray-600 truncate">{activity.description}</p>
+                          <p className="text-xs sm:text-sm text-muted-foreground truncate">{activity.description}</p>
                           <div className="flex items-center gap-2">
                             {getStatusIcon(activity.status)}
-                            <span className="text-xs text-gray-500">
+                            <span className="text-xs text-muted-foreground">
                               {new Date(activity.date).toLocaleDateString()}
                             </span>
                           </div>
@@ -643,14 +645,14 @@ export default function OverviewPage() {
                   ))}
                 </div>
 
-                <Separator className="my-6 bg-gray-200" />
+                <Separator className="my-6 bg-border" />
 
                 <div className="flex gap-3">
                   <Button 
                     variant="outline" 
                     size="sm" 
                     onClick={() => router.push('/transactions')}
-                    className="border-gray-300 text-black hover:bg-gray-100"
+                    className="border-border text-foreground hover:bg-muted"
                   >
                     View All Transactions
                   </Button>
@@ -658,7 +660,7 @@ export default function OverviewPage() {
                     variant="outline" 
                     size="sm" 
                     onClick={() => router.push('/savings')}
-                    className="border-gray-300 text-black hover:bg-gray-100"
+                    className="border-border text-foreground hover:bg-muted"
                   >
                     Manage Goals
                   </Button>
@@ -674,26 +676,26 @@ export default function OverviewPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
         >
-          <Card className="border-0 shadow-xl bg-gradient-to-r from-white to-gray-50">
+          <Card className="border-0 shadow-xl bg-card border-border">
             <CardHeader>
-              <CardTitle className="text-lg sm:text-xl md:text-2xl text-black">Quick Actions</CardTitle>
-              <CardDescription className="text-gray-600">
+              <CardTitle className="text-xs sm:text-base text-foreground">Quick Actions</CardTitle>
+              <CardDescription className="text-muted-foreground text-xs sm:text-sm">
                 Common tasks to manage your finances
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <CardContent className="p-3 sm:p-4">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-2 sm:gap-3">
                 {/* Add Money Button */}
                 <Button
                   variant="outline"
-                  className="h-24 flex-col gap-3 border-2 border-gray-200 hover:border-black hover:bg-black hover:text-white transition-all duration-300 transform hover:scale-105 shadow-lg"
+                  className="h-16 sm:h-20 flex-col gap-1 sm:gap-2 border border-border hover:border-primary hover:bg-primary hover:text-primary-foreground transition-all duration-300 transform hover:scale-105 shadow-lg"
                   onClick={() => {
                     console.log('Transfer Money button clicked!');
                     setIsTransferModalOpen(true);
                   }}
                 >
-                  <ArrowUpRight className="h-6 w-6" />
-                  <span className="text-sm font-medium">Transfer Money</span>
+                  <ArrowUpRight className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <span className="text-xs sm:text-sm font-medium">Transfer Money</span>
                 </Button>
 
                 {/* Transfer Modal */}
@@ -820,14 +822,14 @@ export default function OverviewPage() {
                 {/* Set Goal Button */}
                 <Button
                   variant="outline"
-                  className="h-24 flex-col gap-3 border-2 border-gray-200 hover:border-black hover:bg-black hover:text-white transition-all duration-300 transform hover:scale-105 shadow-lg"
+                  className="h-16 sm:h-20 flex-col gap-1 sm:gap-2 border border-border hover:border-primary hover:bg-primary hover:text-primary-foreground transition-all duration-300 transform hover:scale-105 shadow-lg"
                   onClick={() => {
                     console.log('Set Goal button clicked!');
                     setIsSavingsModalOpen(true);
                   }}
                 >
-                  <Target className="h-6 w-6" />
-                  <span className="text-sm font-medium">Set Goal</span>
+                  <Target className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <span className="text-xs sm:text-sm font-medium">Set Goal</span>
                 </Button>
 
                 {/* Set Goal Modal */}
@@ -937,19 +939,19 @@ export default function OverviewPage() {
                 
                 <Button
                   variant="outline"
-                  className="h-24 flex-col gap-3 border-2 border-gray-200 hover:border-black hover:bg-black hover:text-white transition-all duration-300 transform hover:scale-105 shadow-lg"
+                  className="h-16 sm:h-20 flex-col gap-1 sm:gap-2 border border-border hover:border-primary hover:bg-primary hover:text-primary-foreground transition-all duration-300 transform hover:scale-105 shadow-lg"
                   onClick={() => router.push('/investment')}
                 >
-                  <TrendingUp className="h-6 w-6" />
-                  <span className="text-sm font-medium">Invest</span>
+                  <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <span className="text-xs sm:text-sm font-medium">Invest</span>
                 </Button>
                 <Button
                   variant="outline"
-                  className="h-24 flex-col gap-3 border-2 border-gray-200 hover:border-black hover:bg-black hover:text-white transition-all duration-300 transform hover:scale-105 shadow-lg"
+                  className="h-16 sm:h-20 flex-col gap-1 sm:gap-2 border border-border hover:border-primary hover:bg-primary hover:text-primary-foreground transition-all duration-300 transform hover:scale-105 shadow-lg"
                   onClick={() => router.push('/cards')}
                 >
-                  <CreditCard className="h-6 w-6" />
-                  <span className="text-sm font-medium">Manage Cards</span>
+                  <CreditCard className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <span className="text-xs sm:text-sm font-medium">Manage Cards</span>
                 </Button>
               </div>
             </CardContent>
@@ -963,6 +965,7 @@ export default function OverviewPage() {
           open={isDepositModalOpen}
           onOpenChange={setIsDepositModalOpen}
         />
+        <SectionFooter section="main" activePage="/overview" />
       </ResponsiveSidebarLayout>
     </SidebarProvider>
   );

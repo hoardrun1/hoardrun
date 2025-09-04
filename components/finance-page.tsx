@@ -18,8 +18,6 @@ import {
   Settings,
   Download,
   Upload,
-  PieChart,
-  BarChart2,
   Brain,
   Loader2,
   RefreshCcw
@@ -31,7 +29,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
 import { DatePicker } from "@/components/ui/date-picker"
-import { LayoutWrapper } from "@/components/ui/layout-wrapper"
+import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sidebar-layout';
+import { SidebarContent } from '@/components/ui/sidebar-content';
+import { SidebarToggle } from '@/components/ui/sidebar-toggle';
+import { DepositModal } from '@/components/deposit-modal';
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
@@ -40,6 +41,8 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { useToast } from "@/components/ui/use-toast"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts'
 import { cn } from "@/lib/utils"
+import Link from 'next/link'
+import { Home, BarChart2, CreditCard, PieChart } from 'lucide-react'
 
 interface Transaction {
   id: string
@@ -118,17 +121,18 @@ export function FinancePageComponent() {
       setError(null)
 
       // Simulate API calls with Promise.all for parallel requests
-      const [transactionsData, categoriesData, metricsData, insightsData] = await Promise.all([
+      const [transactionsResponse, categoriesResponse, metricsResponse, insightsResponse] = await Promise.all([
         fetch('/api/transactions').then(res => res.json()),
         fetch('/api/categories').then(res => res.json()),
         fetch('/api/financial-metrics').then(res => res.json()),
         fetch('/api/ai-insights').then(res => res.json())
       ])
 
-      setTransactions(transactionsData)
-      setCategories(categoriesData)
-      setMetrics(metricsData)
-      setAIInsights(insightsData)
+      // Extract data from API responses
+      setTransactions(Array.isArray(transactionsResponse) ? transactionsResponse : transactionsResponse?.data || [])
+      setCategories(Array.isArray(categoriesResponse) ? categoriesResponse : categoriesResponse?.data || [])
+      setMetrics(metricsResponse?.data || metricsResponse || null)
+      setAIInsights(Array.isArray(insightsResponse) ? insightsResponse : insightsResponse?.data || [])
     } catch (err) {
       const errorMessage = 'Failed to load financial data. Please try again.'
       setError(errorMessage)
@@ -143,8 +147,53 @@ export function FinancePageComponent() {
   }, [toast])
 
   useEffect(() => {
-    fetchData()
-  }, [fetchData])
+    let isMounted = true
+    
+    const loadData = async () => {
+      if (!isMounted) return
+      
+      try {
+        setIsLoading(true)
+        setError(null)
+
+        // Simulate API calls with Promise.all for parallel requests
+        const [transactionsResponse, categoriesResponse, metricsResponse, insightsResponse] = await Promise.all([
+          fetch('/api/transactions').then(res => res.json()),
+          fetch('/api/categories').then(res => res.json()),
+          fetch('/api/financial-metrics').then(res => res.json()),
+          fetch('/api/ai-insights').then(res => res.json())
+        ])
+
+        if (isMounted) {
+          // Extract data from API responses
+          setTransactions(Array.isArray(transactionsResponse) ? transactionsResponse : transactionsResponse?.data || [])
+          setCategories(Array.isArray(categoriesResponse) ? categoriesResponse : categoriesResponse?.data || [])
+          setMetrics(metricsResponse?.data || metricsResponse || null)
+          setAIInsights(Array.isArray(insightsResponse) ? insightsResponse : insightsResponse?.data || [])
+        }
+      } catch (err) {
+        if (isMounted) {
+          const errorMessage = 'Failed to load financial data. Please try again.'
+          setError(errorMessage)
+          toast({
+            title: "Error",
+            description: errorMessage,
+            variant: "destructive"
+          })
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false)
+        }
+      }
+    }
+    
+    loadData()
+    
+    return () => {
+      isMounted = false
+    }
+  }, [toast])
 
   // Filter transactions based on search and category
   const filteredTransactions = useCallback(() => {
@@ -234,38 +283,46 @@ export function FinancePageComponent() {
     )
   }
 
-  return (
-    <LayoutWrapper className="bg-gray-50 dark:bg-gray-900 min-h-screen">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <div className="container mx-auto px-4">
-          <div className="flex h-16 items-center justify-between">
-            <div className="flex items-center gap-4">
-              <h1 className="text-xl font-semibold dark:text-white">Finance</h1>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="relative hidden md:block">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
-                <Input 
-                  placeholder="Search transactions..." 
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-64 pl-9"
-                />
-              </div>
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-5 w-5" />
-                <span className="absolute top-1 right-1 h-2 w-2 bg-gray-500 rounded-full" />
-              </Button>
-              <Button variant="ghost" size="icon">
-                <Settings className="h-5 w-5" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+  // Deposit modal state
+  const [isDepositModalOpen, setIsDepositModalOpen] = useState(false)
 
-      <main className="container mx-auto px-4 py-6 space-y-6">
+  return (
+    <SidebarProvider>
+      <ResponsiveSidebarLayout
+        sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
+      >
+        <SidebarToggle />
+        <div className="min-h-screen bg-white pt-16 pb-4 px-3 sm:pt-20 sm:pb-6 sm:px-4">
+          <div className="max-w-7xl mx-auto space-y-3 sm:space-y-4">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-xs sm:text-base font-bold bg-gradient-to-r from-black to-gray-700 bg-clip-text text-transparent">
+                  Finance Overview
+                </h1>
+                <p className="text-black/60 mt-1 text-xs sm:text-sm">
+                  Track your income, expenses, and financial insights
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="relative hidden md:block">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+                  <Input 
+                    placeholder="Search transactions..." 
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-64 pl-9"
+                  />
+                </div>
+                <Button variant="ghost" size="icon" className="relative">
+                  <Bell className="h-5 w-5" />
+                  <span className="absolute top-1 right-1 h-2 w-2 bg-gray-500 rounded-full" />
+                </Button>
+                <Button variant="ghost" size="icon">
+                  <Settings className="h-5 w-5" />
+                </Button>
+              </div>
+            </div>
         {/* AI Insights */}
         {showInsights && (
           <motion.div
@@ -273,7 +330,7 @@ export function FinancePageComponent() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <Card className="border-2 border-blue-500/20">
+            <Card className="border-2 border-gray-300 dark:border-gray-700">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -307,12 +364,7 @@ export function FinancePageComponent() {
                         exit={{ opacity: 0, x: 20 }}
                         transition={{ delay: index * 0.1 }}
                       >
-                        <Card className={cn(
-                          "border-l-4",
-                          insight.type === 'spending' ? "border-red-500" :
-                          insight.type === 'saving' ? "border-green-500" :
-                          "border-blue-500"
-                        )}>
+                        <Card className="border-l-4 border-gray-800 dark:border-gray-200">
                           <CardContent className="p-4">
                             <div className="flex justify-between items-start">
                               <div>
@@ -369,7 +421,7 @@ export function FinancePageComponent() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
               >
-                <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+                <Card className="bg-black text-white border-gray-800">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-medium text-gray-100">
                       Total Balance
@@ -377,12 +429,12 @@ export function FinancePageComponent() {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">
-                      ${metrics?.totalBalance.toLocaleString()}
+                      ${metrics?.totalBalance?.toLocaleString() || '0'}
                     </div>
-                    <div className="flex items-center mt-1 text-gray-100">
+                    <div className="flex items-center mt-1 text-gray-300">
                       <ArrowUpRight className="h-4 w-4 mr-1" />
                       <span className="text-sm">
-                        +{metrics?.trends.balance}% from last month
+                        +{metrics?.trends?.balance || 0}% from last month
                       </span>
                     </div>
                   </CardContent>
@@ -394,15 +446,19 @@ export function FinancePageComponent() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: 0.1 }}
               >
-                <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
+                <Card className="bg-gray-900 text-white border-gray-700">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-medium text-gray-100">Monthly Income</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">$5,800.00</div>
-                    <div className="flex items-center mt-1 text-gray-100">
+                    <div className="text-2xl font-bold">
+                      ${metrics?.monthlyIncome?.toLocaleString() || '0'}
+                    </div>
+                    <div className="flex items-center mt-1 text-gray-300">
                       <ArrowUpRight className="h-4 w-4 mr-1" />
-                      <span className="text-sm">+12% from last month</span>
+                      <span className="text-sm">
+                        +{metrics?.trends?.income || 0}% from last month
+                      </span>
                     </div>
                   </CardContent>
                 </Card>
@@ -413,15 +469,19 @@ export function FinancePageComponent() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: 0.2 }}
               >
-                <Card className="bg-gradient-to-br from-orange-500 to-orange-600 text-white">
+                <Card className="bg-gray-800 text-white border-gray-600">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-medium text-gray-100">Monthly Expenses</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">$3,700.00</div>
-                    <div className="flex items-center mt-1 text-gray-100">
+                    <div className="text-2xl font-bold">
+                      ${metrics?.monthlyExpenses?.toLocaleString() || '0'}
+                    </div>
+                    <div className="flex items-center mt-1 text-gray-300">
                       <ArrowUpRight className="h-4 w-4 mr-1" />
-                      <span className="text-sm">+5% from last month</span>
+                      <span className="text-sm">
+                        +{metrics?.trends?.expenses || 0}% from last month
+                      </span>
                     </div>
                   </CardContent>
                 </Card>
@@ -432,15 +492,19 @@ export function FinancePageComponent() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: 0.3 }}
               >
-                <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+                <Card className="bg-gray-700 text-white border-gray-500">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-medium text-gray-100">Savings Rate</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">36.2%</div>
-                    <div className="flex items-center mt-1 text-gray-100">
+                    <div className="text-2xl font-bold">
+                      {metrics?.savingsRate?.toFixed(1) || '0'}%
+                    </div>
+                    <div className="flex items-center mt-1 text-gray-300">
                       <ArrowUpRight className="h-4 w-4 mr-1" />
-                      <span className="text-sm">+2.5% from last month</span>
+                      <span className="text-sm">
+                        +{metrics?.trends?.savings || 0}% from last month
+                      </span>
                     </div>
                   </CardContent>
                 </Card>
@@ -542,7 +606,7 @@ export function FinancePageComponent() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {categories.map((category, index) => (
+                  {(categories || []).map((category, index) => (
                     <motion.div
                       key={index}
                       initial={{ opacity: 0, y: 20 }}
@@ -550,7 +614,7 @@ export function FinancePageComponent() {
                       transition={{ delay: index * 0.1 }}
                       className="flex items-center gap-4"
                     >
-                      <div className={`w-2 h-2 rounded-full bg-${category.color}-500`} />
+                      <div className="w-2 h-2 rounded-full bg-gray-800 dark:bg-gray-200" />
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-1">
                           <span className="font-medium dark:text-white">
@@ -562,7 +626,7 @@ export function FinancePageComponent() {
                         </div>
                         <div className="w-full h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
                           <motion.div 
-                            className={`h-full bg-${category.color}-500`}
+                            className="h-full bg-gray-800 dark:bg-gray-200"
                             initial={{ width: 0 }}
                             animate={{ width: `${category.percentage}%` }}
                             transition={{ duration: 0.5, delay: index * 0.1 }}
@@ -687,7 +751,59 @@ export function FinancePageComponent() {
             </CardContent>
           </Card>
         </motion.div>
-      </main>
-    </LayoutWrapper>
+          </div>
+        </div>
+
+        {/* Navigation Footer */}
+        <footer className="fixed bottom-0 left-0 right-0 bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800 py-2">
+          <div className="container mx-auto px-4">
+            <nav className="grid grid-cols-5 gap-1 sm:gap-2">
+              {[
+                { icon: Home, label: 'Home', href: '/home' },
+                { icon: BarChart2, label: 'Finance', active: true, href: '/finance' },
+                { icon: CreditCard, label: 'Cards', href: '/cards' },
+                { icon: PieChart, label: 'Investment', href: '/investment' },
+                { icon: Settings, label: 'Settings', href: '/settings' }
+              ].map((item, index) => (
+                item.href ? (
+                  <Link key={index} href={item.href}>
+                    <Button
+                      variant="ghost"
+                      className={`w-full flex flex-col items-center py-1 sm:py-2 h-auto transition-colors ${
+                        item.active
+                          ? 'text-black dark:text-white font-bold bg-gray-100 dark:bg-gray-900'
+                          : 'text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-900'
+                      }`}
+                    >
+                      <item.icon className="h-5 w-5 sm:h-6 sm:w-6" />
+                      <span className="text-[10px] sm:text-xs mt-1">{item.label}</span>
+                    </Button>
+                  </Link>
+                ) : (
+                  <Button
+                    key={index}
+                    variant="ghost"
+                    className={`w-full flex flex-col items-center py-1 sm:py-2 h-auto transition-colors ${
+                      item.active
+                        ? 'text-black dark:text-white font-bold bg-gray-100 dark:bg-gray-900'
+                        : 'text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-900'
+                    }`}
+                  >
+                    <item.icon className="h-5 w-5 sm:h-6 sm:w-6" />
+                    <span className="text-[10px] sm:text-xs mt-1">{item.label}</span>
+                  </Button>
+                )
+              ))}
+            </nav>
+          </div>
+        </footer>
+
+        {/* Deposit Modal */}
+        <DepositModal
+          open={isDepositModalOpen}
+          onOpenChange={setIsDepositModalOpen}
+        />
+      </ResponsiveSidebarLayout>
+    </SidebarProvider>
   )
 }

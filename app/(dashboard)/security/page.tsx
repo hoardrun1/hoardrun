@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTheme } from '@/contexts/ThemeContext'
 import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sidebar-layout'
 import { SidebarContent } from '@/components/ui/sidebar-content'
 import { SidebarToggle } from '@/components/ui/sidebar-toggle'
@@ -27,6 +28,7 @@ import {
   MapPin,
   Monitor
 } from 'lucide-react'
+import { SectionFooter } from '@/components/ui/section-footer'
 
 // Mock security data
 const loginSessions = [
@@ -88,6 +90,7 @@ export default function SecurityPage() {
     confirm: ''
   })
   const { addToast } = useToast()
+  const { theme } = useTheme()
 
   const handlePasswordChange = () => {
     if (passwordData.new !== passwordData.confirm) {
@@ -131,15 +134,15 @@ export default function SecurityPage() {
         sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
       >
         <SidebarToggle />
-        <div className="min-h-screen bg-white pt-16 pb-4 px-4 sm:pt-20 sm:pb-6 sm:px-6">
+        <div className="min-h-screen bg-background pt-16 pb-32 px-4 sm:pt-20 sm:pb-32 sm:px-6">
           <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
             {/* Header */}
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-black">
+                <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
                   Security
                 </h1>
-                <p className="text-black/60 mt-1 text-sm sm:text-base">
+                <p className="text-muted-foreground mt-1 text-sm sm:text-base">
                   Manage your account security and authentication settings
                 </p>
               </div>
@@ -153,20 +156,20 @@ export default function SecurityPage() {
               <CardContent>
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center space-x-2">
-                    <CheckCircle className="h-5 w-5 text-black" />
-                    <span className="text-sm font-medium">Account Verified</span>
+                    <CheckCircle className="h-5 w-5 text-foreground" />
+                    <span className="text-sm font-medium text-foreground">Account Verified</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     {twoFactorEnabled ? (
-                      <CheckCircle className="h-5 w-5 text-black" />
+                      <CheckCircle className="h-5 w-5 text-foreground" />
                     ) : (
-                      <AlertTriangle className="h-5 w-5 text-black/60" />
+                      <AlertTriangle className="h-5 w-5 text-muted-foreground" />
                     )}
-                    <span className="text-sm font-medium">
+                    <span className="text-sm font-medium text-foreground">
                       Two-Factor Authentication {twoFactorEnabled ? 'Enabled' : 'Disabled'}
                     </span>
                   </div>
-                  <Badge variant="secondary" className="bg-black/10 text-black">
+                  <Badge variant="secondary" className="bg-muted text-foreground">
                     Strong Security
                   </Badge>
                 </div>
@@ -185,7 +188,7 @@ export default function SecurityPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Change Password</CardTitle>
-                    <p className="text-sm text-black/60">
+                    <p className="text-sm text-muted-foreground">
                       Update your password to keep your account secure
                     </p>
                   </CardHeader>
@@ -252,7 +255,7 @@ export default function SecurityPage() {
                     </div>
                     <Button 
                       onClick={handlePasswordChange}
-                      className="bg-black text-white hover:bg-black/90"
+                      className="bg-primary text-primary-foreground hover:bg-primary/90"
                     >
                       Update Password
                     </Button>
@@ -264,17 +267,17 @@ export default function SecurityPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Two-Factor Authentication</CardTitle>
-                    <p className="text-sm text-black/60">
+                    <p className="text-sm text-muted-foreground">
                       Add an extra layer of security to your account
                     </p>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    <div className="flex items-center justify-between p-4 border border-black/10 rounded-lg">
+                    <div className="flex items-center justify-between p-4 border border-border rounded-lg">
                       <div className="flex items-center space-x-3">
-                        <Smartphone className="h-5 w-5 text-black" />
+                        <Smartphone className="h-5 w-5 text-foreground" />
                         <div>
-                          <p className="font-medium">Authenticator App</p>
-                          <p className="text-sm text-black/60">Use an app like Google Authenticator</p>
+                          <p className="font-medium text-foreground">Authenticator App</p>
+                          <p className="text-sm text-muted-foreground">Use an app like Google Authenticator</p>
                         </div>
                       </div>
                       <Switch
@@ -283,8 +286,8 @@ export default function SecurityPage() {
                       />
                     </div>
                     {twoFactorEnabled && (
-                      <div className="p-4 bg-black/5 rounded-lg">
-                        <p className="text-sm text-black/60">
+                      <div className="p-4 bg-muted/50 rounded-lg">
+                        <p className="text-sm text-muted-foreground">
                           Two-factor authentication is enabled. You'll need to enter a code from your authenticator app when signing in.
                         </p>
                       </div>
@@ -297,7 +300,7 @@ export default function SecurityPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Active Sessions</CardTitle>
-                    <p className="text-sm text-black/60">
+                    <p className="text-sm text-muted-foreground">
                       Manage devices that are currently signed in to your account
                     </p>
                   </CardHeader>
@@ -306,20 +309,20 @@ export default function SecurityPage() {
                       {loginSessions.map((session) => (
                         <div
                           key={session.id}
-                          className="flex items-center justify-between p-4 border border-black/10 rounded-lg"
+                          className="flex items-center justify-between p-4 border border-border rounded-lg"
                         >
                           <div className="flex items-center space-x-4">
-                            <Monitor className="h-5 w-5 text-black" />
+                            <Monitor className="h-5 w-5 text-foreground" />
                             <div>
-                              <p className="font-medium flex items-center">
+                              <p className="font-medium flex items-center text-foreground">
                                 {session.device}
                                 {session.current && (
-                                  <Badge variant="secondary" className="ml-2 bg-black/10 text-black">
+                                  <Badge variant="secondary" className="ml-2 bg-muted text-foreground">
                                     Current
                                   </Badge>
                                 )}
                               </p>
-                              <div className="flex items-center space-x-4 text-sm text-black/60">
+                              <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                                 <span className="flex items-center">
                                   <MapPin className="h-3 w-3 mr-1" />
                                   {session.location}
@@ -336,7 +339,6 @@ export default function SecurityPage() {
                               variant="outline"
                               size="sm"
                               onClick={() => terminateSession(session.id)}
-                              className="border-black text-black hover:bg-black hover:text-white"
                             >
                               Terminate
                             </Button>
@@ -352,7 +354,7 @@ export default function SecurityPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Security Activity</CardTitle>
-                    <p className="text-sm text-black/60">
+                    <p className="text-sm text-muted-foreground">
                       Recent security events and login attempts
                     </p>
                   </CardHeader>
@@ -361,20 +363,20 @@ export default function SecurityPage() {
                       {securityEvents.map((event) => (
                         <div
                           key={event.id}
-                          className="flex items-center space-x-4 p-4 border border-black/10 rounded-lg"
+                          className="flex items-center space-x-4 p-4 border border-border rounded-lg"
                         >
                           <div className={`p-2 rounded-full ${
-                            event.status === 'success' ? 'bg-black/10' : 'bg-black/10'
+                            event.status === 'success' ? 'bg-muted' : 'bg-muted'
                           }`}>
                             {event.status === 'success' ? (
-                              <CheckCircle className="h-4 w-4 text-black" />
+                              <CheckCircle className="h-4 w-4 text-foreground" />
                             ) : (
-                              <AlertTriangle className="h-4 w-4 text-black" />
+                              <AlertTriangle className="h-4 w-4 text-foreground" />
                             )}
                           </div>
                           <div className="flex-1">
-                            <p className="font-medium">{event.description}</p>
-                            <p className="text-sm text-black/60">{event.timestamp}</p>
+                            <p className="font-medium text-foreground">{event.description}</p>
+                            <p className="text-sm text-muted-foreground">{event.timestamp}</p>
                           </div>
                         </div>
                       ))}
@@ -390,6 +392,8 @@ export default function SecurityPage() {
           open={isDepositModalOpen}
           onOpenChange={setIsDepositModalOpen}
         />
+        
+        <SectionFooter section="account" activePage="/security" />
       </ResponsiveSidebarLayout>
     </SidebarProvider>
   )

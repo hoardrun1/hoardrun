@@ -20,6 +20,8 @@ import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sideba
 import { SidebarContent } from '@/components/ui/sidebar-content'
 import { SidebarToggle } from '@/components/ui/sidebar-toggle'
 import { DepositModal } from '@/components/deposit-modal'
+import { SectionFooter } from '@/components/ui/section-footer'
+import { useTheme } from '@/contexts/ThemeContext'
 import {
   DollarSign, TrendingUp, TrendingDown, AlertTriangle,
   Plus, Target, PiggyBank,
@@ -90,47 +92,49 @@ export default function BudgetPage() {
         sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
       >
         <SidebarToggle />
-        <div className="min-h-screen bg-white pt-16 pb-4 px-4 sm:pt-20 sm:pb-6 sm:px-6">
-          <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
+        <div className="min-h-screen bg-background pt-16 pb-4 px-3 sm:pt-20 sm:pb-6 sm:px-4 mb-20">
+          <div className="max-w-7xl mx-auto space-y-3 sm:space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-black">
+            <h1 className="text-xs sm:text-base font-bold text-foreground">
               Budget Tracker
             </h1>
-            <p className="text-black/60 mt-1">
+            <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
               Track your spending and manage your budget
             </p>
           </div>
           <Dialog open={isAddCategoryOpen} onOpenChange={setIsAddCategoryOpen}>
             <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
+              <Button className="text-xs sm:text-sm">
+                <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                 Add Category
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Add Budget Category</DialogTitle>
+                <DialogTitle className="text-xs sm:text-base">Add Budget Category</DialogTitle>
               </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label>Category Name</Label>
+              <div className="space-y-3 sm:space-y-4 py-3 sm:py-4">
+                <div className="space-y-1 sm:space-y-2">
+                  <Label className="text-xs sm:text-sm">Category Name</Label>
                   <Input
+                    className="text-xs sm:text-sm"
                     placeholder="e.g., Groceries"
                     value={newCategory.name}
                     onChange={(e) => setNewCategory({...newCategory, name: e.target.value})}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>Monthly Budget</Label>
+                <div className="space-y-1 sm:space-y-2">
+                  <Label className="text-xs sm:text-sm">Monthly Budget</Label>
                   <Input
+                    className="text-xs sm:text-sm"
                     type="number"
                     placeholder="0.00"
                     value={newCategory.budget}
                     onChange={(e) => setNewCategory({...newCategory, budget: e.target.value})}
                   />
                 </div>
-                <Button onClick={handleAddCategory} className="w-full">
+                <Button onClick={handleAddCategory} className="w-full text-xs sm:text-sm">
                   Add Category
                 </Button>
               </div>
@@ -138,26 +142,26 @@ export default function BudgetPage() {
           </Dialog>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Budget</CardTitle>
-              <Target className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-xs sm:text-sm font-medium">Total Budget</CardTitle>
+              <Target className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">${totalBudget.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">Monthly allocation</p>
+            <CardContent className="p-3 sm:p-4">
+              <div className="text-xs sm:text-base font-bold">${totalBudget.toLocaleString()}</div>
+              <p className="text-xs sm:text-sm text-muted-foreground">Monthly allocation</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Spent</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-xs sm:text-sm font-medium">Total Spent</CardTitle>
+              <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">${totalSpent.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">
+            <CardContent className="p-3 sm:p-4">
+              <div className="text-xs sm:text-base font-bold">${totalSpent.toLocaleString()}</div>
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 {budgetProgress.toFixed(1)}% of budget
               </p>
             </CardContent>
@@ -165,14 +169,14 @@ export default function BudgetPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Remaining</CardTitle>
-              <PiggyBank className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-xs sm:text-sm font-medium">Remaining</CardTitle>
+              <PiggyBank className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className={`text-2xl font-bold ${remainingBudget >= 0 ? 'text-black' : 'text-black'}`}>
+            <CardContent className="p-3 sm:p-4">
+              <div className={`text-xs sm:text-base font-bold ${remainingBudget >= 0 ? 'text-foreground' : 'text-destructive'}`}>
                 ${Math.abs(remainingBudget).toLocaleString()}
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 {remainingBudget >= 0 ? 'Under budget' : 'Over budget'}
               </p>
             </CardContent>
@@ -180,29 +184,29 @@ export default function BudgetPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Alerts</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-xs sm:text-sm font-medium">Alerts</CardTitle>
+              <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-black">
+            <CardContent className="p-3 sm:p-4">
+              <div className="text-xs sm:text-base font-bold text-foreground">
                 {overBudgetCategories.length}
               </div>
-              <p className="text-xs text-muted-foreground">Categories over budget</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">Categories over budget</p>
             </CardContent>
           </Card>
         </div>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Overall Budget Progress</CardTitle>
-            <CardDescription>
+          <CardHeader className="p-3 sm:p-4">
+            <CardTitle className="text-xs sm:text-base">Overall Budget Progress</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">
               You've spent ${totalSpent.toLocaleString()} of your ${totalBudget.toLocaleString()} budget
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-3 sm:p-4">
             <div className="space-y-2">
-              <Progress value={budgetProgress} className="h-3" />
-              <div className="flex justify-between text-sm text-muted-foreground">
+              <Progress value={budgetProgress} className="h-2 sm:h-3" />
+              <div className="flex justify-between text-xs sm:text-sm text-muted-foreground">
                 <span>0%</span>
                 <span>{budgetProgress.toFixed(1)}%</span>
                 <span>100%</span>
@@ -211,27 +215,27 @@ export default function BudgetPage() {
           </CardContent>
         </Card>
 
-        <Tabs defaultValue="categories" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="categories">Categories</TabsTrigger>
-            <TabsTrigger value="trends">Trends</TabsTrigger>
-            <TabsTrigger value="insights">Insights</TabsTrigger>
+        <Tabs defaultValue="categories" className="space-y-3 sm:space-y-4">
+          <TabsList className="text-xs sm:text-sm">
+            <TabsTrigger value="categories" className="text-xs sm:text-sm">Categories</TabsTrigger>
+            <TabsTrigger value="trends" className="text-xs sm:text-sm">Trends</TabsTrigger>
+            <TabsTrigger value="insights" className="text-xs sm:text-sm">Insights</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="categories" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <TabsContent value="categories" className="space-y-3 sm:space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
               <Card>
-                <CardHeader>
-                  <CardTitle>Spending by Category</CardTitle>
+                <CardHeader className="p-3 sm:p-4">
+                  <CardTitle className="text-xs sm:text-base">Spending by Category</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
+                <CardContent className="p-3 sm:p-4">
+                  <ResponsiveContainer width="100%" height={200}>
                     <PieChart>
                       <Pie
                         data={pieChartData}
                         cx="50%"
                         cy="50%"
-                        outerRadius={100}
+                        outerRadius={70}
                         fill="#8884d8"
                         dataKey="value"
                         label={({name, value}) => `${name}: $${value}`}
@@ -247,18 +251,18 @@ export default function BudgetPage() {
               </Card>
 
               <Card>
-                <CardHeader>
-                  <CardTitle>Budget vs Actual</CardTitle>
+                <CardHeader className="p-3 sm:p-4">
+                  <CardTitle className="text-xs sm:text-base">Budget vs Actual</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
+                <CardContent className="p-3 sm:p-4">
+                  <ResponsiveContainer width="100%" height={200}>
                     <BarChart data={budgetData}>
                       <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
+                      <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} />
                       <YAxis />
                       <Tooltip />
-                      <Bar dataKey="budgeted" fill="#000000" name="Budgeted" />
-                      <Bar dataKey="spent" fill="#666666" name="Spent" />
+                      <Bar dataKey="budgeted" fill="hsl(var(--foreground))" name="Budgeted" />
+                      <Bar dataKey="spent" fill="hsl(var(--muted-foreground))" name="Spent" />
                     </BarChart>
                   </ResponsiveContainer>
                 </CardContent>
@@ -266,24 +270,24 @@ export default function BudgetPage() {
             </div>
 
             <Card>
-              <CardHeader>
-                <CardTitle>Category Details</CardTitle>
+              <CardHeader className="p-3 sm:p-4">
+                <CardTitle className="text-xs sm:text-base">Category Details</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
+              <CardContent className="p-3 sm:p-4">
+                <div className="space-y-3 sm:space-y-4">
                   {budgetData.map((category) => {
                     const IconComponent = category.icon
                     const isOverBudget = category.percentage > 100
                     
                     return (
-                      <div key={category.id} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div className="flex items-center space-x-4">
-                          <div className="p-2 rounded-full" style={{ backgroundColor: category.color + '20' }}>
-                            <IconComponent className="h-5 w-5" style={{ color: category.color }} />
+                      <div key={category.id} className="flex items-center justify-between p-3 sm:p-4 border-border rounded-lg border bg-card">
+                        <div className="flex items-center space-x-3 sm:space-x-4">
+                          <div className="p-1.5 sm:p-2 rounded-full" style={{ backgroundColor: category.color + '20' }}>
+                            <IconComponent className="h-3 w-3 sm:h-4 sm:w-4" style={{ color: category.color }} />
                           </div>
                           <div>
-                            <h3 className="font-medium">{category.name}</h3>
-                            <p className="text-sm text-muted-foreground">
+                            <h3 className="text-xs sm:text-sm font-medium text-foreground">{category.name}</h3>
+                            <p className="text-xs sm:text-sm text-muted-foreground">
                               ${category.spent} of ${category.budgeted}
                             </p>
                           </div>
@@ -292,10 +296,10 @@ export default function BudgetPage() {
                           <Badge variant={isOverBudget ? "destructive" : "secondary"}>
                             {category.percentage.toFixed(1)}%
                           </Badge>
-                          <div className="w-24">
+                          <div className="w-16 sm:w-24">
                             <Progress 
                               value={Math.min(category.percentage, 100)} 
-                              className="h-2"
+                              className="h-1.5 sm:h-2"
                             />
                           </div>
                         </div>
@@ -309,21 +313,21 @@ export default function BudgetPage() {
 
           <TabsContent value="trends">
             <Card>
-              <CardHeader>
-                <CardTitle>Monthly Spending Trends</CardTitle>
-                <CardDescription>
+              <CardHeader className="p-3 sm:p-4">
+                <CardTitle className="text-xs sm:text-base">Monthly Spending Trends</CardTitle>
+                <CardDescription className="text-xs sm:text-sm">
                   Compare your budgeted vs actual spending over time
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={400}>
+              <CardContent className="p-3 sm:p-4">
+                <ResponsiveContainer width="100%" height={200}>
                   <LineChart data={monthlyTrend}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="month" />
                     <YAxis />
                     <Tooltip />
-                    <Line type="monotone" dataKey="budgeted" stroke="#000000" name="Budgeted" />
-                    <Line type="monotone" dataKey="spent" stroke="#666666" name="Actual Spent" />
+                    <Line type="monotone" dataKey="budgeted" stroke="hsl(var(--foreground))" name="Budgeted" />
+                    <Line type="monotone" dataKey="spent" stroke="hsl(var(--muted-foreground))" name="Actual Spent" />
                   </LineChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -331,35 +335,35 @@ export default function BudgetPage() {
           </TabsContent>
 
           <TabsContent value="insights">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
               <Card>
-                <CardHeader>
-                  <CardTitle>Budget Insights</CardTitle>
+                <CardHeader className="p-3 sm:p-4">
+                  <CardTitle className="text-xs sm:text-base">Budget Insights</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-start space-x-3">
-                    <TrendingUp className="h-5 w-5 text-black mt-0.5" />
+                <CardContent className="p-3 sm:p-4 space-y-3 sm:space-y-4">
+                  <div className="flex items-start space-x-2 sm:space-x-3">
+                    <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-green-600 dark:text-green-400 mt-0.5" />
                     <div>
-                      <p className="font-medium">Great job on Transportation!</p>
-                      <p className="text-sm text-black/60">
+                      <p className="text-xs sm:text-sm font-medium text-foreground">Great job on Transportation!</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
                         You&apos;re 24% under budget this month
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-start space-x-3">
-                    <TrendingDown className="h-5 w-5 text-black mt-0.5" />
+                  <div className="flex items-start space-x-2 sm:space-x-3">
+                    <TrendingDown className="h-3 w-3 sm:h-4 sm:w-4 text-red-600 dark:text-red-400 mt-0.5" />
                     <div>
-                      <p className="font-medium">Watch your Entertainment spending</p>
-                      <p className="text-sm text-black/60">
+                      <p className="text-xs sm:text-sm font-medium text-foreground">Watch your Entertainment spending</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
                         You&apos;re 40% over budget in this category
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-start space-x-3">
-                    <Target className="h-5 w-5 text-black mt-0.5" />
+                  <div className="flex items-start space-x-2 sm:space-x-3">
+                    <Target className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600 dark:text-blue-400 mt-0.5" />
                     <div>
-                      <p className="font-medium">On track overall</p>
-                      <p className="text-sm text-black/60">
+                      <p className="text-xs sm:text-sm font-medium text-foreground">On track overall</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
                         You&apos;re within 5% of your total monthly budget
                       </p>
                     </div>
@@ -368,23 +372,23 @@ export default function BudgetPage() {
               </Card>
 
               <Card>
-                <CardHeader>
-                  <CardTitle>Recommendations</CardTitle>
+                <CardHeader className="p-3 sm:p-4">
+                  <CardTitle className="text-xs sm:text-base">Recommendations</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="p-3 bg-black/5 rounded-lg border border-black/10">
-                    <p className="font-medium text-black">
+                <CardContent className="p-3 sm:p-4 space-y-3 sm:space-y-4">
+                  <div className="p-2 sm:p-3 bg-muted/50 rounded-lg border border-border">
+                    <p className="text-xs sm:text-sm font-medium text-foreground">
                       Consider reallocating budget
                     </p>
-                    <p className="text-sm text-black/60">
+                    <p className="text-xs sm:text-sm text-muted-foreground">
                       Move $100 from Transportation to Entertainment to better match your spending patterns
                     </p>
                   </div>
-                  <div className="p-3 bg-black/5 rounded-lg border border-black/10">
-                    <p className="font-medium text-black">
+                  <div className="p-2 sm:p-3 bg-muted/50 rounded-lg border border-border">
+                    <p className="text-xs sm:text-sm font-medium text-foreground">
                       Save more this month
                     </p>
-                    <p className="text-sm text-black/60">
+                    <p className="text-xs sm:text-sm text-muted-foreground">
                       You have $630 remaining. Consider moving it to savings or investments
                     </p>
                   </div>
@@ -400,6 +404,7 @@ export default function BudgetPage() {
           open={isDepositModalOpen}
           onOpenChange={setIsDepositModalOpen}
         />
+        <SectionFooter section="main" activePage="/budget" />
       </ResponsiveSidebarLayout>
     </SidebarProvider>
   )

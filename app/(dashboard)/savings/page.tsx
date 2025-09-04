@@ -23,6 +23,8 @@ import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sideba
 import { SidebarContent } from '@/components/ui/sidebar-content'
 import { SidebarToggle } from '@/components/ui/sidebar-toggle'
 import { DepositModal } from '@/components/deposit-modal'
+import { SectionFooter } from '@/components/ui/section-footer'
+import { useTheme } from '@/contexts/ThemeContext'
 
 interface SavingsAnalytics {
   totalSavings: number;
@@ -147,24 +149,24 @@ export default function SavingsPage() {
       transition={{ duration: 0.3 }}
       key={goal.id}
     >
-      <Card className="mb-4">
-        <CardHeader>
+      <Card className="mb-3 sm:mb-4">
+        <CardHeader className="p-3 sm:p-4">
           <div className="flex justify-between items-center">
-            <CardTitle>{goal.name}</CardTitle>
-            <Button variant="ghost" size="sm">
+            <CardTitle className="text-xs sm:text-base">{goal.name}</CardTitle>
+            <Button variant="ghost" size="sm" className="text-xs sm:text-sm">
               Contribute
             </Button>
           </div>
-          <CardDescription>{goal.category}</CardDescription>
+          <CardDescription className="text-xs sm:text-sm">{goal.category}</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex justify-between text-sm">
+        <CardContent className="p-3 sm:p-4">
+          <div className="space-y-3 sm:space-y-4">
+            <div className="flex justify-between text-xs sm:text-sm">
               <span>Progress</span>
               <span>{formatCurrency(goal.currentAmount)} / {formatCurrency(goal.targetAmount)}</span>
             </div>
-            <Progress value={goal.progress} />
-            <div className="flex justify-between text-sm text-gray-500">
+            <Progress value={goal.progress} className="h-1.5 sm:h-2" />
+            <div className="flex justify-between text-xs sm:text-sm text-muted-foreground">
               <span>Monthly: {formatCurrency(goal.monthlyContribution)}</span>
               <span>{goal.daysLeft} days left</span>
             </div>
@@ -178,39 +180,39 @@ export default function SavingsPage() {
     if (!analytics) return null
 
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
         <Card>
-          <CardHeader>
-            <CardTitle>Total Savings</CardTitle>
+          <CardHeader className="p-3 sm:p-4">
+            <CardTitle className="text-xs sm:text-sm font-medium">Total Savings</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(analytics.totalSavings)}</div>
+          <CardContent className="p-3 sm:p-4">
+            <div className="text-xs sm:text-base font-bold">{formatCurrency(analytics.totalSavings)}</div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle>Monthly Growth</CardTitle>
+          <CardHeader className="p-3 sm:p-4">
+            <CardTitle className="text-xs sm:text-sm font-medium">Monthly Growth</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(analytics.monthlyGrowth)}</div>
+          <CardContent className="p-3 sm:p-4">
+            <div className="text-xs sm:text-base font-bold">{formatCurrency(analytics.monthlyGrowth)}</div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle>Next Milestone</CardTitle>
+          <CardHeader className="p-3 sm:p-4">
+            <CardTitle className="text-xs sm:text-sm font-medium">Next Milestone</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="p-3 sm:p-4">
+            <div className="text-xs sm:text-base font-bold">
               {analytics?.nextMilestone ? formatCurrency(analytics.nextMilestone) : formatCurrency(0)}
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader>
-            <CardTitle>Projected Savings</CardTitle>
+          <CardHeader className="p-3 sm:p-4">
+            <CardTitle className="text-xs sm:text-sm font-medium">Projected Savings</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(analytics.projectedSavings)}</div>
+          <CardContent className="p-3 sm:p-4">
+            <div className="text-xs sm:text-base font-bold">{formatCurrency(analytics.projectedSavings)}</div>
           </CardContent>
         </Card>
       </div>
@@ -223,66 +225,69 @@ export default function SavingsPage() {
         sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
       >
         <SidebarToggle />
-        <div className="min-h-screen bg-white pt-16 pb-4 px-4 sm:pt-20 sm:pb-6 sm:px-6">
-          <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
+        <div className="min-h-screen bg-background pt-16 pb-4 px-3 sm:pt-20 sm:pb-6 sm:px-4 mb-20">
+          <div className="max-w-7xl mx-auto space-y-3 sm:space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-black">
+            <h1 className="text-xs sm:text-base font-bold text-foreground">
               Savings Goals
             </h1>
-            <p className="text-black/60 mt-1">
+            <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
               Track and manage your savings goals
             </p>
           </div>
           <Dialog open={isNewGoalDialogOpen} onOpenChange={setIsNewGoalDialogOpen}>
             <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
+              <Button className="text-xs sm:text-sm">
+                <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                 New Goal
               </Button>
             </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Create New Savings Goal</DialogTitle>
-              <DialogDescription>
+              <DialogTitle className="text-xs sm:text-base">Create New Savings Goal</DialogTitle>
+              <DialogDescription className="text-xs sm:text-sm">
                 Set up a new savings goal with regular contributions
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               <div>
-                <Label htmlFor="name">Goal Name</Label>
+                <Label htmlFor="name" className="text-xs sm:text-sm">Goal Name</Label>
                 <Input
                   id="name"
+                  className="text-xs sm:text-sm"
                   value={newGoalForm.name}
                   onChange={(e) => setNewGoalForm(prev => ({ ...prev, name: e.target.value }))}
                 />
               </div>
               <div>
-                <Label htmlFor="targetAmount">Target Amount</Label>
+                <Label htmlFor="targetAmount" className="text-xs sm:text-sm">Target Amount</Label>
                 <Input
                   id="targetAmount"
                   type="number"
+                  className="text-xs sm:text-sm"
                   value={newGoalForm.targetAmount}
                   onChange={(e) => setNewGoalForm(prev => ({ ...prev, targetAmount: e.target.value }))}
                 />
               </div>
               <div>
-                <Label htmlFor="monthlyContribution">Monthly Contribution</Label>
+                <Label htmlFor="monthlyContribution" className="text-xs sm:text-sm">Monthly Contribution</Label>
                 <Input
                   id="monthlyContribution"
                   type="number"
+                  className="text-xs sm:text-sm"
                   value={newGoalForm.monthlyContribution}
                   onChange={(e) => setNewGoalForm(prev => ({ ...prev, monthlyContribution: e.target.value }))}
                 />
               </div>
               <div>
-                <Label htmlFor="category">Category</Label>
+                <Label htmlFor="category" className="text-xs sm:text-sm">Category</Label>
                 <Select
                   value={newGoalForm.category}
                   onValueChange={(value) => setNewGoalForm(prev => ({ ...prev, category: value }))}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="text-xs sm:text-sm">
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
@@ -301,9 +306,9 @@ export default function SavingsPage() {
                   checked={newGoalForm.isAutoSave}
                   onCheckedChange={(checked) => setNewGoalForm(prev => ({ ...prev, isAutoSave: checked }))}
                 />
-                <Label htmlFor="autoSave">Enable Auto-Save</Label>
+                <Label htmlFor="autoSave" className="text-xs sm:text-sm">Enable Auto-Save</Label>
               </div>
-              <Button onClick={handleCreateGoal} className="w-full">
+              <Button onClick={handleCreateGoal} className="w-full text-xs sm:text-sm">
                 Create Goal
               </Button>
             </div>
@@ -313,15 +318,15 @@ export default function SavingsPage() {
 
       {renderAnalytics()}
 
-      <Tabs defaultValue="active" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="active">Active Goals</TabsTrigger>
-          <TabsTrigger value="completed">Completed</TabsTrigger>
-          <TabsTrigger value="insights">Insights</TabsTrigger>
+      <Tabs defaultValue="active" className="space-y-3 sm:space-y-4">
+        <TabsList className="text-xs sm:text-sm">
+          <TabsTrigger value="active" className="text-xs sm:text-sm">Active Goals</TabsTrigger>
+          <TabsTrigger value="completed" className="text-xs sm:text-sm">Completed</TabsTrigger>
+          <TabsTrigger value="insights" className="text-xs sm:text-sm">Insights</TabsTrigger>
         </TabsList>
 
         <TabsContent value="active">
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {isLoading ? (
               <div className="text-center py-8">Loading...</div>
             ) : error ? (
@@ -338,7 +343,7 @@ export default function SavingsPage() {
         </TabsContent>
 
         <TabsContent value="completed">
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {savingsGoals
               .filter(goal => goal.isCompleted)
               .map(goal => renderGoalCard(goal))}
@@ -347,22 +352,22 @@ export default function SavingsPage() {
 
         <TabsContent value="insights">
           <Card>
-            <CardHeader>
-              <CardTitle>Savings Insights</CardTitle>
-              <CardDescription>
+            <CardHeader className="p-3 sm:p-4">
+              <CardTitle className="text-xs sm:text-base">Savings Insights</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">
                 Track your savings progress and get personalized recommendations
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
+            <CardContent className="p-3 sm:p-4">
+              <div className="space-y-3 sm:space-y-4">
                 {analytics?.insights?.map((insight: any, index: number) => (
-                  <div key={index} className="flex items-start space-x-4">
-                    <div className="bg-primary/10 p-2 rounded-full">
-                      <TrendingUp className="h-4 w-4 text-primary" />
+                  <div key={index} className="flex items-start space-x-2 sm:space-x-3">
+                    <div className="bg-primary/10 p-1.5 sm:p-2 rounded-full">
+                      <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-primary" />
                     </div>
                     <div>
-                      <h4 className="font-medium">{insight.title}</h4>
-                      <p className="text-sm text-gray-500">{insight.description}</p>
+                      <h4 className="text-xs sm:text-sm font-medium text-foreground">{insight.title}</h4>
+                      <p className="text-xs sm:text-sm text-muted-foreground">{insight.description}</p>
                     </div>
                   </div>
                 ))}
@@ -379,6 +384,7 @@ export default function SavingsPage() {
           open={isDepositModalOpen}
           onOpenChange={setIsDepositModalOpen}
         />
+        <SectionFooter section="main" activePage="/savings" />
       </ResponsiveSidebarLayout>
     </SidebarProvider>
   )

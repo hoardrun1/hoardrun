@@ -20,14 +20,14 @@ export function FeatureNavigation() {
       title: 'Savings',
       description: 'Create personalized savings goals with AI-powered recommendations',
       icon: PiggyBank,
-      color: 'bg-gray-500',
+      color: 'bg-muted-foreground',
       path: 'savings'
     },
     {
       title: 'Investments',
       description: 'Grow your wealth with smart investment opportunities',
       icon: TrendingUp,
-      color: 'bg-gray-500',
+      color: 'bg-muted-foreground',
       path: 'investment'
     }
   ];
@@ -42,22 +42,22 @@ export function FeatureNavigation() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: index * 0.1 }}
           >
-            <Card className="bg-gray-800 border-0 shadow-lg hover:shadow-xl transition-all duration-300 h-full group cursor-pointer"
+            <Card className="bg-card border-border shadow-lg hover:shadow-xl transition-all duration-300 h-full group cursor-pointer"
                   onClick={() => handleNavigate(feature.path)}>
               <CardContent className="p-6">
                 <div className="flex items-start gap-4">
                   <div className={`${feature.color} w-12 h-12 rounded-full flex items-center justify-center`}>
-                    <feature.icon className="w-6 h-6 text-white" />
+                    <feature.icon className="w-6 h-6 text-secondary-foreground" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-xl font-semibold mb-2 text-white group-hover:text-gray-400 transition-colors duration-300">
+                    <h3 className="text-xl font-semibold mb-2 text-foreground group-hover:text-muted-foreground transition-colors duration-300">
                       {feature.title}
                     </h3>
-                    <p className="text-gray-300 mb-4 group-hover:text-gray-200 transition-colors duration-300">
+                    <p className="text-muted-foreground mb-4 group-hover:text-foreground transition-colors duration-300">
                       {feature.description}
                     </p>
                     <div className="flex justify-end">
-                      <Button variant="ghost" className="text-gray-400 group-hover:text-gray-300 p-0 h-auto">
+                      <Button variant="ghost" className="text-muted-foreground group-hover:text-foreground p-0 h-auto">
                         <span className="mr-1">Explore</span>
                         <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform duration-300" />
                       </Button>

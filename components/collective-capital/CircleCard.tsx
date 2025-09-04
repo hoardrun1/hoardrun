@@ -52,131 +52,131 @@ export function CircleCard({ circle, onJoin, onViewDetails, className }: CircleC
       transition={{ duration: 0.3 }}
       className={className}
     >
-      <Card className="h-full hover:shadow-lg transition-all duration-300 border-2 bg-white border-black hover:border-black">
-        <CardHeader className="pb-3">
+      <Card className="h-full hover:shadow-lg transition-all duration-300 border bg-white border-black hover:border-black">
+        <CardHeader className="p-3 sm:p-6 pb-2 sm:pb-3">
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <div className="flex items-center gap-2 mb-2">
-                <CardTitle className="text-lg font-bold line-clamp-1 text-black">
+              <div className="flex items-center gap-1 sm:gap-2 mb-1 sm:mb-2">
+                <CardTitle className="text-xs sm:text-base font-bold line-clamp-1 text-black">
                   {circle.name}
                 </CardTitle>
                 {circle.isPrivate && (
-                  <Lock className="h-4 w-4 text-black" />
+                  <Lock className="h-3 w-3 sm:h-4 sm:w-4 text-black" />
                 )}
               </div>
               <Badge 
                 variant="outline" 
-                className={cn("text-xs", getCategoryColor(circle.category))}
+                className={cn("text-xs px-1 py-0.5", getCategoryColor(circle.category))}
               >
                 {circle.category.replace('_', ' ')}
               </Badge>
             </div>
             
-            <div className="flex items-center gap-1">
-              <Sparkles className="h-4 w-4 text-black" />
-              <span className="text-sm font-semibold text-black">
+            <div className="flex items-center gap-0.5 sm:gap-1">
+              <Sparkles className="h-3 w-3 sm:h-4 sm:w-4 text-black" />
+              <span className="text-xs sm:text-sm font-semibold text-black">
                 {circle.averageReturn.toFixed(1)}%
               </span>
             </div>
           </div>
           
-          <p className="text-sm text-black/60 line-clamp-2 mt-2">
+          <p className="text-xs sm:text-sm text-black/60 line-clamp-2 mt-1 sm:mt-2">
             {circle.description}
           </p>
         </CardHeader>
 
-        <CardContent className="space-y-4">
+        <CardContent className="p-3 sm:p-6 pt-0 sm:pt-0 space-y-2 sm:space-y-4">
           {/* Key Metrics */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <div className="flex items-center gap-1">
-                <DollarSign className="h-3 w-3 text-black/60" />
+          <div className="grid grid-cols-2 gap-2 sm:gap-4">
+            <div className="space-y-0.5 sm:space-y-1">
+              <div className="flex items-center gap-0.5 sm:gap-1">
+                <DollarSign className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-black/60" />
                 <span className="text-xs text-black/60">Pool Value</span>
               </div>
-              <p className="font-semibold text-sm text-black">
+              <p className="font-semibold text-xs sm:text-sm text-black">
                 {formatCurrency(circle.totalPoolValue)}
               </p>
             </div>
             
-            <div className="space-y-1">
-              <div className="flex items-center gap-1">
-                <Target className="h-3 w-3 text-black/60" />
+            <div className="space-y-0.5 sm:space-y-1">
+              <div className="flex items-center gap-0.5 sm:gap-1">
+                <Target className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-black/60" />
                 <span className="text-xs text-black/60">Min. Investment</span>
               </div>
-              <p className="font-semibold text-sm text-black">
+              <p className="font-semibold text-xs sm:text-sm text-black">
                 {formatCurrency(circle.minimumContribution)}
               </p>
             </div>
           </div>
 
           {/* Members Progress */}
-          <div className="space-y-2">
+          <div className="space-y-1 sm:space-y-2">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1">
-                <Users className="h-3 w-3 text-black/60" />
+              <div className="flex items-center gap-0.5 sm:gap-1">
+                <Users className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-black/60" />
                 <span className="text-xs text-black/60">Members</span>
               </div>
               <span className="text-xs font-medium text-black">
                 {circle.currentMembers}/{circle.maxMembers}
               </span>
             </div>
-            <Progress value={membershipProgress} className="h-2" />
+            <Progress value={membershipProgress} className="h-1.5 sm:h-2" />
           </div>
 
           {/* Performance & Risk */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-black" />
-              <span className="text-sm font-medium text-black">
+            <div className="flex items-center gap-1 sm:gap-2">
+              <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-black" />
+              <span className="text-xs sm:text-sm font-medium text-black">
                 +{circle.totalReturns.toLocaleString()} returns
               </span>
             </div>
             
-            <div className="flex items-center gap-1">
-              <Shield className={cn("h-4 w-4", getRiskColor(circle.riskScore))} />
-              <span className={cn("text-sm font-medium", getRiskColor(circle.riskScore))}>
+            <div className="flex items-center gap-0.5 sm:gap-1">
+              <Shield className={cn("h-3 w-3 sm:h-4 sm:w-4", getRiskColor(circle.riskScore))} />
+              <span className={cn("text-xs sm:text-sm font-medium", getRiskColor(circle.riskScore))}>
                 Risk {circle.riskScore}
               </span>
             </div>
           </div>
 
           {/* Blockchain Network */}
-          <div className="flex items-center gap-2">
-            <Globe className="h-3 w-3 text-black" />
-            <span className="text-xs text-black font-medium">
+          <div className="flex items-center gap-1 sm:gap-2">
+            <Globe className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-black" />
+            <span className="text-xs sm:text-sm text-black font-medium">
               {circle.blockchainNetwork}
             </span>
-            <Badge variant="outline" className="text-xs bg-white text-black border-black">
+            <Badge variant="outline" className="text-xs sm:text-sm px-1 py-0.5 bg-white text-black border-black">
               {circle.status}
             </Badge>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-2 pt-2">
+          <div className="flex gap-1 sm:gap-2 pt-1 sm:pt-2">
             <Button
               variant="outline"
               size="sm"
               onClick={onViewDetails}
-              className="flex-1 text-xs bg-white text-black border-black hover:bg-black hover:text-white"
+              className="flex-1 text-xs sm:text-sm bg-white text-black border-black hover:bg-black hover:text-white px-2 py-1.5 h-auto"
             >
-              <Eye className="h-3 w-3 mr-1" />
+              <Eye className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1" />
               Details
             </Button>
             
             <Button
               size="sm"
               onClick={onJoin}
-              className="flex-1 bg-black hover:bg-black/90 text-white text-xs"
+              className="flex-1 bg-black hover:bg-black/90 text-white text-xs sm:text-sm px-2 py-1.5 h-auto"
               disabled={circle.currentMembers >= circle.maxMembers}
             >
               {circle.isPrivate ? (
                 <>
-                  <UserPlus className="h-3 w-3 mr-1" />
+                  <UserPlus className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1" />
                   Request
                 </>
               ) : (
                 <>
-                  <ArrowRight className="h-3 w-3 mr-1" />
+                  <ArrowRight className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1" />
                   Join
                 </>
               )}
@@ -184,14 +184,14 @@ export function CircleCard({ circle, onJoin, onViewDetails, className }: CircleC
           </div>
 
           {/* Recent Activity Indicator */}
-          <div className="flex items-center justify-between pt-2 border-t border-black">
-            <div className="flex items-center gap-1">
-              <div className="w-2 h-2 bg-black rounded-full animate-pulse"></div>
+          <div className="flex items-center justify-between pt-1 sm:pt-2 border-t border-black">
+            <div className="flex items-center gap-0.5 sm:gap-1">
+              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-black rounded-full animate-pulse"></div>
               <span className="text-xs text-black/60">Active</span>
             </div>
             
-            <div className="flex items-center gap-1">
-              <Calendar className="h-3 w-3 text-black/60" />
+            <div className="flex items-center gap-0.5 sm:gap-1">
+              <Calendar className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-black/60" />
               <span className="text-xs text-black/60">
                 Created {new Date(circle.createdAt).toLocaleDateString()}
               </span>
@@ -203,10 +203,10 @@ export function CircleCard({ circle, onJoin, onViewDetails, className }: CircleC
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              className="absolute top-2 right-2"
+              className="absolute top-1 sm:top-2 right-1 sm:right-2"
             >
-              <Badge className="bg-black text-white text-xs">
-                <Sparkles className="h-3 w-3 mr-1" />
+              <Badge className="bg-black text-white text-xs px-1 py-0.5">
+                <Sparkles className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 sm:mr-1" />
                 AI Pick
               </Badge>
             </motion.div>

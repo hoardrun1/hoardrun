@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Bell, Search, User, Lock, CreditCard, HelpCircle, LogOut, Loader2, Check, AlertCircle } from 'lucide-react'
+import { Bell, Search, User, Lock, CreditCard, HelpCircle, LogOut, Loader2, Check, AlertCircle, Home, BarChart2, PieChart, Settings } from 'lucide-react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useToast } from "@/components/ui/use-toast"
@@ -237,6 +237,34 @@ export function SettingsPageComponent() {
           </div>
         </motion.div>
       </main>
+
+      {/* Navigation Footer */}
+      <footer className="fixed bottom-0 left-0 right-0 bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800 py-2">
+        <div className="container mx-auto px-4">
+          <nav className="grid grid-cols-5 gap-1 sm:gap-2">
+            {[
+              { icon: Home, label: 'Home', href: '/home' },
+              { icon: BarChart2, label: 'Finance', href: '/finance' },
+              { icon: CreditCard, label: 'Cards', href: '/cards' },
+              { icon: PieChart, label: 'Investment', href: '/investment' },
+              { icon: Settings, label: 'Settings', active: true, href: '/settings' }
+            ].map((item, index) => (
+              <Link
+                key={index}
+                href={item.href}
+                className={`flex flex-col items-center justify-center py-2 px-1 rounded-lg transition-colors ${
+                  item.active
+                    ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
+                }`}
+              >
+                <item.icon className="h-5 w-5 mb-1" />
+                <span className="text-xs font-medium">{item.label}</span>
+              </Link>
+            ))}
+          </nav>
+        </div>
+      </footer>
     </div>
   )
 }

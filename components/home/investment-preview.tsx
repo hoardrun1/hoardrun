@@ -57,13 +57,13 @@ export function InvestmentPreview() {
   };
 
   return (
-    <Card className="bg-gray-800 border-0 shadow-lg">
+    <Card className="bg-card border-border shadow-lg">
       <CardHeader className="flex flex-row items-center justify-between pb-2 pt-6">
-        <CardTitle className="text-xl text-white">Investments</CardTitle>
+        <CardTitle className="text-xl text-foreground">Investments</CardTitle>
         <Button 
           variant="ghost" 
           size="sm" 
-          className="text-gray-400 hover:text-gray-300"
+          className="text-muted-foreground hover:text-foreground"
           onClick={handleNavigateToInvestments}
         >
           View All
@@ -77,16 +77,16 @@ export function InvestmentPreview() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: index * 0.1 }}
-              className="bg-gray-700 rounded-lg p-4"
+              className="bg-secondary rounded-lg p-4"
             >
               <div className="flex justify-between items-start mb-2">
                 <div>
-                  <h3 className="font-medium text-white">{investment.name}</h3>
+                  <h3 className="font-medium text-foreground">{investment.name}</h3>
                   <Badge variant="outline" className="mt-1 text-xs">
                     {investment.type}
                   </Badge>
                 </div>
-                <div className={`flex items-center ${investment.positive ? 'text-gray-400' : 'text-gray-400'}`}>
+                <div className={`flex items-center ${investment.positive ? 'text-green-600' : 'text-red-600'}`}>
                   {investment.positive ? (
                     <ArrowUpRight className="w-4 h-4 mr-1" />
                   ) : (
@@ -95,42 +95,42 @@ export function InvestmentPreview() {
                   <span>{Math.abs(investment.change)}%</span>
                 </div>
               </div>
-              <div className="text-lg font-semibold text-white">
+              <div className="text-lg font-semibold text-foreground">
                 {formatCurrency(investment.value)}
               </div>
             </motion.div>
           ))}
 
           <div className="mt-6">
-            <h3 className="text-sm font-medium text-gray-300 mb-3">Recommended for You</h3>
+            <h3 className="text-sm font-medium text-muted-foreground mb-3">Recommended for You</h3>
             {recommendedInvestments.map((investment, index) => (
               <motion.div
                 key={investment.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.1 + 0.2 }}
-                className="bg-gray-900/30 border border-blue-800/50 rounded-lg p-4"
+                className="bg-accent/30 border border-primary/20 rounded-lg p-4"
               >
                 <div className="flex justify-between items-start mb-2">
                   <div>
-                    <h3 className="font-medium text-white">{investment.name}</h3>
+                    <h3 className="font-medium text-foreground">{investment.name}</h3>
                     <div className="flex items-center gap-2 mt-1">
                       <Badge variant="outline" className="text-xs">
                         {investment.type}
                       </Badge>
-                      <span className="text-xs text-gray-300">
+                      <span className="text-xs text-muted-foreground">
                         {investment.risk} Risk
                       </span>
                     </div>
                   </div>
-                  <div className="text-gray-400 flex items-center">
+                  <div className="text-muted-foreground flex items-center">
                     <TrendingUp className="w-4 h-4 mr-1" />
                     <span>{investment.expectedReturn}%</span>
                   </div>
                 </div>
                 <Button 
                   size="sm" 
-                  className="mt-2 w-full bg-gray-600 hover:bg-gray-700"
+                  className="mt-2 w-full"
                   onClick={handleNavigateToInvestments}
                 >
                   Invest Now
@@ -141,7 +141,7 @@ export function InvestmentPreview() {
 
           <Button 
             variant="outline" 
-            className="w-full mt-4 border-dashed border-gray-600 text-gray-300 hover:text-white hover:bg-gray-700"
+            className="w-full mt-4 border-dashed border-border text-muted-foreground hover:text-foreground hover:bg-secondary"
             onClick={handleNavigateToInvestments}
           >
             <Plus className="mr-2 h-4 w-4" />

@@ -136,13 +136,13 @@ export function AIRecommendationsPanel() {
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-3 sm:space-y-4">
         {[...Array(3)].map((_, i) => (
           <Card key={i} className="animate-pulse bg-white border-black">
-            <CardContent className="p-6">
-              <div className="h-4 bg-black/20 rounded w-3/4 mb-4"></div>
-              <div className="h-3 bg-black/20 rounded w-full mb-2"></div>
-              <div className="h-3 bg-black/20 rounded w-2/3"></div>
+            <CardContent className="p-3 sm:p-6">
+              <div className="h-3 sm:h-4 bg-black/20 rounded w-3/4 mb-2 sm:mb-4"></div>
+              <div className="h-2 sm:h-3 bg-black/20 rounded w-full mb-1 sm:mb-2"></div>
+              <div className="h-2 sm:h-3 bg-black/20 rounded w-2/3"></div>
             </CardContent>
           </Card>
         ))}
@@ -151,83 +151,89 @@ export function AIRecommendationsPanel() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-2xl font-bold flex items-center gap-2 text-black">
-            <Brain className="h-6 w-6 text-black" />
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex-1 min-w-0">
+          <h3 className="text-xs sm:text-base font-bold flex items-center gap-1 sm:gap-2 text-black">
+            <Brain className="h-3 w-3 sm:h-6 sm:w-6 text-black" />
             AI Investment Insights
           </h3>
-          <p className="text-black/60">
+          <p className="text-xs sm:text-sm text-black/60">
             Personalized recommendations powered by advanced market analysis
           </p>
         </div>
-        <Badge className="bg-black text-white">
-          <Zap className="h-3 w-3 mr-1" />
+        <Badge className="bg-black text-white text-xs px-2 py-1 shrink-0">
+          <Zap className="h-2 w-2 mr-1" />
           AI Powered
         </Badge>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4">
         <Card className="bg-white border-black">
-          <CardContent className="p-4 text-center">
-            <Target className="h-6 w-6 text-black mx-auto mb-2" />
-            <div className="text-2xl font-bold text-black">
+          <CardContent className="p-2 sm:p-4 text-center">
+            <Target className="h-3 w-3 sm:h-6 sm:w-6 text-black mx-auto mb-1" />
+            <div className="text-xs sm:text-base font-bold text-black">
               {recommendations.filter(r => r.type === 'INVESTMENT_OPPORTUNITY').length}
             </div>
-            <div className="text-xs text-black/60">Opportunities</div>
+            <div className="text-xs sm:text-sm text-black/60">Opportunities</div>
           </CardContent>
         </Card>
         
         <Card className="bg-white border-black">
-          <CardContent className="p-4 text-center">
-            <AlertTriangle className="h-6 w-6 text-black mx-auto mb-2" />
-            <div className="text-2xl font-bold text-black">
+          <CardContent className="p-2 sm:p-4 text-center">
+            <AlertTriangle className="h-3 w-3 sm:h-6 sm:w-6 text-black mx-auto mb-1" />
+            <div className="text-xs sm:text-base font-bold text-black">
               {recommendations.filter(r => r.type === 'RISK_WARNING').length}
             </div>
-            <div className="text-xs text-black/60">Risk Alerts</div>
+            <div className="text-xs sm:text-sm text-black/60">Risk Alerts</div>
           </CardContent>
         </Card>
         
         <Card className="bg-white border-black">
-          <CardContent className="p-4 text-center">
-            <Brain className="h-6 w-6 text-black mx-auto mb-2" />
-            <div className="text-2xl font-bold text-black">
+          <CardContent className="p-2 sm:p-4 text-center">
+            <Brain className="h-3 w-3 sm:h-6 sm:w-6 text-black mx-auto mb-1" />
+            <div className="text-xs sm:text-base font-bold text-black">
               {recommendations.filter(r => r.type === 'MARKET_INSIGHT').length}
             </div>
-            <div className="text-xs text-black/60">Market Insights</div>
+            <div className="text-xs sm:text-sm text-black/60">Market Insights</div>
           </CardContent>
         </Card>
         
         <Card className="bg-white border-black">
-          <CardContent className="p-4 text-center">
-            <Star className="h-6 w-6 text-black mx-auto mb-2" />
-            <div className="text-2xl font-bold text-black">
+          <CardContent className="p-2 sm:p-4 text-center">
+            <Star className="h-3 w-3 sm:h-6 sm:w-6 text-black mx-auto mb-1" />
+            <div className="text-xs sm:text-base font-bold text-black">
               {Math.round(recommendations.reduce((acc, r) => acc + r.confidence, 0) / recommendations.length)}%
             </div>
-            <div className="text-xs text-black/60">Avg Confidence</div>
+            <div className="text-xs sm:text-sm text-black/60">Avg Confidence</div>
           </CardContent>
         </Card>
       </div>
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4 bg-white border-black">
-          <TabsTrigger value="all" className="data-[state=active]:bg-black data-[state=active]:text-white text-black">All ({recommendations.length})</TabsTrigger>
-          <TabsTrigger value="opportunities" className="data-[state=active]:bg-black data-[state=active]:text-white text-black">
-            Opportunities ({recommendations.filter(r => r.type === 'INVESTMENT_OPPORTUNITY').length})
+        <TabsList className="grid w-full grid-cols-4 bg-white border-black h-8 sm:h-10">
+          <TabsTrigger value="all" className="data-[state=active]:bg-black data-[state=active]:text-white text-black text-xs sm:text-sm px-1 sm:px-3">
+            <span className="hidden sm:inline">All ({recommendations.length})</span>
+            <span className="sm:hidden">All</span>
           </TabsTrigger>
-          <TabsTrigger value="warnings" className="data-[state=active]:bg-black data-[state=active]:text-white text-black">
-            Warnings ({recommendations.filter(r => r.type === 'RISK_WARNING').length})
+          <TabsTrigger value="opportunities" className="data-[state=active]:bg-black data-[state=active]:text-white text-black text-xs sm:text-sm px-1 sm:px-3">
+            <span className="hidden sm:inline">Opportunities ({recommendations.filter(r => r.type === 'INVESTMENT_OPPORTUNITY').length})</span>
+            <span className="sm:hidden">Opps</span>
           </TabsTrigger>
-          <TabsTrigger value="insights" className="data-[state=active]:bg-black data-[state=active]:text-white text-black">
-            Insights ({recommendations.filter(r => r.type === 'MARKET_INSIGHT' || r.type === 'PORTFOLIO_OPTIMIZATION').length})
+          <TabsTrigger value="warnings" className="data-[state=active]:bg-black data-[state=active]:text-white text-black text-xs sm:text-sm px-1 sm:px-3">
+            <span className="hidden sm:inline">Warnings ({recommendations.filter(r => r.type === 'RISK_WARNING').length})</span>
+            <span className="sm:hidden">Warn</span>
+          </TabsTrigger>
+          <TabsTrigger value="insights" className="data-[state=active]:bg-black data-[state=active]:text-white text-black text-xs sm:text-sm px-1 sm:px-3">
+            <span className="hidden sm:inline">Insights ({recommendations.filter(r => r.type === 'MARKET_INSIGHT' || r.type === 'PORTFOLIO_OPTIMIZATION').length})</span>
+            <span className="sm:hidden">Insights</span>
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value={activeTab} className="space-y-4 mt-6">
+        <TabsContent value={activeTab} className="space-y-3 mt-3 sm:mt-6">
           {filteredRecommendations.map((recommendation, index) => (
             <motion.div
               key={recommendation.id}
@@ -236,92 +242,102 @@ export function AIRecommendationsPanel() {
               transition={{ duration: 0.3, delay: index * 0.1 }}
             >
               <Card className="hover:shadow-lg transition-all duration-300 bg-white border-black">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
+                <CardContent className="p-4">
+                  <div className="space-y-3">
+                    {/* Title and Icon Row */}
                     <div className="flex items-start gap-3">
-                      {getTypeIcon(recommendation.type)}
-                      <div>
-                        <CardTitle className="text-lg text-black">{recommendation.title}</CardTitle>
-                        <div className="flex items-center gap-2 mt-1">
+                      <div className="shrink-0 mt-1">
+                        {getTypeIcon(recommendation.type)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-xs sm:text-base font-semibold text-black leading-tight mb-2">
+                          {recommendation.title}
+                        </h4>
+                        
+                        {/* Badges Row */}
+                        <div className="flex flex-wrap items-center gap-2 mb-2">
                           <Badge 
                             variant="outline" 
-                            className={cn("text-xs", getPriorityColor(recommendation.priority))}
+                            className="text-xs sm:text-sm px-2 py-1 bg-white text-black border-black font-medium"
                           >
                             {recommendation.priority}
                           </Badge>
-                          <Badge variant="outline" className="text-xs bg-white text-black border-black">
+                          <Badge variant="outline" className="text-xs sm:text-sm px-2 py-1 bg-white text-black border-black">
                             {recommendation.category.replace('_', ' ')}
                           </Badge>
                           {recommendation.actionRequired && (
-                            <Badge className="text-xs bg-black text-white">
+                            <Badge className="text-xs sm:text-sm px-2 py-1 bg-black text-white">
                               Action Required
                             </Badge>
                           )}
                         </div>
+
+                        {/* Confidence Row */}
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs sm:text-sm font-medium text-black">
+                            {recommendation.confidence}% confidence
+                          </span>
+                          <Progress 
+                            value={recommendation.confidence} 
+                            className="flex-1 h-1.5 bg-gray-200"
+                          />
+                        </div>
                       </div>
                     </div>
-                    
-                    <div className="text-right">
-                      <div className={cn("text-sm font-medium", getConfidenceColor(recommendation.confidence))}>
-                        {recommendation.confidence}% confidence
-                      </div>
-                      <Progress 
-                        value={recommendation.confidence} 
-                        className="w-20 h-2 mt-1 bg-gray-200"
-                      />
-                    </div>
-                  </div>
-                </CardHeader>
 
-                <CardContent className="space-y-4">
-                  <p className="text-black/70">
-                    {recommendation.description}
-                  </p>
+                    {/* Description */}
+                    <p className="text-xs sm:text-sm text-black/70 leading-relaxed pl-8">
+                      {recommendation.description}
+                    </p>
 
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-sm text-black/60">
-                      <Clock className="h-4 w-4 text-black" />
-                      {new Date(recommendation.createdAt).toLocaleDateString()}
-                      {recommendation.expiresAt && (
-                        <span className="text-black font-medium">
-                          • Expires {new Date(recommendation.expiresAt).toLocaleDateString()}
+                    {/* Footer */}
+                    <div className="flex flex-col gap-3 pt-2 border-t border-gray-100">
+                      {/* Date Row */}
+                      <div className="flex items-center gap-2 text-xs sm:text-sm text-black/60 pl-8">
+                        <Clock className="h-3 w-3 text-black shrink-0" />
+                        <span>
+                          {new Date(recommendation.createdAt).toLocaleDateString()}
+                          {recommendation.expiresAt && (
+                            <span className="text-black font-medium ml-2">
+                              • Expires {new Date(recommendation.expiresAt).toLocaleDateString()}
+                            </span>
+                          )}
                         </span>
-                      )}
-                    </div>
+                      </div>
 
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleRecommendationAction(recommendation.id, 'dismiss')}
-                        className="bg-white text-black border-black hover:bg-black hover:text-white"
-                      >
-                        <ThumbsDown className="h-3 w-3 mr-1" />
-                        Dismiss
-                      </Button>
-                      
-                      {recommendation.actionRequired && (
-                        <Button
-                          size="sm"
-                          onClick={() => handleRecommendationAction(recommendation.id, 'accept')}
-                          className="bg-black text-white hover:bg-gray-800"
-                        >
-                          <ArrowRight className="h-3 w-3 mr-1" />
-                          Take Action
-                        </Button>
-                      )}
-                      
-                      {!recommendation.actionRequired && (
+                      {/* Action Buttons Row */}
+                      <div className="flex items-center gap-2 pl-8">
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleRecommendationAction(recommendation.id, 'accept')}
-                          className="bg-white text-black border-black hover:bg-black hover:text-white"
+                          onClick={() => handleRecommendationAction(recommendation.id, 'dismiss')}
+                          className="bg-white text-black border-black hover:bg-black hover:text-white text-xs sm:text-sm px-4 py-2 h-auto flex-1"
                         >
-                          <ThumbsUp className="h-3 w-3 mr-1" />
-                          Helpful
+                          <ThumbsDown className="h-3 w-3 mr-2" />
+                          Dismiss
                         </Button>
-                      )}
+                        
+                        {recommendation.actionRequired ? (
+                          <Button
+                            size="sm"
+                            onClick={() => handleRecommendationAction(recommendation.id, 'accept')}
+                            className="bg-black text-white hover:bg-gray-800 text-xs sm:text-sm px-4 py-2 h-auto flex-1"
+                          >
+                            <ArrowRight className="h-3 w-3 mr-2" />
+                            Take Action
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleRecommendationAction(recommendation.id, 'accept')}
+                            className="bg-white text-black border-black hover:bg-black hover:text-white text-xs sm:text-sm px-4 py-2 h-auto flex-1"
+                          >
+                            <ThumbsUp className="h-3 w-3 mr-2" />
+                            Helpful
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </CardContent>
@@ -330,12 +346,12 @@ export function AIRecommendationsPanel() {
           ))}
 
           {filteredRecommendations.length === 0 && (
-            <div className="text-center py-12">
-              <Brain className="h-12 w-12 text-black/40 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-black mb-2">
+            <div className="text-center py-8 sm:py-12">
+              <Brain className="h-8 w-8 sm:h-12 sm:w-12 text-black/40 mx-auto mb-3 sm:mb-4" />
+              <h3 className="text-xs sm:text-base font-semibold text-black mb-1 sm:mb-2">
                 No recommendations available
               </h3>
-              <p className="text-black/60">
+              <p className="text-xs sm:text-sm text-black/60">
                 AI is analyzing market data to provide personalized insights
               </p>
             </div>

@@ -352,7 +352,7 @@ export function HomePageComponent() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-white dark:bg-black">
+      <div className="flex items-center justify-center min-h-screen bg-background">
         <Alert variant="destructive" className="max-w-md">
           <AlertDescription>{error}</AlertDescription>
           <Button
@@ -377,20 +377,20 @@ export function HomePageComponent() {
         sidebar={<SidebarContent onAddMoney={() => setShowDepositModal(true)} />}
       >
         <SidebarToggle />
-        <LayoutWrapper className="bg-white min-h-screen" showBreadcrumbs={false}>
+        <LayoutWrapper className="bg-background min-h-screen" showBreadcrumbs={false}>
 
       {/* Header */}
-      <header className="sticky top-0 z-30 bg-white dark:bg-black border-b border-gray-200 dark:border-gray-800 shadow-sm">
+      <header className="sticky top-0 z-30 bg-background border-b border-border shadow-sm">
         <div className="container mx-auto px-4 lg:px-6">
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center gap-4 ml-16">
               <div className="flex items-center gap-3">
-                <Wallet className="h-8 w-8 text-black dark:text-white" />
+                <Wallet className="h-8 w-8 text-foreground" />
                 <div>
-                  <h1 className="text-xl font-bold text-black dark:text-white">
+                  <h1 className="text-xl font-bold text-foreground">
                     Welcome back, {user?.name || 'User'}
                   </h1>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <p className="text-sm text-muted-foreground">
                     {new Date().toLocaleDateString('en-US', {
                       weekday: 'long',
                       year: 'numeric',
@@ -403,12 +403,12 @@ export function HomePageComponent() {
             </div>
             <div className="flex items-center gap-3">
               <div className="relative hidden md:block">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search transactions..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-64 pl-9 bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700"
+                  className="w-64 pl-9 bg-secondary border-border"
                 />
               </div>
               <Button
@@ -419,7 +419,7 @@ export function HomePageComponent() {
               >
                 <Bell className="h-5 w-5" />
                 {notificationCount > 0 && (
-                  <span className="absolute -top-1 -right-1 h-5 w-5 bg-black dark:bg-white text-white dark:text-black text-xs rounded-full flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 h-5 w-5 bg-primary text-primary-foreground text-xs rounded-full flex items-center justify-center">
                     {notificationCount > 9 ? '9+' : notificationCount}
                   </span>
                 )}
@@ -444,11 +444,11 @@ export function HomePageComponent() {
           transition={{ duration: 0.3 }}
           className="text-center mb-8"
         >
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Total Balance</p>
-          <h1 className="text-4xl lg:text-5xl font-bold text-black dark:text-white mb-1">
+          <p className="text-sm text-muted-foreground mb-2">Total Balance</p>
+          <h1 className="text-4xl lg:text-5xl font-bold text-foreground mb-1">
             ${balance.toLocaleString()}
           </h1>
-          <div className="flex items-center justify-center gap-1 text-gray-600 dark:text-gray-400">
+          <div className="flex items-center justify-center gap-1 text-muted-foreground">
             <ArrowUpRight className="h-4 w-4" />
             <span className="text-sm font-medium">+2.5% this month</span>
           </div>
@@ -467,10 +467,10 @@ export function HomePageComponent() {
               whileHover={{ scale: 1.02, y: -2 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setShowDepositModal(true)}
-              className="bg-black dark:bg-white text-white dark:text-black p-8 rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-500 group border-2 border-transparent hover:border-gray-300 dark:hover:border-gray-700"
+              className="bg-primary text-primary-foreground p-8 rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-500 group border-2 border-transparent hover:border-border"
             >
               <div className="flex flex-col items-center gap-4">
-                <div className="bg-white/10 dark:bg-black/10 p-4 rounded-2xl group-hover:bg-white/20 dark:group-hover:bg-black/20 transition-all duration-300 group-hover:scale-110">
+                <div className="bg-primary-foreground/10 p-4 rounded-2xl group-hover:bg-primary-foreground/20 transition-all duration-300 group-hover:scale-110">
                   <Plus className="h-8 w-8" />
                 </div>
                 <div className="text-center">
@@ -484,10 +484,10 @@ export function HomePageComponent() {
               whileHover={{ scale: 1.02, y: -2 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setIsTransferModalOpen(true)}
-              className="bg-white dark:bg-black text-black dark:text-white p-8 rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-500 group border-2 border-gray-200 dark:border-gray-800 hover:border-gray-400 dark:hover:border-gray-600"
+              className="bg-card text-card-foreground p-8 rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-500 group border-2 border-border hover:border-muted-foreground"
             >
               <div className="flex flex-col items-center gap-4">
-                <div className="bg-black/10 dark:bg-white/10 p-4 rounded-2xl group-hover:bg-black/20 dark:group-hover:bg-white/20 transition-all duration-300 group-hover:scale-110">
+                <div className="bg-foreground/10 p-4 rounded-2xl group-hover:bg-foreground/20 transition-all duration-300 group-hover:scale-110">
                   <Send className="h-8 w-8" />
                 </div>
                 <div className="text-center">
@@ -501,10 +501,10 @@ export function HomePageComponent() {
               whileHover={{ scale: 1.02, y: -2 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => router.push('/savings')}
-              className="bg-gray-100 dark:bg-gray-900 text-black dark:text-white p-8 rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-500 group border-2 border-gray-200 dark:border-gray-800 hover:border-gray-400 dark:hover:border-gray-600"
+              className="bg-secondary text-secondary-foreground p-8 rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-500 group border-2 border-border hover:border-muted-foreground"
             >
               <div className="flex flex-col items-center gap-4">
-                <div className="bg-black/10 dark:bg-white/10 p-4 rounded-2xl group-hover:bg-black/20 dark:group-hover:bg-white/20 transition-all duration-300 group-hover:scale-110">
+                <div className="bg-secondary-foreground/10 p-4 rounded-2xl group-hover:bg-secondary-foreground/20 transition-all duration-300 group-hover:scale-110">
                   <PiggyBank className="h-8 w-8" />
                 </div>
                 <div className="text-center">
@@ -518,10 +518,10 @@ export function HomePageComponent() {
               whileHover={{ scale: 1.02, y: -2 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => router.push('/investment')}
-              className="bg-gray-200 dark:bg-gray-800 text-black dark:text-white p-8 rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-500 group border-2 border-gray-300 dark:border-gray-700 hover:border-gray-500 dark:hover:border-gray-500"
+              className="bg-muted text-muted-foreground p-8 rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-500 group border-2 border-border hover:border-accent"
             >
               <div className="flex flex-col items-center gap-4">
-                <div className="bg-black/10 dark:bg-white/10 p-4 rounded-2xl group-hover:bg-black/20 dark:group-hover:bg-white/20 transition-all duration-300 group-hover:scale-110">
+                <div className="bg-muted-foreground/10 p-4 rounded-2xl group-hover:bg-muted-foreground/20 transition-all duration-300 group-hover:scale-110">
                   <TrendingUp className="h-8 w-8" />
                 </div>
                 <div className="text-center">
@@ -549,15 +549,15 @@ export function HomePageComponent() {
                 whileHover={{ scale: 1.05, y: -1 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={item.onClick}
-                className="bg-white dark:bg-black border-2 border-gray-200 dark:border-gray-800 p-4 rounded-2xl hover:shadow-lg transition-all duration-300 group hover:border-gray-400 dark:hover:border-gray-600 relative"
+                className="bg-card border-2 border-border p-4 rounded-2xl hover:shadow-lg transition-all duration-300 group hover:border-muted-foreground relative"
               >
                 <div className="flex flex-col items-center gap-3">
-                  <div className="bg-gray-100 dark:bg-gray-900 p-3 rounded-xl group-hover:bg-gray-200 dark:group-hover:bg-gray-800 transition-all duration-300 group-hover:scale-110">
-                    <item.icon className="h-5 w-5 text-black dark:text-white" />
+                  <div className="bg-secondary p-3 rounded-xl group-hover:bg-secondary/80 transition-all duration-300 group-hover:scale-110">
+                    <item.icon className="h-5 w-5 text-foreground" />
                   </div>
-                  <span className="text-xs font-semibold text-black dark:text-white">{item.label}</span>
+                  <span className="text-xs font-semibold text-foreground">{item.label}</span>
                   {item.hasNotification && notificationCount > 0 && (
-                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-black dark:bg-white text-white dark:text-black text-xs rounded-full flex items-center justify-center font-bold">
+                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground text-xs rounded-full flex items-center justify-center font-bold">
                       {notificationCount}
                     </div>
                   )}
@@ -575,81 +575,81 @@ export function HomePageComponent() {
           className="mb-8"
         >
           <div className="mb-6">
-            <h2 className="text-2xl font-bold text-black dark:text-white mb-2">Financial Overview</h2>
-            <p className="text-gray-600 dark:text-gray-400">Your financial performance this month</p>
+            <h2 className="text-2xl font-bold text-foreground mb-2">Financial Overview</h2>
+            <p className="text-muted-foreground">Your financial performance this month</p>
           </div>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {/* Total Balance Card */}
-            <Card className="bg-black dark:bg-white text-white dark:text-black border-0 shadow-xl hover:shadow-2xl transition-all duration-300 group">
+            <Card className="bg-primary text-primary-foreground border-0 shadow-xl hover:shadow-2xl transition-all duration-300 group">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-300 dark:text-gray-600 text-sm font-medium">Total Balance</p>
+                    <p className="text-primary-foreground/70 text-sm font-medium">Total Balance</p>
                     <p className="text-3xl font-bold mt-2">${balance.toLocaleString()}</p>
                     <div className="flex items-center mt-2">
-                      <ArrowUpRight className="h-4 w-4 text-gray-400 dark:text-gray-500 mr-1" />
-                      <span className="text-gray-400 dark:text-gray-500 text-sm">+2.5% from last month</span>
+                      <ArrowUpRight className="h-4 w-4 text-primary-foreground/60 mr-1" />
+                      <span className="text-primary-foreground/60 text-sm">+2.5% from last month</span>
                     </div>
                   </div>
-                  <div className="bg-white/10 dark:bg-black/10 p-3 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                    <Wallet className="h-6 w-6 text-white dark:text-black" />
+                  <div className="bg-primary-foreground/10 p-3 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                    <Wallet className="h-6 w-6 text-primary-foreground" />
                   </div>
                 </div>
               </CardContent>
             </Card>
 
             {/* Monthly Income Card */}
-            <Card className="bg-gray-900 dark:bg-gray-100 text-white dark:text-black border-0 shadow-xl hover:shadow-2xl transition-all duration-300 group">
+            <Card className="bg-secondary text-secondary-foreground border-0 shadow-xl hover:shadow-2xl transition-all duration-300 group">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-300 dark:text-gray-600 text-sm font-medium">Monthly Income</p>
+                    <p className="text-secondary-foreground/70 text-sm font-medium">Monthly Income</p>
                     <p className="text-3xl font-bold mt-2">$3,200</p>
                     <div className="flex items-center mt-2">
-                      <ArrowUpRight className="h-4 w-4 text-gray-400 dark:text-gray-500 mr-1" />
-                      <span className="text-gray-400 dark:text-gray-500 text-sm">+8.2% this month</span>
+                      <ArrowUpRight className="h-4 w-4 text-secondary-foreground/60 mr-1" />
+                      <span className="text-secondary-foreground/60 text-sm">+8.2% this month</span>
                     </div>
                   </div>
-                  <div className="bg-white/10 dark:bg-black/10 p-3 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                    <TrendingUp className="h-6 w-6 text-white dark:text-black" />
+                  <div className="bg-secondary-foreground/10 p-3 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                    <TrendingUp className="h-6 w-6 text-secondary-foreground" />
                   </div>
                 </div>
               </CardContent>
             </Card>
 
             {/* Monthly Expenses Card */}
-            <Card className="bg-gray-800 dark:bg-gray-200 text-white dark:text-black border-0 shadow-xl hover:shadow-2xl transition-all duration-300 group">
+            <Card className="bg-muted text-muted-foreground border-0 shadow-xl hover:shadow-2xl transition-all duration-300 group">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-300 dark:text-gray-600 text-sm font-medium">Monthly Expenses</p>
+                    <p className="text-muted-foreground/70 text-sm font-medium">Monthly Expenses</p>
                     <p className="text-3xl font-bold mt-2">$1,850</p>
                     <div className="flex items-center mt-2">
-                      <ArrowDownRight className="h-4 w-4 text-gray-400 dark:text-gray-500 mr-1" />
-                      <span className="text-gray-400 dark:text-gray-500 text-sm">-3.1% this month</span>
+                      <ArrowDownRight className="h-4 w-4 text-muted-foreground/60 mr-1" />
+                      <span className="text-muted-foreground/60 text-sm">-3.1% this month</span>
                     </div>
                   </div>
-                  <div className="bg-white/10 dark:bg-black/10 p-3 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                    <ArrowDownRight className="h-6 w-6 text-white dark:text-black" />
+                  <div className="bg-muted-foreground/10 p-3 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                    <ArrowDownRight className="h-6 w-6 text-muted-foreground" />
                   </div>
                 </div>
               </CardContent>
             </Card>
 
             {/* Savings Goal Card */}
-            <Card className="bg-gray-700 dark:bg-gray-300 text-white dark:text-black border-0 shadow-xl hover:shadow-2xl transition-all duration-300 group">
+            <Card className="bg-accent text-accent-foreground border-0 shadow-xl hover:shadow-2xl transition-all duration-300 group">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-300 dark:text-gray-600 text-sm font-medium">Savings Progress</p>
+                    <p className="text-accent-foreground/70 text-sm font-medium">Savings Progress</p>
                     <p className="text-3xl font-bold mt-2">75%</p>
                     <div className="flex items-center mt-2">
-                      <Target className="h-4 w-4 text-gray-400 dark:text-gray-500 mr-1" />
-                      <span className="text-gray-400 dark:text-gray-500 text-sm">$7,500 of $10,000</span>
+                      <Target className="h-4 w-4 text-accent-foreground/60 mr-1" />
+                      <span className="text-accent-foreground/60 text-sm">$7,500 of $10,000</span>
                     </div>
                   </div>
-                  <div className="bg-white/10 dark:bg-black/10 p-3 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                    <PiggyBank className="h-6 w-6 text-white dark:text-black" />
+                  <div className="bg-accent-foreground/10 p-3 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                    <PiggyBank className="h-6 w-6 text-accent-foreground" />
                   </div>
                 </div>
               </CardContent>
@@ -696,10 +696,10 @@ export function HomePageComponent() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: 0.5 }}
             >
-              <Card className="border-2 border-gray-300 dark:border-gray-700 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+              <Card className="border-2 border-border bg-gradient-to-br from-secondary/50 to-secondary">
                 <CardHeader>
                   <div className="flex items-center gap-2">
-                    <Brain className="h-5 w-5 text-black dark:text-white" />
+                    <Brain className="h-5 w-5 text-foreground" />
                     <CardTitle className="text-lg">AI Insights</CardTitle>
                   </div>
                   <CardDescription>Personalized financial recommendations</CardDescription>
@@ -716,25 +716,25 @@ export function HomePageComponent() {
                       {aiInsights.slice(0, 3).map((insight) => (
                         <div
                           key={insight.id}
-                          className="bg-white dark:bg-black p-4 rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm"
+                          className="bg-card p-4 rounded-lg border border-border shadow-sm"
                         >
-                          <h3 className="font-medium text-black dark:text-white mb-1">
+                          <h3 className="font-medium text-card-foreground mb-1">
                             {insight.title}
                           </h3>
-                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                          <p className="text-sm text-muted-foreground mb-3">
                             {insight.description}
                           </p>
                           <div className="flex items-center justify-between">
-                            <Badge variant="secondary" className="text-xs bg-gray-100 dark:bg-gray-800 text-black dark:text-white">
+                            <Badge variant="secondary" className="text-xs">
                               {insight.priority || 'medium'}
                             </Badge>
-                            <Button size="sm" variant="outline" className="text-xs border-gray-300 dark:border-gray-600">
+                            <Button size="sm" variant="outline" className="text-xs">
                               Learn More
                             </Button>
                           </div>
                         </div>
                       ))}
-                      <Button variant="outline" className="w-full border-gray-300 dark:border-gray-600">
+                      <Button variant="outline" className="w-full">
                         <Brain className="h-4 w-4 mr-2" />
                         View All Insights
                       </Button>
@@ -761,15 +761,15 @@ export function HomePageComponent() {
                   <CardDescription>Your latest financial activities</CardDescription>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <Button variant="outline" size="sm" className="text-xs border-gray-300 dark:border-gray-600">
+                  <Button variant="outline" size="sm" className="text-xs">
                     <Filter className="h-4 w-4 mr-2" />
                     Filter
                   </Button>
-                  <Button variant="outline" size="sm" className="text-xs border-gray-300 dark:border-gray-600">
+                  <Button variant="outline" size="sm" className="text-xs">
                     <Download className="h-4 w-4 mr-2" />
                     Export
                   </Button>
-                  <Button size="sm" className="text-xs bg-black hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-200 text-white dark:text-black">
+                  <Button size="sm" className="text-xs">
                     <Plus className="h-4 w-4 mr-2" />
                     Add Transaction
                   </Button>
@@ -791,34 +791,30 @@ export function HomePageComponent() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.2, delay: index * 0.05 }}
-                      className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                      className="flex items-center justify-between p-4 bg-secondary/50 rounded-lg hover:bg-secondary transition-colors"
                     >
                       <div className="flex items-center gap-4">
-                        <div className={`p-2 rounded-full ${
-                          transaction.type === 'income'
-                            ? 'bg-gray-200 dark:bg-gray-700'
-                            : 'bg-gray-300 dark:bg-gray-600'
-                        }`}>
+                        <div className="p-2 rounded-full bg-muted">
                           {transaction.type === 'income' ? (
-                            <ArrowUpRight className="h-4 w-4 text-black dark:text-white" />
+                            <ArrowUpRight className="h-4 w-4 text-foreground" />
                           ) : (
-                            <ArrowDownRight className="h-4 w-4 text-black dark:text-white" />
+                            <ArrowDownRight className="h-4 w-4 text-foreground" />
                           )}
                         </div>
                         <div>
-                          <p className="font-medium text-black dark:text-white">
+                          <p className="font-medium text-foreground">
                             {transaction.description}
                           </p>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                          <p className="text-sm text-muted-foreground">
                             {transaction.merchant} • {transaction.category}
                           </p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="font-semibold text-black dark:text-white">
+                        <p className="font-semibold text-foreground">
                           {transaction.type === 'income' ? '+' : '-'}${transaction.amount.toFixed(2)}
                         </p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                        <p className="text-sm text-muted-foreground">
                           {new Date(transaction.date).toLocaleDateString()}
                         </p>
                       </div>
@@ -826,12 +822,12 @@ export function HomePageComponent() {
                   ))}
                   {filteredTransactions.length === 0 && (
                     <div className="text-center py-8">
-                      <p className="text-gray-500 dark:text-gray-400">No transactions found</p>
+                      <p className="text-muted-foreground">No transactions found</p>
                     </div>
                   )}
                   {filteredTransactions.length > 5 && (
                     <div className="text-center pt-4">
-                      <Button variant="outline" className="w-full border-gray-300 dark:border-gray-600">
+                      <Button variant="outline" className="w-full">
                         View All Transactions
                       </Button>
                     </div>
@@ -852,21 +848,21 @@ export function HomePageComponent() {
           console.log('Transfer modal state changing from', isTransferModalOpen, 'to:', open);
           setIsTransferModalOpen(open);
         }}>
-          <DialogContent className="sm:max-w-md bg-white dark:bg-black border-gray-200 dark:border-gray-800">
+          <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle className="text-black dark:text-white">Send Money</DialogTitle>
-              <DialogDescription className="text-gray-600 dark:text-gray-400">
+              <DialogTitle>Send Money</DialogTitle>
+              <DialogDescription>
                 Transfer money quickly and securely
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="transfer-method" className="text-black dark:text-white">Transfer Method</Label>
+                <Label htmlFor="transfer-method">Transfer Method</Label>
                 <Select value={transferMethod} onValueChange={setTransferMethod}>
-                  <SelectTrigger className="border-gray-300 dark:border-gray-600 bg-white dark:bg-black">
+                  <SelectTrigger>
                     <SelectValue placeholder="Select transfer method" />
                   </SelectTrigger>
-                  <SelectContent className="bg-white dark:bg-black border-gray-300 dark:border-gray-600">
+                  <SelectContent>
                     <SelectItem value="bank">Bank Transfer</SelectItem>
                     <SelectItem value="card">Card Transfer</SelectItem>
                     <SelectItem value="mobile">Mobile Money</SelectItem>
@@ -876,21 +872,21 @@ export function HomePageComponent() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="transfer-amount" className="text-black dark:text-white">Amount</Label>
+                <Label htmlFor="transfer-amount">Amount</Label>
                 <Input
                   id="transfer-amount"
                   type="number"
                   placeholder="0.00"
                   value={transferAmount}
                   onChange={(e) => setTransferAmount(e.target.value)}
-                  className="text-lg font-semibold border-gray-300 dark:border-gray-600 bg-white dark:bg-black"
+                  className="text-lg font-semibold"
                   step="0.01"
                   min="0"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="transfer-recipient" className="text-black dark:text-white">
+                <Label htmlFor="transfer-recipient">
                   {transferMethod === 'bank' ? 'Account Number' :
                    transferMethod === 'card' ? 'Card Number' :
                    transferMethod === 'mobile' ? 'Phone Number' : 'Email or Phone'}
@@ -904,35 +900,35 @@ export function HomePageComponent() {
                   }
                   value={transferRecipient}
                   onChange={(e) => setTransferRecipient(e.target.value)}
-                  className="border-gray-300 dark:border-gray-600 bg-white dark:bg-black"
+                  className=""
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="transfer-note" className="text-black dark:text-white">Note (Optional)</Label>
+                <Label htmlFor="transfer-note">Note (Optional)</Label>
                 <Textarea
                   id="transfer-note"
                   placeholder="What's this transfer for?"
                   value={transferNote}
                   onChange={(e) => setTransferNote(e.target.value)}
                   rows={2}
-                  className="border-gray-300 dark:border-gray-600 bg-white dark:bg-black"
+                  className=""
                 />
               </div>
 
               {transferAmount && (
-                <div className="bg-gray-100 dark:bg-gray-900 p-3 rounded-lg space-y-1">
+                <div className="bg-secondary p-3 rounded-lg space-y-1">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">Amount:</span>
-                    <span className="text-black dark:text-white">{formatCurrency(parseFloat(transferAmount) || 0)}</span>
+                    <span className="text-muted-foreground">Amount:</span>
+                    <span className="text-foreground">{formatCurrency(parseFloat(transferAmount) || 0)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">Fee:</span>
-                    <span className="text-black dark:text-white">{formatCurrency(2.50)}</span>
+                    <span className="text-muted-foreground">Fee:</span>
+                    <span className="text-foreground">{formatCurrency(2.50)}</span>
                   </div>
                   <div className="flex justify-between font-semibold">
-                    <span className="text-black dark:text-white">Total:</span>
-                    <span className="text-black dark:text-white">{formatCurrency((parseFloat(transferAmount) || 0) + 2.50)}</span>
+                    <span className="text-foreground">Total:</span>
+                    <span className="text-foreground">{formatCurrency((parseFloat(transferAmount) || 0) + 2.50)}</span>
                   </div>
                 </div>
               )}
@@ -941,14 +937,14 @@ export function HomePageComponent() {
                 <Button
                   variant="outline"
                   onClick={() => setIsTransferModalOpen(false)}
-                  className="flex-1 border-gray-300 dark:border-gray-600"
+                  className="flex-1"
                 >
                   Cancel
                 </Button>
                 <Button
                   onClick={handleTransfer}
                   disabled={isProcessingTransfer || !transferAmount || !transferRecipient}
-                  className="flex-1 bg-black hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-200 text-white dark:text-black"
+                  className="flex-1"
                 >
                   {isProcessingTransfer ? (
                     <>

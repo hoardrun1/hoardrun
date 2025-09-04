@@ -7,8 +7,9 @@ import {
   ArrowDownRight, PieChart, BarChart, Wallet,
   Globe, Shield, AlertCircle, Info, Target,
   Clock, Filter, Brain, Loader2, RefreshCcw,
-  Building2, Briefcase, ChartBar,
-  LucideIcon, Lock, CheckCircle, AlertTriangle
+  Building2, Briefcase, ChartBar, Menu, X,
+  LucideIcon, Lock, CheckCircle, AlertTriangle,
+  Home, Activity, Users, Settings
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useToast } from "@/components/ui/use-toast"
@@ -42,6 +43,10 @@ import { DepositModal } from '@/components/deposit-modal';
 import { CollectiveCapitalCircles } from '@/components/collective-capital/CollectiveCapitalCircles';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { z } from "zod"
+import Link from 'next/link'
+import { BarChart2, CreditCard } from 'lucide-react'
+import { SectionFooter } from '@/components/ui/section-footer'
+import { useTheme } from '@/contexts/ThemeContext'
 
 interface Investment {
   id: string
@@ -166,66 +171,6 @@ const investmentCategories: InvestmentCategory[] = [
     minInvestment: 5,
     description: 'Digital asset investments',
     features: ['24/7 trading', 'High volatility', 'Blockchain technology']
-  },
-  {
-    id: 'growth-stocks',
-    title: 'Growth Stocks',
-    icon: TrendingUp,
-    return: 15.5,
-    risk: 'High',
-    minInvestment: 100,
-    description: 'High-growth public company stocks',
-    features: ['Rapid growth potential', 'Market leadership', 'Innovation focus']
-  },
-  {
-    id: 'dividend-stocks',
-    title: 'Dividend Stocks',
-    icon: Wallet,
-    return: 8.2,
-    risk: 'Moderate',
-    minInvestment: 100,
-    description: 'Stable dividend-paying stocks',
-    features: ['Regular dividends', 'Stable companies', 'Income generation']
-  },
-  {
-    id: 'municipal-bonds',
-    title: 'Municipal Bonds',
-    icon: Building2,
-    return: 4.5,
-    risk: 'Low',
-    minInvestment: 500,
-    description: 'Tax-advantaged government bonds',
-    features: ['Tax benefits', 'Government backed', 'Stable returns']
-  },
-  {
-    id: 'commodity-etfs',
-    title: 'Commodity ETFs',
-    icon: BarChart,
-    return: 11.2,
-    risk: 'Moderate',
-    minInvestment: 200,
-    description: 'Diversified commodity exposure',
-    features: ['Inflation hedge', 'Portfolio diversification', 'Global exposure']
-  },
-  {
-    id: 'tech-startups',
-    title: 'Tech Startups',
-    icon: Brain,
-    return: 28.5,
-    risk: 'Very High',
-    minInvestment: 5000,
-    description: 'Early-stage technology companies',
-    features: ['Innovation focus', 'High growth potential', 'Direct ownership']
-  },
-  {
-    id: 'real-estate-trusts',
-    title: 'REITs',
-    icon: Building2,
-    return: 10.5,
-    risk: 'Moderate',
-    minInvestment: 250,
-    description: 'Real Estate Investment Trusts',
-    features: ['Property portfolio', 'Regular income', 'Liquidity']
   }
 ]
 
@@ -255,6 +200,7 @@ const startupInvestmentSchema = z.object({
 })
 
 export function InvestmentPage() {
+  const { theme } = useTheme()
   const [selectedInvestment, setSelectedInvestment] = useState<InvestmentCategory | null>(null)
   const [showInvestModal, setShowInvestModal] = useState(false)
   const [investmentAmount, setInvestmentAmount] = useState<string>('')
@@ -278,6 +224,8 @@ export function InvestmentPage() {
     isInvestorVerified: false,
   })
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false)
+  const [activeSection, setActiveSection] = useState('overview')
+  const [showQuickNav, setShowQuickNav] = useState(false)
 
   const router = useRouter()
   const { addToast } = useToast()
@@ -404,45 +352,115 @@ export function InvestmentPage() {
     }
   }, [fetchStockQuote, addToast])
 
+  // Quick navigation sections
+  const quickNavSections = [
+    { id: 'overview', label: 'Overview', icon: Home },
+    { id: 'performance', label: 'Performance', icon: Activity },
+    { id: 'investments', label: 'Investments', icon: TrendingUp },
+    { id: 'startups', label: 'Startups', icon: Building2 },
+    { id: 'collective', label: 'Circles', icon: Users },
+  ]
+
+  const scrollToSection = (sectionId: string) => {
+    console.log('Scrolling to section:', sectionId) // Debug log
+    setActiveSection(sectionId)
+    setShowQuickNav(false)
+    
+    // Add a small delay to ensure the nav closes first
+    setTimeout(() => {
+      const element = document.getElementById(sectionId)
+      console.log('Found element:', element) // Debug log
+      
+      if (element) {
+        // Try a simpler approach first
+        element.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start',
+          inline: 'nearest'
+        })
+        
+        // Alternative method with manual calculation
+        setTimeout(() => {
+          const rect = element.getBoundingClientRect()
+          const scrollTop = window.pageYOffset || document.documentElement.scrollTop
+          const elementTop = rect.top + scrollTop
+          const headerOffset = 80 // Fixed offset for header
+          
+          window.scrollTo({
+            top: elementTop - headerOffset,
+            behavior: 'smooth'
+          })
+        }, 50)
+      } else {
+        console.error('Element not found:', sectionId)
+      }
+    }, 150)
+  }
+
+  // Add scroll listener to update active section
+  useEffect(() => {
+    const handleScroll = () => {
+      const sections = quickNavSections.map(section => section.id)
+      const stickyHeader = document.querySelector('.sticky')
+      const headerHeight = stickyHeader ? stickyHeader.getBoundingClientRect().height : 0
+      
+      for (let i = sections.length - 1; i >= 0; i--) {
+        const section = document.getElementById(sections[i])
+        if (section) {
+          const rect = section.getBoundingClientRect()
+          if (rect.top <= headerHeight + 50) { // 50px threshold
+            setActiveSection(sections[i])
+            break
+          }
+        }
+      }
+    }
+
+    window.addEventListener('scroll', handleScroll)
+    handleScroll() // Call once to set initial active section
+
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [quickNavSections])
+
   // Show security verification first
   if (!securityChecks.isEmailVerified || !securityChecks.isIdentityVerified || !securityChecks.isInvestorVerified) {
     return (
-      <div className="min-h-screen bg-white py-8">
-        <div className="container mx-auto px-4 max-w-md">
-          <Card className="bg-white border-black">
-            <CardHeader>
-              <CardTitle className="flex items-center text-black">
-                <Lock className="w-5 h-5 mr-2" />
+      <div className="min-h-screen bg-background py-4 px-4">
+        <div className="container mx-auto max-w-md">
+          <Card className="bg-card border-border">
+            <CardHeader className="p-4">
+              <CardTitle className="flex items-center text-foreground text-sm">
+                <Lock className="w-4 h-4 mr-2" />
                 Security Verification Required
               </CardTitle>
-              <CardDescription className="text-black/60">
+              <CardDescription className="text-muted-foreground text-xs">
                 Please complete the verification process to continue
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3 p-4 pt-0">
               <div className="flex items-center space-x-2">
                 {securityChecks.isEmailVerified ? (
-                  <CheckCircle className="w-5 h-5 text-black" />
+                  <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
                 ) : (
-                  <AlertTriangle className="w-5 h-5 text-black/60" />
+                  <AlertTriangle className="w-4 h-4 text-muted-foreground" />
                 )}
-                <span className="text-black">Email Verification</span>
+                <span className="text-foreground text-xs">Email Verification</span>
               </div>
               <div className="flex items-center space-x-2">
                 {securityChecks.isIdentityVerified ? (
-                  <CheckCircle className="w-5 h-5 text-black" />
+                  <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
                 ) : (
-                  <AlertTriangle className="w-5 h-5 text-black/60" />
+                  <AlertTriangle className="w-4 h-4 text-muted-foreground" />
                 )}
-                <span className="text-black">Identity Verification</span>
+                <span className="text-foreground text-xs">Identity Verification</span>
               </div>
               <div className="flex items-center space-x-2">
                 {securityChecks.isInvestorVerified ? (
-                  <CheckCircle className="w-5 h-5 text-black" />
+                  <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
                 ) : (
-                  <AlertTriangle className="w-5 h-5 text-black/60" />
+                  <AlertTriangle className="w-4 h-4 text-muted-foreground" />
                 )}
-                <span className="text-black">Investor Verification</span>
+                <span className="text-foreground text-xs">Investor Verification</span>
               </div>
             </CardContent>
           </Card>
@@ -497,120 +515,147 @@ export function InvestmentPage() {
         sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
       >
         <SidebarToggle />
-        <LayoutWrapper className="min-h-screen bg-white pt-0 sm:pb-6 sm:px-6">
-          {/* Investment Overview */}
-          <div className="bg-black text-white py-8">
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
-                <div className="flex-1">
-                  <h1 className="text-3xl font-bold text-white">Smart Investments</h1>
-                  <p className="text-white/60">AI-Powered Portfolio Management</p>
+        <LayoutWrapper className="min-h-screen bg-background">
+          {/* Sticky Quick Navigation - Mobile First */}
+          <div className="sticky top-0 z-50 bg-background border-b border-border">
+            <div className="flex items-center justify-between p-2">
+              <h1 className="text-xs sm:text-base font-bold text-foreground">Investments</h1>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowQuickNav(!showQuickNav)}
+                className="p-1 h-auto"
+              >
+                {showQuickNav ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+              </Button>
+            </div>
+            
+            <AnimatePresence>
+              {showQuickNav && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="border-t border-border bg-background"
+                >
+                  <div className="grid grid-cols-5 gap-1 p-2">
+                    {quickNavSections.map((section) => (
+                      <Button
+                        key={section.id}
+                        variant={activeSection === section.id ? "default" : "ghost"}
+                        size="sm"
+                        onClick={() => scrollToSection(section.id)}
+                        className={`flex flex-col items-center gap-1 h-auto py-2 px-1 text-xs ${
+                          activeSection === section.id 
+                            ? 'bg-primary text-primary-foreground' 
+                            : 'text-foreground hover:bg-primary hover:text-primary-foreground'
+                        }`}
+                      >
+                        <section.icon className="h-3 w-3" />
+                        <span className="text-xs sm:text-sm">{section.label}</span>
+                      </Button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Portfolio Overview Section */}
+          <section id="overview" className="p-3 bg-primary text-primary-foreground">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xs sm:text-base font-bold">Portfolio Overview</h2>
+                  <p className="text-xs sm:text-sm text-primary-foreground/60">AI-Powered Management</p>
                 </div>
-                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 shrink-0">
+                <div className="flex gap-2">
                   <Button
-                    onClick={() => router.push('/startupregistration')}
-                    className="bg-white text-black hover:bg-white/90 border border-white"
-                    disabled={marketDataLoading}
+                    size="sm"
+                    onClick={() => setShowInvestModal(true)}
+                    className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 text-xs sm:text-sm px-2 py-1 h-auto"
                   >
-                    <Building2 className="w-4 h-4 mr-2" />
-                    Register Startup
+                    <DollarSign className="w-3 h-3 mr-1" />
+                    Invest
                   </Button>
                   <Button
-                    onClick={() => setShowInvestModal(true)}
-                    className="bg-white text-black hover:bg-white/90"
-                    disabled={marketDataLoading}
+                    size="sm"
+                    onClick={() => router.push('/startupregistration')}
+                    variant="outline"
+                    className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary text-xs sm:text-sm px-2 py-1 h-auto"
                   >
-                    {marketDataLoading ? 'Loading...' : 'New Investment'}
+                    <Building2 className="w-3 h-3 mr-1" />
+                    Register
                   </Button>
                 </div>
               </div>
 
-              {marketData && (
-                <div className="bg-white rounded-lg p-4 shadow-lg border border-black mb-6">
-                  <h2 className="text-black text-xl font-semibold mb-4">
-                    Market Data for {marketData.symbol}
-                  </h2>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div>
-                      <p className="text-black/60">Current Price</p>
-                      <p className="text-2xl font-bold text-black">
-                        ${marketData.price.toFixed(2)}
-                      </p>
+              {/* Key Metrics - Compact Grid */}
+              <div className="grid grid-cols-3 gap-2">
+                <Card className="bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground">
+                  <CardContent className="p-2">
+                    <div className="text-xs sm:text-sm text-primary-foreground/60">Portfolio</div>
+                    <div className="text-xs sm:text-base font-bold">$45,678</div>
+                    <div className="flex items-center text-xs sm:text-sm text-green-400">
+                      <ArrowUpRight className="h-2 w-2 mr-1" />
+                      +12.5%
                     </div>
-                    <div>
-                      <p className="text-black/60">Change</p>
-                      <p className="text-2xl font-bold text-black">
-                        {marketData.change.toFixed(2)}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="bg-white border-white text-black">
-                  <CardHeader>
-                    <CardTitle className="text-lg text-black">Portfolio Value</CardTitle>
-                    <div className="text-3xl font-bold text-black">$45,678.90</div>
-                    <div className="flex items-center text-black/60">
-                      <ArrowUpRight className="h-4 w-4 mr-1" />
-                      +12.5% YTD
-                    </div>
-                  </CardHeader>
+                  </CardContent>
                 </Card>
 
-                <Card className="bg-white border-white text-black">
-                  <CardHeader>
-                    <CardTitle className="text-lg text-black">Total Returns</CardTitle>
-                    <div className="text-3xl font-bold text-black">$5,432.10</div>
-                    <div className="flex items-center text-black/60">
-                      <ArrowUpRight className="h-4 w-4 mr-1" />
-                      +8.3% MTD
+                <Card className="bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground">
+                  <CardContent className="p-2">
+                    <div className="text-xs sm:text-sm text-primary-foreground/60">Returns</div>
+                    <div className="text-xs sm:text-base font-bold">$5,432</div>
+                    <div className="flex items-center text-xs sm:text-sm text-green-400">
+                      <ArrowUpRight className="h-2 w-2 mr-1" />
+                      +8.3%
                     </div>
-                  </CardHeader>
+                  </CardContent>
                 </Card>
 
-                <Card className="bg-white border-white text-black">
-                  <CardHeader>
-                    <CardTitle className="text-lg text-black">AI Risk Score</CardTitle>
-                    <div className="text-3xl font-bold text-black">85/100</div>
-                    <div className="text-black/60">Optimized Portfolio</div>
-                  </CardHeader>
+                <Card className="bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground">
+                  <CardContent className="p-2">
+                    <div className="text-xs sm:text-sm text-primary-foreground/60">AI Score</div>
+                    <div className="text-xs sm:text-base font-bold">85/100</div>
+                    <div className="text-xs sm:text-sm text-primary-foreground/60">Optimized</div>
+                  </CardContent>
                 </Card>
               </div>
             </div>
-          </div>
+          </section>
 
-          {/* Performance Chart */}
-          <div className="container mx-auto px-4 py-8 bg-white">
-            <Card className="mb-8 bg-white border-black">
-              <CardHeader>
-                <CardTitle className="text-black">Portfolio Performance</CardTitle>
+          {/* Performance Chart Section */}
+          <section id="performance" className="p-3 bg-background">
+            <Card className="bg-card border-border">
+              <CardHeader className="p-3">
+                <CardTitle className="text-xs sm:text-base text-foreground">Performance</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="h-[300px]">
+              <CardContent className="p-3 pt-0">
+                <div className="h-[150px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={performanceData}>
                       <defs>
                         <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#000000" stopOpacity={0.8}/>
-                          <stop offset="95%" stopColor="#000000" stopOpacity={0}/>
+                          <stop offset="5%" stopColor="hsl(var(--foreground))" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="hsl(var(--foreground))" stopOpacity={0}/>
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#000000" />
-                      <XAxis dataKey="month" stroke="#000000" />
-                      <YAxis stroke="#000000" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                      <XAxis dataKey="month" stroke="hsl(var(--foreground))" fontSize={10} />
+                      <YAxis stroke="hsl(var(--foreground))" fontSize={10} />
                       <Tooltip 
                         contentStyle={{ 
-                          backgroundColor: '#ffffff', 
-                          border: '1px solid #000000',
-                          color: '#000000'
+                          backgroundColor: 'hsl(var(--background))', 
+                          border: '1px solid hsl(var(--border))',
+                          color: 'hsl(var(--foreground))',
+                          fontSize: '12px'
                         }} 
                       />
                       <Area
                         type="monotone"
                         dataKey="value"
-                        stroke="#000000"
+                        stroke="hsl(var(--foreground))"
                         fillOpacity={1}
                         fill="url(#colorValue)"
                       />
@@ -619,304 +664,146 @@ export function InvestmentPage() {
                 </div>
               </CardContent>
             </Card>
+          </section>
 
-            {/* Investment Categories */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Investment Categories Section */}
+          <section id="investments" className="p-3 bg-background">
+            <div className="mb-3">
+              <h3 className="text-xs sm:text-base font-bold text-foreground mb-1">Investment Options</h3>
+              <p className="text-xs sm:text-sm text-muted-foreground">Diversified portfolio opportunities</p>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-2">
               {investmentCategories.map((category) => (
                 <Card
                   key={category.id}
-                  className="hover:shadow-lg transition-shadow cursor-pointer group bg-white border-black"
+                  className="hover:shadow-md transition-shadow cursor-pointer bg-card border-border"
                   onClick={() => {
                     setSelectedInvestment(category)
                     setShowInvestModal(true)
                   }}
                 >
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <category.icon className="h-5 w-5 text-black" />
-                        <CardTitle className="text-lg text-black">{category.title}</CardTitle>
+                  <CardContent className="p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-1">
+                        <category.icon className="h-3 w-3 text-foreground" />
+                        <span className="text-xs sm:text-sm font-medium text-foreground">{category.title}</span>
                       </div>
-                      <div className="px-2 py-1 rounded text-sm bg-white text-black border border-black">
+                      <Badge variant="outline" className="border-border text-foreground text-xs sm:text-sm px-1 py-0">
                         {category.risk}
+                      </Badge>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs sm:text-sm text-muted-foreground">Return</span>
+                        <span className="text-xs sm:text-sm font-bold text-foreground">{category.return}%</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs sm:text-sm text-muted-foreground">Min</span>
+                        <span className="text-xs sm:text-sm text-foreground">${category.minInvestment.toLocaleString()}</span>
                       </div>
                     </div>
-                    <CardDescription className="text-black/60">{category.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div>
-                        <div className="text-sm text-black/60">Expected Return</div>
-                        <div className="text-2xl font-bold text-black">
-                          {category.return}%
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-sm text-black/60">Min Investment</div>
-                        <div className="font-medium text-black">
-                          ${category.minInvestment.toLocaleString()}
-                        </div>
-                      </div>
-                      <div className="pt-2 border-t border-black">
-                        <div className="text-sm text-black/60 mb-2">Key Features</div>
-                        <ul className="space-y-1">
-                          {category.features.map((feature, index) => (
-                            <li key={index} className="text-sm flex items-center text-black/60">
-                              <ArrowUpRight className="h-4 w-4 mr-2 text-black" />
-                              {feature}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
+                    
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-2 line-clamp-2">{category.description}</p>
                   </CardContent>
                 </Card>
               ))}
             </div>
-          </div>
+          </section>
 
           {/* Startup Investments Section */}
-          <div className="px-4 py-6 bg-white">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-black">Startup Investments</h2>
+          <section id="startups" className="p-3 bg-muted/50">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <h3 className="text-xs sm:text-base font-bold text-foreground">Startup Investments</h3>
+                <p className="text-xs sm:text-sm text-muted-foreground">Early-stage opportunities</p>
+              </div>
               <Button
-                onClick={() => setStartupView('list')}
                 variant="outline"
-                className="flex items-center gap-2 bg-white text-black border-black hover:bg-black hover:text-white"
+                size="sm"
+                className="text-xs sm:text-sm px-2 py-1 h-auto"
               >
-                <RefreshCcw className="w-4 h-4" />
+                <RefreshCcw className="w-3 h-3 mr-1" />
                 Refresh
               </Button>
             </div>
 
-            {startupView === 'list' ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {startups.map((startup) => (
-                  <Card key={startup.id} className="hover:shadow-lg transition-shadow bg-white border-black">
-                    <CardHeader>
-                      <CardTitle className="text-black">{startup.companyName}</CardTitle>
-                      <CardDescription className="text-black/60">{startup.companyType}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        <div>
-                          <p className="text-sm text-black/60">Valuation</p>
-                          <p className="text-lg font-semibold text-black">${startup.valuation.toLocaleString()}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-black/60">Fundraising Progress</p>
-                          <div className="w-full bg-white rounded-full h-2.5 mb-2 border border-black">
-                            <div
-                              className="bg-black h-2.5 rounded-full"
-                              style={{ width: `${startup.progress}%` }}
-                            />
-                          </div>
-                          <p className="text-sm text-black/60">
-                            {startup.progress}% of ${startup.fundraisingGoal.toLocaleString()}
-                          </p>
-                        </div>
-                        <div className="pt-4">
-                          <Button
-                            className="w-full bg-black text-white hover:bg-black/90"
-                            onClick={() => {
-                              setSelectedStartup(startup)
-                              setStartupView('detail')
-                            }}
-                          >
-                            View Details
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              selectedStartup && (
-                <div className="space-y-8">
-                  <Button
-                    variant="ghost"
-                    onClick={() => setStartupView('list')}
-                    className="mb-4 text-black hover:bg-black hover:text-white"
-                  >
-                    ← Back to List
-                  </Button>
-
-                  {/* Company Overview */}
-                  <Card className="bg-white border-black">
-                    <CardHeader>
-                      <CardTitle className="text-black">Company Overview</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 gap-3">
+              {startups.map((startup) => (
+                <Card key={startup.id} className="bg-card border-border">
+                  <CardContent className="p-3">
+                    <div className="flex justify-between items-start mb-2">
                       <div>
-                        <h3 className="font-semibold text-black">{selectedStartup.companyName}</h3>
-                        <p className="text-black/60">{selectedStartup.description}</p>
+                        <h4 className="text-xs sm:text-base font-medium text-foreground">{startup.companyName}</h4>
+                        <p className="text-xs sm:text-sm text-muted-foreground">{startup.companyType}</p>
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <p className="text-sm text-black/60">Registration Number</p>
-                          <p className="font-medium text-black">{selectedStartup.registrationNumber}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-black/60">Incorporation Date</p>
-                          <p className="font-medium text-black">{selectedStartup.incorporationDate}</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Financial Details */}
-                  <Card className="bg-white border-black">
-                    <CardHeader>
-                      <CardTitle className="text-black">Financial Overview</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div>
-                          <p className="text-sm text-black/60">Valuation</p>
-                          <p className="text-lg font-semibold text-black">
-                            ${selectedStartup.valuation.toLocaleString()}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-black/60">Annual Revenue</p>
-                          <p className="text-lg font-semibold text-black">
-                            ${selectedStartup.annualRevenue.toLocaleString()}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-black/60">Profit Margin</p>
-                          <p className="text-lg font-semibold text-black">{selectedStartup.profitMargin}%</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-black/60">Available Equity</p>
-                          <p className="text-lg font-semibold text-black">{selectedStartup.availablePercentage}%</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Investment Details */}
-                  <Card className="bg-white border-black">
-                    <CardHeader>
-                      <CardTitle className="text-black">Investment Opportunity</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        <div>
-                          <p className="text-sm text-black/60">Share Type</p>
-                          <p className="font-medium text-black">{selectedStartup.shareType}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-black/60">Price per Share</p>
-                          <p className="font-medium text-black">${selectedStartup.pricePerShare}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-black/60">Available Shares</p>
-                          <p className="font-medium text-black">{selectedStartup.sharesAvailable.toLocaleString()}</p>
-                        </div>
-                      </div>
-
+                      <Badge variant="outline" className="border-border text-foreground text-xs sm:text-sm">
+                        {startup.progress}% funded
+                      </Badge>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-2 mb-2">
                       <div>
-                        <p className="text-sm text-black/60 mb-2">Fundraising Progress</p>
-                        <div className="w-full bg-white rounded-full h-2.5 mb-2 border border-black">
-                          <div
-                            className="bg-black h-2.5 rounded-full"
-                            style={{ width: `${selectedStartup.progress}%` }}
-                          />
-                        </div>
-                        <p className="text-sm text-black/60">
-                          {selectedStartup.progress}% of ${selectedStartup.fundraisingGoal.toLocaleString()} goal
-                        </p>
+                        <span className="text-xs sm:text-sm text-muted-foreground">Valuation</span>
+                        <p className="text-xs sm:text-sm font-medium text-foreground">${(startup.valuation / 1000000).toFixed(1)}M</p>
                       </div>
-
                       <div>
-                        <p className="text-sm text-black/60 mb-2">Use of Funds</p>
-                        <p className="text-black/60">{selectedStartup.fundUse}</p>
+                        <span className="text-xs sm:text-sm text-muted-foreground">Min Investment</span>
+                        <p className="text-xs sm:text-sm font-medium text-foreground">${startup.pricePerShare}</p>
                       </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Call to Action */}
-                  <div className="flex justify-center pt-6">
+                    </div>
+                    
+                    <div className="w-full bg-muted rounded-full h-1.5 mb-2">
+                      <div
+                        className="bg-primary h-1.5 rounded-full"
+                        style={{ width: `${startup.progress}%` }}
+                      />
+                    </div>
+                    
                     <Button
-                      size="lg"
-                      className="px-8 py-6 text-lg bg-black text-white hover:bg-black/90"
+                      size="sm"
+                      className="w-full text-xs sm:text-sm py-1 h-auto"
                       onClick={() => setShowStartupModal(true)}
                     >
-                      Invest Now
+                      View Details
                     </Button>
-                  </div>
-                </div>
-              )
-            )}
-          </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </section>
 
           {/* Collective Capital Circles Section */}
-          <div className="container mx-auto px-4 py-8 bg-white">
-            <Tabs defaultValue="traditional" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-8 bg-white border-black">
-                <TabsTrigger value="traditional" className="text-black data-[state=active]:bg-black data-[state=active]:text-white">Traditional Investments</TabsTrigger>
-                <TabsTrigger value="collective" className="text-black data-[state=active]:bg-black data-[state=active]:text-white">Collective Capital Circles</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="traditional">
-                <div className="text-center py-12">
-                  <h3 className="text-2xl font-bold mb-4 text-black">Traditional Investment Options</h3>
-                  <p className="text-black/60 mb-6">
-                    Explore our curated selection of traditional investment opportunities
-                  </p>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {investmentCategories.slice(0, 3).map((category) => (
-                      <Card key={category.id} className="hover:shadow-lg transition-shadow bg-white border-black">
-                        <CardHeader>
-                          <div className="flex items-center space-x-2">
-                            <category.icon className="h-5 w-5 text-black" />
-                            <CardTitle className="text-lg text-black">{category.title}</CardTitle>
-                          </div>
-                        </CardHeader>
-                        <CardContent>
-                          <p className="text-black/60 mb-4">{category.description}</p>
-                          <div className="flex justify-between items-center">
-                            <span className="text-2xl font-bold text-black">
-                              {category.return}%
-                            </span>
-                            <Badge variant="outline" className="border-black text-black">{category.risk}</Badge>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="collective">
-                <CollectiveCapitalCircles />
-              </TabsContent>
-            </Tabs>
-          </div>
+          <section id="collective" className="p-3 bg-background">
+            <div className="mb-3">
+              <h3 className="text-xs sm:text-base font-bold text-foreground">Collective Circles</h3>
+              <p className="text-xs sm:text-sm text-muted-foreground">Join investment communities</p>
+            </div>
+            <CollectiveCapitalCircles />
+          </section>
 
           {/* Investment Modal */}
           <Dialog open={showInvestModal} onOpenChange={setShowInvestModal}>
-            <DialogContent className="sm:max-w-[425px] bg-white border-black">
+            <DialogContent className="sm:max-w-[90vw] max-w-[350px] bg-background border-border">
               <DialogHeader>
-                <DialogTitle className="text-black">New Investment</DialogTitle>
-                <DialogDescription className="text-black/60">
+                <DialogTitle className="text-foreground text-sm">New Investment</DialogTitle>
+                <DialogDescription className="text-muted-foreground text-xs">
                   Available Balance: ${balance?.toLocaleString() ?? '0'}
                 </DialogDescription>
               </DialogHeader>
 
-              <div className="grid gap-4 py-4">
+              <div className="grid gap-3 py-3">
                 <div className="space-y-2">
-                  <Label className="text-black">Investment Amount</Label>
+                  <Label className="text-foreground text-xs">Investment Amount</Label>
                   <div className="relative">
-                    <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-black h-4 w-4" />
+                    <DollarSign className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground h-3 w-3" />
                     <Input
                       type="number"
                       value={investmentAmount}
                       onChange={(e) => setInvestmentAmount(e.target.value)}
                       placeholder="Enter amount"
-                      className="pl-10 bg-white border-black text-black"
+                      className="pl-8 text-xs h-8"
                       min={0}
                       max={balance}
                     />
@@ -924,7 +811,7 @@ export function InvestmentPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-black">Risk Tolerance</Label>
+                  <Label className="text-foreground text-xs">Risk Tolerance</Label>
                   <Slider
                     value={[riskTolerance]}
                     onValueChange={(value) => setRiskTolerance(value[0])}
@@ -932,23 +819,23 @@ export function InvestmentPage() {
                     step={1}
                     className="mt-2"
                   />
-                  <div className="flex justify-between text-sm text-black/60 mt-1">
+                  <div className="flex justify-between text-xs text-muted-foreground mt-1">
                     <span>Conservative</span>
                     <span>Aggressive</span>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-black">Investment Strategy</Label>
+                  <Label className="text-foreground text-xs">Investment Strategy</Label>
                   <Select>
-                    <SelectTrigger className="bg-white border-black text-black">
+                    <SelectTrigger className="h-8 text-xs">
                       <SelectValue placeholder="Select strategy" />
                     </SelectTrigger>
-                    <SelectContent className="bg-white border-black">
-                      <SelectItem value="growth" className="text-black">Growth</SelectItem>
-                      <SelectItem value="value" className="text-black">Value</SelectItem>
-                      <SelectItem value="dividend" className="text-black">Dividend</SelectItem>
-                      <SelectItem value="blend" className="text-black">Blend</SelectItem>
+                    <SelectContent>
+                      <SelectItem value="growth" className="text-xs">Growth</SelectItem>
+                      <SelectItem value="value" className="text-xs">Value</SelectItem>
+                      <SelectItem value="dividend" className="text-xs">Dividend</SelectItem>
+                      <SelectItem value="blend" className="text-xs">Blend</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -958,65 +845,13 @@ export function InvestmentPage() {
                     checked={autoInvest}
                     onCheckedChange={setAutoInvest}
                   />
-                  <Label className="text-black">Enable Auto-Invest</Label>
+                  <Label className="text-foreground text-xs">Enable Auto-Invest</Label>
                 </div>
-
-                {autoInvest && (
-                  <div className="space-y-2">
-                    <Label className="text-black">Auto-Invest Frequency</Label>
-                    <Select>
-                      <SelectTrigger className="bg-white border-black text-black">
-                        <SelectValue placeholder="Select frequency" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white border-black">
-                        <SelectItem value="weekly" className="text-black">Weekly</SelectItem>
-                        <SelectItem value="biweekly" className="text-black">Bi-weekly</SelectItem>
-                        <SelectItem value="monthly" className="text-black">Monthly</SelectItem>
-                        <SelectItem value="quarterly" className="text-black">Quarterly</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-
-                {mlPredictions && (
-                  <Card className="bg-white border-black">
-                    <CardHeader>
-                      <CardTitle className="text-sm flex items-center text-black">
-                        <Brain className="h-4 w-4 mr-2" />
-                        AI Recommendation
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-sm space-y-1">
-                        <div className="flex justify-between">
-                          <span className="text-black/60">Predicted Return:</span>
-                          <span className="font-medium text-black">
-                            {mlPredictions.predictedReturn}%
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-black/60">Confidence:</span>
-                          <span className="font-medium text-black">
-                            {mlPredictions.confidence}%
-                          </span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
               </div>
 
               <DialogFooter>
                 <Button
-                  onClick={() => setShowInvestModal(false)}
-                  variant="outline"
-                  className="bg-white text-black border-black hover:bg-black hover:text-white"
-                >
-                  Cancel
-                </Button>
-                <Button
                   onClick={() => {
-                    // Handle investment submission
                     addToast({
                       title: "Investment Successful",
                       description: `Successfully invested $${investmentAmount}`,
@@ -1026,11 +861,11 @@ export function InvestmentPage() {
                   disabled={isLoading || !investmentAmount ||
                     Number(investmentAmount) <= 0 ||
                     Number(investmentAmount) > (balance ?? 0)}
-                  className="bg-black text-white hover:bg-black/90"
+                  className="text-xs px-3 py-1 h-auto"
                 >
                   {isLoading ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <Loader2 className="mr-1 h-3 w-3 animate-spin" />
                       Processing...
                     </>
                   ) : (
@@ -1043,27 +878,27 @@ export function InvestmentPage() {
 
           {/* Startup Investment Modal */}
           <Dialog open={showStartupModal} onOpenChange={setShowStartupModal}>
-            <DialogContent className="bg-white border-black">
+            <DialogContent className="sm:max-w-[90vw] max-w-[350px] bg-background border-border">
               <DialogHeader>
-                <DialogTitle className="text-black">Invest in {selectedStartup?.companyName}</DialogTitle>
-                <DialogDescription className="text-black/60">
+                <DialogTitle className="text-foreground text-sm">Invest in {selectedStartup?.companyName}</DialogTitle>
+                <DialogDescription className="text-muted-foreground text-xs">
                   Enter the number of shares you would like to purchase
                 </DialogDescription>
               </DialogHeader>
-              <div className="space-y-4 py-4">
+              <div className="space-y-3 py-3">
                 <div className="space-y-2">
-                  <Label className="text-black">Number of Shares</Label>
+                  <Label className="text-foreground text-xs">Number of Shares</Label>
                   <Input
                     type="number"
                     placeholder="Enter number of shares"
                     min="1"
                     max={selectedStartup?.sharesAvailable}
-                    className="bg-white border-black text-black"
+                    className="text-xs h-8"
                   />
                 </div>
                 <div>
-                  <Label className="text-black">Total Investment</Label>
-                  <div className="text-2xl font-bold text-black">
+                  <Label className="text-foreground text-xs">Total Investment</Label>
+                  <div className="text-sm font-bold text-foreground">
                     $0.00
                   </div>
                 </div>
@@ -1072,14 +907,18 @@ export function InvestmentPage() {
                 <Button 
                   variant="outline" 
                   onClick={() => setShowStartupModal(false)}
-                  className="bg-white text-black border-black hover:bg-black hover:text-white"
+                  className="text-xs px-3 py-1 h-auto"
                 >
                   Cancel
                 </Button>
-                <Button className="bg-black text-white hover:bg-black/90">Confirm Investment</Button>
+                <Button className="text-xs px-3 py-1 h-auto">
+                  Confirm Investment
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
+
+          <SectionFooter section="main" activePage="/investment" />
 
           {/* Deposit Modal */}
           <DepositModal

@@ -24,6 +24,7 @@ import {
   Calendar,
   Bell
 } from 'lucide-react'
+import { SectionFooter } from '@/components/ui/section-footer'
 
 export default function HomePage() {
   const router = useRouter()
@@ -142,14 +143,14 @@ export default function HomePage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.5 }}
-              className="fixed inset-0 bg-gradient-to-br from-white via-gray-50 to-gray-100 z-[100] flex items-center justify-center overflow-hidden"
+              className="fixed inset-0 bg-gradient-to-br from-background via-secondary to-muted z-[100] flex items-center justify-center overflow-hidden"
             >
               {/* Animated Background Particles */}
               <div className="absolute inset-0">
                 {[...Array(20)].map((_, i) => (
                   <motion.div
                     key={i}
-                    className="absolute w-1 h-1 bg-black/10 rounded-full"
+                    className="absolute w-1 h-1 bg-foreground/10 rounded-full"
                     initial={{ 
                       x: Math.random() * window.innerWidth,
                       y: Math.random() * window.innerHeight,
@@ -210,7 +211,7 @@ export default function HomePage() {
                   {/* Main Title with LED-like effect */}
                   <motion.div className="relative">
                     <motion.h1 
-                      className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-black via-gray-800 to-black"
+                      className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-foreground via-muted-foreground to-foreground"
                       initial={{ letterSpacing: "0.1em" }}
                       animate={{ 
                         letterSpacing: ["0.1em", "0.05em", "0.02em"],
@@ -222,7 +223,7 @@ export default function HomePage() {
                     
                     {/* Glowing underline effect */}
                     <motion.div
-                      className="absolute -bottom-2 left-1/2 h-1 bg-gradient-to-r from-transparent via-black to-transparent"
+                      className="absolute -bottom-2 left-1/2 h-1 bg-gradient-to-r from-transparent via-foreground to-transparent"
                       initial={{ width: 0, x: "-50%" }}
                       animate={{ width: "100%" }}
                       transition={{ delay: 0.8, duration: 1, ease: "easeOut" }}
@@ -230,7 +231,7 @@ export default function HomePage() {
                   </motion.div>
 
                   <motion.h2 
-                    className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-800"
+                    className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 1, duration: 0.6 }}
@@ -245,7 +246,7 @@ export default function HomePage() {
                     transition={{ delay: 1.5, duration: 0.8 }}
                     className="relative space-y-4"
                   >
-                    <p className="text-lg sm:text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+                    <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
                       Here's what's happening with your money today
                     </p>
                     
@@ -254,7 +255,7 @@ export default function HomePage() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 2, duration: 0.6 }}
-                      className="flex items-center justify-center space-x-3 text-gray-500"
+                      className="flex items-center justify-center space-x-3 text-muted-foreground"
                     >
                       <motion.div
                         initial={{ scale: 0 }}
@@ -280,7 +281,7 @@ export default function HomePage() {
                     
                     {/* Blinking cursor effect */}
                     <motion.span
-                      className="inline-block w-0.5 h-6 bg-black ml-1"
+                      className="inline-block w-0.5 h-6 bg-foreground ml-1"
                       animate={{ opacity: [1, 0, 1] }}
                       transition={{ duration: 0.8, repeat: Infinity }}
                     />
@@ -305,7 +306,7 @@ export default function HomePage() {
                 >
                   {/* Outer glow rings */}
                   <motion.div
-                    className="absolute inset-0 rounded-full border-2 border-black/20"
+                    className="absolute inset-0 rounded-full border-2 border-foreground/20"
                     animate={{ 
                       scale: [1, 1.3, 1],
                       opacity: [0.3, 0.1, 0.3]
@@ -313,7 +314,7 @@ export default function HomePage() {
                     transition={{ duration: 2, repeat: Infinity }}
                   />
                   <motion.div
-                    className="absolute inset-2 rounded-full border border-black/30"
+                    className="absolute inset-2 rounded-full border border-foreground/30"
                     animate={{ 
                       scale: [1, 1.2, 1],
                       opacity: [0.5, 0.2, 0.5]
@@ -323,7 +324,7 @@ export default function HomePage() {
                   
                   {/* Main icon container */}
                   <motion.div
-                    className="relative w-full h-full bg-gradient-to-br from-gray-900 via-black to-gray-800 rounded-full flex items-center justify-center shadow-2xl"
+                    className="relative w-full h-full bg-gradient-to-br from-primary via-primary to-primary rounded-full flex items-center justify-center shadow-2xl"
                     animate={{ 
                       boxShadow: [
                         "0 0 20px rgba(0,0,0,0.3)",
@@ -337,11 +338,11 @@ export default function HomePage() {
                       animate={{ rotate: 360 }}
                       transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
                     >
-                      <DollarSign className="h-10 w-10 text-white" />
+                      <DollarSign className="h-10 w-10 text-primary-foreground" />
                     </motion.div>
                     
                     {/* Inner highlight */}
-                    <div className="absolute inset-2 rounded-full bg-gradient-to-br from-white/20 to-transparent" />
+                    <div className="absolute inset-2 rounded-full bg-gradient-to-br from-primary-foreground/20 to-transparent" />
                   </motion.div>
                 </motion.div>
 
@@ -355,7 +356,7 @@ export default function HomePage() {
                   {[0, 1, 2].map((i) => (
                     <motion.div
                       key={i}
-                      className="w-2 h-2 bg-black rounded-full"
+                      className="w-2 h-2 bg-foreground rounded-full"
                       animate={{ 
                         scale: [1, 1.5, 1],
                         opacity: [0.3, 1, 0.3]
@@ -380,44 +381,39 @@ export default function HomePage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, ease: [0.23, 1, 0.320, 1] }}
-              className={`relative min-h-screen bg-cover bg-center bg-no-repeat pt-12 sm:pt-16 md:pt-20 lg:pt-0 pb-2 sm:pb-4 md:pb-6 lg:pb-0 px-2 sm:px-4 md:px-6 lg:px-0 transition-all duration-300 ${
+              className={`relative min-h-screen bg-background pt-12 sm:pt-16 md:pt-20 lg:pt-0 pb-2 sm:pb-4 md:pb-6 lg:pb-0 px-2 sm:px-4 md:px-6 lg:px-0 transition-all duration-300 ${
                 isRightSidebarOpen ? 'lg:mr-80' : ''
               }`}
-              style={{
-                backgroundImage: 'url(https://images.unsplash.com/photo-1615800098779-1be32e60cca3?q=80&w=710&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D)'
-              }}
             >
-              {/* Background overlay for better readability */}
-              <div className="absolute inset-0 bg-white/80 backdrop-blur-sm"></div>
               
               {/* Content container with relative positioning */}
-              <div className="relative z-10 max-w-full sm:max-w-5xl md:max-w-6xl lg:max-w-none mx-auto lg:mx-0 space-y-8 sm:space-y-10 md:space-y-12 lg:space-y-10 lg:p-2">
+              <div className="relative z-10 max-w-full sm:max-w-5xl md:max-w-6xl lg:max-w-none mx-auto lg:mx-0 space-y-8 sm:space-y-10 md:space-y-12 lg:space-y-10 lg:p-2 mb-20">
 
             {/* Balance Card - Prominent like Cash App */}
-            <Card className="bg-gradient-to-br from-black to-gray-900 text-white shadow-xl">
+            <Card className="bg-gradient-to-br from-primary to-primary/90 text-primary-foreground shadow-xl">
               <CardContent className="p-4 sm:p-6">
                 <div className="text-center space-y-2">
-                  <p className="text-sm text-gray-300">Total Balance</p>
+                  <p className="text-sm text-primary-foreground/70">Total Balance</p>
                   <h1 className="text-3xl sm:text-4xl font-bold">${stats.totalBalance.toLocaleString()}</h1>
-                  <p className="text-sm text-gray-400">+2.5% from last month</p>
+                  <p className="text-sm text-primary-foreground/60">+2.5% from last month</p>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Primary Actions - Black and White Design */}
+            {/* Primary Actions - Theme-aware Design */}
             <div className="space-y-3">
-              <h2 className="text-lg font-semibold text-gray-900 px-1 text-center lg:text-center">Quick Actions</h2>
+              <h2 className="text-lg font-semibold text-foreground px-1 text-center lg:text-center">Quick Actions</h2>
               <div className="flex overflow-x-auto lg:justify-center gap-3 pb-2 px-1">
                 {[
-                  { label: 'Send', href: '/send', icon: ArrowUpRight, color: 'bg-black' },
-                  { label: 'Add Money', action: () => setIsDepositModalOpen(true), icon: ArrowDownLeft, color: 'bg-gray-800' },
-                  { label: 'Cards', href: '/cards', icon: CreditCard, color: 'bg-gray-700' },
-                  { label: 'Invest', href: '/investment', icon: TrendingUp, color: 'bg-gray-600' },
-                  { label: 'Save', href: '/savings', icon: Target, color: 'bg-gray-500' }
+                  { label: 'Send', href: '/send', icon: ArrowUpRight, color: 'bg-primary' },
+                  { label: 'Add Money', action: () => setIsDepositModalOpen(true), icon: ArrowDownLeft, color: 'bg-secondary' },
+                  { label: 'Cards', href: '/cards', icon: CreditCard, color: 'bg-muted' },
+                  { label: 'Invest', href: '/investment', icon: TrendingUp, color: 'bg-accent' },
+                  { label: 'Save', href: '/savings', icon: Target, color: 'bg-muted-foreground' }
                 ].map((action, index) => (
                   <Button
                     key={index}
-                    className={`${action.color} hover:bg-black hover:opacity-90 text-white border-0 min-w-[80px] h-16 flex flex-col items-center justify-center space-y-1 rounded-xl shadow-lg transition-all duration-200`}
+                    className={`${action.color} hover:bg-primary hover:opacity-90 text-primary-foreground border-0 min-w-[80px] h-16 flex flex-col items-center justify-center space-y-1 rounded-xl shadow-lg transition-all duration-200`}
                     onClick={() => handleQuickAction(action)}
                   >
                     <action.icon className="h-5 w-5" />
@@ -428,7 +424,7 @@ export default function HomePage() {
             </div>
 
             {/* Secondary Actions - More compact */}
-            <Card className="bg-white border-gray-200">
+            <Card className="bg-card border-border">
               <CardContent className="p-3">
                 <div className="grid grid-cols-3 gap-2">
                   {[
@@ -439,7 +435,7 @@ export default function HomePage() {
                     <Button
                       key={index}
                       variant="ghost"
-                      className="h-14 flex flex-col items-center justify-center space-y-1 text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                      className="h-14 flex flex-col items-center justify-center space-y-1 text-muted-foreground hover:text-foreground hover:bg-secondary"
                       onClick={() => handleQuickAction(action)}
                     >
                       <action.icon className="h-4 w-4" />
@@ -454,63 +450,63 @@ export default function HomePage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-3">
               {/* Financial Overview */}
               <div className="space-y-2 sm:space-y-3">
-                <h2 className="text-lg sm:text-xl font-bold text-gray-900 text-center md:text-left">Financial Overview</h2>
+                <h2 className="text-lg sm:text-xl font-bold text-foreground text-center md:text-left">Financial Overview</h2>
                 <div className="grid grid-cols-2 gap-1 sm:gap-2">
-                  <Card className="bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+                  <Card className="bg-gradient-to-br from-secondary to-secondary/80 border-border shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2 p-2 sm:p-4">
-                      <CardTitle className="text-xs sm:text-sm font-medium text-gray-700">Total Balance</CardTitle>
-                      <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 text-gray-600" />
+                      <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Total Balance</CardTitle>
+                      <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent className="p-2 sm:p-4 pt-0">
-                      <div className="text-sm sm:text-base md:text-lg font-bold text-gray-900">
+                      <div className="text-sm sm:text-base md:text-lg font-bold text-foreground">
                         ${stats.totalBalance.toLocaleString()}
                       </div>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted-foreground">
                         +2.5% from last month
                       </p>
                     </CardContent>
                   </Card>
 
-                  <Card className="bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+                  <Card className="bg-gradient-to-br from-secondary to-secondary/80 border-border shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2 p-2 sm:p-4">
-                      <CardTitle className="text-xs sm:text-sm font-medium text-gray-700">Total Savings</CardTitle>
-                      <PiggyBank className="h-3 w-3 sm:h-4 sm:w-4 text-gray-600" />
+                      <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Total Savings</CardTitle>
+                      <PiggyBank className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent className="p-2 sm:p-4 pt-0">
-                      <div className="text-sm sm:text-base md:text-lg font-bold text-gray-900">
+                      <div className="text-sm sm:text-base md:text-lg font-bold text-foreground">
                         ${stats.savings.toLocaleString()}
                       </div>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted-foreground">
                         +8% from last month
                       </p>
                     </CardContent>
                   </Card>
 
-                  <Card className="bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+                  <Card className="bg-gradient-to-br from-secondary to-secondary/80 border-border shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2 p-2 sm:p-4">
-                      <CardTitle className="text-xs sm:text-sm font-medium text-gray-700">Net Worth</CardTitle>
-                      <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-gray-600" />
+                      <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Net Worth</CardTitle>
+                      <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent className="p-2 sm:p-4 pt-0">
-                      <div className="text-sm sm:text-base md:text-lg font-bold text-gray-900">
+                      <div className="text-sm sm:text-base md:text-lg font-bold text-foreground">
                         ${(stats.totalBalance + stats.investments).toLocaleString()}
                       </div>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted-foreground">
                         +15% from last month
                       </p>
                     </CardContent>
                   </Card>
 
-                  <Card className="bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+                  <Card className="bg-gradient-to-br from-secondary to-secondary/80 border-border shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2 p-2 sm:p-4">
-                      <CardTitle className="text-xs sm:text-sm font-medium text-gray-700">Portfolio Value</CardTitle>
-                      <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-gray-600" />
+                      <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Portfolio Value</CardTitle>
+                      <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent className="p-2 sm:p-4 pt-0">
-                      <div className="text-sm sm:text-base md:text-lg font-bold text-gray-900">
+                      <div className="text-sm sm:text-base md:text-lg font-bold text-foreground">
                         ${stats.investments.toLocaleString()}
                       </div>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted-foreground">
                         +12.5% from last month
                       </p>
                     </CardContent>
@@ -519,8 +515,8 @@ export default function HomePage() {
               </div>
 
               {/* Recent Transactions */}
-              <Card className="bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300">
-                <CardHeader className="bg-gradient-to-r from-gray-900 to-gray-800 text-white rounded-t-lg">
+              <Card className="bg-gradient-to-br from-secondary to-secondary/80 border-border shadow-lg hover:shadow-xl transition-all duration-300">
+                <CardHeader className="bg-gradient-to-r from-primary to-primary/90 text-primary-foreground rounded-t-lg">
                   <CardTitle className="text-base sm:text-lg font-bold text-center md:text-left">Recent Transactions</CardTitle>
                 </CardHeader>
                 <CardContent className="p-2 sm:p-3">
@@ -528,27 +524,27 @@ export default function HomePage() {
                     {recentTransactions.map((transaction) => (
                       <div
                         key={transaction.id}
-                        className="flex items-center justify-between p-2 sm:p-3 border border-gray-200 rounded-lg bg-white shadow-sm hover:shadow-md transition-all duration-200"
+                        className="flex items-center justify-between p-2 sm:p-3 border border-border rounded-lg bg-card shadow-sm hover:shadow-md transition-all duration-200"
                       >
                         <div className="flex items-center space-x-3 sm:space-x-4 flex-1 min-w-0">
                           <div className={`p-2 sm:p-3 rounded-full ${
                             transaction.type === 'income'
-                              ? 'bg-gray-100 border border-gray-200'
-                              : 'bg-gray-100 border border-gray-200'
+                              ? 'bg-secondary border border-border'
+                              : 'bg-secondary border border-border'
                           }`}>
                             {transaction.type === 'income' ? (
-                              <ArrowDownLeft className="h-4 w-4 sm:h-5 sm:w-5 text-gray-700" />
+                              <ArrowDownLeft className="h-4 w-4 sm:h-5 sm:w-5 text-foreground" />
                             ) : (
-                              <ArrowUpRight className="h-4 w-4 sm:h-5 sm:w-5 text-gray-700" />
+                              <ArrowUpRight className="h-4 w-4 sm:h-5 sm:w-5 text-foreground" />
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-gray-900 text-sm sm:text-base truncate">{transaction.description}</p>
-                            <p className="text-xs sm:text-sm text-gray-500">{transaction.date}</p>
+                            <p className="font-semibold text-foreground text-sm sm:text-base truncate">{transaction.description}</p>
+                            <p className="text-xs sm:text-sm text-muted-foreground">{transaction.date}</p>
                           </div>
                         </div>
                         <div className={`font-bold text-sm sm:text-base ${
-                          transaction.type === 'income' ? 'text-gray-900' : 'text-gray-900'
+                          transaction.type === 'income' ? 'text-foreground' : 'text-foreground'
                         } ml-2`}>
                           {transaction.type === 'income' ? '+' : ''}${Math.abs(transaction.amount).toLocaleString()}
                         </div>
@@ -561,45 +557,45 @@ export default function HomePage() {
 
             {/* Financial Health */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-3">
-              <Card className="bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300">
-                <CardHeader className="bg-gradient-to-r from-gray-900 to-gray-800 text-white rounded-t-lg">
+              <Card className="bg-gradient-to-br from-secondary to-secondary/80 border-border shadow-lg hover:shadow-xl transition-all duration-300">
+                <CardHeader className="bg-gradient-to-r from-primary to-primary/90 text-primary-foreground rounded-t-lg">
                   <CardTitle className="text-base sm:text-lg font-bold text-center md:text-left">Financial Health</CardTitle>
                 </CardHeader>
                 <CardContent className="p-2 sm:p-3">
                   <div className="space-y-2 sm:space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Credit Score</span>
-                      <span className="font-bold text-gray-900">{stats.creditScore}</span>
+                      <span className="text-sm text-muted-foreground">Credit Score</span>
+                      <span className="font-bold text-foreground">{stats.creditScore}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Debt-to-Income</span>
-                      <span className="font-bold text-gray-900">15%</span>
+                      <span className="text-sm text-muted-foreground">Debt-to-Income</span>
+                      <span className="font-bold text-foreground">15%</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Savings Rate</span>
-                      <span className="font-bold text-gray-900">25%</span>
+                      <span className="text-sm text-muted-foreground">Savings Rate</span>
+                      <span className="font-bold text-foreground">25%</span>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300">
-                <CardHeader className="bg-gradient-to-r from-gray-900 to-gray-800 text-white rounded-t-lg">
+              <Card className="bg-gradient-to-br from-secondary to-secondary/80 border-border shadow-lg hover:shadow-xl transition-all duration-300">
+                <CardHeader className="bg-gradient-to-r from-primary to-primary/90 text-primary-foreground rounded-t-lg">
                   <CardTitle className="text-base sm:text-lg font-bold text-center md:text-left">Investment Performance</CardTitle>
                 </CardHeader>
                 <CardContent className="p-2 sm:p-3">
                   <div className="space-y-2 sm:space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Total Invested</span>
-                      <span className="font-bold text-gray-900">${stats.investments.toLocaleString()}</span>
+                      <span className="text-sm text-muted-foreground">Total Invested</span>
+                      <span className="font-bold text-foreground">${stats.investments.toLocaleString()}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Total Return</span>
-                      <span className="font-bold text-gray-900">+12.5%</span>
+                      <span className="text-sm text-muted-foreground">Total Return</span>
+                      <span className="font-bold text-foreground">+12.5%</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">This Month</span>
-                      <span className="font-bold text-gray-900">+2.1%</span>
+                      <span className="text-sm text-muted-foreground">This Month</span>
+                      <span className="font-bold text-foreground">+2.1%</span>
                     </div>
                   </div>
                 </CardContent>
@@ -628,6 +624,8 @@ export default function HomePage() {
             onClick={() => setIsRightSidebarOpen(false)}
           />
         )}
+
+        <SectionFooter section="main" activePage="/home" />
       </ResponsiveSidebarLayout>
     </SidebarProvider>
   )

@@ -14,8 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Image from "next/image"
 import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { signIn } from "next-auth/react"
-import { GoogleSignInButton } from "./GoogleSignInButton"
+import { useAwsCognitoAuth } from "@/hooks/useAwsCognitoAuth"
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -32,9 +31,10 @@ export function SignInPage() {
   })
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
-  const [activeTab, setActiveTab] = useState("social")
+  const [activeTab, setActiveTab] = useState("cognito")
   const router = useRouter()
   const { toast } = useToast()
+  const { signIn: cognitoSignIn, error: cognitoError, loading: cognitoLoading } = useAwsCognitoAuth()
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -59,14 +59,21 @@ export function SignInPage() {
       // Clean up URL
       window.history.replaceState({}, document.title, window.location.pathname)
     }
-  }, [toast])
 
-  const handleCredentialsSignIn = async (e: React.FormEvent) => {
+    // Set error from Cognito hook
+    if (cognitoError) {
+      setError(cognitoError)
+    }
+  }, [toast, cognitoError])
+
+  const handleCognitoSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError(null)
 
     try {
+      // AWS Cognito will handle the authentication via Hosted UI
+      // The email and password fields are not used directly, but we validate them for UX
       if (!formData.email || !formData.password) {
         throw new Error("Email and password are required")
       }
@@ -78,22 +85,14 @@ export function SignInPage() {
       // Validate with Zod
       loginSchema.parse(formData)
 
-      const result = await signIn('credentials', {
-        email: formData.email,
-        password: formData.password,
-        redirect: false,
-      })
-
-      if (result?.error) {
-        throw new Error(result.error)
-      }
-
       toast({
-        title: "Success",
-        description: "Signed in successfully!",
+        title: "Redirecting...",
+        description: "Redirecting to AWS Cognito for authentication",
       })
 
-      router.push("/home")
+      // This will redirect to AWS Cognito Hosted UI
+      await cognitoSignIn(formData.email, formData.password)
+      
     } catch (err) {
       console.error('Login error:', err)
       
@@ -112,6 +111,30 @@ export function SignInPage() {
       })
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleDirectCognitoSignIn = async () => {
+    setError(null)
+    
+    try {
+      toast({
+        title: "Redirecting...",
+        description: "Redirecting to AWS Cognito for authentication",
+      })
+
+      // Direct sign in without form validation
+      await cognitoSignIn("", "")
+      
+    } catch (err) {
+      console.error('Direct Cognito login error:', err)
+      const errorMessage = err instanceof Error ? err.message : 'Authentication failed'
+      setError(errorMessage)
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      })
     }
   }
 
@@ -154,26 +177,42 @@ export function SignInPage() {
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="social" className="flex items-center gap-2">
-                <Smartphone className="w-4 h-4" />
-                Social
+              <TabsTrigger value="cognito" className="flex items-center gap-2">
+                <Lock className="w-4 h-4" />
+                AWS Cognito
               </TabsTrigger>
-              <TabsTrigger value="email" className="flex items-center gap-2">
+              <TabsTrigger value="form" className="flex items-center gap-2">
                 <Mail className="w-4 h-4" />
-                Email
+                Form Login
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="social" className="space-y-4">
-              <GoogleSignInButton callbackUrl="/home" />
+            <TabsContent value="cognito" className="space-y-4">
+              <Button
+                onClick={handleDirectCognitoSignIn}
+                className="w-full h-12 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700"
+                disabled={cognitoLoading}
+              >
+                {cognitoLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Redirecting...
+                  </>
+                ) : (
+                  <>
+                    <Lock className="mr-2 h-4 w-4" />
+                    Sign In with AWS Cognito
+                  </>
+                )}
+              </Button>
               
               <div className="text-center text-sm text-muted-foreground">
-                Quick and secure sign-in with your Google account
+                Secure authentication powered by AWS Cognito
               </div>
             </TabsContent>
 
-            <TabsContent value="email" className="space-y-4">
-              <form onSubmit={handleCredentialsSignIn} className="space-y-4">
+            <TabsContent value="form" className="space-y-4">
+              <form onSubmit={handleCognitoSignIn} className="space-y-4">
                 <div className="space-y-2">
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
@@ -239,15 +278,15 @@ export function SignInPage() {
                 <Button
                   type="submit"
                   className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                  disabled={isLoading}
+                  disabled={isLoading || cognitoLoading}
                 >
-                  {isLoading ? (
+                  {isLoading || cognitoLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Signing in...
+                      Redirecting to Cognito...
                     </>
                   ) : (
-                    "Sign In"
+                    "Sign In with Cognito"
                   )}
                 </Button>
               </form>

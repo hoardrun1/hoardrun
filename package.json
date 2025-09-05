@@ -11,6 +11,10 @@
     "build:render": "chmod +x scripts/build.sh && scripts/build.sh",
     "start:render": "npx prisma migrate deploy && npm start",
     "postinstall": "npx prisma generate",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:reset": "npx prisma migrate reset --force",
+    "db:push": "npx prisma db push",
+    "db:studio": "npx prisma studio",
     "test:email": "node tests/run-email-tests.js",
     "test:email-verification": "node tests/email-verification.test.js"
   },
@@ -40,6 +44,7 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/jsonwebtoken": "^9.0.10",
+    "@types/pg": "^8.15.5",
     "amazon-cognito-identity-js": "^6.3.15",
     "apple-auth": "^1.0.9",
     "aws-sdk": "^2.1692.0",
@@ -73,6 +78,7 @@
     "next-themes": "^0.4.4",
     "nodemailer": "^6.10.0",
     "oauth-1.0a": "^2.2.6",
+    "pg": "^8.16.3",
     "rate-limiter-flexible": "^7.2.0",
     "react": "^18",
     "react-circular-progressbar": "^2.2.0",
@@ -93,7 +99,7 @@
     "zustand": "^5.0.2"
   },
   "devDependencies": {
-    "@types/bcryptjs": "^2.4.2",
+    "@types/bcryptjs": "^2.4.6",
     "@types/fb": "^0.0.23",
     "@types/geoip-lite": "^1.4.4",
     "@types/node": "^20",
@@ -105,7 +111,11 @@
     "postcss": "^8",
     "prisma": "^5.22.0",
     "tailwindcss": "^3.4.15",
+    "tsx": "^4.20.5",
     "typescript": "^5"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   },
   "overrides": {
     "node-fetch": "^3.3.2"

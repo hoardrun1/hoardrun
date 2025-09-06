@@ -255,83 +255,85 @@ export function CollectiveCapitalCircles({ className }: CollectiveCapitalCircles
   return (
     <div className={`space-y-6 ${className}`}>
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-1 sm:gap-4">
         <div>
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-            <Users className="h-8 w-8 text-blue-600" />
+          <h2 className="text-xs sm:text-base font-bold text-black flex items-center gap-1 sm:gap-3">
+            <Users className="h-3 w-3 sm:h-8 sm:w-8 text-black" />
             Collective Capital Circles
           </h2>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
+          <p className="text-xs sm:text-sm text-black/60 mt-0.5 sm:mt-1">
             Join forces with like-minded investors for better returns
           </p>
         </div>
         
-        <div className="flex items-center gap-3">
-          <Button
-            onClick={() => setShowFilters(!showFilters)}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <Filter className="h-4 w-4" />
-            Filters
-          </Button>
-          <Button
-            onClick={() => setShowCreateModal(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
-          >
-            <Plus className="h-4 w-4" />
-            Create Circle
-          </Button>
+        <div className="flex items-center gap-1 sm:gap-3">
+            <Button
+              onClick={() => setShowFilters(!showFilters)}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-1 sm:gap-2 bg-white text-black border-black hover:bg-black hover:text-white text-xs sm:text-sm px-2 py-1.5 h-auto"
+            >
+              <Filter className="h-2.5 w-2.5 sm:h-4 sm:w-4" />
+              Filters
+            </Button>
+            <Button
+              onClick={() => setShowCreateModal(true)}
+              size="sm"
+              className="bg-black hover:bg-black/90 text-white flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 py-1.5 h-auto"
+            >
+              <Plus className="h-2.5 w-2.5 sm:h-4 sm:w-4" />
+              Create Circle
+            </Button>
         </div>
       </div>
 
       {/* Stats Overview */}
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="p-4">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
+          <Card className="bg-white border-black">
+            <CardContent className="p-2 sm:p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Total Circles</p>
-                  <p className="text-2xl font-bold">{stats.totalCircles}</p>
+                  <p className="text-xs sm:text-sm text-black/60">Total Circles</p>
+                  <p className="text-xs sm:text-base font-bold text-black">{stats.totalCircles}</p>
                 </div>
-                <Globe className="h-8 w-8 text-blue-600" />
+                <Globe className="h-3 w-3 sm:h-8 sm:w-8 text-black" />
               </div>
             </CardContent>
           </Card>
           
-          <Card>
-            <CardContent className="p-4">
+          <Card className="bg-white border-black">
+            <CardContent className="p-2 sm:p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Total Pool Value</p>
-                  <p className="text-2xl font-bold">${(stats.totalPoolValue / 1000000).toFixed(1)}M</p>
+                  <p className="text-xs sm:text-sm text-black/60">Total Pool Value</p>
+                  <p className="text-xs sm:text-base font-bold text-black">${(stats.totalPoolValue / 1000000).toFixed(1)}M</p>
                 </div>
-                <Coins className="h-8 w-8 text-green-600" />
+                <Coins className="h-3 w-3 sm:h-8 sm:w-8 text-black" />
               </div>
             </CardContent>
           </Card>
           
-          <Card>
-            <CardContent className="p-4">
+          <Card className="bg-white border-black">
+            <CardContent className="p-2 sm:p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Avg. Returns</p>
-                  <p className="text-2xl font-bold">{stats.averageReturn}%</p>
+                  <p className="text-xs sm:text-sm text-black/60">Avg. Returns</p>
+                  <p className="text-xs sm:text-base font-bold text-black">{stats.averageReturn}%</p>
                 </div>
-                <TrendingUp className="h-8 w-8 text-green-600" />
+                <TrendingUp className="h-3 w-3 sm:h-8 sm:w-8 text-black" />
               </div>
             </CardContent>
           </Card>
           
-          <Card>
-            <CardContent className="p-4">
+          <Card className="bg-white border-black">
+            <CardContent className="p-2 sm:p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Your Circles</p>
-                  <p className="text-2xl font-bold">{stats.userCircles}</p>
+                  <p className="text-xs sm:text-sm text-black/60">Your Circles</p>
+                  <p className="text-xs sm:text-base font-bold text-black">{stats.userCircles}</p>
                 </div>
-                <Crown className="h-8 w-8 text-yellow-600" />
+                <Crown className="h-3 w-3 sm:h-8 sm:w-8 text-black" />
               </div>
             </CardContent>
           </Card>
@@ -339,15 +341,15 @@ export function CollectiveCapitalCircles({ className }: CollectiveCapitalCircles
       )}
 
       {/* Search and Filters */}
-      <div className="flex flex-col lg:flex-row gap-4">
+      <div className="flex flex-col lg:flex-row gap-2 sm:gap-4">
         <div className="flex-1">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 h-3 w-3 sm:h-4 sm:w-4 text-black/60" />
             <Input
               placeholder="Search circles by name, category, or description..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
+              className="pl-8 sm:pl-10 bg-white border-black text-black text-xs sm:text-sm py-2 sm:py-3 h-auto"
             />
           </div>
         </div>
@@ -373,28 +375,28 @@ export function CollectiveCapitalCircles({ className }: CollectiveCapitalCircles
 
       {/* Main Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="discover">Discover</TabsTrigger>
-          <TabsTrigger value="my-circles">My Circles</TabsTrigger>
-          <TabsTrigger value="ai-recommendations">AI Insights</TabsTrigger>
-          <TabsTrigger value="loyalty">Rewards</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-4 bg-white border-black">
+          <TabsTrigger value="discover" className="text-black data-[state=active]:bg-black data-[state=active]:text-white text-xs sm:text-sm">Discover</TabsTrigger>
+          <TabsTrigger value="my-circles" className="text-black data-[state=active]:bg-black data-[state=active]:text-white text-xs sm:text-sm">My Circles</TabsTrigger>
+          <TabsTrigger value="ai-recommendations" className="text-black data-[state=active]:bg-black data-[state=active]:text-white text-xs sm:text-sm">AI Insights</TabsTrigger>
+          <TabsTrigger value="loyalty" className="text-black data-[state=active]:bg-black data-[state=active]:text-white text-xs sm:text-sm">Rewards</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="discover" className="space-y-6">
+        <TabsContent value="discover" className="space-y-3 sm:space-y-6">
           {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
               {[...Array(6)].map((_, i) => (
-                <Card key={i} className="animate-pulse">
-                  <CardContent className="p-6">
-                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
-                    <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
-                    <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+                <Card key={i} className="animate-pulse bg-white border-black">
+                  <CardContent className="p-3 sm:p-6">
+                    <div className="h-3 sm:h-4 bg-black/20 rounded w-3/4 mb-2 sm:mb-4"></div>
+                    <div className="h-2 sm:h-3 bg-black/20 rounded w-full mb-1 sm:mb-2"></div>
+                    <div className="h-2 sm:h-3 bg-black/20 rounded w-2/3"></div>
                   </CardContent>
                 </Card>
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
               {filteredCircles.map((circle) => (
                 <CircleCard
                   key={circle.id}
@@ -407,15 +409,19 @@ export function CollectiveCapitalCircles({ className }: CollectiveCapitalCircles
           )}
           
           {!isLoading && filteredCircles.length === 0 && (
-            <div className="text-center py-12">
-              <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+            <div className="text-center py-6 sm:py-12">
+              <Users className="h-8 w-8 sm:h-12 sm:w-12 text-black/60 mx-auto mb-2 sm:mb-4" />
+              <h3 className="text-xs sm:text-base font-semibold text-black mb-1 sm:mb-2">
                 No circles found
               </h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-4">
+              <p className="text-xs sm:text-sm text-black/60 mb-2 sm:mb-4">
                 Try adjusting your search or filters, or create a new circle
               </p>
-              <Button onClick={() => setShowCreateModal(true)}>
+              <Button 
+                onClick={() => setShowCreateModal(true)} 
+                size="sm"
+                className="bg-black text-white hover:bg-black/90 text-xs sm:text-sm"
+              >
                 Create New Circle
               </Button>
             </div>
@@ -423,10 +429,10 @@ export function CollectiveCapitalCircles({ className }: CollectiveCapitalCircles
         </TabsContent>
 
         <TabsContent value="my-circles">
-          <div className="text-center py-12">
-            <Crown className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Your Investment Circles</h3>
-            <p className="text-gray-600 dark:text-gray-400">
+          <div className="text-center py-6 sm:py-12">
+            <Crown className="h-8 w-8 sm:h-12 sm:w-12 text-black mx-auto mb-2 sm:mb-4" />
+            <h3 className="text-xs sm:text-base font-semibold mb-1 sm:mb-2 text-black">Your Investment Circles</h3>
+            <p className="text-xs sm:text-sm text-black/60">
               Manage your active circles and track performance
             </p>
           </div>

@@ -1,12 +1,15 @@
 'use client'
 
 import { useState } from 'react'
+import { useTheme } from '@/contexts/ThemeContext'
 import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sidebar-layout'
 import { SidebarContent } from '@/components/ui/sidebar-content'
 import { SidebarToggle } from '@/components/ui/sidebar-toggle'
 import { DepositModal } from '@/components/deposit-modal'
+import { SectionFooter } from '@/components/ui/section-footer'
 
 export default function HelpPage() {
+  const { theme } = useTheme()
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false)
 
   return (
@@ -15,11 +18,11 @@ export default function HelpPage() {
         sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
       >
         <SidebarToggle />
-        <div className="min-h-screen bg-white pt-16 pb-4 px-4 sm:pt-20 sm:pb-6 sm:px-6">
+        <div className="min-h-screen bg-background pt-16 pb-32 px-4 sm:pt-20 sm:pb-32 sm:px-6">
           <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
             <div className="text-center">
-              <h1 className="text-2xl sm:text-3xl font-bold text-black">Help Center</h1>
-              <p className="text-black/60 mt-2 text-sm sm:text-base">Find answers to common questions and get the help you need</p>
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Help Center</h1>
+              <p className="text-muted-foreground mt-2 text-sm sm:text-base">Find answers to common questions and get the help you need</p>
             </div>
           </div>
         </div>
@@ -28,6 +31,8 @@ export default function HelpPage() {
           open={isDepositModalOpen}
           onOpenChange={setIsDepositModalOpen}
         />
+        
+        <SectionFooter section="support" activePage="/help" />
       </ResponsiveSidebarLayout>
     </SidebarProvider>
   )

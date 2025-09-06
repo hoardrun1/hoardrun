@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 export default function AuthDebugPage() {
-  const { data: session, status } = useSession()
+  const { data: session, status } = useSession() || { data: null, status: 'loading' }
 
   if (status === 'loading') {
     return <div className="p-8">Loading...</div>

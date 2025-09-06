@@ -4,42 +4,32 @@ import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useToast } from '@/components/ui/use-toast'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Loader2, Mail, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
+import { Loader2, Mail, CheckCircle, XCircle } from 'lucide-react'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 
 function VerifyEmailContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { addToast } = useToast()
-  const { user, resendConfirmationCode, confirmSignUp } = useAuth()
+  const { toast } = useToast()
+  const { user } = useAuth()
 
   const [email, setEmail] = useState('')
   const [verificationCode, setVerificationCode] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isResending, setIsResending] = useState(false)
   const [verificationStatus, setVerificationStatus] = useState<'pending' | 'success' | 'error'>('pending')
-  const [showCodeInput, setShowCodeInput] = useState(false)
 
   useEffect(() => {
-    // Check if this is a Web3Forms verification callback
-    const token = searchParams?.get('token');
-    const emailParam = searchParams?.get('email');
+    // Check if this is a verification callback
+    const token = searchParams?.get('token')
+    const emailParam = searchParams?.get('email')
+    const codeParam = searchParams?.get('code')
 
     if (emailParam && token) {
-      setEmail(emailParam);
-      handleAwsCognitoVerification(emailParam, token);
-      return;
-    }
-
-    // Check if this is a Firebase email verification callback
-    const actionCode = searchParams?.get('oobCode');
-    const mode = searchParams?.get('mode');
-
-    if (mode === 'verifyEmail' && actionCode) {
-      handleEmailVerification(actionCode);
-      return;
+      setEmail(emailParam)
+      handleAwsCognitoVerification(emailParam, token)
+      return
     }
 
     // Get email from URL params
@@ -56,10 +46,55 @@ function VerifyEmailContent() {
     // If there's a verification code in URL, show the input
     if (codeParam) {
       setVerificationCode(codeParam)
-      setShowCodeInput(true)
       handleEmailVerification(codeParam, emailParam || user?.email || '')
     }
   }, [router, searchParams, user])
+
+  const handleAwsCognitoVerification = async (userEmail: string, verificationToken: string) => {
+    setVerificationStatus('pending')
+    setIsLoading(true)
+
+    try {
+      // AWS Cognito verification process
+      await new Promise(resolve => setTimeout(resolve, 2000))
+
+      // In production, this would validate the token with AWS Cognito
+      const isValidToken = verificationToken.length > 10
+
+      if (isValidToken) {
+        setVerificationStatus('success')
+
+        toast({
+          title: "Email Verified!",
+          description: "Your account is now active. Welcome to HoardRun!",
+        })
+
+        // Redirect to signin after verification
+        setTimeout(() => {
+          router.push('/signin?verified=true')
+        }, 3000)
+
+      } else {
+        setVerificationStatus('error')
+        toast({
+          title: "Verification Failed",
+          description: "Invalid or expired verification token.",
+          variant: "destructive"
+        })
+      }
+
+    } catch (error) {
+      console.error('AWS Cognito verification error:', error)
+      setVerificationStatus('error')
+      toast({
+        title: "Verification Failed",
+        description: "An error occurred while verifying your email.",
+        variant: "destructive"
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const handleEmailVerification = async (code: string, userEmail: string) => {
     if (!code || !userEmail) return
@@ -68,86 +103,41 @@ function VerifyEmailContent() {
     setIsLoading(true)
 
     try {
-      // Use AWS Cognito confirmSignUp
-      await confirmSignUp(userEmail, code)
-
-      setVerificationStatus('success')
-      router.push('/signup');
-    }
-  }, [router, searchParams, user]);
-
-  const handleAwsCognitoVerification = async (userEmail: string, verificationToken: string) => {
-    setVerificationStatus('pending');
-    try {
-      // AWS Cognito verification process
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // In production, this would validate the token with AWS Cognito
-      const isValidToken = verificationToken.length > 10;
-
-      if (isValidToken) {
-        setVerificationStatus('success');
-
-        addToast({
-          title: "Email Verified!",
-          description: "Your account is now active. Welcome to HoardRun!",
-        });
-
-        // Redirect to signin after verification
-        setTimeout(() => {
-          router.push('/signin?verified=true');
-        }, 3000);
-
-      } else {
-        setVerificationStatus('error');
-        addToast({
-          title: "Verification Failed",
-          description: "Invalid or expired verification token.",
-          variant: "destructive"
-        });
-      }
-
-    } catch (error) {
-      console.error('AWS Cognito verification error:', error);
-      setVerificationStatus('error');
-      addToast({
-        title: "Verification Failed",
-        description: "An error occurred while verifying your email.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleEmailVerification = async (actionCode: string) => {
-    setVerificationStatus('pending');
-    try {
-      await verifyEmail(actionCode);
-      setVerificationStatus('success');
-
-      addToast({
-        title: "Email Verified!",
-        description: "Your account has been successfully verified. You can now sign in.",
+      const response = await fetch('/api/auth/verify-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: userEmail, code })
       })
 
-      // Redirect to signin page after a delay
-      setTimeout(() => {
-        router.push('/signin?verified=true')
-      }, 2000)
+      const data = await response.json()
+
+      if (response.ok) {
+        setVerificationStatus('success')
+        toast({
+          title: "Email Verified!",
+          description: "Your account has been successfully verified. You can now sign in.",
+        })
+
+        // Redirect to signin page after a delay
+        setTimeout(() => {
+          router.push('/signin?verified=true')
+        }, 2000)
+      } else {
+        throw new Error(data.message || 'Verification failed')
+      }
 
     } catch (error: any) {
       console.error('Email verification error:', error)
       setVerificationStatus('error')
 
       let errorMessage = 'Email verification failed'
-      if (error.name === 'CodeMismatchException') {
+      if (error.message?.includes('Invalid')) {
         errorMessage = 'Invalid verification code. Please check and try again.'
-      } else if (error.name === 'ExpiredCodeException') {
+      } else if (error.message?.includes('expired')) {
         errorMessage = 'Verification code has expired. Please request a new one.'
-      } else if (error.name === 'NotAuthorizedException') {
-        errorMessage = 'User is already confirmed or verification failed.'
       }
 
-      addToast({
+      toast({
         title: "Verification Failed",
         description: errorMessage,
         variant: "destructive"
@@ -159,7 +149,7 @@ function VerifyEmailContent() {
 
   const handleResendCode = async () => {
     if (!email) {
-      addToast({
+      toast({
         title: "Error",
         description: "No email address found. Please sign up again.",
         variant: "destructive"
@@ -169,28 +159,27 @@ function VerifyEmailContent() {
 
     setIsResending(true)
     try {
-      // In production, this would use AWS Cognito to resend verification email
-      await sendEmailVerification(email);
-      // Use AWS Cognito resendConfirmationCode
-      await resendConfirmationCode(email)
-
-      addToast({
-        title: "Success",
-        description: "Verification code has been resent to your email"
+      const response = await fetch('/api/auth/send-verification-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
       })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: "Verification code has been resent to your email"
+        })
+      } else {
+        throw new Error(data.message || 'Failed to resend code')
+      }
     } catch (error: any) {
       console.error('Resend code error:', error)
-
-      let errorMessage = 'Failed to resend verification code'
-      if (error.name === 'UserNotFoundException') {
-        errorMessage = 'User not found. Please sign up again.'
-      } else if (error.name === 'InvalidParameterException') {
-        errorMessage = 'User is already confirmed.'
-      }
-
-      addToast({
+      toast({
         title: "Error",
-        description: errorMessage,
+        description: error.message || 'Failed to resend verification code',
         variant: "destructive"
       })
     } finally {
@@ -201,7 +190,7 @@ function VerifyEmailContent() {
   const handleCodeSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!verificationCode.trim()) {
-      addToast({
+      toast({
         title: "Error",
         description: "Please enter the verification code",
         variant: "destructive"
@@ -211,7 +200,6 @@ function VerifyEmailContent() {
 
     await handleEmailVerification(verificationCode.trim(), email)
   }
-
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
@@ -458,13 +446,16 @@ function VerifyEmailContent() {
         </div>
       </div>
     </div>
-  );
+  )
 }
 
-export function CheckEmailPage() {
+export function VerifyEmailPage() {
   return (
     <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div>Loading...</div></div>}>
       <VerifyEmailContent />
     </Suspense>
-  );
+  )
 }
+
+// Export as CheckEmailPage for compatibility
+export const CheckEmailPage = VerifyEmailPage;

@@ -32,13 +32,6 @@ import {
   Smartphone
 } from 'lucide-react'
 import { formatCurrency, calculateTransactionFee } from '@/lib/banking'
-<<<<<<< HEAD
-import { AccountType, TransactionType } from '@prisma/client'
-=======
-// import { AccountType, TransactionType } from '@prisma/client'
-type AccountType = 'CHECKING' | 'SAVINGS' | 'CREDIT'
-type TransactionType = 'SEND' | 'RECEIVE' | 'DEPOSIT' | 'WITHDRAWAL' | 'TRANSFER'
->>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
 import { cn } from '@/lib/utils'
 import { LayoutWrapper } from "@/components/ui/layout-wrapper"
 import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sidebar-layout'
@@ -52,6 +45,8 @@ import { DepositModal } from '@/components/deposit-modal'
 import { MomoClient } from '@/lib/momo-client'
 import { MastercardClient } from '@/lib/mastercard-client'
 import { VisaClient } from '@/lib/visa-client'
+import { SectionFooter } from '@/components/ui/section-footer'
+import { useTheme } from '@/contexts/ThemeContext'
 
 // Types
 type AccountType = 'CHECKING' | 'SAVINGS' | 'CREDIT'
@@ -95,7 +90,7 @@ interface TransactionData {
 // Loading Component
 function LoadingSkeleton() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background">
       <div className="max-w-md mx-auto pt-20 px-4 space-y-6">
         <Skeleton className="h-8 w-32" />
         <Skeleton className="h-16 w-full" />
@@ -118,9 +113,10 @@ function ErrorDisplay({ message }: { message: string }) {
 }
 
 export function SendMoneyPage() {
+  const { theme } = useTheme()
   const router = useRouter()
   const { user } = useAuth()
-  const { addToast } = useToast()
+  const { toast } = useToast()
   
   // Form state
   const [amount, setAmount] = useState('')
@@ -240,7 +236,7 @@ export function SendMoneyPage() {
       // Show success animation
       setShowSuccess(true)
       
-      addToast({
+      toast({
         title: 'Success',
         description: 'Money sent successfully',
       })
@@ -262,7 +258,7 @@ export function SendMoneyPage() {
     } finally {
       setIsProcessing(false)
     }
-  }, [validateForm, addToast, router])
+  }, [validateForm, toast, router])
 
   // Get selected account
   const selectedAccount = selectedAccountId ? getAccountById(selectedAccountId) : null
@@ -275,7 +271,7 @@ export function SendMoneyPage() {
   // Error state
   if (accountsError || beneficiariesError) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center px-4">
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
         <ErrorDisplay message={accountsError || beneficiariesError || 'An error occurred'} />
       </div>
     )
@@ -288,20 +284,19 @@ export function SendMoneyPage() {
       >
         <SidebarToggle />
         <LayoutWrapper>
-          <div className="min-h-screen bg-white">
+          <div className="min-h-screen bg-background">
             {/* Header */}
-            <div className="sticky top-0 z-10 bg-white border-b border-gray-100">
+            <div className="sticky top-0 z-10 bg-background border-b border-border">
               <div className="max-w-md mx-auto px-4 py-4">
                 <div className="flex items-center gap-4">
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => router.back()}
-                    className="hover:bg-gray-100"
                   >
                     <ArrowLeft className="h-5 w-5" />
                   </Button>
-                  <h1 className="text-xl font-semibold text-black">Send Money</h1>
+                  <h1 className="text-xl font-semibold text-foreground">Send Money</h1>
                 </div>
               </div>
             </div>
@@ -332,15 +327,15 @@ export function SendMoneyPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
                 >
-                  <Label className="text-sm font-medium text-gray-700">Amount</Label>
+                  <Label className="text-sm font-medium text-foreground">Amount</Label>
                   <div className="relative">
-                    <DollarSign className="absolute left-4 top-1/2 transform -translate-y-1/2 h-6 w-6 text-gray-400" />
+                    <DollarSign className="absolute left-4 top-1/2 transform -translate-y-1/2 h-6 w-6 text-muted-foreground" />
                     <Input
                       type="number"
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
                       placeholder="0.00"
-                      className="pl-12 h-16 text-2xl font-semibold text-center border-2 border-gray-200 focus:border-black transition-colors"
+                      className="pl-12 h-16 text-2xl font-semibold text-center border-2 transition-colors"
                       step="0.01"
                       min="0"
                     />
@@ -354,11 +349,11 @@ export function SendMoneyPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
                 >
-                  <Label className="text-sm font-medium text-gray-700">From Account</Label>
+                  <Label className="text-sm font-medium text-foreground">From Account</Label>
                   <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
-                    <SelectTrigger className="h-14 border-2 border-gray-200 focus:border-black">
+                    <SelectTrigger className="h-14 border-2">
                       <div className="flex items-center gap-3">
-                        <CreditCard className="h-5 w-5 text-gray-400" />
+                        <CreditCard className="h-5 w-5 text-muted-foreground" />
                         <SelectValue placeholder="Select account" />
                       </div>
                     </SelectTrigger>
@@ -368,7 +363,7 @@ export function SendMoneyPage() {
                           <div className="flex justify-between items-center w-full">
                             <div>
                               <div className="font-medium">{account.type}</div>
-                              <div className="text-sm text-gray-500">•••• {account.number.slice(-4)}</div>
+                              <div className="text-sm text-muted-foreground">•••• {account.number?.slice(-4) || '****'}</div>
                             </div>
                             <div className="text-sm font-medium">
                               {formatCurrency(account.balance)}
@@ -379,7 +374,7 @@ export function SendMoneyPage() {
                     </SelectContent>
                   </Select>
                   {selectedAccount && (
-                    <div className="text-sm text-gray-600">
+                    <div className="text-sm text-muted-foreground">
                       Available: {formatCurrency(selectedAccount.balance)}
                     </div>
                   )}
@@ -392,7 +387,7 @@ export function SendMoneyPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
                 >
-                  <Label className="text-sm font-medium text-gray-700">Transfer Method</Label>
+                  <Label className="text-sm font-medium text-foreground">Transfer Method</Label>
                   <div className="grid grid-cols-3 gap-2">
                     {[
                       { value: 'bank', label: 'Bank', icon: CreditCard },
@@ -403,12 +398,7 @@ export function SendMoneyPage() {
                         key={value}
                         type="button"
                         variant={transferType === value ? "default" : "outline"}
-                        className={cn(
-                          "h-14 flex-col gap-1",
-                          transferType === value 
-                            ? "bg-black text-white hover:bg-gray-800" 
-                            : "border-2 border-gray-200 hover:border-gray-300"
-                        )}
+                        className="h-14 flex-col gap-1"
                         onClick={() => setTransferType(value as any)}
                       >
                         <Icon className="h-4 w-4" />
@@ -427,11 +417,11 @@ export function SendMoneyPage() {
                 >
                   {transferType === 'bank' && (
                     <>
-                      <Label className="text-sm font-medium text-gray-700">To Beneficiary</Label>
+                      <Label className="text-sm font-medium text-foreground">To Beneficiary</Label>
                       <Select value={selectedBeneficiaryId} onValueChange={setSelectedBeneficiaryId}>
-                        <SelectTrigger className="h-14 border-2 border-gray-200 focus:border-black">
+                        <SelectTrigger className="h-14 border-2">
                           <div className="flex items-center gap-3">
-                            <User className="h-5 w-5 text-gray-400" />
+                            <User className="h-5 w-5 text-muted-foreground" />
                             <SelectValue placeholder="Select beneficiary" />
                           </div>
                         </SelectTrigger>
@@ -440,8 +430,8 @@ export function SendMoneyPage() {
                             <SelectItem key={beneficiary.id} value={beneficiary.id}>
                               <div>
                                 <div className="font-medium">{beneficiary.name}</div>
-                                <div className="text-sm text-gray-500">
-                                  {beneficiary.bankName} • •••• {beneficiary.accountNumber.slice(-4)}
+                                <div className="text-sm text-muted-foreground">
+                                  {beneficiary.bankName} • •••• {beneficiary.accountNumber?.slice(-4) || '****'}
                                 </div>
                               </div>
                             </SelectItem>
@@ -453,15 +443,15 @@ export function SendMoneyPage() {
 
                   {transferType === 'momo' && (
                     <>
-                      <Label className="text-sm font-medium text-gray-700">Phone Number</Label>
+                      <Label className="text-sm font-medium text-foreground">Phone Number</Label>
                       <div className="relative">
-                        <Smartphone className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                        <Smartphone className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                         <Input
                           type="tel"
                           value={momoPhone}
                           onChange={(e) => setMomoPhone(e.target.value)}
                           placeholder="+1 (555) 000-0000"
-                          className="pl-12 h-14 border-2 border-gray-200 focus:border-black"
+                          className="pl-12 h-14 border-2"
                         />
                       </div>
                     </>
@@ -469,15 +459,15 @@ export function SendMoneyPage() {
 
                   {transferType === 'card' && (
                     <>
-                      <Label className="text-sm font-medium text-gray-700">Card Number</Label>
+                      <Label className="text-sm font-medium text-foreground">Card Number</Label>
                       <div className="relative">
-                        <CreditCard className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                        <CreditCard className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                         <Input
                           type="text"
                           value={cardNumber}
                           onChange={(e) => setCardNumber(e.target.value)}
                           placeholder="1234 5678 9012 3456"
-                          className="pl-12 h-14 border-2 border-gray-200 focus:border-black"
+                          className="pl-12 h-14 border-2"
                         />
                       </div>
                     </>
@@ -491,12 +481,12 @@ export function SendMoneyPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.5 }}
                 >
-                  <Label className="text-sm font-medium text-gray-700">Description (Optional)</Label>
+                  <Label className="text-sm font-medium text-foreground">Description (Optional)</Label>
                   <Input
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="What's this for?"
-                    className="h-12 border-2 border-gray-200 focus:border-black"
+                    className="h-12 border-2"
                   />
                 </motion.div>
 
@@ -509,23 +499,23 @@ export function SendMoneyPage() {
                       exit={{ opacity: 0, height: 0 }}
                       transition={{ duration: 0.3 }}
                     >
-                      <Card className="border-2 border-gray-100">
+                      <Card className="border-2 border-border">
                         <CardContent className="p-4">
                           <div className="space-y-3">
                             <div className="flex justify-between text-sm">
-                              <span className="text-gray-600">Amount</span>
-                              <span className="font-medium">{formatCurrency(preview.amount)}</span>
+                              <span className="text-muted-foreground">Amount</span>
+                              <span className="font-medium text-foreground">{formatCurrency(preview.amount)}</span>
                             </div>
                             <div className="flex justify-between text-sm">
-                              <span className="text-gray-600">Fee</span>
-                              <span className="font-medium">{formatCurrency(preview.fee)}</span>
+                              <span className="text-muted-foreground">Fee</span>
+                              <span className="font-medium text-foreground">{formatCurrency(preview.fee)}</span>
                             </div>
                             <Separator />
-                            <div className="flex justify-between font-semibold">
+                            <div className="flex justify-between font-semibold text-foreground">
                               <span>Total</span>
                               <span>{formatCurrency(preview.total)}</span>
                             </div>
-                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
                               <Clock className="h-4 w-4" />
                               <span>{preview.estimatedTime}</span>
                             </div>
@@ -544,7 +534,7 @@ export function SendMoneyPage() {
                 >
                   <Button
                     type="submit"
-                    className="w-full h-14 text-lg font-semibold bg-black hover:bg-gray-800 text-white"
+                    className="w-full h-14 text-lg font-semibold"
                     disabled={isProcessing || !amount || !selectedAccountId}
                   >
                     {isProcessing ? (
@@ -576,7 +566,7 @@ export function SendMoneyPage() {
                     initial={{ scale: 0.5, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     exit={{ scale: 0.5, opacity: 0 }}
-                    className="bg-white rounded-2xl p-8 shadow-2xl"
+                    className="bg-background rounded-2xl p-8 shadow-2xl border border-border"
                   >
                     <div className="text-center">
                       <motion.div
@@ -585,12 +575,12 @@ export function SendMoneyPage() {
                           rotate: [0, 360]
                         }}
                         transition={{ duration: 0.6 }}
-                        className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4"
+                        className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4"
                       >
-                        <Check className="w-8 h-8 text-gray-600" />
+                        <Check className="w-8 h-8 text-green-600 dark:text-green-400" />
                       </motion.div>
-                      <h3 className="text-xl font-semibold text-black mb-2">Success!</h3>
-                      <p className="text-gray-600">Your money has been sent</p>
+                      <h3 className="text-xl font-semibold text-foreground mb-2">Success!</h3>
+                      <p className="text-muted-foreground">Your money has been sent</p>
                     </div>
                   </motion.div>
                 </motion.div>
@@ -603,6 +593,8 @@ export function SendMoneyPage() {
               onOpenChange={setIsDepositModalOpen}
             />
           </div>
+
+          <SectionFooter section="financial" activePage="/send-money" />
         </LayoutWrapper>
       </ResponsiveSidebarLayout>
     </SidebarProvider>

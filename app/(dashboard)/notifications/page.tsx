@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTheme } from '@/contexts/ThemeContext'
 import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sidebar-layout'
 import { SidebarContent } from '@/components/ui/sidebar-content'
 import { SidebarToggle } from '@/components/ui/sidebar-toggle'
@@ -23,6 +24,7 @@ import {
   CheckCircle,
   Info
 } from 'lucide-react'
+import { SectionFooter } from '@/components/ui/section-footer'
 
 // Mock notifications data
 const notifications = [
@@ -79,6 +81,7 @@ const notifications = [
 ]
 
 export default function NotificationsPage() {
+  const { theme } = useTheme()
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false)
   const [notificationList, setNotificationList] = useState(notifications)
   const [selectedTab, setSelectedTab] = useState('all')
@@ -128,20 +131,20 @@ export default function NotificationsPage() {
         sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
       >
         <SidebarToggle />
-        <div className="min-h-screen bg-white pt-16 pb-4 px-4 sm:pt-20 sm:pb-6 sm:px-6">
+        <div className="min-h-screen bg-background pt-16 pb-32 px-4 sm:pt-20 sm:pb-32 sm:px-6">
           <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
               <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-black flex items-center">
+                <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center">
                   Notifications
                   {unreadCount > 0 && (
-                    <Badge className="ml-3 bg-black text-white text-xs">
+                    <Badge className="ml-3 bg-primary text-primary-foreground text-xs">
                       {unreadCount}
                     </Badge>
                   )}
                 </h1>
-                <p className="text-black/60 mt-1 text-sm sm:text-base">
+                <p className="text-muted-foreground mt-1 text-sm sm:text-base">
                   Stay updated with your account activity and important alerts
                 </p>
               </div>
@@ -149,7 +152,7 @@ export default function NotificationsPage() {
                 <Button
                   onClick={markAllAsRead}
                   variant="outline"
-                  className="border-black text-black hover:bg-black hover:text-white w-full sm:w-auto"
+                  className="w-full sm:w-auto"
                 >
                   <Check className="h-4 w-4 mr-2" />
                   Mark All Read
@@ -162,52 +165,52 @@ export default function NotificationsPage() {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Total</CardTitle>
-                  <Bell className="h-4 w-4 text-black/60" />
+                  <Bell className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-black">
+                  <div className="text-2xl font-bold text-foreground">
                     {notificationList.length}
                   </div>
-                  <p className="text-xs text-black/60">All notifications</p>
+                  <p className="text-xs text-muted-foreground">All notifications</p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Unread</CardTitle>
-                  <AlertTriangle className="h-4 w-4 text-black/60" />
+                  <AlertTriangle className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-black">
+                  <div className="text-2xl font-bold text-foreground">
                     {unreadCount}
                   </div>
-                  <p className="text-xs text-black/60">Need attention</p>
+                  <p className="text-xs text-muted-foreground">Need attention</p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Security</CardTitle>
-                  <Shield className="h-4 w-4 text-black/60" />
+                  <Shield className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-black">
+                  <div className="text-2xl font-bold text-foreground">
                     {notificationList.filter(n => n.type === 'security').length}
                   </div>
-                  <p className="text-xs text-black/60">Security alerts</p>
+                  <p className="text-xs text-muted-foreground">Security alerts</p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Financial</CardTitle>
-                  <DollarSign className="h-4 w-4 text-black/60" />
+                  <DollarSign className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-black">
+                  <div className="text-2xl font-bold text-foreground">
                     {notificationList.filter(n => ['transaction', 'card', 'investment'].includes(n.type)).length}
                   </div>
-                  <p className="text-xs text-black/60">Money related</p>
+                  <p className="text-xs text-muted-foreground">Money related</p>
                 </CardContent>
               </Card>
             </div>
@@ -225,9 +228,9 @@ export default function NotificationsPage() {
                 {filteredNotifications.length === 0 ? (
                   <Card>
                     <CardContent className="flex flex-col items-center justify-center py-12">
-                      <Bell className="h-12 w-12 text-black/20 mb-4" />
-                      <h3 className="text-lg font-medium text-black mb-2">No notifications</h3>
-                      <p className="text-black/60 text-center">
+                      <Bell className="h-12 w-12 text-muted-foreground/20 mb-4" />
+                      <h3 className="text-lg font-medium text-foreground mb-2">No notifications</h3>
+                      <p className="text-muted-foreground text-center">
                         {selectedTab === 'unread' 
                           ? "You're all caught up! No unread notifications."
                           : `No ${selectedTab === 'all' ? '' : selectedTab} notifications to show.`
@@ -243,30 +246,30 @@ export default function NotificationsPage() {
                         <Card 
                           key={notification.id} 
                           className={`transition-all hover:shadow-md ${
-                            !notification.read ? 'border-l-4 border-l-black bg-black/5' : ''
+                            !notification.read ? 'border-l-4 border-l-primary bg-muted/50' : ''
                           }`}
                         >
                           <CardContent className="p-4">
                             <div className="flex items-start space-x-4">
-                              <div className={`p-2 rounded-full bg-black/10 ${notification.color}`}>
+                              <div className="p-2 rounded-full bg-muted text-foreground">
                                 <IconComponent className="h-5 w-5" />
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-start justify-between">
                                   <div className="flex-1">
-                                    <h3 className={`font-medium ${!notification.read ? 'text-black' : 'text-black/80'}`}>
+                                    <h3 className={`font-medium ${!notification.read ? 'text-foreground' : 'text-muted-foreground'}`}>
                                       {notification.title}
                                     </h3>
-                                    <p className="text-sm text-black/60 mt-1">
+                                    <p className="text-sm text-muted-foreground mt-1">
                                       {notification.message}
                                     </p>
                                     <div className="flex items-center space-x-2 mt-2">
-                                      <Clock className="h-3 w-3 text-black/40" />
-                                      <span className="text-xs text-black/40">
+                                      <Clock className="h-3 w-3 text-muted-foreground/60" />
+                                      <span className="text-xs text-muted-foreground/60">
                                         {notification.timestamp}
                                       </span>
                                       {!notification.read && (
-                                        <Badge variant="secondary" className="bg-black text-white text-xs">
+                                        <Badge variant="secondary" className="bg-primary text-primary-foreground text-xs">
                                           New
                                         </Badge>
                                       )}
@@ -278,7 +281,7 @@ export default function NotificationsPage() {
                                         size="sm"
                                         variant="ghost"
                                         onClick={() => markAsRead(notification.id)}
-                                        className="h-8 w-8 p-0 hover:bg-black/10"
+                                        className="h-8 w-8 p-0"
                                       >
                                         <Check className="h-4 w-4" />
                                       </Button>
@@ -287,7 +290,7 @@ export default function NotificationsPage() {
                                       size="sm"
                                       variant="ghost"
                                       onClick={() => deleteNotification(notification.id)}
-                                      className="h-8 w-8 p-0 hover:bg-black/10"
+                                      className="h-8 w-8 p-0"
                                     >
                                       <X className="h-4 w-4" />
                                     </Button>
@@ -310,6 +313,8 @@ export default function NotificationsPage() {
           open={isDepositModalOpen}
           onOpenChange={setIsDepositModalOpen}
         />
+        
+        <SectionFooter section="account" activePage="/notifications" />
       </ResponsiveSidebarLayout>
     </SidebarProvider>
   )

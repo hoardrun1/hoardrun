@@ -98,8 +98,6 @@ const mockLoginAttempt = {
   createdAt: new Date()
 };
 
-
-
 const mockTransaction = {
   id: 'mock-transaction-id',
   userId: 'mock-user-id',

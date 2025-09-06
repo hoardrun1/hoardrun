@@ -1,10 +1,12 @@
 'use client'
 
 import { useState } from 'react'
+import { useTheme } from '@/contexts/ThemeContext'
 import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sidebar-layout'
 import { SidebarContent } from '@/components/ui/sidebar-content'
 import { SidebarToggle } from '@/components/ui/sidebar-toggle'
 import { DepositModal } from '@/components/deposit-modal'
+import { SectionFooter } from '@/components/ui/section-footer'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -30,6 +32,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext'
 
 export default function ProfilePage() {
+  const { theme } = useTheme()
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [profileData, setProfileData] = useState({
@@ -68,21 +71,21 @@ export default function ProfilePage() {
         sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
       >
         <SidebarToggle />
-        <div className="min-h-screen bg-white pt-16 pb-4 px-4 sm:pt-20 sm:pb-6 sm:px-6">
+        <div className="min-h-screen bg-background pt-16 pb-32 px-4 sm:pt-20 sm:pb-32 sm:px-6">
           <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
               <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-black">
+                <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
                   Profile
                 </h1>
-                <p className="text-black/60 mt-1 text-sm sm:text-base">
+                <p className="text-muted-foreground mt-1 text-sm sm:text-base">
                   Manage your personal information and preferences
                 </p>
               </div>
               <Button
                 onClick={() => isEditing ? handleSave() : setIsEditing(true)}
-                className="bg-black text-white hover:bg-black/90 w-full sm:w-auto"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 w-full sm:w-auto"
               >
                 {isEditing ? (
                   <>
@@ -113,29 +116,29 @@ export default function ProfilePage() {
                       <div className="relative">
                         <Avatar className="w-20 h-20 sm:w-24 sm:h-24">
                           <AvatarImage src="/placeholder-avatar.jpg" />
-                          <AvatarFallback className="text-xl sm:text-2xl bg-black text-white">
+                          <AvatarFallback className="text-xl sm:text-2xl bg-primary text-primary-foreground">
                             {profileData.firstName[0]}{profileData.lastName[0]}
                           </AvatarFallback>
                         </Avatar>
                         {isEditing && (
                           <Button
                             size="sm"
-                            className="absolute -bottom-2 -right-2 rounded-full w-7 h-7 sm:w-8 sm:h-8 p-0 bg-black text-white hover:bg-black/90"
+                            className="absolute -bottom-2 -right-2 rounded-full w-7 h-7 sm:w-8 sm:h-8 p-0 bg-primary text-primary-foreground hover:bg-primary/90"
                           >
                             <Camera className="h-3 w-3 sm:h-4 sm:w-4" />
                           </Button>
                         )}
                       </div>
                       <div className="flex-1 text-center sm:text-left">
-                        <h2 className="text-xl sm:text-2xl font-bold text-black">
+                        <h2 className="text-xl sm:text-2xl font-bold text-foreground">
                           {profileData.firstName} {profileData.lastName}
                         </h2>
-                        <p className="text-black/60 text-sm sm:text-base">{profileData.email}</p>
+                        <p className="text-muted-foreground text-sm sm:text-base">{profileData.email}</p>
                         <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-2 sm:space-y-0 sm:space-x-4 mt-2">
-                          <Badge variant="secondary" className="bg-black/10 text-black text-xs">
+                          <Badge variant="secondary" className="bg-muted text-foreground text-xs">
                             Verified Account
                           </Badge>
-                          <Badge variant="secondary" className="bg-black/10 text-black text-xs">
+                          <Badge variant="secondary" className="bg-muted text-foreground text-xs">
                             Premium Member
                           </Badge>
                         </div>
@@ -255,32 +258,32 @@ export default function ProfilePage() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Security Settings</CardTitle>
-                    <p className="text-sm text-black/60">
+                    <p className="text-sm text-muted-foreground">
                       Manage your account security and authentication methods
                     </p>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    <div className="flex items-center justify-between p-4 border border-black/10 rounded-lg">
+                    <div className="flex items-center justify-between p-4 border border-border rounded-lg">
                       <div className="flex items-center space-x-3">
-                        <Shield className="h-5 w-5 text-black" />
+                        <Shield className="h-5 w-5 text-foreground" />
                         <div>
-                          <p className="font-medium">Two-Factor Authentication</p>
-                          <p className="text-sm text-black/60">Add an extra layer of security</p>
+                          <p className="font-medium text-foreground">Two-Factor Authentication</p>
+                          <p className="text-sm text-muted-foreground">Add an extra layer of security</p>
                         </div>
                       </div>
-                      <Button variant="outline" className="border-black text-black hover:bg-black hover:text-white">
+                      <Button variant="outline">
                         Enable
                       </Button>
                     </div>
-                    <div className="flex items-center justify-between p-4 border border-black/10 rounded-lg">
+                    <div className="flex items-center justify-between p-4 border border-border rounded-lg">
                       <div className="flex items-center space-x-3">
-                        <CreditCard className="h-5 w-5 text-black" />
+                        <CreditCard className="h-5 w-5 text-foreground" />
                         <div>
-                          <p className="font-medium">Password</p>
-                          <p className="text-sm text-black/60">Last changed 30 days ago</p>
+                          <p className="font-medium text-foreground">Password</p>
+                          <p className="text-sm text-muted-foreground">Last changed 30 days ago</p>
                         </div>
                       </div>
-                      <Button variant="outline" className="border-black text-black hover:bg-black hover:text-white">
+                      <Button variant="outline">
                         Change
                       </Button>
                     </div>
@@ -292,20 +295,20 @@ export default function ProfilePage() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Notification Preferences</CardTitle>
-                    <p className="text-sm text-black/60">
+                    <p className="text-sm text-muted-foreground">
                       Choose how you want to be notified about account activity
                     </p>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    <div className="flex items-center justify-between p-4 border border-black/10 rounded-lg">
+                    <div className="flex items-center justify-between p-4 border border-border rounded-lg">
                       <div className="flex items-center space-x-3">
-                        <Bell className="h-5 w-5 text-black" />
+                        <Bell className="h-5 w-5 text-foreground" />
                         <div>
-                          <p className="font-medium">Email Notifications</p>
-                          <p className="text-sm text-black/60">Receive updates via email</p>
+                          <p className="font-medium text-foreground">Email Notifications</p>
+                          <p className="text-sm text-muted-foreground">Receive updates via email</p>
                         </div>
                       </div>
-                      <Button variant="outline" className="border-black text-black hover:bg-black hover:text-white">
+                      <Button variant="outline">
                         Configure
                       </Button>
                     </div>
@@ -320,6 +323,7 @@ export default function ProfilePage() {
           open={isDepositModalOpen}
           onOpenChange={setIsDepositModalOpen}
         />
+        <SectionFooter section="account" activePage="/profile" />
       </ResponsiveSidebarLayout>
     </SidebarProvider>
   )

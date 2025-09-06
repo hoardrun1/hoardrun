@@ -1,13 +1,9 @@
 import { cache } from './cache'
 import { logger } from './logger'
 import { AppError, ErrorCode } from './error-handling'
-<<<<<<< HEAD
-import { Transaction, User } from '@prisma/client'
-=======
 // import { Transaction, User } from '@prisma/client'
 type Transaction = any // Placeholder type
 type User = any // Placeholder type
->>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
 import geoip from 'geoip-lite'
 
 interface FraudDetectionConfig {
@@ -454,4 +450,4 @@ export class FraudDetectionService {
 
 // Export singleton instance
 export const fraudDetection = new FraudDetectionService()
-export default fraudDetection 
+export default fraudDetection

@@ -1,10 +1,12 @@
 'use client'
 
 import { useState } from 'react'
+import { useTheme } from '@/contexts/ThemeContext'
 import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sidebar-layout'
 import { SidebarContent } from '@/components/ui/sidebar-content'
 import { SidebarToggle } from '@/components/ui/sidebar-toggle'
 import { DepositModal } from '@/components/deposit-modal'
+import { SectionFooter } from '@/components/ui/section-footer'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
@@ -48,6 +50,7 @@ const weeklySpending = [
 ]
 
 export default function AnalyticsPage() {
+  const { theme } = useTheme()
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false)
 
   const totalIncome = monthlyData.reduce((sum, month) => sum + month.income, 0)
@@ -63,15 +66,15 @@ export default function AnalyticsPage() {
         sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
       >
         <SidebarToggle />
-        <div className="min-h-screen bg-white pt-16 pb-4 px-4 sm:pt-20 sm:pb-6 sm:px-6">
+        <div className="min-h-screen bg-background pt-16 pb-32 px-4 sm:pt-20 sm:pb-32 sm:px-6">
           <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
             {/* Header */}
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-black">
+                <h1 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-foreground">
                   Analytics
                 </h1>
-                <p className="text-black/60 mt-1 text-sm sm:text-base">
+                <p className="text-muted-foreground mt-1 text-sm sm:text-base">
                   Insights into your financial patterns and trends
                 </p>
               </div>
@@ -82,52 +85,52 @@ export default function AnalyticsPage() {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Avg Monthly Income</CardTitle>
-                  <TrendingUp className="h-4 w-4 text-black/60" />
+                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-black">
+                  <div className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-foreground">
                     ${avgMonthlyIncome.toLocaleString()}
                   </div>
-                  <p className="text-xs text-black/60">Last 6 months</p>
+                  <p className="text-xs text-muted-foreground">Last 6 months</p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Avg Monthly Expenses</CardTitle>
-                  <TrendingDown className="h-4 w-4 text-black/60" />
+                  <TrendingDown className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-black">
+                  <div className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-foreground">
                     ${avgMonthlyExpenses.toLocaleString()}
                   </div>
-                  <p className="text-xs text-black/60">Last 6 months</p>
+                  <p className="text-xs text-muted-foreground">Last 6 months</p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Savings Rate</CardTitle>
-                  <Target className="h-4 w-4 text-black/60" />
+                  <Target className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-black">
+                  <div className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-foreground">
                     {savingsRate}%
                   </div>
-                  <p className="text-xs text-black/60">Of total income</p>
+                  <p className="text-xs text-muted-foreground">Of total income</p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Total Savings</CardTitle>
-                  <DollarSign className="h-4 w-4 text-black/60" />
+                  <DollarSign className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-black">
+                  <div className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-foreground">
                     ${totalSavings.toLocaleString()}
                   </div>
-                  <p className="text-xs text-black/60">Last 6 months</p>
+                  <p className="text-xs text-muted-foreground">Last 6 months</p>
                 </CardContent>
               </Card>
             </div>
@@ -149,13 +152,19 @@ export default function AnalyticsPage() {
                     <CardContent>
                       <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
                         <BarChart data={monthlyData}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="month" />
-                          <YAxis />
-                          <Tooltip />
-                          <Bar dataKey="income" fill="#000000" name="Income" />
-                          <Bar dataKey="expenses" fill="#666666" name="Expenses" />
-                          <Bar dataKey="savings" fill="#CCCCCC" name="Savings" />
+                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                          <XAxis dataKey="month" tick={{ fill: 'hsl(var(--foreground))' }} />
+                          <YAxis tick={{ fill: 'hsl(var(--foreground))' }} />
+                          <Tooltip 
+                            contentStyle={{ 
+                              backgroundColor: 'hsl(var(--background))', 
+                              border: '1px solid hsl(var(--border))',
+                              color: 'hsl(var(--foreground))'
+                            }} 
+                          />
+                          <Bar dataKey="income" fill="hsl(var(--foreground))" name="Income" />
+                          <Bar dataKey="expenses" fill="hsl(var(--muted-foreground))" name="Expenses" />
+                          <Bar dataKey="savings" fill="hsl(var(--muted))" name="Savings" />
                         </BarChart>
                       </ResponsiveContainer>
                     </CardContent>
@@ -181,7 +190,14 @@ export default function AnalyticsPage() {
                               <Cell key={`cell-${index}`} fill={entry.color} />
                             ))}
                           </Pie>
-                          <Tooltip formatter={(value) => [`$${value}`, 'Amount']} />
+                          <Tooltip 
+                            formatter={(value) => [`$${value}`, 'Amount']}
+                            contentStyle={{ 
+                              backgroundColor: 'hsl(var(--background))', 
+                              border: '1px solid hsl(var(--border))',
+                              color: 'hsl(var(--foreground))'
+                            }}
+                          />
                         </PieChart>
                       </ResponsiveContainer>
                     </CardContent>
@@ -198,11 +214,17 @@ export default function AnalyticsPage() {
                     <CardContent>
                       <ResponsiveContainer width="100%" height={300}>
                         <AreaChart data={weeklySpending}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="day" />
-                          <YAxis />
-                          <Tooltip />
-                          <Area type="monotone" dataKey="amount" stroke="#000000" fill="#000000" fillOpacity={0.3} />
+                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                          <XAxis dataKey="day" tick={{ fill: 'hsl(var(--foreground))' }} />
+                          <YAxis tick={{ fill: 'hsl(var(--foreground))' }} />
+                          <Tooltip 
+                            contentStyle={{ 
+                              backgroundColor: 'hsl(var(--background))', 
+                              border: '1px solid hsl(var(--border))',
+                              color: 'hsl(var(--foreground))'
+                            }}
+                          />
+                          <Area type="monotone" dataKey="amount" stroke="hsl(var(--foreground))" fill="hsl(var(--foreground))" fillOpacity={0.3} />
                         </AreaChart>
                       </ResponsiveContainer>
                     </CardContent>
@@ -224,8 +246,8 @@ export default function AnalyticsPage() {
                               <span className="text-sm font-medium">{category.name}</span>
                             </div>
                             <div className="text-right">
-                              <span className="font-bold">${category.value}</span>
-                              <p className="text-xs text-black/60">
+                              <span className="font-bold text-foreground">${category.value}</span>
+                              <p className="text-xs text-muted-foreground">
                                 {((category.value / categoryData.reduce((sum, cat) => sum + cat.value, 0)) * 100).toFixed(1)}%
                               </p>
                             </div>
@@ -245,13 +267,19 @@ export default function AnalyticsPage() {
                   <CardContent>
                     <ResponsiveContainer width="100%" height={400}>
                       <LineChart data={monthlyData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="month" />
-                        <YAxis />
-                        <Tooltip />
-                        <Line type="monotone" dataKey="income" stroke="#000000" strokeWidth={2} name="Income" />
-                        <Line type="monotone" dataKey="expenses" stroke="#666666" strokeWidth={2} name="Expenses" />
-                        <Line type="monotone" dataKey="savings" stroke="#CCCCCC" strokeWidth={2} name="Savings" />
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                        <XAxis dataKey="month" tick={{ fill: 'hsl(var(--foreground))' }} />
+                        <YAxis tick={{ fill: 'hsl(var(--foreground))' }} />
+                        <Tooltip 
+                          contentStyle={{ 
+                            backgroundColor: 'hsl(var(--background))', 
+                            border: '1px solid hsl(var(--border))',
+                            color: 'hsl(var(--foreground))'
+                          }}
+                        />
+                        <Line type="monotone" dataKey="income" stroke="hsl(var(--foreground))" strokeWidth={2} name="Income" />
+                        <Line type="monotone" dataKey="expenses" stroke="hsl(var(--muted-foreground))" strokeWidth={2} name="Expenses" />
+                        <Line type="monotone" dataKey="savings" stroke="hsl(var(--muted))" strokeWidth={2} name="Savings" />
                       </LineChart>
                     </ResponsiveContainer>
                   </CardContent>
@@ -265,6 +293,7 @@ export default function AnalyticsPage() {
           open={isDepositModalOpen}
           onOpenChange={setIsDepositModalOpen}
         />
+        <SectionFooter section="financial" activePage="/analytics" />
       </ResponsiveSidebarLayout>
     </SidebarProvider>
   )

@@ -31,19 +31,19 @@ export default function Navigation() {
                 home
               </Link>
               <Link 
-                href="../finance-page.tsx"
+                href="/finance"
                 className="inline-flex items-center px-1 pt-1 text-gray-500 hover:text-gray-900"
               >
                 Finance
               </Link>
               <Link 
-                href="../home-page.tsx/investment-page.tsx"
+                href="/investment"
                 className="inline-flex items-center px-1 pt-1 text-gray-500 hover:text-gray-900"
               >
                 Investments
               </Link>
               <Link 
-                href="../home-page.tsx/cards-page.tsx"
+                href="/cards"
                 className="inline-flex items-center px-1 pt-1 text-gray-500 hover:text-gray-900"
               >
                 Cards

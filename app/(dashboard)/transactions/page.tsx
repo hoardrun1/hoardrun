@@ -1,10 +1,12 @@
 'use client'
 
 import { useState } from 'react'
+import { useTheme } from '@/contexts/ThemeContext'
 import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sidebar-layout'
 import { SidebarContent } from '@/components/ui/sidebar-content'
 import { SidebarToggle } from '@/components/ui/sidebar-toggle'
 import { DepositModal } from '@/components/deposit-modal'
+import { SectionFooter } from '@/components/ui/section-footer'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -73,6 +75,7 @@ const transactions = [
 ]
 
 export default function TransactionsPage() {
+  const { theme } = useTheme()
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
@@ -95,19 +98,19 @@ export default function TransactionsPage() {
         sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
       >
         <SidebarToggle />
-        <div className="min-h-screen bg-white pt-16 pb-4 px-4 sm:pt-20 sm:pb-6 sm:px-6">
+        <div className="min-h-screen bg-background pt-16 pb-32 px-4 sm:pt-20 sm:pb-32 sm:px-6">
           <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
               <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-black">
+                <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
                   Transactions
                 </h1>
-                <p className="text-black/60 mt-1 text-sm sm:text-base">
+                <p className="text-muted-foreground mt-1 text-sm sm:text-base">
                   View and manage your transaction history
                 </p>
               </div>
-              <Button className="bg-black text-white hover:bg-black/90 w-full sm:w-auto">
+              <Button className="bg-primary text-primary-foreground hover:bg-primary/90 w-full sm:w-auto">
                 <Receipt className="h-4 w-4 mr-2" />
                 Export
               </Button>
@@ -118,39 +121,39 @@ export default function TransactionsPage() {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Total Income</CardTitle>
-                  <TrendingUp className="h-4 w-4 text-black/60" />
+                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-xl sm:text-2xl font-bold text-black">
+                  <div className="text-xl sm:text-2xl font-bold text-foreground">
                     ${totalIncome.toLocaleString()}
                   </div>
-                  <p className="text-xs text-black/60">This month</p>
+                  <p className="text-xs text-muted-foreground">This month</p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
-                  <TrendingDown className="h-4 w-4 text-black/60" />
+                  <TrendingDown className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-black">
+                  <div className="text-2xl font-bold text-foreground">
                     ${totalExpenses.toLocaleString()}
                   </div>
-                  <p className="text-xs text-black/60">This month</p>
+                  <p className="text-xs text-muted-foreground">This month</p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Net Amount</CardTitle>
-                  <DollarSign className="h-4 w-4 text-black/60" />
+                  <DollarSign className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className={`text-2xl font-bold ${netAmount >= 0 ? 'text-black' : 'text-black'}`}>
+                  <div className={`text-2xl font-bold ${netAmount >= 0 ? 'text-foreground' : 'text-foreground'}`}>
                     ${Math.abs(netAmount).toLocaleString()}
                   </div>
-                  <p className="text-xs text-black/60">
+                  <p className="text-xs text-muted-foreground">
                     {netAmount >= 0 ? 'Positive' : 'Negative'} balance
                   </p>
                 </CardContent>
@@ -159,13 +162,13 @@ export default function TransactionsPage() {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Transactions</CardTitle>
-                  <Receipt className="h-4 w-4 text-black/60" />
+                  <Receipt className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-black">
+                  <div className="text-2xl font-bold text-foreground">
                     {transactions.length}
                   </div>
-                  <p className="text-xs text-black/60">Total count</p>
+                  <p className="text-xs text-muted-foreground">Total count</p>
                 </CardContent>
               </Card>
             </div>
@@ -179,7 +182,7 @@ export default function TransactionsPage() {
                 <div className="flex flex-col sm:flex-row gap-4">
                   <div className="flex-1">
                     <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-black/40" />
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
                         placeholder="Search transactions..."
                         value={searchQuery}
@@ -221,7 +224,7 @@ export default function TransactionsPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Recent Transactions</CardTitle>
-                <p className="text-sm text-black/60">
+                <p className="text-sm text-muted-foreground">
                   {filteredTransactions.length} transactions found
                 </p>
               </CardHeader>
@@ -230,32 +233,32 @@ export default function TransactionsPage() {
                   {filteredTransactions.map((transaction) => (
                     <div
                       key={transaction.id}
-                      className="flex items-center justify-between p-3 sm:p-4 border border-black/10 rounded-lg hover:bg-black/5 transition-colors"
+                      className="flex items-center justify-between p-3 sm:p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors"
                     >
                       <div className="flex items-center space-x-3 sm:space-x-4 flex-1 min-w-0">
                         <div className={`p-1.5 sm:p-2 rounded-full ${
                           transaction.type === 'income'
-                            ? 'bg-black/10'
-                            : 'bg-black/10'
+                            ? 'bg-muted'
+                            : 'bg-muted'
                         }`}>
                           {transaction.type === 'income' ? (
-                            <ArrowDownLeft className="h-3 w-3 sm:h-4 sm:w-4 text-black" />
+                            <ArrowDownLeft className="h-3 w-3 sm:h-4 sm:w-4 text-foreground" />
                           ) : (
-                            <ArrowUpRight className="h-3 w-3 sm:h-4 sm:w-4 text-black" />
+                            <ArrowUpRight className="h-3 w-3 sm:h-4 sm:w-4 text-foreground" />
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-black text-sm sm:text-base truncate">{transaction.description}</p>
-                          <p className="text-xs sm:text-sm text-black/60">{transaction.category}</p>
+                          <p className="font-medium text-foreground text-sm sm:text-base truncate">{transaction.description}</p>
+                          <p className="text-xs sm:text-sm text-muted-foreground">{transaction.category}</p>
                         </div>
                       </div>
                       <div className="text-right ml-2">
                         <p className={`font-bold text-sm sm:text-base ${
-                          transaction.type === 'income' ? 'text-black' : 'text-black'
+                          transaction.type === 'income' ? 'text-foreground' : 'text-foreground'
                         }`}>
                           {transaction.type === 'income' ? '+' : ''}${Math.abs(transaction.amount).toLocaleString()}
                         </p>
-                        <p className="text-xs sm:text-sm text-black/60">{transaction.date}</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">{transaction.date}</p>
                       </div>
                     </div>
                   ))}
@@ -269,6 +272,7 @@ export default function TransactionsPage() {
           open={isDepositModalOpen}
           onOpenChange={setIsDepositModalOpen}
         />
+        <SectionFooter section="financial" activePage="/transactions" />
       </ResponsiveSidebarLayout>
     </SidebarProvider>
   )

@@ -2,139 +2,104 @@
 
 import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
->>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
-import { navigation } from '@/lib/navigation'
 import { useToast } from '@/components/ui/use-toast'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Loader2, Mail, CheckCircle } from 'lucide-react'
 import Link from 'next/link'
-<<<<<<< HEAD
-import { sendVerificationEmail, generateVerificationToken, generateVerificationLink } from '@/lib/web3forms-email'
 
 function CheckEmailContent() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
->>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
-  const { addToast } = useToast();
-  const [email, setEmail] = useState('');
-  const [verificationCode, setVerificationCode] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  const [showCodeInput, setShowCodeInput] = useState(false);
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const { toast } = useToast()
+  const [email, setEmail] = useState('')
+  const [verificationCode, setVerificationCode] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [isVerifying, setIsVerifying] = useState(false)
+  const [mounted, setMounted] = useState(false)
+  const [showCodeInput, setShowCodeInput] = useState(false)
 
   useEffect(() => {
-    setMounted(true);
-<<<<<<< HEAD
-    
-=======
+    setMounted(true)
 
-    // Get email from URL params (Web3Forms flow) or navigation data (legacy flow)
-    const emailFromParams = searchParams?.get('email');
+    // Get email from URL params
+    const emailFromParams = searchParams?.get('email')
     if (emailFromParams) {
-      setEmail(emailFromParams);
-      return;
+      setEmail(emailFromParams)
+      return
     }
 
-    // Fallback to navigation data for legacy flow
->>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
-    if (!navigation.isValidTransition('signup', 'check-email')) {
-      router.push('/signup');
-      return;
-    }
-
-    const data = navigation.getData('check-email');
-    if (!data?.email) {
-      router.push('/signup');
-      return;
-    }
-
-    setEmail(data.email);
-<<<<<<< HEAD
-  }, [router]);
-=======
-  }, [router, searchParams]);
->>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
+    // Fallback - redirect to signup if no email
+    router.push('/signup')
+  }, [router, searchParams])
 
   const handleResendEmail = async () => {
-    if (!email) return;
+    if (!email) return
 
-    setIsLoading(true);
+    setIsLoading(true)
     try {
-<<<<<<< HEAD
-      const response = await fetch('/api/auth/resend-verification', {
+      const response = await fetch('/api/auth/send-verification-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email })
-      });
+      })
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message);
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.message)
 
-      addToast({
+      toast({
         title: "Success",
         description: "Verification email has been resent"
-      });
-=======
-      // Generate new verification token and link
-      const verificationToken = generateVerificationToken(email);
-      const verificationLink = generateVerificationLink(email, verificationToken);
-
-      // Extract name from email (simple approach)
-      const userName = email.split('@')[0];
-
-      // Send verification email using Web3Forms
-      const emailResult = await sendVerificationEmail(email, userName, verificationLink);
-
-      if (emailResult.success) {
-        addToast({
-          title: "Success",
-          description: "Verification email has been resent"
-        });
-      } else {
-        throw new Error(emailResult.message);
-      }
->>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
+      })
     } catch (error) {
-      addToast({
+      toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to resend verification email",
         variant: "destructive"
-      });
+      })
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
-<<<<<<< HEAD
-  const handleVerificationComplete = async (token: string) => {
+  const handleVerifyCode = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!verificationCode || verificationCode.length !== 6) return
+
+    setIsVerifying(true)
     try {
-      const response = await fetch('/api/auth/verify', {
+      const response = await fetch('/api/auth/verify-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token })
-      });
+        body: JSON.stringify({ 
+          email,
+          code: verificationCode 
+        })
+      })
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message);
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.message)
 
-      navigation.connect('check-email', 'verify-email');
-      router.push('/verify-email');
+      toast({
+        title: "Success",
+        description: "Email verified successfully!"
+      })
+
+      // Redirect to sign in
+      router.push('/signin')
     } catch (error) {
-      addToast({
+      toast({
         title: "Error",
-        description: "Verification failed",
+        description: error instanceof Error ? error.message : "Verification failed",
         variant: "destructive"
-      });
+      })
+    } finally {
+      setIsVerifying(false)
     }
-  };
-=======
+  }
 
->>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
-
-  if (!mounted) return null;
+  if (!mounted) return null
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -150,7 +115,7 @@ function CheckEmailContent() {
       {/* Faded dark overlay */}
       <div className="absolute inset-0 bg-black/70"></div>
 
-      {/* Animated geometric background pattern - Adjusted for mobile */}
+      {/* Animated geometric background pattern */}
       <div className="absolute inset-0 opacity-5 sm:opacity-10">
         <div 
           className="absolute top-0 left-0 w-48 sm:w-96 h-48 sm:h-96 border border-white/30 rounded-full -translate-x-24 sm:-translate-x-48 -translate-y-24 sm:-translate-y-48 transition-all duration-&lsqb;3s&rsqb; ease-out"
@@ -178,7 +143,7 @@ function CheckEmailContent() {
         ></div>
       </div>
 
-      {/* Floating particles - Reduced for mobile */}
+      {/* Floating particles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {[...Array(6)].map((_, i) => (
           <div
@@ -197,10 +162,10 @@ function CheckEmailContent() {
       <div className="relative z-10 min-h-screen flex items-center justify-center px-3 sm:px-4 py-8 sm:py-12">
         <div className="w-full">
           
-          {/* Main content - Full width layout */}
+          {/* Main content */}
           <div className="max-w-7xl mx-auto">
             
-            {/* Header section - Centered with better mobile spacing */}
+            {/* Header section */}
             <div 
               className="text-center mb-8 sm:mb-12 transition-all duration-1000 ease-out"
               style={{
@@ -255,365 +220,137 @@ function CheckEmailContent() {
               </p>
             </div>
 
-            {/* Mobile-first layout - Side sections on mobile, main action full width */}
-            <div className="space-y-4 sm:space-y-6">
-              
-              {/* Side sections - Side by side on mobile */}
-              <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:hidden">
+            {/* Main action card */}
+            <div 
+              className="max-w-md mx-auto transition-all duration-1000 ease-out"
+              style={{
+                transform: mounted ? 'translateY(0)' : 'translateY(30px)',
+                opacity: mounted ? 1 : 0,
+                transitionDelay: '800ms'
+              }}
+            >
+              <div className="bg-white/25 sm:bg-white/30 backdrop-blur-sm rounded-xl shadow-2xl p-4 sm:p-6 border border-white/30 transition-all duration-500 hover:shadow-3xl hover:bg-white/35 text-center">
+                <h2 className="text-base sm:text-lg font-bold text-white mb-3 sm:mb-4">Ready to continue?</h2>
+                <p className="text-white mb-4 sm:mb-6 text-xs sm:text-sm leading-relaxed">
+                  Click the button below if you need us to resend the verification email.
+                </p>
                 
-                {/* Instructions card */}
-                <div 
-                  className="transition-all duration-1000 ease-out"
-                  style={{
-                    transform: mounted ? 'translateX(0) translateY(0)' : 'translateX(-30px) translateY(20px)',
-                    opacity: mounted ? 1 : 0,
-                    transitionDelay: '700ms'
-                  }}
-                >
-                  <div className="bg-white/25 backdrop-blur-sm rounded-lg shadow-2xl p-3 sm:p-4 border border-white/30 transition-all duration-500 hover:shadow-3xl hover:bg-white/35 h-full">
-                    <div className="flex items-start">
-                      <CheckCircle className="h-4 w-4 text-white mr-2 flex-shrink-0 mt-0.5 animate-pulse" />
-                      <div>
-                        <h3 className="font-bold text-white mb-1.5 text-xs">Verify Your Account</h3>
-                        <p className="text-white text-xs leading-relaxed">
-                          Click the verification link in your email to activate your account.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Help card */}
-                <div 
-                  className="transition-all duration-1000 ease-out"
-                  style={{
-                    transform: mounted ? 'translateX(0) translateY(0)' : 'translateX(30px) translateY(20px)',
-                    opacity: mounted ? 1 : 0,
-                    transitionDelay: '900ms'
-                  }}
-                >
-                  <div className="bg-white/25 backdrop-blur-sm rounded-lg shadow-2xl p-3 sm:p-4 border border-white/30 transition-all duration-500 hover:shadow-3xl hover:bg-white/35 h-full">
-                    <h3 className="font-bold text-white mb-2 text-xs">Can't find the email?</h3>
-                    <div className="space-y-1.5 text-white text-xs">
-                      <div className="flex items-start">
-                        <div className="w-1 h-1 bg-white rounded-full mt-1.5 mr-2 flex-shrink-0"></div>
-                        <p>Check spam folder</p>
-                      </div>
-                      <div className="flex items-start">
-                        <div className="w-1 h-1 bg-white rounded-full mt-1.5 mr-2 flex-shrink-0"></div>
-                        <p>Verify email address</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Main action card - Full width on mobile */}
-              <div 
-                className="lg:hidden transition-all duration-1000 ease-out"
-                style={{
-                  transform: mounted ? 'translateY(0)' : 'translateY(30px)',
-                  opacity: mounted ? 1 : 0,
-                  transitionDelay: '800ms'
-                }}
-              >
-                <div className="bg-white/25 sm:bg-white/30 backdrop-blur-sm rounded-xl shadow-2xl p-4 sm:p-6 border border-white/30 transition-all duration-500 hover:shadow-3xl hover:bg-white/35 text-center">
-                  <h2 className="text-base sm:text-lg font-bold text-white mb-3 sm:mb-4">Ready to continue?</h2>
-                  <p className="text-white mb-4 sm:mb-6 text-xs sm:text-sm leading-relaxed">
-                    Click the button below if you need us to resend the verification email.
-                  </p>
-                  
-                  {!showCodeInput ? (
-                    <>
-                      <Button
-                        onClick={handleResendEmail}
-                        className="w-full bg-white hover:bg-gray-100 text-black py-2.5 sm:py-3 text-sm font-semibold rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 mb-3 sm:mb-4"
-                        disabled={isLoading}
-                      >
-                        {isLoading ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            <span className="text-xs sm:text-sm">Resending...</span>
-                          </>
-                        ) : (
-                          <span className="text-xs sm:text-sm">Resend verification email</span>
-                        )}
-                      </Button>
-
-                      <Button
-                        onClick={() => setShowCodeInput(true)}
-                        variant="outline"
-                        className="w-full bg-transparent border-white text-white hover:bg-white/10 py-2.5 sm:py-3 text-sm font-semibold rounded-lg transition-all duration-300 mb-3 sm:mb-4"
-                      >
-                        <span className="text-xs sm:text-sm">Enter verification code</span>
-                      </Button>
-                    </>
-                  ) : (
-                    <form onSubmit={handleVerifyCode} className="space-y-4">
-                      <div>
-                        <Label htmlFor="verificationCode" className="text-white text-sm font-medium mb-2 block">
-                          Verification Code
-                        </Label>
-                        <Input
-                          id="verificationCode"
-                          type="text"
-                          placeholder="Enter 6-digit code"
-                          value={verificationCode}
-                          onChange={(e) => setVerificationCode(e.target.value)}
-                          className="w-full bg-white/10 border-white/30 text-white placeholder-white/60 focus:border-white focus:bg-white/20"
-                          maxLength={6}
-                          required
-                        />
-                      </div>
-                      
-                      <div className="flex gap-2">
-                        <Button
-                          type="submit"
-                          className="flex-1 bg-white hover:bg-gray-100 text-black py-2.5 sm:py-3 text-sm font-semibold rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
-                          disabled={isVerifying || verificationCode.length !== 6}
-                        >
-                          {isVerifying ? (
-                            <>
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              <span className="text-xs sm:text-sm">Verifying...</span>
-                            </>
-                          ) : (
-                            <span className="text-xs sm:text-sm">Verify Code</span>
-                          )}
-                        </Button>
-                        
-                        <Button
-                          type="button"
-                          onClick={() => {
-                            setShowCodeInput(false);
-                            setVerificationCode('');
-                          }}
-                          variant="outline"
-                          className="bg-transparent border-white text-white hover:bg-white/10 py-2.5 sm:py-3 text-sm font-semibold rounded-lg transition-all duration-300"
-                        >
-                          <span className="text-xs sm:text-sm">Cancel</span>
-                        </Button>
-                      </div>
-                    </form>
-                  )}
-
-                  <div className="text-center text-white text-xs sm:text-sm">
-                    <p>
-                      Already verified?{' '}
-                      <Link 
-                        href="/signin" 
-                        className="text-white hover:text-gray-200 font-semibold underline transition-all duration-200 hover:scale-105 inline-block"
-                      >
-                        Sign in
-                      </Link>
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Desktop layout - Three columns side by side */}
-              <div className="hidden lg:grid lg:grid-cols-3 gap-6 lg:gap-12">
-                
-                {/* Instructions card */}
-                <div 
-                  className="transition-all duration-1000 ease-out"
-                  style={{
-                    transform: mounted ? 'translateX(0) translateY(0)' : 'translateX(-50px) translateY(20px)',
-                    opacity: mounted ? 1 : 0,
-                    transitionDelay: '700ms'
-                  }}
-                >
-                  <div className="bg-white/30 backdrop-blur-sm rounded-2xl shadow-2xl p-8 border border-white/30 transition-all duration-500 hover:shadow-3xl hover:bg-white/40">
-                    <div className="flex items-start">
-                      <CheckCircle className="h-5 w-5 text-white mr-3 flex-shrink-0 mt-1 animate-pulse" />
-                      <div>
-                        <h3 className="font-bold text-white mb-2 text-base">Verify Your Account</h3>
-                        <p className="text-white text-sm leading-relaxed">
-                          Click the verification link in your email to activate your account and get started.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Main action card */}
-                <div 
-                  className="transition-all duration-1000 ease-out"
-                  style={{
-                    transform: mounted ? 'translateY(0)' : 'translateY(30px)',
-                    opacity: mounted ? 1 : 0,
-                    transitionDelay: '800ms'
-                  }}
-                >
-                  <div className="bg-white/30 backdrop-blur-sm rounded-2xl shadow-2xl p-10 border border-white/30 transition-all duration-500 hover:shadow-3xl hover:bg-white/40 text-center">
-                    <h2 className="text-xl font-bold text-white mb-6">Ready to continue?</h2>
-                    <p className="text-white mb-8 text-sm leading-relaxed px-2">
-                      Click the button below if you need us to resend the verification email.
-                    </p>
-                    
+                {!showCodeInput ? (
+                  <>
                     <Button
                       onClick={handleResendEmail}
-                      className="w-full bg-white hover:bg-gray-100 text-black py-3 text-sm font-semibold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 mb-6"
+                      className="w-full bg-white hover:bg-gray-100 text-black py-2.5 sm:py-3 text-sm font-semibold rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 mb-3 sm:mb-4"
                       disabled={isLoading}
                     >
                       {isLoading ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          <span className="text-sm">Resending...</span>
+                          <span className="text-xs sm:text-sm">Resending...</span>
                         </>
                       ) : (
-                        <span className="text-sm">Resend verification email</span>
+                        <span className="text-xs sm:text-sm">Resend verification email</span>
                       )}
                     </Button>
 
-                    <div className="text-center text-white text-sm">
-                      <p>
-                        Already verified?{' '}
-                        <Link 
-                          href="/signin" 
-                          className="text-white hover:text-gray-200 font-semibold underline transition-all duration-200 hover:scale-105 inline-block"
-                        >
-                          Sign in
-                        </Link>
-                      </p>
+                    <Button
+                      onClick={() => setShowCodeInput(true)}
+                      variant="outline"
+                      className="w-full bg-transparent border-white text-white hover:bg-white/10 py-2.5 sm:py-3 text-sm font-semibold rounded-lg transition-all duration-300 mb-3 sm:mb-4"
+                    >
+                      <span className="text-xs sm:text-sm">Enter verification code</span>
+                    </Button>
+                  </>
+                ) : (
+                  <form onSubmit={handleVerifyCode} className="space-y-4">
+                    <div>
+                      <Label htmlFor="verificationCode" className="text-white text-sm font-medium mb-2 block">
+                        Verification Code
+                      </Label>
+                      <Input
+                        id="verificationCode"
+                        type="text"
+                        placeholder="Enter 6-digit code"
+                        value={verificationCode}
+                        onChange={(e) => setVerificationCode(e.target.value)}
+                        className="w-full bg-white/10 border-white/30 text-white placeholder-white/60 focus:border-white focus:bg-white/20"
+                        maxLength={6}
+                        required
+                      />
                     </div>
-                  </div>
-                </div>
+                    
+                    <div className="flex gap-2">
+                      <Button
+                        type="submit"
+                        className="flex-1 bg-white hover:bg-gray-100 text-black py-2.5 sm:py-3 text-sm font-semibold rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
+                        disabled={isVerifying || verificationCode.length !== 6}
+                      >
+                        {isVerifying ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            <span className="text-xs sm:text-sm">Verifying...</span>
+                          </>
+                        ) : (
+                          <span className="text-xs sm:text-sm">Verify Code</span>
+                        )}
+                      </Button>
+                      
+                      <Button
+                        type="button"
+                        onClick={() => {
+                          setShowCodeInput(false)
+                          setVerificationCode('')
+                        }}
+                        variant="outline"
+                        className="bg-transparent border-white text-white hover:bg-white/10 py-2.5 sm:py-3 text-sm font-semibold rounded-lg transition-all duration-300"
+                      >
+                        <span className="text-xs sm:text-sm">Cancel</span>
+                      </Button>
+                    </div>
+                  </form>
+                )}
 
-                {/* Help card */}
-                <div 
-                  className="transition-all duration-1000 ease-out"
-                  style={{
-                    transform: mounted ? 'translateX(0) translateY(0)' : 'translateX(50px) translateY(20px)',
-                    opacity: mounted ? 1 : 0,
-                    transitionDelay: '900ms'
-                  }}
-                >
-                  <div className="bg-white/30 backdrop-blur-sm rounded-2xl shadow-2xl p-8 border border-white/30 transition-all duration-500 hover:shadow-3xl hover:bg-white/40">
-                    <h3 className="font-bold text-white mb-4 text-base">Can't find the email?</h3>
-                    <div className="space-y-3 text-white text-sm">
-                      <div className="flex items-start">
-                        <div className="w-1.5 h-1.5 bg-white rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                        <p>Check your spam or junk folder</p>
-                      </div>
-                      <div className="flex items-start">
-                        <div className="w-1.5 h-1.5 bg-white rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                        <p>Make sure you entered the correct email address</p>
-                      </div>
-                      <div className="flex items-start">
-                        <div className="w-1.5 h-1.5 bg-white rounded-full mt-2 mr-3 flex-shrink-0"></div>
-                        <p>Wait a few minutes for the email to arrive</p>
-                      </div>
-                    </div>
-                  </div>
+                <div className="text-center text-white text-xs sm:text-sm">
+                  <p>
+                    Already verified?{' '}
+                    <Link 
+                      href="/signin" 
+                      className="text-white hover:text-gray-200 font-semibold underline transition-all duration-200 hover:scale-105 inline-block"
+                    >
+                      Sign in
+                    </Link>
+                  </p>
                 </div>
               </div>
             </div>
 
-            {/* Development mode section - Better mobile layout */}
-            {process.env.NODE_ENV === 'development' && (
-              <div 
-                className="mt-8 sm:mt-12 max-w-4xl mx-auto transition-all duration-1000 ease-out"
-                style={{
-                  transform: mounted ? 'translateY(0)' : 'translateY(30px)',
-                  opacity: mounted ? 1 : 0,
-                  transitionDelay: '1000ms'
-                }}
-              >
-                <div className="bg-white/25 sm:bg-white/30 text-white p-6 sm:p-8 rounded-xl sm:rounded-2xl border-2 border-white/30 transition-all duration-500 hover:shadow-2xl hover:bg-white/35 sm:hover:bg-white/40 text-center">
-                  <h3 className="font-bold mb-3 sm:mb-4 text-base sm:text-lg">Development Mode</h3>
-                  <p className="text-white mb-4 sm:mb-6 text-xs sm:text-sm leading-relaxed max-w-2xl mx-auto px-2">
-                    If the real email fails to send, you can view the backup development email using the link below.
-                  </p>
-                  <Link
-                    href={`/dev/emails?email=${encodeURIComponent(email)}`}
-                    className="inline-block bg-white text-black hover:bg-gray-100 px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-semibold text-xs sm:text-sm transition-all duration-300 hover:scale-105 shadow-lg"
-                    target="_blank"
-                  >
-                    View Development Emails →
-                  </Link>
-                  <p className="text-white text-xs mt-3 sm:mt-4">
-                    This section only appears in development mode.
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* Bottom feature highlights - Side by side on mobile, 3 columns on larger screens */}
+            {/* Help section */}
             <div 
-              className="mt-12 sm:mt-16 max-w-5xl mx-auto transition-all duration-1000 ease-out"
+              className="mt-8 max-w-md mx-auto transition-all duration-1000 ease-out"
               style={{
                 transform: mounted ? 'translateY(0)' : 'translateY(30px)',
                 opacity: mounted ? 1 : 0,
-                transitionDelay: '1100ms'
+                transitionDelay: '900ms'
               }}
             >
-              {/* Mobile layout - First two side by side, third full width */}
-              <div className="sm:hidden space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  {[
-                    { title: "Secure Verification", desc: "Advanced email verification keeps your account safe" },
-                    { title: "Instant Access", desc: "Verify once and enjoy seamless access to all features" }
-                  ].map((feature, i) => (
-                    <div 
-                      key={i}
-                      className="text-center text-white transition-all duration-700 ease-out hover:scale-105"
-                      style={{
-                        transform: mounted ? 'translateY(0)' : 'translateY(20px)',
-                        opacity: mounted ? 1 : 0,
-                        transitionDelay: `${1200 + i * 100}ms`
-                      }}
-                    >
-                      <div className="w-2 h-2 bg-white rounded-full mx-auto mb-2 animate-pulse"></div>
-                      <h3 className="text-xs font-semibold mb-1.5">{feature.title}</h3>
-                      <p className="text-white text-xs leading-relaxed">{feature.desc}</p>
-                    </div>
-                  ))}
-                </div>
-                
-                {/* Third feature full width on mobile */}
-                <div 
-                  className="text-center text-white transition-all duration-700 ease-out hover:scale-105"
-                  style={{
-                    transform: mounted ? 'translateY(0)' : 'translateY(20px)',
-                    opacity: mounted ? 1 : 0,
-                    transitionDelay: '1400ms'
-                  }}
-                >
-                  <div className="w-2 h-2 bg-white rounded-full mx-auto mb-2 animate-pulse"></div>
-                  <h3 className="text-xs font-semibold mb-1.5">Privacy First</h3>
-                  <p className="text-white text-xs leading-relaxed">Your email is protected and never shared</p>
-                </div>
-              </div>
-
-              {/* Tablet and desktop layout - All three side by side */}
-              <div className="hidden sm:grid grid-cols-3 gap-6 sm:gap-8">
-                {[
-                  { title: "Secure Verification", desc: "Advanced email verification keeps your account safe" },
-                  { title: "Instant Access", desc: "Verify once and enjoy seamless access to all features" },
-                  { title: "Privacy First", desc: "Your email is protected and never shared" }
-                ].map((feature, i) => (
-                  <div 
-                    key={i}
-                    className="text-center text-white transition-all duration-700 ease-out hover:scale-105 px-2"
-                    style={{
-                      transform: mounted ? 'translateY(0)' : 'translateY(20px)',
-                      opacity: mounted ? 1 : 0,
-                      transitionDelay: `${1200 + i * 100}ms`
-                    }}
-                  >
-                    <div className="w-2.5 sm:w-3 h-2.5 sm:h-3 bg-white rounded-full mx-auto mb-3 sm:mb-4 animate-pulse"></div>
-                    <h3 className="text-sm sm:text-base font-semibold mb-2">{feature.title}</h3>
-                    <p className="text-white text-xs sm:text-sm leading-relaxed">{feature.desc}</p>
+              <div className="bg-white/25 backdrop-blur-sm rounded-xl shadow-2xl p-4 border border-white/30 text-center">
+                <h3 className="font-bold text-white mb-3 text-sm">Can't find the email?</h3>
+                <div className="space-y-2 text-white text-xs">
+                  <div className="flex items-center justify-center">
+                    <CheckCircle className="h-3 w-3 mr-2" />
+                    <p>Check your spam folder</p>
                   </div>
-                ))}
+                  <div className="flex items-center justify-center">
+                    <CheckCircle className="h-3 w-3 mr-2" />
+                    <p>Verify email address is correct</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 export function CheckEmailPage() {
@@ -621,5 +358,5 @@ export function CheckEmailPage() {
     <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div>Loading...</div></div>}>
       <CheckEmailContent />
     </Suspense>
-  );
+  )
 }

@@ -1,11 +1,7 @@
-<<<<<<< HEAD
-import { SavingsGoal, SavingsContribution, Transaction } from '@prisma/client'
-=======
 // import { SavingsGoal, SavingsContribution, Transaction } from '@prisma/client'
 type SavingsGoal = any // Placeholder type
 type SavingsContribution = any // Placeholder type
 type Transaction = any // Placeholder type
->>>>>>> b6db85744d1c02aafeee0a9bfc69af758d9c4fc9
 
 interface InterestRate {
   baseRate: number
@@ -349,4 +345,4 @@ export default {
   calculateInterest,
   generateGoalRecommendations,
   analyzeSavingsPattern,
-} 
+}

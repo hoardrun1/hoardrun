@@ -140,10 +140,10 @@ export function SignInPage() {
         transition={{ duration: 0.5 }}
         className="relative z-10 w-full max-w-md"
       >
-        <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6 sm:p-8">
+        <div className="bg-card/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6 sm:p-8">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
-            <p className="text-gray-600">Sign in to your HoardRun account</p>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Welcome Back</h1>
+            <p className="text-muted-foreground">Sign in to your HoardRun account</p>
           </div>
 
           {error && (
@@ -167,7 +167,7 @@ export function SignInPage() {
             <TabsContent value="social" className="space-y-4">
               <GoogleSignInButton callbackUrl="/home" />
               
-              <div className="text-center text-sm text-gray-500">
+              <div className="text-center text-sm text-muted-foreground">
                 Quick and secure sign-in with your Google account
               </div>
             </TabsContent>
@@ -176,7 +176,7 @@ export function SignInPage() {
               <form onSubmit={handleCredentialsSignIn} className="space-y-4">
                 <div className="space-y-2">
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
                     <Input
                       type="email"
                       name="email"
@@ -191,7 +191,7 @@ export function SignInPage() {
 
                 <div className="space-y-2">
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
                     <Input
                       type={showPassword ? "text" : "password"}
                       name="password"
@@ -209,9 +209,9 @@ export function SignInPage() {
                       onClick={() => setShowPassword(!showPassword)}
                     >
                       {showPassword ? (
-                        <EyeOff className="h-4 w-4 text-gray-400" />
+                        <EyeOff className="h-4 w-4 text-muted-foreground" />
                       ) : (
-                        <Eye className="h-4 w-4 text-gray-400" />
+                        <Eye className="h-4 w-4 text-muted-foreground" />
                       )}
                     </Button>
                   </div>
@@ -227,7 +227,7 @@ export function SignInPage() {
                         setFormData(prev => ({ ...prev, rememberMe: checked as boolean }))
                       }
                     />
-                    <label htmlFor="rememberMe" className="text-sm text-gray-600">
+                    <label htmlFor="rememberMe" className="text-sm text-muted-foreground">
                       Remember me
                     </label>
                   </div>
@@ -256,7 +256,7 @@ export function SignInPage() {
 
           <Separator className="my-6" />
 
-          <div className="text-center text-sm text-gray-600">
+          <div className="text-center text-sm text-muted-foreground">
             Don't have an account?{" "}
             <Link href="/signup" className="text-blue-600 hover:underline font-medium">
               Sign up here

@@ -118,7 +118,7 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
   const isActiveRoute = (href: string) => {
     if (href === '/home') return pathname === '/home' || pathname === '/'
     if (href === '/overview') return pathname === '/overview'
-    return pathname.startsWith(href)
+    return pathname?.startsWith(href) || false
   }
 
   const handleNavigation = (href: string) => {
@@ -138,12 +138,12 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
 
   const renderMenuSection = (title: string, items: MenuItem[]) => (
     <motion.div 
-      className="mb-4 lg:mb-8"
+      className="mb-4 lg:mb-5"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <div className="flex items-center gap-2 mb-3 lg:mb-4 px-1 lg:px-2">
+      <div className="flex items-center gap-2 mb-3 lg:mb-3 px-1 lg:px-2">
         <motion.div
           className="w-1 h-4 bg-gradient-to-b from-white/60 to-white/20 rounded-full"
           animate={{ scaleY: [1, 1.2, 1] }}
@@ -154,14 +154,14 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
         </h3>
         <div className="flex-1 h-px bg-gradient-to-r from-white/20 to-transparent" />
       </div>
-      <div className="space-y-1 lg:space-y-2">
+      <div className="space-y-1 lg:space-y-1">
         {items.map((item, index) => (
           <motion.button
             key={item.id}
             onClick={() => handleNavigation(item.href)}
             onMouseEnter={() => setHoveredItem(item.id)}
             onMouseLeave={() => setHoveredItem(null)}
-            className={`w-full flex items-center gap-3 lg:gap-4 p-2 lg:p-3 rounded-xl lg:rounded-2xl transition-all duration-500 group relative overflow-hidden ${
+            className={`w-full flex items-center gap-3 lg:gap-3 p-2 lg:p-2 rounded-xl lg:rounded-xl transition-all duration-500 group relative overflow-hidden ${
               isActiveRoute(item.href)
                 ? 'bg-gradient-to-r from-white/20 to-white/10 text-white shadow-2xl border border-white/30'
                 : 'text-white/70 hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 hover:text-white hover:shadow-xl'
@@ -196,7 +196,7 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
             )}
             
             {/* Icon container with enhanced styling */}
-            <div className={`relative p-2 lg:p-2.5 rounded-lg lg:rounded-xl transition-all duration-500 ${
+            <div className={`relative p-2 lg:p-2 rounded-lg lg:rounded-lg transition-all duration-500 ${
               isActiveRoute(item.href)
                 ? `bg-gradient-to-br ${item.color || 'from-white/20 to-white/10'} shadow-lg backdrop-blur-sm`
                 : 'bg-white/10 group-hover:bg-white/20 backdrop-blur-sm'
@@ -216,7 +216,7 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
                 animate={isActiveRoute(item.href) ? { rotate: [0, 5, -5, 0] } : {}}
                 transition={{ duration: 2, repeat: Infinity }}
               >
-                <item.icon className={`h-4 w-4 lg:h-5 lg:w-5 transition-all duration-500 ${
+                <item.icon className={`h-4 w-4 lg:h-4 lg:w-4 transition-all duration-500 ${
                   isActiveRoute(item.href) ? 'text-white drop-shadow-lg' : 'text-white/70 group-hover:text-white'
                 }`} />
               </motion.div>
@@ -225,7 +225,7 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
             {/* Content */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between">
-                <span className={`font-semibold text-[11px] lg:text-sm transition-all duration-500 ${
+                <span className={`font-semibold text-[11px] lg:text-xs transition-all duration-500 ${
                   isActiveRoute(item.href) ? 'text-white drop-shadow-sm' : 'group-hover:text-white'
                 }`}>
                   {item.label}
@@ -236,7 +236,7 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
                     transition={{ duration: 2, repeat: Infinity }}
                   >
                     <Badge
-                      className={`ml-2 text-[8px] lg:text-[10px] font-bold px-1.5 lg:px-2 py-0.5 transition-all duration-500 ${
+                      className={`ml-2 text-[8px] lg:text-[9px] font-bold px-1.5 lg:px-1.5 py-0.5 transition-all duration-500 ${
                         isActiveRoute(item.href)
                           ? `bg-gradient-to-r ${item.color || 'from-white/30 to-white/20'} text-white border border-white/30`
                           : 'bg-white/20 text-white/70 group-hover:bg-white/30 group-hover:text-white border border-white/20'
@@ -248,7 +248,7 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
                 )}
               </div>
               {item.description && (
-                <p className={`text-[9px] lg:text-xs mt-0.5 lg:mt-1 transition-all duration-500 hidden lg:block ${
+                <p className={`text-[9px] lg:text-[10px] mt-0.5 lg:mt-0.5 transition-all duration-500 hidden lg:block ${
                   isActiveRoute(item.href)
                     ? 'text-white/80'
                     : 'text-white/50 group-hover:text-white/70'
@@ -267,7 +267,7 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
               }}
               transition={{ duration: 0.3 }}
             >
-              <ChevronRight className={`h-3 w-3 lg:h-4 lg:w-4 transition-all duration-500 ${
+              <ChevronRight className={`h-3 w-3 lg:h-3 lg:w-3 transition-all duration-500 ${
                 isActiveRoute(item.href) ? 'text-white drop-shadow-sm' : 'text-white/50 group-hover:text-white/70'
               }`} />
             </motion.div>
@@ -305,7 +305,7 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
   return (
     <div
       ref={sidebarRef}
-      className="h-full w-full bg-gradient-to-b from-gray-900 via-black to-gray-900 border-r border-white/20 overflow-hidden relative"
+      className="h-full w-full overflow-hidden relative bg-gradient-to-b from-gray-900 via-black to-gray-900 border-r border-white/20"
     >
       {/* Animated background pattern */}
       <div className="absolute inset-0 opacity-5">
@@ -360,24 +360,24 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
       >
         {/* Enhanced Header */}
         <motion.div 
-          className="pt-4 px-4 pb-4 lg:pt-8 lg:px-6 lg:pb-8 border-b border-white/20 relative"
+          className="pt-4 px-4 pb-4 lg:pt-5 lg:px-5 lg:pb-5 border-b border-white/20 relative"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
           {/* Brand Identity with enhanced styling */}
-          <div className="flex items-center gap-3 mb-4 lg:gap-4 lg:mb-6">
+          <div className="flex items-center gap-3 mb-4 lg:gap-3 lg:mb-4">
             <motion.div 
               className="relative"
               whileHover={{ scale: 1.05 }}
               transition={{ duration: 0.2 }}
             >
-              <div className="bg-gradient-to-br from-white via-gray-100 to-gray-200 p-2 lg:p-3 rounded-xl lg:rounded-2xl shadow-2xl border border-white/20">
+              <div className="bg-gradient-to-br from-white via-gray-100 to-gray-200 p-2 lg:p-2 rounded-xl lg:rounded-xl shadow-2xl border border-white/20">
                 <motion.div
                   animate={{ rotate: [0, 5, -5, 0] }}
                   transition={{ duration: 4, repeat: Infinity }}
                 >
-                  <Wallet className="h-5 w-5 lg:h-7 lg:w-7 text-black" />
+                  <Wallet className="h-5 w-5 lg:h-5 lg:w-5 text-black" />
                 </motion.div>
               </div>
               {/* Glow effect */}
@@ -385,14 +385,14 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
             </motion.div>
             <div>
               <motion.h1 
-                className="text-xl lg:text-2xl font-black text-white tracking-tight bg-gradient-to-r from-white to-gray-300 bg-clip-text"
+                className="text-xl lg:text-xl font-black text-white tracking-tight bg-gradient-to-r from-white to-gray-300 bg-clip-text"
                 animate={{ backgroundPosition: ['0%', '100%', '0%'] }}
                 transition={{ duration: 3, repeat: Infinity }}
               >
                 HoardRun
               </motion.h1>
               <div className="flex items-center gap-2">
-                <p className="text-[10px] lg:text-sm text-white/60 font-medium">Premium Banking</p>
+                <p className="text-[10px] lg:text-xs text-white/60 font-medium">Premium Banking</p>
                 <motion.div
                   animate={{ rotate: 360 }}
                   transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
@@ -405,17 +405,17 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
 
           {/* Enhanced User Profile */}
           <motion.div
-            className="flex items-center gap-3 p-3 lg:gap-4 lg:p-4 bg-gradient-to-r from-white/10 to-white/5 rounded-xl lg:rounded-2xl border border-white/20 backdrop-blur-sm"
+            className="flex items-center gap-3 p-3 lg:gap-3 lg:p-3 bg-gradient-to-r from-white/10 to-white/5 rounded-xl lg:rounded-xl border border-white/20 backdrop-blur-sm"
             whileHover={{ scale: 1.02, y: -2 }}
             transition={{ duration: 0.2 }}
           >
             <div className="relative">
               <motion.div 
-                className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-white to-gray-200 rounded-xl lg:rounded-2xl flex items-center justify-center shadow-xl border border-white/30"
+                className="w-10 h-10 lg:w-10 lg:h-10 bg-gradient-to-br from-white to-gray-200 rounded-xl lg:rounded-xl flex items-center justify-center shadow-xl border border-white/30"
                 whileHover={{ rotate: 5 }}
                 transition={{ duration: 0.2 }}
               >
-                <User className="h-5 w-5 lg:h-6 lg:w-6 text-black" />
+                <User className="h-5 w-5 lg:h-5 lg:w-5 text-black" />
               </motion.div>
               <motion.div 
                 className="absolute -bottom-1 -right-1 w-4 h-4 bg-gradient-to-br from-white to-gray-200 rounded-full border-2 border-black flex items-center justify-center"
@@ -426,10 +426,10 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
               </motion.div>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-bold text-white text-[11px] lg:text-sm truncate">
+              <p className="font-bold text-white text-[11px] lg:text-xs truncate">
                 {user?.name || 'Demo User'}
               </p>
-              <p className="text-[9px] lg:text-xs text-white/60 truncate">
+              <p className="text-[9px] lg:text-[10px] text-white/60 truncate">
                 {user?.email || 'user@example.com'}
               </p>
             </div>
@@ -444,14 +444,14 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
 
         {/* Enhanced Quick Action */}
         <motion.div 
-          className="px-4 py-3 lg:px-6 lg:py-6 border-b border-white/20"
+          className="px-4 py-3 lg:px-5 lg:py-4 border-b border-white/20"
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
           <Button
             onClick={onAddMoney}
-            className="w-full bg-gradient-to-r from-white to-gray-100 text-black font-bold py-3 lg:py-4 text-xs lg:text-sm rounded-xl lg:rounded-2xl shadow-2xl hover:from-gray-100 hover:to-white transition-all duration-500 hover:scale-105 hover:shadow-3xl border border-white/20 group relative overflow-hidden"
+            className="w-full bg-gradient-to-r from-white to-gray-100 text-black font-bold py-3 lg:py-3 text-xs lg:text-xs rounded-xl lg:rounded-xl shadow-2xl hover:from-gray-100 hover:to-white transition-all duration-500 hover:scale-105 hover:shadow-3xl border border-white/20 group relative overflow-hidden"
           >
             {/* Animated background */}
             <motion.div
@@ -463,7 +463,7 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
               animate={{ rotate: [0, 180, 360] }}
               transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
             >
-              <Plus className="h-4 w-4 lg:h-5 lg:w-5 mr-2 relative z-10" />
+              <Plus className="h-4 w-4 lg:h-4 lg:w-4 mr-2 relative z-10" />
             </motion.div>
             <span className="relative z-10">Add Money</span>
           </Button>
@@ -471,7 +471,7 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
 
         {/* Enhanced Navigation Menu */}
         <motion.div 
-          className="px-4 py-3 lg:px-6 lg:py-6"
+          className="px-4 py-3 lg:px-5 lg:py-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.3 }}
@@ -484,7 +484,7 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
 
         {/* Enhanced Logout */}
         <motion.div 
-          className="px-4 py-3 lg:px-6 lg:py-6 border-t border-white/20"
+          className="px-4 py-3 lg:px-5 lg:py-4 border-t border-white/20"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.4 }}
@@ -492,13 +492,13 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
           <Button
             onClick={handleLogout}
             variant="ghost"
-            className="w-full justify-start text-white/60 hover:text-white hover:bg-gradient-to-r hover:from-red-500/20 hover:to-pink-500/20 rounded-xl lg:rounded-2xl p-3 lg:p-4 text-xs lg:text-sm transition-all duration-500 group border border-transparent hover:border-white/20"
+            className="w-full justify-start text-white/60 hover:text-white hover:bg-gradient-to-r hover:from-red-500/20 hover:to-pink-500/20 rounded-xl lg:rounded-xl p-3 lg:p-3 text-xs lg:text-xs transition-all duration-500 group border border-transparent hover:border-white/20"
           >
             <motion.div
               whileHover={{ rotate: 15 }}
               transition={{ duration: 0.2 }}
             >
-              <LogOut className="h-4 w-4 lg:h-5 lg:w-5 mr-3 group-hover:text-red-400 transition-colors duration-300" />
+              <LogOut className="h-4 w-4 lg:h-4 lg:w-4 mr-3 group-hover:text-red-400 transition-colors duration-300" />
             </motion.div>
             Sign Out
           </Button>

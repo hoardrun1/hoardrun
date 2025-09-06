@@ -123,4 +123,4 @@ if (process.env.NODE_ENV === 'development') {
   (globalThis as any).cache = cache
 }
 
-export default cache 
+export default cache

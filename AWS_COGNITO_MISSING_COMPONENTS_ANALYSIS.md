@@ -191,3 +191,5 @@ Based on the analysis of your AWS Cognito setup, here are the key findings and m
 4. **Optional**: Set up AWS SES for production email
 
 This analysis provides a complete roadmap for getting AWS Cognito working with mobile verification while staying within the free tier limits.
+
+// ...delete this file if not needed for production or documentation...

@@ -8,29 +8,21 @@ export const useAppNavigation = () => {
   const pathname = usePathname()
   const currentPage = useNavigationStore((state) => state.currentPage)
   const previousPage = useNavigationStore((state) => state.previousPage)
-  const isTransitioning = useNavigationStore((state) => state.isTransitioning)
-  const transitionDirection = useNavigationStore((state) => state.transitionDirection)
   const navigationStack = useNavigationStore((state) => state.navigationStack)
 
   const navigate = useCallback(async (to: string, options?: { replace?: boolean }) => {
-    // Start performance monitoring
-    navigationPerformance.startNavigation(pathname, to)
-
-    // Skip complex navigation service for faster performance
+    navigationPerformance.startNavigation(pathname || '/', to)
     if (options?.replace) {
       router.replace(to)
     } else {
       router.push(to)
     }
-
-    // End performance monitoring after a short delay to account for page load
     setTimeout(() => {
       navigationPerformance.endNavigation()
     }, 100)
   }, [router, pathname])
 
   const goBack = useCallback(async () => {
-    // Use simple router.back() for faster performance
     router.back()
   }, [router])
 
@@ -42,11 +34,9 @@ export const useAppNavigation = () => {
   return {
     currentPage,
     previousPage,
-    isTransitioning,
-    transitionDirection,
     navigationStack,
     navigate,
     goBack,
     reset,
   }
-} 
+}

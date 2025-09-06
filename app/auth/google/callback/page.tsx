@@ -12,9 +12,9 @@ function GoogleCallbackContent() {
   useEffect(() => {
     const handleGoogleCallback = async () => {
       try {
-        const code = searchParams.get('code')
-        const state = searchParams.get('state')
-        const error = searchParams.get('error')
+        const code = searchParams?.get('code')
+        const state = searchParams?.get('state')
+        const error = searchParams?.get('error')
 
         if (error) {
           throw new Error(`Google OAuth error: ${error}`)

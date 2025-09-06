@@ -206,3 +206,5 @@ npm run dev
 ---
 
 **Summary**: The issue is AWS SDK v3.873.0 compatibility, not network or configuration. Downgrading to v3.850.0 should resolve all connection issues immediately.
+
+// ...delete this file if not needed for production or documentation...

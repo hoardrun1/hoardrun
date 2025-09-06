@@ -48,7 +48,14 @@ export function registerServices(container: Container): void {
 
   container.registerSingleton<EmailService>(TOKENS.EMAIL_SERVICE, () => {
     const logger = container.resolve<Logger>(TOKENS.LOGGER)
-    const emailConfig = container.resolve(TOKENS.EMAIL_CONFIG)
+    const emailConfig = container.resolve<{
+      smtpHost: string;
+      smtpPort: number;
+      smtpUser: string;
+      smtpPassword: string;
+      fromEmail: string;
+      fromName: string;
+    }>(TOKENS.EMAIL_CONFIG)
     return new NodemailerEmailService(logger, emailConfig)
   })
 

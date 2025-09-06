@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useToast } from '@/components/ui/use-toast'
+import { useTheme } from '@/contexts/ThemeContext'
 import { 
   Settings as SettingsIcon, 
   Bell, 
@@ -26,9 +27,11 @@ import {
   Download,
   Trash2
 } from 'lucide-react'
+import { SectionFooter } from '@/components/ui/section-footer'
 
 export default function SettingsPage() {
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false)
+  const { theme, setTheme } = useTheme()
   const [settings, setSettings] = useState({
     notifications: {
       email: true,
@@ -42,7 +45,6 @@ export default function SettingsPage() {
       analytics: true
     },
     preferences: {
-      theme: 'light',
       language: 'en',
       currency: 'USD',
       timezone: 'UTC-5'
@@ -65,21 +67,29 @@ export default function SettingsPage() {
     })
   }
 
+  const handleThemeChange = (newTheme: 'light' | 'dark') => {
+    setTheme(newTheme)
+    addToast({
+      title: "Theme Updated",
+      description: `Switched to ${newTheme} mode.`,
+    })
+  }
+
   return (
     <SidebarProvider>
       <ResponsiveSidebarLayout
         sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
       >
         <SidebarToggle />
-        <div className="min-h-screen bg-white pt-16 pb-4 px-4 sm:pt-20 sm:pb-6 sm:px-6">
+        <div className="min-h-screen bg-background pt-16 pb-20 px-4 sm:pt-20 sm:pb-24 sm:px-6">
           <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
             {/* Header */}
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-black">
+                <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
                   Settings
                 </h1>
-                <p className="text-black/60 mt-1 text-sm sm:text-base">
+                <p className="text-muted-foreground mt-1 text-sm sm:text-base">
                   Customize your app experience and preferences
                 </p>
               </div>
@@ -97,7 +107,7 @@ export default function SettingsPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Appearance</CardTitle>
-                    <p className="text-sm text-black/60">
+                    <p className="text-sm text-muted-foreground">
                       Customize how the app looks and feels
                     </p>
                   </CardHeader>
@@ -105,11 +115,11 @@ export default function SettingsPage() {
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
                         <Label>Theme</Label>
-                        <p className="text-sm text-black/60">Choose your preferred theme</p>
+                        <p className="text-sm text-muted-foreground">Choose your preferred theme</p>
                       </div>
                       <Select
-                        value={settings.preferences.theme}
-                        onValueChange={(value) => handleSettingChange('preferences', 'theme', value)}
+                        value={theme}
+                        onValueChange={(value: 'light' | 'dark') => handleThemeChange(value)}
                       >
                         <SelectTrigger className="w-full sm:w-[180px]">
                           <SelectValue />
@@ -134,7 +144,7 @@ export default function SettingsPage() {
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
                         <Label>Language</Label>
-                        <p className="text-sm text-black/60">Select your preferred language</p>
+                        <p className="text-sm text-muted-foreground">Select your preferred language</p>
                       </div>
                       <Select 
                         value={settings.preferences.language} 
@@ -155,7 +165,7 @@ export default function SettingsPage() {
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
                         <Label>Currency</Label>
-                        <p className="text-sm text-black/60">Default currency for transactions</p>
+                        <p className="text-sm text-muted-foreground">Default currency for transactions</p>
                       </div>
                       <Select 
                         value={settings.preferences.currency} 
@@ -180,17 +190,17 @@ export default function SettingsPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Notification Preferences</CardTitle>
-                    <p className="text-sm text-black/60">
+                    <p className="text-sm text-muted-foreground">
                       Choose how and when you want to be notified
                     </p>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
-                        <Mail className="h-5 w-5 text-black" />
+                        <Mail className="h-5 w-5 text-foreground" />
                         <div className="space-y-0.5">
                           <Label>Email Notifications</Label>
-                          <p className="text-sm text-black/60">Receive updates via email</p>
+                          <p className="text-sm text-muted-foreground">Receive updates via email</p>
                         </div>
                       </div>
                       <Switch
@@ -201,10 +211,10 @@ export default function SettingsPage() {
 
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
-                        <Smartphone className="h-5 w-5 text-black" />
+                        <Smartphone className="h-5 w-5 text-foreground" />
                         <div className="space-y-0.5">
                           <Label>Push Notifications</Label>
-                          <p className="text-sm text-black/60">Get notified on your device</p>
+                          <p className="text-sm text-muted-foreground">Get notified on your device</p>
                         </div>
                       </div>
                       <Switch
@@ -215,10 +225,10 @@ export default function SettingsPage() {
 
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
-                        <Bell className="h-5 w-5 text-black" />
+                        <Bell className="h-5 w-5 text-foreground" />
                         <div className="space-y-0.5">
                           <Label>SMS Notifications</Label>
-                          <p className="text-sm text-black/60">Receive text messages for important updates</p>
+                          <p className="text-sm text-muted-foreground">Receive text messages for important updates</p>
                         </div>
                       </div>
                       <Switch
@@ -229,10 +239,10 @@ export default function SettingsPage() {
 
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
-                        <DollarSign className="h-5 w-5 text-black" />
+                        <DollarSign className="h-5 w-5 text-foreground" />
                         <div className="space-y-0.5">
                           <Label>Marketing Communications</Label>
-                          <p className="text-sm text-black/60">Receive promotional offers and updates</p>
+                          <p className="text-sm text-muted-foreground">Receive promotional offers and updates</p>
                         </div>
                       </div>
                       <Switch
@@ -248,7 +258,7 @@ export default function SettingsPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Privacy Settings</CardTitle>
-                    <p className="text-sm text-black/60">
+                    <p className="text-sm text-muted-foreground">
                       Control your data and privacy preferences
                     </p>
                   </CardHeader>
@@ -256,7 +266,7 @@ export default function SettingsPage() {
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
                         <Label>Profile Visibility</Label>
-                        <p className="text-sm text-black/60">Who can see your profile information</p>
+                        <p className="text-sm text-muted-foreground">Who can see your profile information</p>
                       </div>
                       <Select 
                         value={settings.privacy.profileVisibility} 
@@ -275,10 +285,10 @@ export default function SettingsPage() {
 
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
-                        <Database className="h-5 w-5 text-black" />
+                        <Database className="h-5 w-5 text-foreground" />
                         <div className="space-y-0.5">
                           <Label>Data Sharing</Label>
-                          <p className="text-sm text-black/60">Allow sharing anonymized data for improvements</p>
+                          <p className="text-sm text-muted-foreground">Allow sharing anonymized data for improvements</p>
                         </div>
                       </div>
                       <Switch
@@ -289,10 +299,10 @@ export default function SettingsPage() {
 
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
-                        <Shield className="h-5 w-5 text-black" />
+                        <Shield className="h-5 w-5 text-foreground" />
                         <div className="space-y-0.5">
                           <Label>Analytics</Label>
-                          <p className="text-sm text-black/60">Help improve the app with usage analytics</p>
+                          <p className="text-sm text-muted-foreground">Help improve the app with usage analytics</p>
                         </div>
                       </div>
                       <Switch
@@ -308,33 +318,33 @@ export default function SettingsPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Account Management</CardTitle>
-                    <p className="text-sm text-black/60">
+                    <p className="text-sm text-muted-foreground">
                       Manage your account data and preferences
                     </p>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    <div className="flex items-center justify-between p-4 border border-black/10 rounded-lg">
+                    <div className="flex items-center justify-between p-4 border border-border rounded-lg">
                       <div className="flex items-center space-x-3">
-                        <Download className="h-5 w-5 text-black" />
+                        <Download className="h-5 w-5 text-foreground" />
                         <div>
-                          <p className="font-medium">Export Data</p>
-                          <p className="text-sm text-black/60">Download a copy of your account data</p>
+                          <p className="font-medium text-foreground">Export Data</p>
+                          <p className="text-sm text-muted-foreground">Download a copy of your account data</p>
                         </div>
                       </div>
-                      <Button variant="outline" className="border-black text-black hover:bg-black hover:text-white">
+                      <Button variant="outline">
                         Export
                       </Button>
                     </div>
 
-                    <div className="flex items-center justify-between p-4 border border-black/10 rounded-lg">
+                    <div className="flex items-center justify-between p-4 border border-border rounded-lg">
                       <div className="flex items-center space-x-3">
-                        <Trash2 className="h-5 w-5 text-black" />
+                        <Trash2 className="h-5 w-5 text-foreground" />
                         <div>
-                          <p className="font-medium">Delete Account</p>
-                          <p className="text-sm text-black/60">Permanently delete your account and all data</p>
+                          <p className="font-medium text-foreground">Delete Account</p>
+                          <p className="text-sm text-muted-foreground">Permanently delete your account and all data</p>
                         </div>
                       </div>
-                      <Button variant="outline" className="border-black text-black hover:bg-black hover:text-white">
+                      <Button variant="outline">
                         Delete
                       </Button>
                     </div>
@@ -349,6 +359,8 @@ export default function SettingsPage() {
           open={isDepositModalOpen}
           onOpenChange={setIsDepositModalOpen}
         />
+
+        <SectionFooter section="account" activePage="/settings" />
       </ResponsiveSidebarLayout>
     </SidebarProvider>
   )

@@ -313,11 +313,6 @@ export class AccountRecoveryService {
     attempt: RecoveryAttempt,
     code: string
   ): Promise<void> {
-    // Mock implementation - in real app would check backup codes
-    // if (!user.backupCodes) {
-    //   throw new Error('No backup codes available')
-    // }
-
     const isValid = await this.verifyBackupCode(user.id, code)
     if (!isValid) {
       throw new Error('Invalid backup code')
@@ -403,4 +398,4 @@ export class AccountRecoveryService {
 
 // Export singleton instance
 export const accountRecovery = new AccountRecoveryService()
-export default accountRecovery 
+export default accountRecovery

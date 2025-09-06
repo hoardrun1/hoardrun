@@ -101,7 +101,7 @@ export function GlobalNotificationBanner() {
                 initial={{ width: '100%' }}
                 animate={{ width: '0%' }}
                 transition={{ 
-                  duration: (currentNotification.duration || 5000) / 1000,
+                  duration: 5,
                   ease: 'linear'
                 }}
               />

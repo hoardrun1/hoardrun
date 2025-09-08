@@ -340,20 +340,21 @@ export default function OverviewPage() {
         sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
       >
         <SidebarToggle />
-        <div className="min-h-screen bg-background pt-16 pb-4 px-3 sm:pt-20 sm:pb-6 sm:px-4 mb-20">
-          <div className="max-w-7xl mx-auto space-y-3 sm:space-y-4">
+        <div className="min-h-screen bg-background pt-14 sm:pt-16 pb-20 sm:pb-6 px-3 sm:px-4">
+          <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xs sm:text-base font-bold text-foreground">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">
               Financial Overview
             </h1>
-            <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
+            <p className="text-muted-foreground mt-1 text-sm sm:text-base">
               Welcome back, {user?.name || 'User'}! Here's your financial snapshot.
             </p>
           </div>
-          <Button 
+          <Button
             onClick={() => router.push('/home')}
+            className="w-full sm:w-auto"
             className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-xs sm:text-sm px-2 py-1 h-auto"
           >
             <BarChart3 className="h-3 w-3 mr-1" />

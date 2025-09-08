@@ -14,6 +14,9 @@ import { FloatingNotificationBell } from '@/components/ui/floating-notification-
 export const metadata: Metadata = {
   title: 'Hoardrun',
   description: 'Your digital banking solution',
+  viewport: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no',
+  themeColor: '#000000',
+  manifest: '/manifest.json',
 }
 
 export default function RootLayout({
@@ -23,15 +26,24 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="font-sans">
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+        <meta name="theme-color" content="#000000" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+      </head>
+      <body className="font-sans antialiased overflow-x-hidden">
         {/* Using AWS Cognito authentication instead of NextAuth */}
         <ThemeProvider>
           <ClientAuthProvider>
             <FinanceProvider>
               <NavigationProvider>
                 <NotificationProvider>
-                  {children}
-                  <FloatingNotificationBell />
+                  <div className="min-h-screen bg-background">
+                    {children}
+                    <FloatingNotificationBell />
+                  </div>
                 </NotificationProvider>
               </NavigationProvider>
             </FinanceProvider>

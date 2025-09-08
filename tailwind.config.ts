@@ -55,6 +55,32 @@ const config: Config = {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
+  		},
+  		// Mobile-specific extensions
+  		screens: {
+  			'xs': '475px',
+  			'3xl': '1600px',
+  		},
+  		spacing: {
+  			'safe-top': 'env(safe-area-inset-top)',
+  			'safe-bottom': 'env(safe-area-inset-bottom)',
+  			'safe-left': 'env(safe-area-inset-left)',
+  			'safe-right': 'env(safe-area-inset-right)',
+  		},
+  		height: {
+  			'screen-mobile': '100dvh', // Dynamic viewport height
+  			'safe-screen': 'calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom))',
+  		},
+  		minHeight: {
+  			'screen-mobile': '100dvh',
+  			'safe-screen': 'calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom))',
+  		},
+  		fontSize: {
+  			'mobile-xs': ['0.75rem', { lineHeight: '1rem' }],
+  			'mobile-sm': ['0.875rem', { lineHeight: '1.25rem' }],
+  			'mobile-base': ['1rem', { lineHeight: '1.5rem' }],
+  			'mobile-lg': ['1.125rem', { lineHeight: '1.75rem' }],
+  			'mobile-xl': ['1.25rem', { lineHeight: '1.75rem' }],
   		}
   	}
   },

@@ -51,6 +51,7 @@ import { SidebarContent } from '@/components/ui/sidebar-content'
 import { SidebarToggle } from '@/components/ui/sidebar-toggle'
 import { Notifications } from './ui/notifications'
 import { Settings as SettingsPanel } from './ui/settings'
+import { MobileNavigation } from '@/components/ui/mobile-navigation'
 
 interface Transaction {
   id: string
@@ -380,21 +381,27 @@ export function HomePageComponent() {
         <LayoutWrapper className="bg-background min-h-screen" showBreadcrumbs={false}>
 
       {/* Header */}
-      <header className="sticky top-0 z-30 bg-background border-b border-border shadow-sm">
-        <div className="container mx-auto px-4 lg:px-6">
-          <div className="flex h-16 items-center justify-between">
-            <div className="flex items-center gap-4 ml-16">
-              <div className="flex items-center gap-3">
-                <Wallet className="h-8 w-8 text-foreground" />
-                <div>
-                  <h1 className="text-xl font-bold text-foreground">
+      <header className="sticky top-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
+        <div className="w-full px-3 sm:px-4 lg:px-6">
+          <div className="flex h-14 sm:h-16 items-center justify-between">
+            <div className="flex items-center gap-2 sm:gap-4 lg:ml-16 min-w-0 flex-1">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                <Wallet className="h-6 w-6 sm:h-8 sm:w-8 text-foreground flex-shrink-0" />
+                <div className="min-w-0">
+                  <h1 className="text-sm sm:text-lg lg:text-xl font-bold text-foreground truncate">
                     Welcome back, {user?.name || 'User'}
                   </h1>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">
                     {new Date().toLocaleDateString('en-US', {
                       weekday: 'long',
                       year: 'numeric',
                       month: 'long',
+                      day: 'numeric'
+                    })}
+                  </p>
+                  <p className="text-xs text-muted-foreground sm:hidden">
+                    {new Date().toLocaleDateString('en-US', {
+                      month: 'short',
                       day: 'numeric'
                     })}
                   </p>
@@ -976,6 +983,11 @@ export function HomePageComponent() {
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
       />
+
+      {/* Mobile Navigation - Only show on mobile */}
+      <div className="lg:hidden">
+        <MobileNavigation onAddMoney={() => setShowDepositModal(true)} />
+      </div>
         </LayoutWrapper>
       </ResponsiveSidebarLayout>
     </SidebarProvider>

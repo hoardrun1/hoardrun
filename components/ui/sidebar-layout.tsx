@@ -177,7 +177,7 @@ export function ResponsiveSidebarLayout({ children, sidebar, className = '' }: S
                 duration: 0.3,
                 ease: [0.23, 1, 0.320, 1]
               }}
-              className="fixed left-0 top-0 h-full w-[280px] lg:w-[360px] z-50 lg:hidden"
+              className="fixed left-0 top-0 h-full w-[280px] sm:w-[320px] lg:w-[360px] z-50 lg:hidden overflow-y-auto"
             >
               {sidebar}
             </motion.div>

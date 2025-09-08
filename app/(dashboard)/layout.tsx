@@ -35,8 +35,11 @@ export default function DashboardLayout({
   // Skip loading check if bypassing auth in development
   if (loading && !(isDevelopment && bypassAuth)) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-t-2 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-sm text-muted-foreground">Loading...</p>
+        </div>
       </div>
     );
   }
@@ -44,9 +47,11 @@ export default function DashboardLayout({
   // If we're in development mode and bypassing auth, use the mock provider
   if (isDevelopment && bypassAuth) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen bg-background overflow-x-hidden">
         <MockFinanceProvider>
-          {children}
+          <div className="w-full max-w-full">
+            {children}
+          </div>
         </MockFinanceProvider>
         <Toaster />
       </div>
@@ -55,9 +60,11 @@ export default function DashboardLayout({
 
   // Otherwise, use the real provider
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       <FinanceProvider>
-        {children}
+        <div className="w-full max-w-full">
+          {children}
+        </div>
       </FinanceProvider>
       <Toaster />
     </div>

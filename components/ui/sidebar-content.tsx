@@ -125,7 +125,7 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
     // Use direct router.push for faster navigation
     router.push(href)
     // Close sidebar on mobile after navigation
-    if (window.innerWidth < 768) {
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
       setIsOpen(false)
     }
   }

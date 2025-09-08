@@ -406,14 +406,14 @@ export default function HomePage() {
               <div className="flex overflow-x-auto lg:justify-center gap-3 pb-2 px-1">
                 {[
                   { label: 'Send', href: '/send', icon: ArrowUpRight, color: 'bg-primary' },
-                  { label: 'Add Money', action: () => setIsDepositModalOpen(true), icon: ArrowDownLeft, color: 'bg-secondary' },
-                  { label: 'Cards', href: '/cards', icon: CreditCard, color: 'bg-muted' },
+                  { label: 'Add Money', action: () => setIsDepositModalOpen(true), icon: ArrowDownLeft, color: 'bg-black' },
+                  { label: 'Cards', href: '/cards', icon: CreditCard, color: 'bg-black' },
                   { label: 'Invest', href: '/investment', icon: TrendingUp, color: 'bg-accent' },
                   { label: 'Save', href: '/savings', icon: Target, color: 'bg-muted-foreground' }
                 ].map((action, index) => (
                   <Button
                     key={index}
-                    className={`${action.color} hover:bg-primary hover:opacity-90 text-primary-foreground border-0 min-w-[80px] h-16 flex flex-col items-center justify-center space-y-1 rounded-xl shadow-lg transition-all duration-200`}
+                    className={`${action.color} hover:bg-primary hover:opacity-90 ${action.color === 'bg-black' ? 'text-white' : 'text-primary-foreground'} border-0 min-w-[80px] h-16 flex flex-col items-center justify-center space-y-1 rounded-xl shadow-lg transition-all duration-200`}
                     onClick={() => handleQuickAction(action)}
                   >
                     <action.icon className="h-5 w-5" />

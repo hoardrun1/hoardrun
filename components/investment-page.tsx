@@ -372,11 +372,15 @@ export function InvestmentPage() {
       console.log('Found element:', element) // Debug log
       
       if (element) {
-        // Try a simpler approach first
-        element.scrollIntoView({ 
-          behavior: 'smooth', 
-          block: 'start',
-          inline: 'nearest'
+        // Get sticky header height to offset scroll position
+        const stickyHeader = document.querySelector('.sticky')
+        const headerHeight = stickyHeader ? stickyHeader.getBoundingClientRect().height : 0
+        const elementPosition = element.getBoundingClientRect().top + window.pageYOffset
+        const offsetPosition = elementPosition - headerHeight - 16 // 16px additional spacing
+
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth'
         })
         
         // Alternative method with manual calculation
@@ -517,7 +521,7 @@ export function InvestmentPage() {
         <SidebarToggle />
         <LayoutWrapper className="min-h-screen bg-background">
           {/* Sticky Quick Navigation - Mobile First */}
-          <div className="sticky top-0 z-50 bg-background border-b border-border">
+          <div className="sticky top-14 sm:top-16 z-40 bg-background border-b border-border">
             <div className="flex items-center justify-between p-2">
               <h1 className="text-xs sm:text-base font-bold text-foreground">Investments</h1>
               <Button
@@ -561,6 +565,9 @@ export function InvestmentPage() {
             </AnimatePresence>
           </div>
 
+          {/* Spacer to prevent sticky header overlap */}
+          <div className="h-4"></div>
+
           {/* Portfolio Overview Section */}
           <section id="overview" className="p-3 bg-primary text-primary-foreground">
             <div className="space-y-3">
@@ -582,7 +589,7 @@ export function InvestmentPage() {
                     size="sm"
                     onClick={() => router.push('/startupregistration')}
                     variant="outline"
-                    className="border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary text-xs sm:text-sm px-2 py-1 h-auto"
+                    className="border-primary-foreground/50 text-primary-foreground bg-transparent hover:bg-primary-foreground hover:text-primary text-xs sm:text-sm px-2 py-1 h-auto"
                   >
                     <Building2 className="w-3 h-3 mr-1" />
                     Register

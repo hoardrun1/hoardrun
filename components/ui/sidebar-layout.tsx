@@ -28,19 +28,23 @@ interface SidebarProviderProps {
 export function SidebarProvider({ children }: SidebarProviderProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [isLargeScreen, setIsLargeScreen] = useState(false)
+  const [userToggled, setUserToggled] = useState(false)
 
   // Check screen size and set sidebar state accordingly
   useEffect(() => {
     const checkScreenSize = () => {
       const isLg = window.innerWidth >= 1024 // lg breakpoint
       setIsLargeScreen(isLg)
-      
-      // On large screens, sidebar should be open by default
-      // On smaller screens, it should be closed by default
-      if (isLg) {
-        setIsOpen(true)
-      } else {
-        setIsOpen(false)
+
+      // Only auto-set sidebar state if user hasn't manually toggled it
+      if (!userToggled) {
+        // On large screens, sidebar should be open by default
+        // On smaller screens, it should be closed by default
+        if (isLg) {
+          setIsOpen(true)
+        } else {
+          setIsOpen(false)
+        }
       }
     }
 
@@ -50,14 +54,12 @@ export function SidebarProvider({ children }: SidebarProviderProps) {
     // Listen for resize events
     window.addEventListener('resize', checkScreenSize)
     return () => window.removeEventListener('resize', checkScreenSize)
-  }, [])
+  }, [userToggled])
 
   const toggle = () => {
-    // Only allow toggling on smaller screens
-    // On large screens, sidebar should remain fixed
-    if (!isLargeScreen) {
-      setIsOpen(!isOpen)
-    }
+    // Allow toggling on all screen sizes
+    setUserToggled(true)
+    setIsOpen(!isOpen)
   }
 
   return (
@@ -150,10 +152,23 @@ export function ResponsiveSidebarLayout({ children, sidebar, className = '' }: S
 
   return (
     <div className={`flex min-h-screen bg-white ${className}`}>
-      {/* Fixed Sidebar for Large Screens (lg+) */}
-      <div className="hidden lg:block w-[360px] h-screen fixed left-0 top-0 z-50">
-        {sidebar}
-      </div>
+      {/* Collapsible Sidebar for Large Screens (lg+) */}
+      <AnimatePresence>
+        {isOpen && isLargeScreen && (
+          <motion.div
+            initial={{ x: -360 }}
+            animate={{ x: 0 }}
+            exit={{ x: -360 }}
+            transition={{
+              duration: 0.3,
+              ease: [0.23, 1, 0.320, 1]
+            }}
+            className="hidden lg:block w-[360px] h-screen fixed left-0 top-0 z-50"
+          >
+            {sidebar}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Mobile/Tablet Sidebar Overlay */}
       <AnimatePresence>
@@ -186,9 +201,18 @@ export function ResponsiveSidebarLayout({ children, sidebar, className = '' }: S
       </AnimatePresence>
 
       {/* Main Content */}
-      <div className={`flex-1 min-w-0 relative ${isLargeScreen ? 'lg:ml-[360px]' : ''}`}>
+      <motion.div
+        className="flex-1 min-w-0 relative"
+        animate={{
+          marginLeft: isLargeScreen && isOpen ? 360 : 0
+        }}
+        transition={{
+          duration: 0.3,
+          ease: [0.23, 1, 0.320, 1]
+        }}
+      >
         {children}
-      </div>
+      </motion.div>
     </div>
   )
 }

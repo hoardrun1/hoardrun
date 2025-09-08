@@ -381,7 +381,7 @@ export function HomePageComponent() {
         <LayoutWrapper className="bg-background min-h-screen" showBreadcrumbs={false}>
 
       {/* Header */}
-      <header className="sticky top-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
+      <header className="sticky top-14 sm:top-16 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
         <div className="w-full px-3 sm:px-4 lg:px-6">
           <div className="flex h-14 sm:h-16 items-center justify-between">
             <div className="flex items-center gap-2 sm:gap-4 lg:ml-16 min-w-0 flex-1">
@@ -559,8 +559,8 @@ export function HomePageComponent() {
                 className="bg-card border-2 border-border p-4 rounded-2xl hover:shadow-lg transition-all duration-300 group hover:border-muted-foreground relative"
               >
                 <div className="flex flex-col items-center gap-3">
-                  <div className="bg-secondary p-3 rounded-xl group-hover:bg-secondary/80 transition-all duration-300 group-hover:scale-110">
-                    <item.icon className="h-5 w-5 text-foreground" />
+                  <div className={`${item.label === 'Cards' ? 'bg-black text-white' : 'bg-secondary text-foreground'} p-3 rounded-xl group-hover:bg-opacity-80 transition-all duration-300 group-hover:scale-110`}>
+                    <item.icon className="h-5 w-5" />
                   </div>
                   <span className="text-xs font-semibold text-foreground">{item.label}</span>
                   {item.hasNotification && notificationCount > 0 && (

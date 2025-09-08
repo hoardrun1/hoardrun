@@ -286,7 +286,7 @@ export function SendMoneyPage() {
         <LayoutWrapper>
           <div className="min-h-screen bg-background">
             {/* Header */}
-            <div className="sticky top-0 z-10 bg-background border-b border-border">
+            <div className="sticky top-14 sm:top-16 z-10 bg-background border-b border-border">
               <div className="max-w-md mx-auto px-4 py-4">
                 <div className="flex items-center gap-4">
                   <Button

@@ -118,7 +118,7 @@ export function CardsPageComponent() {
         <LayoutWrapper className="bg-gray-50 dark:bg-gray-950 min-h-screen pb-4 px-4 sm:pb-6 sm:px-6" showBreadcrumbs={false}>
 
       {/* Header */}
-      <header className={`sticky top-0 z-30 bg-background border-b border-border ${rs.padding}`}>
+      <header className={`sticky top-14 sm:top-16 z-30 bg-background border-b border-border ${rs.padding}`}>
         <div className={rs.container}>
           <div className={`${rs.flexBetween} py-4`}>
             <div className="flex items-center gap-2">

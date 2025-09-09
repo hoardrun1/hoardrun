@@ -686,8 +686,15 @@ export function InvestmentPage() {
                   key={category.id}
                   className="hover:shadow-md transition-shadow cursor-pointer bg-card border-border"
                   onClick={() => {
-                    setSelectedInvestment(category)
-                    setShowInvestModal(true)
+                    // Navigate to opportunities page for specific categories
+                    if (['private-equity', 'real-estate', 'bonds'].includes(category.id)) {
+                      const categoryParam = category.id === 'bonds' ? 'fixed-income' : category.id
+                      router.push(`/investment-opportunities?category=${categoryParam}`)
+                    } else {
+                      // Keep existing modal behavior for other categories
+                      setSelectedInvestment(category)
+                      setShowInvestModal(true)
+                    }
                   }}
                 >
                   <CardContent className="p-3">

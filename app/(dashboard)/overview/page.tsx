@@ -105,69 +105,34 @@ export default function OverviewPage() {
       try {
         setIsLoading(true);
         
-        // Mock data for now - replace with actual API calls
-        const mockSummary: FinancialSummary = {
-          totalBalance: 15750.25,
-          monthlyIncome: 4500.00,
-          monthlyExpenses: 2850.75,
-          savingsRate: 36.7,
+        // Empty data - should be populated from actual API calls
+        const emptySummary: FinancialSummary = {
+          totalBalance: 0,
+          monthlyIncome: 0,
+          monthlyExpenses: 0,
+          savingsRate: 0,
           changePercentages: {
-            balance: 5.2,
-            income: 2.1,
-            expenses: -1.8,
-            savings: 15.3,
+            balance: 0,
+            income: 0,
+            expenses: 0,
+            savings: 0,
           },
         };
 
-        const mockStats: OverviewStats = {
-          totalAssets: 25430.50,
-          totalSavings: 8750.25,
-          totalInvestments: 12500.00,
-          monthlySpending: 2850.75,
-          budgetUtilization: 78.5,
-          savingsGoalProgress: 65.2,
+        const emptyStats: OverviewStats = {
+          totalAssets: 0,
+          totalSavings: 0,
+          totalInvestments: 0,
+          monthlySpending: 0,
+          budgetUtilization: 0,
+          savingsGoalProgress: 0,
         };
 
-        const mockActivity: RecentActivity[] = [
-          {
-            id: '1',
-            type: 'transaction',
-            title: 'Grocery Shopping',
-            description: 'Whole Foods Market',
-            amount: -125.50,
-            date: '2024-01-15',
-            status: 'completed'
-          },
-          {
-            id: '2',
-            type: 'savings',
-            title: 'Emergency Fund',
-            description: 'Monthly contribution',
-            amount: 500.00,
-            date: '2024-01-14',
-            status: 'completed'
-          },
-          {
-            id: '3',
-            type: 'investment',
-            title: 'Portfolio Rebalance',
-            description: 'Quarterly adjustment',
-            date: '2024-01-13',
-            status: 'completed'
-          },
-          {
-            id: '4',
-            type: 'goal',
-            title: 'Vacation Fund',
-            description: 'Goal milestone reached',
-            date: '2024-01-12',
-            status: 'completed'
-          }
-        ];
+        const emptyActivity: RecentActivity[] = [];
 
-        setFinancialSummary(mockSummary);
-        setOverviewStats(mockStats);
-        setRecentActivity(mockActivity);
+        setFinancialSummary(emptySummary);
+        setOverviewStats(emptyStats);
+        setRecentActivity(emptyActivity);
       } catch (error) {
         console.error('Error fetching overview data:', error);
       } finally {
@@ -202,7 +167,7 @@ export default function OverviewPage() {
 
     setIsProcessingTransfer(true);
     try {
-      // Mock transfer processing - replace with actual API call
+      // Transfer processing - replace with actual API call
       await new Promise(resolve => setTimeout(resolve, 2000));
 
       addToast({
@@ -254,7 +219,7 @@ export default function OverviewPage() {
 
     setIsCreatingGoal(true);
     try {
-      // Mock goal creation - replace with actual API call
+      // Goal creation - replace with actual API call
       await new Promise(resolve => setTimeout(resolve, 1500));
 
       addToast({
@@ -354,8 +319,7 @@ export default function OverviewPage() {
           </div>
           <Button
             onClick={() => router.push('/home')}
-            className="w-full sm:w-auto"
-            className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-xs sm:text-sm px-2 py-1 h-auto"
+            className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-xs sm:text-sm px-2 py-1 h-auto"
           >
             <BarChart3 className="h-3 w-3 mr-1" />
             View Dashboard

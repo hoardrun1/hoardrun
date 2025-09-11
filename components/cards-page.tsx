@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { Plus, Home, BarChart2, CreditCard, PieChart, Settings, ChevronRight, Lock, Eye, EyeOff, Shield, AlertCircle } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Plus, Home, BarChart2, CreditCard, PieChart, Settings, ChevronRight, Lock, Eye, EyeOff, Shield, AlertCircle, Loader2 } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
@@ -18,6 +18,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { MastercardClient } from '@/lib/mastercard-client'
 import { COUNTRY_CODES, type CountryCode } from '@/lib/constants/country-codes';
 import { SectionFooter } from '@/components/ui/section-footer'
+import { apiClient, type PaymentMethod } from '@/lib/api-client'
 
 interface CardData {
   id: string
@@ -27,44 +28,134 @@ interface CardData {
   cardholderName: string
   isLocked: boolean
   isContactless: boolean
-  network: 'mastercard' | 'visa'
-  status: 'active' | 'inactive' | 'blocked'
+  network: 'mastercard' | 'visa' | 'american_express' | 'discover'
+  status: 'active' | 'inactive' | 'blocked' | 'locked' | 'frozen' | 'lost'
+}
+
+// Helper function to map backend payment method to frontend card data
+const mapPaymentMethodToCard = (paymentMethod: any): CardData | null => {
+  // Only process card payment methods
+  if (!['credit_card', 'debit_card'].includes(paymentMethod.type)) {
+    return null
+  }
+
+  // Extract last four digits from masked card number
+  const lastFourDigits = paymentMethod.card_number_masked?.slice(-4) || '0000'
+  
+  // Format expiry date
+  const expiryDate = paymentMethod.expiry_month && paymentMethod.expiry_year 
+    ? `${paymentMethod.expiry_month.toString().padStart(2, '0')}/${paymentMethod.expiry_year.toString().slice(-2)}`
+    : '00/00'
+
+  // Map card type to network
+  const networkMap: Record<string, 'mastercard' | 'visa' | 'american_express' | 'discover'> = {
+    'mastercard': 'mastercard',
+    'visa': 'visa',
+    'american_express': 'american_express',
+    'discover': 'discover'
+  }
+
+  // Determine if card is locked based on status
+  const isLocked = ['locked', 'frozen', 'blocked'].includes(paymentMethod.status)
+
+  return {
+    id: paymentMethod.id,
+    type: paymentMethod.type === 'credit_card' ? 'physical' : 'virtual', // Simplified mapping
+    lastFourDigits,
+    expiryDate,
+    cardholderName: paymentMethod.card_holder_name || 'Card Holder',
+    isLocked,
+    isContactless: true, // Default to true for now
+    network: networkMap[paymentMethod.card_type] || 'visa',
+    status: paymentMethod.status === 'active' ? 'active' : 
+            paymentMethod.status === 'inactive' ? 'inactive' : 'blocked'
+  }
 }
 
 export function CardsPageComponent() {
-  const [cards, setCards] = useState<CardData[]>([
-    {
-      id: '1',
-      type: 'physical',
-      lastFourDigits: '4567',
-      expiryDate: '12/25',
-      cardholderName: 'John Doe',
-      network: 'visa',
-      status: 'active',
-      isLocked: false,
-      isContactless: true
-    },
-    {
-      id: '2',
-      type: 'virtual',
-      lastFourDigits: '8901',
-      expiryDate: '06/24',
-      cardholderName: 'John Doe',
-      network: 'mastercard',
-      status: 'active',
-      isLocked: true,
-      isContactless: false
-    }
-  ])
-
+  const [cards, setCards] = useState<CardData[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [showCardDetails, setShowCardDetails] = useState<Record<string, boolean>>({})
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false)
   const { addToast } = useToast()
 
-  const toggleCardLock = (cardId: string) => {
-    setCards(cards.map(card =>
-      card.id === cardId ? { ...card, isLocked: !card.isLocked } : card
-    ))
+  // Fetch payment methods on component mount
+  useEffect(() => {
+    const fetchPaymentMethods = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        
+        const response = await apiClient.getPaymentMethods()
+        
+        if (response.error) {
+          throw new Error(response.error)
+        }
+
+        if (response.data) {
+          // The backend returns a PaginatedResponse structure
+          // The actual payment methods array is in response.data.data
+          const paymentMethods = Array.isArray(response.data) 
+            ? response.data 
+            : (response.data as any)?.data || []
+          
+          // Filter and map only card payment methods
+          const cardData = (paymentMethods as any[])
+            .map((paymentMethod: any) => mapPaymentMethodToCard(paymentMethod))
+            .filter((card): card is CardData => card !== null)
+          
+          setCards(cardData)
+        }
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load payment methods'
+        setError(errorMessage)
+        addToast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive",
+        })
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchPaymentMethods()
+  }, [addToast])
+
+  const toggleCardLock = async (cardId: string) => {
+    try {
+      const card = cards.find(c => c.id === cardId)
+      if (!card) return
+
+      const newStatus = card.isLocked ? 'active' : 'locked'
+      
+      const response = await apiClient.updatePaymentMethod(cardId, {
+        status: newStatus as any
+      })
+
+      if (response.error) {
+        throw new Error(response.error)
+      }
+
+      // Update local state
+      setCards(cards.map(c =>
+        c.id === cardId ? { ...c, isLocked: !c.isLocked, status: newStatus as any } : c
+      ))
+
+      addToast({
+        title: "Success",
+        description: `Card ${card.isLocked ? 'unlocked' : 'locked'} successfully`,
+        variant: "default",
+      })
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update card status'
+      addToast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      })
+    }
   }
 
   const toggleCardDetails = (cardId: string) => {
@@ -74,16 +165,39 @@ export function CardsPageComponent() {
     }))
   }
 
-  const toggleContactless = (cardId: string) => {
-    setCards(cards.map(card =>
-      card.id === cardId ? { ...card, isContactless: !card.isContactless } : card
-    ))
+  const toggleContactless = async (cardId: string) => {
+    try {
+      // For now, just update local state since contactless isn't in the backend model
+      // In a real implementation, this would be part of the card metadata
+      setCards(cards.map(card =>
+        card.id === cardId ? { ...card, isContactless: !card.isContactless } : card
+      ))
+
+      addToast({
+        title: "Success",
+        description: "Contactless setting updated",
+        variant: "default",
+      })
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update contactless setting'
+      addToast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      })
+    }
   }
 
   const handleIssueVirtualCard = async () => {
     try {
-      const user = await fetch('/api/user/profile').then(res => res.json());
-      const country = (user.country as CountryCode) || process.env.NEXT_PUBLIC_MASTERCARD_COUNTRY;
+      const userResponse = await apiClient.getProfile();
+      
+      if (userResponse.error) {
+        throw new Error(userResponse.error);
+      }
+
+      const user = userResponse.data;
+      const country = ((user as any)?.country as CountryCode) || process.env.NEXT_PUBLIC_MASTERCARD_COUNTRY;
 
       if (!(country in COUNTRY_CODES)) {
         throw new Error('Invalid country configuration');
@@ -124,7 +238,7 @@ export function CardsPageComponent() {
             <div className="flex items-center gap-2">
               <h1 className={`${rs.heading2} text-foreground font-bold`}>Cards</h1>
               <span className="px-3 py-1 text-xs font-semibold bg-primary text-primary-foreground rounded-full">
-                {cards.length} Active
+                {loading ? '...' : `${cards.filter(card => card.status === 'active').length} Active`}
               </span>
             </div>
             <div className="flex gap-2">
@@ -201,9 +315,69 @@ export function CardsPageComponent() {
       {/* Main Content */}
       <main className={`${rs.section} pb-24`}>
         <div className={`${rs.container} ${rs.sectionInner}`}>
-          <div className="grid gap-6">
-            <AnimatePresence>
-              {cards.map((card, index) => (
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <span className="ml-2 text-muted-foreground">Loading your cards...</span>
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <AlertCircle className="h-12 w-12 text-destructive mb-4" />
+              <h3 className="text-lg font-semibold text-foreground mb-2">Failed to load cards</h3>
+              <p className="text-muted-foreground mb-4">{error}</p>
+              <Button 
+                onClick={() => window.location.reload()} 
+                variant="outline"
+              >
+                Try Again
+              </Button>
+            </div>
+          ) : cards.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <CreditCard className="h-12 w-12 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold text-foreground mb-2">No cards found</h3>
+              <p className="text-muted-foreground mb-4">You don't have any cards yet. Add your first card to get started.</p>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" /> Add Card
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle className="font-bold">Request New Card</DialogTitle>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <Card className="cursor-pointer hover:border-primary transition-colors">
+                      <CardContent className="flex items-center p-6">
+                        <div className="mr-4">
+                          <CreditCard className="h-8 w-8 text-foreground" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-foreground">Physical Card</h3>
+                          <p className="text-sm text-muted-foreground">Get a physical card for in-person transactions</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <Card className="cursor-pointer hover:border-primary transition-colors">
+                      <CardContent className="flex items-center p-6">
+                        <div className="mr-4">
+                          <Shield className="h-8 w-8 text-foreground" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-foreground">Virtual Card</h3>
+                          <p className="text-sm text-muted-foreground">Create a virtual card for online purchases</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+          ) : (
+            <div className="grid gap-6">
+              <AnimatePresence>
+                {cards.map((card, index) => (
                 <motion.div
                   key={card.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -320,9 +494,10 @@ export function CardsPageComponent() {
                     </CardContent>
                   </Card>
                 </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
+                ))}
+              </AnimatePresence>
+            </div>
+          )}
         </div>
       </main>
 

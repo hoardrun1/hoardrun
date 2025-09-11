@@ -41,6 +41,31 @@ const FloatingCard: React.FC<{ children: React.ReactNode; className?: string }> 
 )
 
 const AnimatedBackground = () => {
+  const [isClient, setIsClient] = useState(false)
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  // Fixed positions for particles to avoid hydration mismatch
+  const particlePositions = [
+    { left: '10%', top: '20%' },
+    { left: '80%', top: '10%' },
+    { left: '20%', top: '80%' },
+    { left: '90%', top: '60%' },
+    { left: '5%', top: '50%' },
+    { left: '70%', top: '30%' },
+    { left: '40%', top: '90%' },
+    { left: '60%', top: '5%' },
+    { left: '30%', top: '70%' },
+    { left: '85%', top: '85%' },
+    { left: '15%', top: '40%' },
+    { left: '75%', top: '75%' },
+    { left: '45%', top: '15%' },
+    { left: '25%', top: '60%' },
+    { left: '95%', top: '40%' },
+  ]
+
   return (
     <div className="absolute inset-0 overflow-hidden">
       {/* Main background */}
@@ -74,23 +99,23 @@ const AnimatedBackground = () => {
           }}
         />
         
-        {/* Floating particles */}
-        {Array.from({ length: 15 }).map((_, i) => (
+        {/* Floating particles - only render on client to avoid hydration mismatch */}
+        {isClient && particlePositions.map((position, i) => (
           <motion.div
             key={i}
             className="absolute w-1 h-1 bg-white/40 rounded-full"
             style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
+              left: position.left,
+              top: position.top,
             }}
             animate={{
               y: [0, -30, 0],
               opacity: [0.2, 0.8, 0.2],
             }}
             transition={{
-              duration: 3 + Math.random() * 2,
+              duration: 3 + (i % 3),
               repeat: Number.POSITIVE_INFINITY,
-              delay: Math.random() * 5,
+              delay: i * 0.3,
             }}
           />
         ))}

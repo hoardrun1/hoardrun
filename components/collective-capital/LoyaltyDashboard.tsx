@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import {
   Award, Crown, Zap, Gift, Trophy,
   Target, TrendingUp, Coins,
-  Sparkles, Flame
+  Sparkles, Flame, Loader2
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -14,6 +14,8 @@ import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { LoyaltyBadge } from '@/types/collective-capital'
 import { cn } from '@/lib/utils'
+import { apiClient } from '@/lib/api-client'
+import { useToast } from "@/components/ui/use-toast"
 
 interface LoyaltyStats {
   totalPoints: number
@@ -43,6 +45,8 @@ export function LoyaltyDashboard() {
   const [rewards, setRewards] = useState<LoyaltyReward[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('overview')
+  const [error, setError] = useState<string | null>(null)
+  const { toast } = useToast()
 
   useEffect(() => {
     loadLoyaltyData()
@@ -51,108 +55,36 @@ export function LoyaltyDashboard() {
   const loadLoyaltyData = async () => {
     try {
       setIsLoading(true)
+      setError(null)
       
-      // Mock loyalty stats
-      const mockStats: LoyaltyStats = {
-        totalPoints: 2850,
-        currentLevel: 'Gold Investor',
-        nextLevel: 'Platinum Elite',
-        pointsToNextLevel: 1150,
-        totalBadges: 8,
-        circlesJoined: 5,
-        successfulInvestments: 12,
-        totalReturns: 18500
+      // TODO: Replace with actual API calls when loyalty endpoints are available
+      // For now, we'll simulate API calls that return empty data
+      const response = await new Promise(resolve => 
+        setTimeout(() => resolve({ data: [], success: true }), 500)
+      );
+      
+      const defaultStats: LoyaltyStats = {
+        totalPoints: 0,
+        currentLevel: 'Bronze',
+        nextLevel: 'Silver',
+        pointsToNextLevel: 100,
+        totalBadges: 0,
+        circlesJoined: 0,
+        successfulInvestments: 0,
+        totalReturns: 0
       }
 
-      // Mock badges
-      const mockBadges: LoyaltyBadge[] = [
-        {
-          id: '1',
-          name: 'First Circle',
-          description: 'Joined your first investment circle',
-          icon: '🎯',
-          color: 'blue',
-          earnedAt: new Date('2024-01-15'),
-          rarity: 'COMMON'
-        },
-        {
-          id: '2',
-          name: 'Green Investor',
-          description: 'Invested in 3 green technology circles',
-          icon: '🌱',
-          color: 'green',
-          earnedAt: new Date('2024-01-18'),
-          rarity: 'RARE'
-        },
-        {
-          id: '3',
-          name: 'Profit Master',
-          description: 'Achieved 20%+ returns on an investment',
-          icon: '💰',
-          color: 'yellow',
-          earnedAt: new Date('2024-01-20'),
-          rarity: 'EPIC'
-        },
-        {
-          id: '4',
-          name: 'Community Leader',
-          description: 'Created a successful investment circle',
-          icon: '👑',
-          color: 'purple',
-          earnedAt: new Date('2024-01-22'),
-          rarity: 'LEGENDARY'
-        }
-      ]
-
-      // Mock rewards
-      const mockRewards: LoyaltyReward[] = [
-        {
-          id: '1',
-          name: '5% Fee Discount',
-          description: 'Reduce transaction fees by 5% for 30 days',
-          pointsCost: 500,
-          type: 'DISCOUNT',
-          icon: '💸',
-          available: true,
-          claimed: false
-        },
-        {
-          id: '2',
-          name: 'Exclusive Circle Access',
-          description: 'Get early access to premium investment circles',
-          pointsCost: 1000,
-          type: 'EXCLUSIVE_ACCESS',
-          icon: '🔑',
-          available: true,
-          claimed: false
-        },
-        {
-          id: '3',
-          name: 'Investment Bonus',
-          description: 'Get 2% bonus on your next investment',
-          pointsCost: 750,
-          type: 'BONUS',
-          icon: '🎁',
-          available: true,
-          claimed: false
-        },
-        {
-          id: '4',
-          name: 'Cashback Reward',
-          description: '$50 cashback on investments over $5,000',
-          pointsCost: 2000,
-          type: 'CASHBACK',
-          icon: '💵',
-          available: false,
-          claimed: false
-        }
-      ]
-
-      setStats(mockStats)
-      setBadges(mockBadges)
-      setRewards(mockRewards)
-    } catch (error) {
-      console.error('Error loading loyalty data:', error)
+      setStats(defaultStats)
+      setBadges([])
+      setRewards([])
+    } catch (err) {
+      console.error('Error loading loyalty data:', err)
+      setError('Failed to load loyalty data')
+      toast({
+        title: "Error",
+        description: "Failed to load loyalty data. Please try again.",
+        variant: "destructive",
+      })
     } finally {
       setIsLoading(false)
     }

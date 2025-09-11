@@ -12,11 +12,21 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { type Beneficiary } from '@/services/transfer-service'
 import { TransferModal } from './transfer-modal'
 
+// Local interface for UI-specific properties
+interface UIBeneficiary {
+  id: string
+  name: string
+  accountNumber: string
+  bankName: string
+  avatar?: string
+  isFavorite: boolean
+  recentTransfer?: boolean
+}
+
 interface BeneficiaryCardProps {
-  beneficiary: Beneficiary
+  beneficiary: UIBeneficiary
   onFavorite: (id: string, favorite: boolean) => void
   onDelete: (id: string) => void
   onSuccess?: () => void
@@ -117,9 +127,19 @@ export function BeneficiaryCard({
       <TransferModal
         open={showTransferModal}
         onOpenChange={setShowTransferModal}
-        beneficiary={beneficiary}
+        beneficiary={{
+          id: beneficiary.id,
+          name: beneficiary.name,
+          account_number: beneficiary.accountNumber,
+          bank_name: beneficiary.bankName,
+          email: undefined,
+          phone_number: undefined,
+          is_active: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }}
         onSuccess={onSuccess}
       />
     </>
   )
-} 
+}

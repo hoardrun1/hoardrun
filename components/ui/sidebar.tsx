@@ -30,6 +30,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/contexts/AuthContext';
 import { navigation } from '@/lib/navigation';
+import { useNotificationCount } from '@/hooks/useNotificationCount';
 
 interface SidebarProps {
   className?: string;
@@ -60,7 +61,7 @@ const menuItems: MenuItem[] = [
   // Financial Features
   { id: 'savings', label: 'Savings Goals', icon: PiggyBank, href: '/savings', description: 'Manage your savings', category: 'financial' },
   { id: 'investments', label: 'Investments', icon: TrendingUp, href: '/investment', description: 'Grow your wealth', category: 'financial' },
-  { id: 'transfer', label: 'Money Transfer', icon: ArrowUpRight, href: '/transfer', description: 'Send & receive money', category: 'financial' },
+  { id: 'transfer', label: 'Money Transfer', icon: ArrowUpRight, href: '/send-money', description: 'Send & receive money', category: 'financial' },
   { id: 'cards', label: 'Cards', icon: CreditCard, href: '/cards', description: 'Manage your cards', category: 'financial' },
   { id: 'transactions', label: 'Transactions', icon: Receipt, href: '/transactions', description: 'View transaction history', category: 'financial' },
   { id: 'budget', label: 'Budget Planner', icon: Target, href: '/budget', description: 'Plan your expenses', category: 'financial' },
@@ -83,6 +84,7 @@ export function Sidebar({ className, onAddMoney }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, signOut } = useAuth();
+  const { unreadCount, isLoading: notificationLoading } = useNotificationCount();
 
   // Check if device is mobile
   useEffect(() => {
@@ -183,18 +185,24 @@ export function Sidebar({ className, onAddMoney }: SidebarProps) {
           {title}
         </h3>
         <div className="space-y-1">
-          {items.map((item) => (
-            <motion.button
-              key={item.id}
-              onClick={() => handleNavigation(item)}
-              className={`w-full flex items-center gap-4 px-4 py-3 text-left transition-all duration-300 group relative overflow-hidden ${
-                isActiveRoute(item.href)
-                  ? 'text-black bg-white/95 backdrop-blur-sm shadow-lg shadow-black/10'
-                  : 'text-gray-400 hover:text-white hover:bg-white/5'
-              }`}
-              whileHover={{ x: 2 }}
-              whileTap={{ scale: 0.995 }}
-            >
+          {items.map((item) => {
+            // Use real notification count for notifications item
+            const displayBadge = item.id === 'notifications' 
+              ? (unreadCount > 0 ? unreadCount.toString() : undefined)
+              : item.badge
+            
+            return (
+              <motion.button
+                key={item.id}
+                onClick={() => handleNavigation(item)}
+                className={`w-full flex items-center gap-4 px-4 py-3 text-left transition-all duration-300 group relative overflow-hidden ${
+                  isActiveRoute(item.href)
+                    ? 'text-black bg-white/95 backdrop-blur-sm shadow-lg shadow-black/10'
+                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                }`}
+                whileHover={{ x: 2 }}
+                whileTap={{ scale: 0.995 }}
+              >
               {/* Active indicator line */}
               {isActiveRoute(item.href) && (
                 <motion.div
@@ -221,7 +229,7 @@ export function Sidebar({ className, onAddMoney }: SidebarProps) {
                   }`}>
                     {item.label}
                   </span>
-                  {item.badge && (
+                  {displayBadge && (
                     <Badge 
                       className={`ml-2 text-[10px] font-bold px-2 py-0.5 transition-colors duration-300 ${
                         isActiveRoute(item.href)
@@ -229,7 +237,7 @@ export function Sidebar({ className, onAddMoney }: SidebarProps) {
                           : 'bg-gray-700 text-gray-300 group-hover:bg-gray-600 group-hover:text-white'
                       }`}
                     >
-                      {item.badge}
+                      {displayBadge}
                     </Badge>
                   )}
                 </div>
@@ -256,7 +264,8 @@ export function Sidebar({ className, onAddMoney }: SidebarProps) {
                 }`} />
               </motion.div>
             </motion.button>
-          ))}
+            )
+          })}
         </div>
       </div>
     );
@@ -356,10 +365,10 @@ export function Sidebar({ className, onAddMoney }: SidebarProps) {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-white font-bold text-base truncate">
-                      {user?.name || 'User'}
+                      {user?.name || 'Guest'}
                     </p>
                     <p className="text-gray-400 text-sm truncate font-medium">
-                      {user?.email || 'user@example.com'}
+                      {user?.email || 'Please sign in'}
                     </p>
                   </div>
                 </motion.div>
@@ -387,7 +396,7 @@ export function Sidebar({ className, onAddMoney }: SidebarProps) {
                     <Button
                       size="sm"
                       className="bg-gray-800/80 text-white hover:bg-gray-700 font-bold py-3 px-4 rounded-xl border border-gray-700 backdrop-blur-sm transition-all duration-300 hover:scale-105"
-                      onClick={() => handleNavigation({ id: 'transfer', label: 'Transfer', icon: ArrowUpRight, href: '/transfer', category: 'financial' })}
+                      onClick={() => handleNavigation({ id: 'transfer', label: 'Transfer', icon: ArrowUpRight, href: '/send-money', category: 'financial' })}
                     >
                       <ArrowUpRight className="h-4 w-4 mr-2" />
                       Transfer

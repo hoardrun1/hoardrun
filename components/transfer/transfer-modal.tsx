@@ -12,7 +12,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2, AlertCircle, Calendar, Send } from 'lucide-react'
 import { useToast } from "@/components/ui/use-toast"
 import { useFinance } from '@/contexts/FinanceContext'
-import { transferService, type Beneficiary } from '@/services/transfer-service'
+import { apiClient, Beneficiary } from '@/lib/api-client'
 
 interface TransferModalProps {
   open: boolean
@@ -54,8 +54,12 @@ export function TransferModal({
       try {
         const numericAmount = parseFloat(amount)
         if (!isNaN(numericAmount) && numericAmount > 0) {
-          const feeData = await transferService.calculateFee(numericAmount)
-          setFee(feeData)
+          const response = await apiClient.calculateTransferFee(numericAmount)
+          if (response.data) {
+            setFee(response.data)
+          } else {
+            setFee(null)
+          }
         } else {
           setFee(null)
         }
@@ -86,16 +90,16 @@ export function TransferModal({
         throw new Error('Insufficient balance to cover transfer fee')
       }
 
-      // Create transfer
-      await transferService.sendMoney({
+      const response = await apiClient.sendMoney({
+        beneficiary_id: beneficiary.id,
         amount: numericAmount,
-        description,
-        category,
-        beneficiaryId: beneficiary.id,
-        scheduledDate: isScheduled && scheduledDate ? scheduledDate : undefined,
-        isRecurring,
-        recurringFrequency: isRecurring ? recurringFrequency : undefined,
+        description: description || undefined,
+        category: category || undefined,
       })
+
+      if (response.error) {
+        throw new Error(response.error)
+      }
 
       toast({
         title: "Transfer Successful",
@@ -247,4 +251,4 @@ export function TransferModal({
       </DialogContent>
     </Dialog>
   )
-} 
+}

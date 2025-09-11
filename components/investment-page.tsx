@@ -35,6 +35,7 @@ import { useMarketData } from '@/hooks/useMarketData';
 import { useAuth } from '@/contexts/AuthContext';
 import { MarketQuote } from '@/types/market';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { apiClient } from '@/lib/api-client';
 import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sidebar-layout';
 import { SidebarContent } from '@/components/ui/sidebar-content';
 import { SidebarToggle } from '@/components/ui/sidebar-toggle';
@@ -102,14 +103,7 @@ interface Startup {
   }>
 }
 
-const performanceData = [
-  { month: 'Jan', value: 4000, profit: 2400 },
-  { month: 'Feb', value: 3000, profit: 1398 },
-  { month: 'Mar', value: 5000, profit: 3800 },
-  { month: 'Apr', value: 2780, profit: 3908 },
-  { month: 'May', value: 1890, profit: 4800 },
-  { month: 'Jun', value: 2390, profit: 3800 },
-]
+const performanceData: Array<{ month: string; value: number; profit: number }> = []
 
 const investmentCategories: InvestmentCategory[] = [
   {
@@ -226,21 +220,74 @@ export function InvestmentPage() {
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false)
   const [activeSection, setActiveSection] = useState('overview')
   const [showQuickNav, setShowQuickNav] = useState(false)
+  // Move startup-related state to the top to avoid conditional hooks
+  const [startups, setStartups] = useState<Startup[]>([])
+  const [loadingStartups, setLoadingStartups] = useState(false)
+  // Investment data state
+  const [investmentSummary, setInvestmentSummary] = useState<any>(null)
+  const [performanceSummary, setPerformanceSummary] = useState<any>(null)
+  const [portfolios, setPortfolios] = useState<any[]>([])
+  const [loadingInvestmentData, setLoadingInvestmentData] = useState(false)
+  const [performanceData, setPerformanceData] = useState<Array<{ month: string; value: number; profit: number }>>([])
 
   const router = useRouter()
   const { addToast } = useToast()
 
+  // Load investment data from API
+  useEffect(() => {
+    const loadInvestmentData = async () => {
+      try {
+        setLoadingInvestmentData(true)
+        
+        // Fetch investment data in parallel
+        const [summaryResponse, performanceResponse, portfoliosResponse] = await Promise.all([
+          apiClient.getInvestmentSummary(),
+          apiClient.getPerformanceSummary('6M'),
+          apiClient.getPortfolios()
+        ])
+
+        if (summaryResponse.data) {
+          setInvestmentSummary(summaryResponse.data)
+        }
+
+        if (performanceResponse.data) {
+          setPerformanceSummary(performanceResponse.data)
+          
+          // Transform performance data for chart
+          if (performanceResponse.data.historical_performance) {
+            const chartData = performanceResponse.data.historical_performance.map((item: any) => ({
+              month: new Date(item.date).toLocaleDateString('en-US', { month: 'short' }),
+              value: item.portfolio_value || 0,
+              profit: item.profit_loss || 0
+            }))
+            setPerformanceData(chartData)
+          }
+        }
+
+        if (portfoliosResponse.data) {
+          setPortfolios(portfoliosResponse.data)
+        }
+
+      } catch (error) {
+        console.error('Error loading investment data:', error)
+        addToast({
+          title: 'Error',
+          description: 'Failed to load investment data',
+          variant: 'destructive'
+        })
+      } finally {
+        setLoadingInvestmentData(false)
+      }
+    }
+
+    loadInvestmentData()
+  }, [addToast])
+
   // Use the finance context with proper error handling
   const financeContext = useFinance();
   const balance = financeContext?.balance || 25000; // Default investment balance
-  const depositFunds = financeContext?.depositFunds || (async (amount: number) => {
-    console.warn('Finance context not available, using mock deposit function');
-    addToast({ title: "Deposit", description: `Mock deposit of $${amount}` });
-  });
-  const withdrawFunds = financeContext?.withdrawFunds || (async (amount: number) => {
-    console.warn('Finance context not available, using mock withdraw function');
-    addToast({ title: "Withdraw", description: `Mock withdraw of $${amount}` });
-  });
+  const depositFunds = financeContext?.depositFunds;
+  const withdrawFunds = financeContext?.withdrawFunds;
 
   const { user, loading } = useAuth()
   const { fetchStockQuote, isLoading: marketDataLoading } = useMarketData()
@@ -332,13 +379,17 @@ export function InvestmentPage() {
       if (quote) {
         // Ensure the quote has all required MarketQuote properties
         const completeQuote: MarketQuote = {
-          ...quote,
+          symbol: quote.symbol,
+          price: quote.price,
+          change: quote.change,
+          changePercent: quote.changePercent,
+          volume: quote.volume || 1000000, // Default volume if not provided
+          marketCap: quote.marketCap || 0,
           high: quote.price * 1.05, // Mock high price
           low: quote.price * 0.95,  // Mock low price
           open: quote.price * 0.98, // Mock open price
           close: quote.price,       // Use current price as close
           timestamp: new Date(),    // Current timestamp
-          marketCap: quote.marketCap || 0
         }
         setMarketData(completeQuote)
       }
@@ -426,6 +477,30 @@ export function InvestmentPage() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [quickNavSections])
 
+  // Load startup data from API - moved before conditional return to avoid hooks violation
+  useEffect(() => {
+    const loadStartups = async () => {
+      try {
+        setLoadingStartups(true)
+        // TODO: Replace with actual API call when startup endpoints are available
+        // const response = await apiClient.getStartups()
+        // setStartups(response.data || [])
+        setStartups([]) // Empty for now until API is implemented
+      } catch (error) {
+        console.error('Failed to load startups:', error)
+        addToast({
+          title: 'Error',
+          description: 'Failed to load startup investments',
+          variant: 'destructive'
+        })
+      } finally {
+        setLoadingStartups(false)
+      }
+    }
+
+    loadStartups()
+  }, [addToast])
+
   // Show security verification first
   if (!securityChecks.isEmailVerified || !securityChecks.isIdentityVerified || !securityChecks.isInvestorVerified) {
     return (
@@ -472,46 +547,6 @@ export function InvestmentPage() {
       </div>
     )
   }
-
-  // Example startup data
-  const startups: Startup[] = [
-    {
-      id: '1',
-      companyName: 'TechVision AI',
-      companyType: 'Technology',
-      description: 'AI-powered analytics platform for enterprise decision making',
-      registrationNumber: 'REG123456789',
-      incorporationDate: '2023-01-15',
-      jurisdiction: 'United States',
-      valuation: 10000000,
-      annualRevenue: 2500000,
-      profitMargin: 25,
-      availablePercentage: 15,
-      missionStatement: 'Revolutionizing enterprise decision making through AI',
-      targetMarket: 'Enterprise businesses',
-      competitiveAdvantage: 'Proprietary AI algorithms and extensive data partnerships',
-      growthStrategy: 'Expand into new markets and develop additional AI solutions',
-      shareType: 'Preferred Shares',
-      sharesAvailable: 20000,
-      pricePerShare: 100,
-      fundraisingGoal: 2000000,
-      fundUse: 'Product development and market expansion',
-      progress: 65,
-      videoUrl: 'https://example.com/video',
-      risks: [
-        'Market competition',
-        'Technology evolution',
-        'Regulatory changes'
-      ],
-      testimonials: [
-        {
-          name: 'John Smith',
-          role: 'Early Investor',
-          comment: 'Outstanding team with a clear vision for the future'
-        }
-      ]
-    }
-  ]
 
   return (
     <SidebarProvider>
@@ -602,10 +637,27 @@ export function InvestmentPage() {
                 <Card className="bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground">
                   <CardContent className="p-2">
                     <div className="text-xs sm:text-sm text-primary-foreground/60">Portfolio</div>
-                    <div className="text-xs sm:text-base font-bold">$45,678</div>
+                    {loadingInvestmentData ? (
+                      <div className="text-xs sm:text-base font-bold">Loading...</div>
+                    ) : (
+                      <div className="text-xs sm:text-base font-bold">
+                        ${(investmentSummary?.total_portfolio_value || 0).toLocaleString()}
+                      </div>
+                    )}
                     <div className="flex items-center text-xs sm:text-sm text-green-400">
-                      <ArrowUpRight className="h-2 w-2 mr-1" />
-                      +12.5%
+                      {loadingInvestmentData ? (
+                        <span>--</span>
+                      ) : (
+                        <>
+                          {(performanceSummary?.total_return_percentage || 0) >= 0 ? (
+                            <ArrowUpRight className="h-2 w-2 mr-1" />
+                          ) : (
+                            <ArrowDownRight className="h-2 w-2 mr-1" />
+                          )}
+                          {(performanceSummary?.total_return_percentage || 0) >= 0 ? '+' : ''}
+                          {(performanceSummary?.total_return_percentage || 0).toFixed(1)}%
+                        </>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -613,10 +665,27 @@ export function InvestmentPage() {
                 <Card className="bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground">
                   <CardContent className="p-2">
                     <div className="text-xs sm:text-sm text-primary-foreground/60">Returns</div>
-                    <div className="text-xs sm:text-base font-bold">$5,432</div>
+                    {loadingInvestmentData ? (
+                      <div className="text-xs sm:text-base font-bold">Loading...</div>
+                    ) : (
+                      <div className="text-xs sm:text-base font-bold">
+                        ${(performanceSummary?.total_return_amount || 0).toLocaleString()}
+                      </div>
+                    )}
                     <div className="flex items-center text-xs sm:text-sm text-green-400">
-                      <ArrowUpRight className="h-2 w-2 mr-1" />
-                      +8.3%
+                      {loadingInvestmentData ? (
+                        <span>--</span>
+                      ) : (
+                        <>
+                          {(performanceSummary?.period_return_percentage || 0) >= 0 ? (
+                            <ArrowUpRight className="h-2 w-2 mr-1" />
+                          ) : (
+                            <ArrowDownRight className="h-2 w-2 mr-1" />
+                          )}
+                          {(performanceSummary?.period_return_percentage || 0) >= 0 ? '+' : ''}
+                          {(performanceSummary?.period_return_percentage || 0).toFixed(1)}%
+                        </>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -624,8 +693,16 @@ export function InvestmentPage() {
                 <Card className="bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground">
                   <CardContent className="p-2">
                     <div className="text-xs sm:text-sm text-primary-foreground/60">AI Score</div>
-                    <div className="text-xs sm:text-base font-bold">85/100</div>
-                    <div className="text-xs sm:text-sm text-primary-foreground/60">Optimized</div>
+                    {loadingInvestmentData ? (
+                      <div className="text-xs sm:text-base font-bold">Loading...</div>
+                    ) : (
+                      <div className="text-xs sm:text-base font-bold">
+                        {investmentSummary?.ai_optimization_score || 85}/100
+                      </div>
+                    )}
+                    <div className="text-xs sm:text-sm text-primary-foreground/60">
+                      {loadingInvestmentData ? '--' : (investmentSummary?.optimization_status || 'Optimized')}
+                    </div>
                   </CardContent>
                 </Card>
               </div>
@@ -743,49 +820,73 @@ export function InvestmentPage() {
               </Button>
             </div>
 
-            <div className="grid grid-cols-1 gap-3">
-              {startups.map((startup) => (
-                <Card key={startup.id} className="bg-card border-border">
-                  <CardContent className="p-3">
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <h4 className="text-xs sm:text-base font-medium text-foreground">{startup.companyName}</h4>
-                        <p className="text-xs sm:text-sm text-muted-foreground">{startup.companyType}</p>
-                      </div>
-                      <Badge variant="outline" className="border-border text-foreground text-xs sm:text-sm">
-                        {startup.progress}% funded
-                      </Badge>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-2 mb-2">
-                      <div>
-                        <span className="text-xs sm:text-sm text-muted-foreground">Valuation</span>
-                        <p className="text-xs sm:text-sm font-medium text-foreground">${(startup.valuation / 1000000).toFixed(1)}M</p>
-                      </div>
-                      <div>
-                        <span className="text-xs sm:text-sm text-muted-foreground">Min Investment</span>
-                        <p className="text-xs sm:text-sm font-medium text-foreground">${startup.pricePerShare}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="w-full bg-muted rounded-full h-1.5 mb-2">
-                      <div
-                        className="bg-primary h-1.5 rounded-full"
-                        style={{ width: `${startup.progress}%` }}
-                      />
-                    </div>
-                    
-                    <Button
-                      size="sm"
-                      className="w-full text-xs sm:text-sm py-1 h-auto"
-                      onClick={() => setShowStartupModal(true)}
-                    >
-                      View Details
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+              <div className="grid grid-cols-1 gap-3">
+                {loadingStartups ? (
+                  <div className="flex items-center justify-center p-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+                  </div>
+                ) : startups.length > 0 ? (
+                  startups.map((startup) => (
+                    <Card key={startup.id} className="bg-card border-border">
+                      <CardContent className="p-3">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <h4 className="text-xs sm:text-base font-medium text-foreground">{startup.companyName}</h4>
+                            <p className="text-xs sm:text-sm text-muted-foreground">{startup.companyType}</p>
+                          </div>
+                          <Badge variant="outline" className="border-border text-foreground text-xs sm:text-sm">
+                            {startup.progress}% funded
+                          </Badge>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-2 mb-2">
+                          <div>
+                            <span className="text-xs sm:text-sm text-muted-foreground">Valuation</span>
+                            <p className="text-xs sm:text-sm font-medium text-foreground">${(startup.valuation / 1000000).toFixed(1)}M</p>
+                          </div>
+                          <div>
+                            <span className="text-xs sm:text-sm text-muted-foreground">Min Investment</span>
+                            <p className="text-xs sm:text-sm font-medium text-foreground">${startup.pricePerShare}</p>
+                          </div>
+                        </div>
+                        
+                        <div className="w-full bg-muted rounded-full h-1.5 mb-2">
+                          <div
+                            className="bg-primary h-1.5 rounded-full"
+                            style={{ width: `${startup.progress}%` }}
+                          />
+                        </div>
+                        
+                        <Button
+                          size="sm"
+                          className="w-full text-xs sm:text-sm py-1 h-auto"
+                          onClick={() => setShowStartupModal(true)}
+                        >
+                          View Details
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : (
+                  <Card className="bg-card border-border">
+                    <CardContent className="p-6 text-center">
+                      <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <h4 className="text-sm font-medium text-foreground mb-2">No Startups Available</h4>
+                      <p className="text-xs text-muted-foreground mb-4">
+                        Check back later for new startup investment opportunities.
+                      </p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => router.push('/startupregistration')}
+                        className="text-xs"
+                      >
+                        Register Your Startup
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
           </section>
 
           {/* Collective Capital Circles Section */}

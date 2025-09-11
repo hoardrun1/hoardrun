@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import { 
   Brain, TrendingUp, AlertTriangle, Target, 
   Sparkles, ArrowRight, Eye, ThumbsUp, 
-  ThumbsDown, Clock, Zap, Shield, Star
+  ThumbsDown, Clock, Zap, Shield, Star, Loader2
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -14,11 +14,15 @@ import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AIRecommendation } from '@/types/collective-capital'
 import { cn } from '@/lib/utils'
+import { apiClient } from '@/lib/api-client'
+import { useToast } from "@/components/ui/use-toast"
 
 export function AIRecommendationsPanel() {
   const [recommendations, setRecommendations] = useState<AIRecommendation[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('all')
+  const [error, setError] = useState<string | null>(null)
+  const { toast } = useToast()
 
   useEffect(() => {
     loadRecommendations()
@@ -27,70 +31,23 @@ export function AIRecommendationsPanel() {
   const loadRecommendations = async () => {
     try {
       setIsLoading(true)
-      // Mock AI recommendations
-      const mockRecommendations: AIRecommendation[] = [
-        {
-          id: '1',
-          type: 'INVESTMENT_OPPORTUNITY',
-          title: 'High-Growth Green Tech Circle Opportunity',
-          description: 'Based on your investment history and market trends, joining "Solar Innovators" circle could yield 22-28% returns. The circle focuses on emerging solar technology companies with strong fundamentals.',
-          confidence: 87,
-          category: 'GREEN_TECH',
-          priority: 'HIGH',
-          actionRequired: true,
-          createdAt: new Date('2024-01-22T10:00:00Z'),
-          expiresAt: new Date('2024-01-29T10:00:00Z')
-        },
-        {
-          id: '2',
-          type: 'RISK_WARNING',
-          title: 'Crypto Market Volatility Alert',
-          description: 'Current crypto circles show increased volatility. Consider reducing exposure or diversifying into more stable asset classes. Market indicators suggest a potential 15-20% correction.',
-          confidence: 92,
-          category: 'CRYPTO',
-          priority: 'URGENT',
-          actionRequired: true,
-          createdAt: new Date('2024-01-22T08:30:00Z'),
-          expiresAt: new Date('2024-01-24T08:30:00Z')
-        },
-        {
-          id: '3',
-          type: 'PORTFOLIO_OPTIMIZATION',
-          title: 'Diversification Opportunity',
-          description: 'Your current portfolio is 70% tech-focused. Adding healthcare or real estate circles could reduce risk by 12% while maintaining similar returns.',
-          confidence: 78,
-          category: 'HEALTHCARE',
-          priority: 'MEDIUM',
-          actionRequired: false,
-          createdAt: new Date('2024-01-21T15:20:00Z')
-        },
-        {
-          id: '4',
-          type: 'MARKET_INSIGHT',
-          title: 'AI Sector Momentum Building',
-          description: 'AI and robotics sectors showing strong momentum. Consider increasing allocation to AI-focused circles. Expected 18-25% growth over next 6 months.',
-          confidence: 84,
-          category: 'AI_TECH',
-          priority: 'HIGH',
-          actionRequired: false,
-          createdAt: new Date('2024-01-21T12:00:00Z')
-        },
-        {
-          id: '5',
-          type: 'INVESTMENT_OPPORTUNITY',
-          title: 'Undervalued Real Estate Circle',
-          description: 'Property Pioneers circle is currently undervalued with strong fundamentals. Market analysis suggests 15-20% upside potential in Q2 2024.',
-          confidence: 73,
-          category: 'REAL_ESTATE',
-          priority: 'MEDIUM',
-          actionRequired: false,
-          createdAt: new Date('2024-01-20T14:45:00Z')
-        }
-      ]
+      setError(null)
       
-      setRecommendations(mockRecommendations)
-    } catch (error) {
-      console.error('Error loading AI recommendations:', error)
+      // TODO: Replace with actual API call when AI recommendations endpoints are available
+      // For now, we'll simulate an API call that returns empty data
+      const response = await new Promise(resolve => 
+        setTimeout(() => resolve({ data: [], success: true }), 500)
+      );
+      
+      setRecommendations([])
+    } catch (err) {
+      console.error('Error loading AI recommendations:', err)
+      setError('Failed to load AI recommendations')
+      toast({
+        title: "Error",
+        description: "Failed to load AI recommendations. Please try again.",
+        variant: "destructive",
+      })
     } finally {
       setIsLoading(false)
     }

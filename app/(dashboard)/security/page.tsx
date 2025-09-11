@@ -1,7 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTheme } from '@/contexts/ThemeContext'
+import { useAuth } from '@/contexts/AuthContext'
+import { apiClient } from '@/lib/api-client'
 import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sidebar-layout'
 import { SidebarContent } from '@/components/ui/sidebar-content'
 import { SidebarToggle } from '@/components/ui/sidebar-toggle'
@@ -30,71 +32,96 @@ import {
 } from 'lucide-react'
 import { SectionFooter } from '@/components/ui/section-footer'
 
-// Mock security data
-const loginSessions = [
-  {
-    id: '1',
-    device: 'MacBook Pro',
-    location: 'New York, NY',
-    lastActive: '2024-01-15 14:30',
-    current: true
-  },
-  {
-    id: '2',
-    device: 'iPhone 15',
-    location: 'New York, NY',
-    lastActive: '2024-01-15 12:15',
-    current: false
-  },
-  {
-    id: '3',
-    device: 'Chrome Browser',
-    location: 'Boston, MA',
-    lastActive: '2024-01-14 09:45',
-    current: false
-  }
-]
-
-const securityEvents = [
-  {
-    id: '1',
-    type: 'login',
-    description: 'Successful login from MacBook Pro',
-    timestamp: '2024-01-15 14:30',
-    status: 'success'
-  },
-  {
-    id: '2',
-    type: 'password_change',
-    description: 'Password changed successfully',
-    timestamp: '2024-01-10 16:20',
-    status: 'success'
-  },
-  {
-    id: '3',
-    type: 'failed_login',
-    description: 'Failed login attempt from unknown device',
-    timestamp: '2024-01-08 22:15',
-    status: 'warning'
-  }
-]
-
 export default function SecurityPage() {
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false)
   const [showCurrentPassword, setShowCurrentPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
-  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [userSettings, setUserSettings] = useState<any>(null)
+  const [securityEvents, setSecurityEvents] = useState<any[]>([])
   const [passwordData, setPasswordData] = useState({
     current: '',
     new: '',
     confirm: ''
   })
-  const { addToast } = useToast()
+  const { toast } = useToast()
   const { theme } = useTheme()
+  const { user } = useAuth()
 
-  const handlePasswordChange = () => {
+  // Mock login sessions data (this would come from a sessions API in a real app)
+  const loginSessions = [
+    {
+      id: '1',
+      device: 'MacBook Pro',
+      location: 'New York, NY',
+      lastActive: '2024-01-15 14:30',
+      current: true
+    },
+    {
+      id: '2',
+      device: 'iPhone 15',
+      location: 'New York, NY',
+      lastActive: '2024-01-15 12:15',
+      current: false
+    },
+    {
+      id: '3',
+      device: 'Chrome Browser',
+      location: 'Boston, MA',
+      lastActive: '2024-01-14 09:45',
+      current: false
+    }
+  ]
+
+  // Fetch user settings and security data on component mount
+  useEffect(() => {
+    const fetchSecurityData = async () => {
+      try {
+        setIsLoading(true)
+        
+        // Fetch user settings for 2FA status
+        const settingsResponse = await apiClient.getUserSettings()
+        if (settingsResponse.data && settingsResponse.data.success && settingsResponse.data.data) {
+          setUserSettings(settingsResponse.data.data.settings)
+        } else {
+          // Set default settings if none exist
+          setUserSettings({
+            two_factor_enabled: false,
+            email_notifications: true,
+            sms_notifications: true
+          })
+        }
+
+        // Fetch audit logs for security activity
+        const auditResponse = await apiClient.getAuditLogs({
+          limit: 10,
+          page: 1
+        })
+        
+        if (auditResponse.data && auditResponse.data.data) {
+          setSecurityEvents(auditResponse.data.data || [])
+        }
+      } catch (error) {
+        console.error('Error fetching security data:', error)
+        toast({
+          title: "Error loading security data",
+          description: "Failed to load your security settings. Please try again.",
+          variant: "destructive",
+        })
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    if (user) {
+      fetchSecurityData()
+    }
+  }, [user, toast])
+
+  const handlePasswordChange = async () => {
     if (passwordData.new !== passwordData.confirm) {
-      addToast({
+      toast({
         title: "Error",
         description: "New passwords don't match.",
         variant: "destructive"
@@ -102,27 +129,92 @@ export default function SecurityPage() {
       return
     }
 
-    // Here you would typically call an API
-    addToast({
-      title: "Password Updated",
-      description: "Your password has been changed successfully.",
-    })
-    
-    setPasswordData({ current: '', new: '', confirm: '' })
+    if (passwordData.new.length < 8) {
+      toast({
+        title: "Password too short",
+        description: "Password must be at least 8 characters long.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      setIsSaving(true)
+      const response = await apiClient.changePassword({
+        current_password: passwordData.current,
+        new_password: passwordData.new
+      })
+      
+      if (response.error) {
+        throw new Error(response.error)
+      }
+
+      setPasswordData({ current: '', new: '', confirm: '' })
+      toast({
+        title: "Password Updated",
+        description: "Your password has been changed successfully.",
+      })
+
+      // Log the password change event
+      await apiClient.createAuditLog({
+        event_type: 'password_change',
+        description: 'Password changed successfully',
+        metadata: { source: 'security_page' }
+      })
+    } catch (error: any) {
+      console.error('Error changing password:', error)
+      toast({
+        title: "Error changing password",
+        description: error.message || "Please try again later.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSaving(false)
+    }
   }
 
-  const handleTwoFactorToggle = (enabled: boolean) => {
-    setTwoFactorEnabled(enabled)
-    addToast({
-      title: enabled ? "2FA Enabled" : "2FA Disabled",
-      description: enabled 
-        ? "Two-factor authentication has been enabled for your account."
-        : "Two-factor authentication has been disabled.",
-    })
+  const handleTwoFactorToggle = async (enabled: boolean) => {
+    try {
+      setIsSaving(true)
+      const response = await apiClient.updateUserSettings({ 
+        two_factor_enabled: enabled 
+      })
+      
+      if (response.error) {
+        throw new Error(response.error)
+      }
+
+      if (response.data && response.data.success && response.data.data) {
+        setUserSettings(response.data.data.settings)
+        toast({
+          title: enabled ? "2FA Enabled" : "2FA Disabled",
+          description: enabled 
+            ? "Two-factor authentication has been enabled for your account."
+            : "Two-factor authentication has been disabled.",
+        })
+
+        // Log the 2FA change event
+        await apiClient.createAuditLog({
+          event_type: enabled ? '2fa_enabled' : '2fa_disabled',
+          description: `Two-factor authentication ${enabled ? 'enabled' : 'disabled'}`,
+          metadata: { source: 'security_page' }
+        })
+      }
+    } catch (error: any) {
+      console.error('Error updating 2FA:', error)
+      toast({
+        title: "Error updating 2FA",
+        description: error.message || "Please try again later.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const terminateSession = (sessionId: string) => {
-    addToast({
+    // This would call a real API to terminate the session
+    toast({
       title: "Session Terminated",
       description: "The selected session has been terminated.",
     })
@@ -160,13 +252,13 @@ export default function SecurityPage() {
                     <span className="text-sm font-medium text-foreground">Account Verified</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    {twoFactorEnabled ? (
+                    {userSettings?.two_factor_enabled ? (
                       <CheckCircle className="h-5 w-5 text-foreground" />
                     ) : (
                       <AlertTriangle className="h-5 w-5 text-muted-foreground" />
                     )}
                     <span className="text-sm font-medium text-foreground">
-                      Two-Factor Authentication {twoFactorEnabled ? 'Enabled' : 'Disabled'}
+                      Two-Factor Authentication {userSettings?.two_factor_enabled ? 'Enabled' : 'Disabled'}
                     </span>
                   </div>
                   <Badge variant="secondary" className="bg-muted text-foreground">
@@ -281,11 +373,11 @@ export default function SecurityPage() {
                         </div>
                       </div>
                       <Switch
-                        checked={twoFactorEnabled}
+                        checked={userSettings?.two_factor_enabled || false}
                         onCheckedChange={handleTwoFactorToggle}
                       />
                     </div>
-                    {twoFactorEnabled && (
+                    {userSettings?.two_factor_enabled && (
                       <div className="p-4 bg-muted/50 rounded-lg">
                         <p className="text-sm text-muted-foreground">
                           Two-factor authentication is enabled. You'll need to enter a code from your authenticator app when signing in.

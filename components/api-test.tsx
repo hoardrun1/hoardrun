@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Button } from "@/components/ui/button"
+import { apiClient } from '@/lib/api-client'
 
 export function ApiTest() {
   const [result, setResult] = useState<string>('')
@@ -12,15 +13,12 @@ export function ApiTest() {
     setIsLoading(true)
     setError(null)
     try {
-      const response = await fetch('/api/test')
-      const contentType = response.headers.get('content-type')
-      
-      if (contentType && contentType.includes('application/json')) {
-        const data = await response.json()
-        setResult(JSON.stringify(data, null, 2))
+      // Test getting user profile as a basic API test
+      const response = await apiClient.getProfile()
+      if (response.error) {
+        setResult(`API Error: ${response.error}`)
       } else {
-        const text = await response.text()
-        setResult(`Non-JSON response: ${text.substring(0, 100)}...`)
+        setResult(JSON.stringify(response.data, null, 2))
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error')
@@ -33,20 +31,17 @@ export function ApiTest() {
     setIsLoading(true)
     setError(null)
     try {
-      const response = await fetch('/api/test', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ test: true, time: new Date().toISOString() })
+      // Test creating a transaction as a POST operation test
+      const response = await apiClient.createTransaction({
+        type: 'expense',
+        amount: 10.00,
+        description: 'API Test Transaction',
+        category: 'testing'
       })
-      
-      const contentType = response.headers.get('content-type')
-      
-      if (contentType && contentType.includes('application/json')) {
-        const data = await response.json()
-        setResult(JSON.stringify(data, null, 2))
+      if (response.error) {
+        setResult(`API Error: ${response.error}`)
       } else {
-        const text = await response.text()
-        setResult(`Non-JSON response: ${text.substring(0, 100)}...`)
+        setResult(JSON.stringify(response.data, null, 2))
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error')
@@ -55,30 +50,16 @@ export function ApiTest() {
     }
   }
 
-  const testSignup = async () => {
+  const testAuth = async () => {
     setIsLoading(true)
     setError(null)
     try {
-      const response = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: 'Test User',
-          email: 'test@example.com',
-          password: 'password123'
-        })
-      })
-      
-      const contentType = response.headers.get('content-type')
-      console.log('Response status:', response.status)
-      console.log('Content type:', contentType)
-      
-      if (contentType && contentType.includes('application/json')) {
-        const data = await response.json()
-        setResult(JSON.stringify(data, null, 2))
+      // Test authentication by getting dashboard data
+      const response = await apiClient.getDashboard()
+      if (response.error) {
+        setResult(`API Error: ${response.error}`)
       } else {
-        const text = await response.text()
-        setResult(`Non-JSON response: ${text.substring(0, 500)}...`)
+        setResult(JSON.stringify(response.data, null, 2))
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error')
@@ -94,15 +75,15 @@ export function ApiTest() {
       <div className="space-y-4">
         <div className="flex space-x-4">
           <Button onClick={testGet} disabled={isLoading}>
-            Test GET /api/test
+            Test GET Profile
           </Button>
           
           <Button onClick={testPost} disabled={isLoading}>
-            Test POST /api/test
+            Test POST Transaction
           </Button>
           
-          <Button onClick={testSignup} disabled={isLoading}>
-            Test POST /api/auth/signup
+          <Button onClick={testAuth} disabled={isLoading}>
+            Test Dashboard Auth
           </Button>
         </div>
         

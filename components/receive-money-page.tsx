@@ -36,6 +36,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ui/use-toast'
 import { Loader2 } from 'lucide-react'
 import { VisaClient } from '@/lib/visa-client'
+import { apiClient } from '@/lib/api-client'
 
 const banks = ['GCB Bank', 'Ecobank', 'Fidelity Bank', 'Zenith Bank', 'Stanbic Bank']
 const mobileWallets = ['MTN Mobile Money', 'Vodafone Cash', 'AirtelTigo Money']
@@ -114,23 +115,16 @@ export function ReceiveMoneyPageComponent() {
 
     setIsGeneratingLink(true)
     try {
-      const response = await fetch('/api/payments/momo/receive', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          amount: parseFloat(amount),
-          phone: momoPhone,
-          userId: user?.id,
-        }),
+      const response = await apiClient.createTransaction({
+        type: 'income',
+        amount: parseFloat(amount),
+        description: `Mobile money payment from ${momoPhone}`,
+        category: 'mobile_money'
       })
 
-      if (!response.ok) {
-        throw new Error('Failed to generate payment link')
+      if (response.error) {
+        throw new Error(response.error)
       }
-
-      const data = await response.json()
       
       toast({
         title: "Success",
@@ -143,7 +137,7 @@ export function ReceiveMoneyPageComponent() {
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to generate payment link",
+        description: error instanceof Error ? error.message : "Failed to generate payment link",
         variant: "destructive",
       })
     } finally {
@@ -163,28 +157,29 @@ export function ReceiveMoneyPageComponent() {
 
     setIsGeneratingCardLink(true);
     try {
-      const response = await fetch('/api/payments/mastercard/link', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          amount: parseFloat(amount),
-          currency: 'EUR',
-          description: 'Payment request'
-        }),
+      const response = await apiClient.createTransaction({
+        type: 'income',
+        amount: parseFloat(amount),
+        description: 'Payment request via card',
+        category: 'payment_link'
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to generate payment link');
+      if (response.error) {
+        throw new Error(response.error);
       }
 
-      const { paymentUrl } = await response.json();
+      // Generate a mock payment URL for demonstration
+      const paymentUrl = `${window.location.origin}/payment/${response.data?.id}`;
       setPaymentLink(paymentUrl);
+      
+      toast({
+        title: "Success",
+        description: "Payment link generated successfully",
+      });
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to generate payment link",
+        description: error instanceof Error ? error.message : "Failed to generate payment link",
         variant: "destructive",
       });
     } finally {
@@ -210,7 +205,7 @@ export function ReceiveMoneyPageComponent() {
       });
 
       const response = await visaClient.initiateDeposit({
-        userId: 'mock-user-id', // In real app, get from auth context
+        userId: user?.id || '', // Get from auth context
         amount: parseFloat(amount),
         currency: 'EUR',
         cardNumber: visaCardNumber,
@@ -220,7 +215,14 @@ export function ReceiveMoneyPageComponent() {
         description: 'Visa deposit'
       });
 
-      // Update user's balance
+      // Create a deposit transaction record
+      await apiClient.createTransaction({
+        type: 'income',
+        amount: parseFloat(amount),
+        description: 'Visa deposit',
+        category: 'deposit'
+      });
+
       await fetch('/api/user/balance/update', {
         method: 'POST',
         headers: {

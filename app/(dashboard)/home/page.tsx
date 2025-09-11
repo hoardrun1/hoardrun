@@ -12,6 +12,7 @@ import { DepositModal } from '@/components/deposit-modal'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { useNotifications } from '@/contexts/NotificationContext'
+import { apiClient, DashboardData, Transaction } from '@/lib/api-client'
 import {
   DollarSign,
   TrendingUp,
@@ -33,6 +34,9 @@ export default function HomePage() {
   const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false)
   const [showWelcomeAnimation, setShowWelcomeAnimation] = useState(true)
   const [hasSeenWelcome, setHasSeenWelcome] = useState(false)
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   // Check if user has already seen the welcome animation (persists across refreshes)
   useEffect(() => {
@@ -52,22 +56,44 @@ export default function HomePage() {
     }
   }, [])
 
-  // Mock data for the dashboard
+  // Fetch dashboard data from API
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setIsLoading(true)
+        setError(null)
+        
+        const response = await apiClient.getDashboard()
+        
+        if (response.error) {
+          throw new Error(response.error)
+        }
+        
+        if (response.data) {
+          setDashboardData(response.data)
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch dashboard data')
+        console.error('Dashboard fetch error:', err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchDashboardData()
+  }, [])
+
+  // Use API data or fallback to empty values
   const stats = {
-    totalBalance: 12450.75,
-    monthlyIncome: 5200.00,
-    monthlyExpenses: 3150.25,
-    savings: 8750.50,
-    investments: 15200.30,
-    creditScore: 742
+    totalBalance: dashboardData?.balance || 0,
+    monthlyIncome: dashboardData?.total_income || 0,
+    monthlyExpenses: dashboardData?.total_expenses || 0,
+    savings: dashboardData?.savings_goals?.reduce((total, goal) => total + (goal.current_amount || 0), 0) || 0,
+    investments: dashboardData?.investments?.reduce((total, inv) => total + inv.amount, 0) || 0,
+    creditScore: 750 // This would come from a separate API call
   }
 
-  const recentTransactions = [
-    { id: 1, type: 'income', description: 'Salary Deposit', amount: 5200.00, date: '2024-01-15' },
-    { id: 2, type: 'expense', description: 'Grocery Shopping', amount: -120.50, date: '2024-01-14' },
-    { id: 3, type: 'expense', description: 'Gas Station', amount: -45.00, date: '2024-01-13' },
-    { id: 4, type: 'income', description: 'Freelance Payment', amount: 800.00, date: '2024-01-12' }
-  ]
+  const recentTransactions: Transaction[] = dashboardData?.recent_transactions || []
 
   const handleQuickAction = (action: { href?: string; action?: () => void }) => {
     if (action.href) {
@@ -77,39 +103,9 @@ export default function HomePage() {
     }
   }
 
-  // Demo function to test notifications
+  // Empty function - notifications should come from real data
   const testNotifications = () => {
-    const notifications = [
-      {
-        type: 'transaction' as const,
-        title: 'Payment Received',
-        message: 'You received $500.00 from Sarah Johnson'
-      },
-      {
-        type: 'warning' as const,
-        title: 'Budget Alert',
-        message: 'You\'ve exceeded your monthly dining budget by $50'
-      },
-      {
-        type: 'success' as const,
-        title: 'Goal Achieved',
-        message: 'Congratulations! You\'ve reached your vacation savings goal'
-      },
-      {
-        type: 'security' as const,
-        title: 'Security Alert',
-        message: 'New login detected from iPhone in New York'
-      },
-      {
-        type: 'info' as const,
-        title: 'Investment Update',
-        message: 'Your portfolio gained 3.2% this week'
-      }
-    ]
-
-    // Pick a random notification
-    const randomNotification = notifications[Math.floor(Math.random() * notifications.length)]
-    addNotification(randomNotification)
+    // No demo notifications
   }
 
   const quickActions = [
@@ -521,18 +517,14 @@ export default function HomePage() {
                 </CardHeader>
                 <CardContent className="p-2 sm:p-3">
                   <div className="space-y-2 sm:space-y-3">
-                    {recentTransactions.map((transaction) => (
+                    {recentTransactions.length > 0 ? recentTransactions.map((transaction) => (
                       <div
                         key={transaction.id}
                         className="flex items-center justify-between p-2 sm:p-3 border border-border rounded-lg bg-card shadow-sm hover:shadow-md transition-all duration-200"
                       >
                         <div className="flex items-center space-x-3 sm:space-x-4 flex-1 min-w-0">
-                          <div className={`p-2 sm:p-3 rounded-full ${
-                            transaction.type === 'income'
-                              ? 'bg-secondary border border-border'
-                              : 'bg-secondary border border-border'
-                          }`}>
-                            {transaction.type === 'income' ? (
+                          <div className={`p-2 sm:p-3 rounded-full bg-secondary border border-border`}>
+                            {transaction.type === 'DEPOSIT' ? (
                               <ArrowDownLeft className="h-4 w-4 sm:h-5 sm:w-5 text-foreground" />
                             ) : (
                               <ArrowUpRight className="h-4 w-4 sm:h-5 sm:w-5 text-foreground" />
@@ -540,16 +532,19 @@ export default function HomePage() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="font-semibold text-foreground text-sm sm:text-base truncate">{transaction.description}</p>
-                            <p className="text-xs sm:text-sm text-muted-foreground">{transaction.date}</p>
+                            <p className="text-xs sm:text-sm text-muted-foreground">{new Date(transaction.date).toLocaleDateString()}</p>
                           </div>
                         </div>
-                        <div className={`font-bold text-sm sm:text-base ${
-                          transaction.type === 'income' ? 'text-foreground' : 'text-foreground'
-                        } ml-2`}>
-                          {transaction.type === 'income' ? '+' : ''}${Math.abs(transaction.amount).toLocaleString()}
+                        <div className={`font-bold text-sm sm:text-base text-foreground ml-2`}>
+                          {transaction.type === 'DEPOSIT' ? '+' : '-'}${Math.abs(transaction.amount).toLocaleString()}
                         </div>
                       </div>
-                    ))}
+                    )) : (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <p>No recent transactions</p>
+                        <p className="text-sm">Your transactions will appear here</p>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>

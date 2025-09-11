@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ui/use-toast'
-import { useSavings } from '@/hooks/useSavings'
+import { useSavingsGoals } from '@/hooks/useSavingsGoals'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -46,9 +46,8 @@ export default function SavingsPage() {
     error,
     fetchSavingsGoals,
     createSavingsGoal,
-    calculateTotalSavings,
     calculateProgress
-  } = useSavings()
+  } = useSavingsGoals()
 
   const [analytics, setAnalytics] = useState<SavingsAnalytics>({
     totalSavings: 0,
@@ -85,8 +84,8 @@ export default function SavingsPage() {
   // Calculate analytics when savings goals change
   useEffect(() => {
     if (savingsGoals.length > 0) {
-      const totalSavings = calculateTotalSavings()
-      const monthlyGrowth = savingsGoals.reduce((sum, goal) => sum + goal.monthlyContribution, 0)
+      const totalSavings = savingsGoals.reduce((sum, goal) => sum + goal.currentAmount, 0)
+      const monthlyGrowth = savingsGoals.reduce((sum, goal) => sum + (goal.autoSaveAmount || 0), 0)
       const nextMilestone = Math.min(...savingsGoals.map(goal => goal.targetAmount - goal.currentAmount).filter(diff => diff > 0)) || 0
       const projectedSavings = totalSavings + (monthlyGrowth * 12)
 
@@ -98,12 +97,12 @@ export default function SavingsPage() {
         insights: [
           {
             title: 'Savings Progress',
-            description: `You&apos;re on track to save $${monthlyGrowth.toLocaleString()} per month`
+            description: `You're on track to save $${monthlyGrowth.toLocaleString()} per month`
           }
         ]
       })
     }
-  }, [savingsGoals, calculateTotalSavings])
+  }, [savingsGoals])
 
   const handleCreateGoal = async () => {
     try {
@@ -336,7 +335,7 @@ export default function SavingsPage() {
               </Alert>
             ) : (
               savingsGoals
-                .filter(goal => !goal.isCompleted)
+                .filter(goal => goal.status === 'ACTIVE')
                 .map(goal => renderGoalCard(goal))
             )}
           </div>
@@ -345,7 +344,7 @@ export default function SavingsPage() {
         <TabsContent value="completed">
           <div className="space-y-3 sm:space-y-4">
             {savingsGoals
-              .filter(goal => goal.isCompleted)
+              .filter(goal => goal.status === 'COMPLETED')
               .map(goal => renderGoalCard(goal))}
           </div>
         </TabsContent>

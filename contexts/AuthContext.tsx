@@ -1,9 +1,32 @@
 'use client'
 
 import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
-import { useCognitoAuth } from '@/hooks/useCognitoAuth';
+import { apiClient } from '@/lib/api-client';
 
-// Define a simple user type for AWS Cognito
+// Cookie utility functions
+const setCookie = (name: string, value: string, days: number = 7) => {
+  const expires = new Date();
+  expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+  document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/;SameSite=Lax`;
+};
+
+const getCookie = (name: string): string | null => {
+  if (typeof document === 'undefined') return null;
+  const nameEQ = name + "=";
+  const ca = document.cookie.split(';');
+  for (let i = 0; i < ca.length; i++) {
+    let c = ca[i];
+    while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+    if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+  }
+  return null;
+};
+
+const deleteCookie = (name: string) => {
+  document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`;
+};
+
+// Define user type for Python backend
 interface User {
   id: string;
   email: string;
@@ -18,25 +41,15 @@ interface AuthContextType {
   loading: boolean;
   error: string | null;
   isAuthenticated: boolean;
-  authMethod: 'jwt' | 'firebase' | 'cognito' | null;
 
-  // Generic auth methods
-  signUp: (email: string, password: string, name?: string) => Promise<void>;
+  // Auth methods
+  signUp: (email: string, password: string, firstName?: string, lastName?: string, phone?: string, dateOfBirth?: string, country?: string, bio?: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   login: (newToken: string, newUser: User) => void;
   logout: () => Promise<void>;
-  signup: (email: string, password: string, name?: string) => Promise<void>;
+  signup: (email: string, password: string, firstName?: string, lastName?: string, phone?: string, dateOfBirth?: string, country?: string, bio?: string) => Promise<void>;
   clearError: () => void;
-  sendEmailVerification: (userId: string) => Promise<void>;
-  verifyEmail: (actionCode: string) => Promise<void>;
-
-  // AWS Cognito auth methods
-  signUpWithCognito: (email: string, password: string, name?: string) => Promise<{ needsVerification: boolean }>;
-  signInWithCognito: (email: string, password: string) => Promise<void>;
-  confirmSignUp: (email: string, confirmationCode: string) => Promise<void>;
-  resendConfirmationCode: (email: string) => Promise<void>;
-  signOutFromCognito: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -46,173 +59,233 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  // Local state for unified auth
+  // Local state for Python backend auth
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [authMethod, setAuthMethod] = useState<'jwt' | 'firebase' | 'cognito' | null>(null);
 
-  // Initialize auth hooks
-  const cognitoAuth = useCognitoAuth();
+  // Function to fetch current user profile from backend
+  const fetchCurrentUser = async (authToken: string) => {
+    try {
+      apiClient.setToken(authToken);
+      const response = await apiClient.getProfile();
+      
+      if (response.error) {
+        throw new Error(response.error);
+      }
+
+      if (response.data) {
+        const userData = response.data;
+        const unifiedUser: User = {
+          id: userData.id,
+          email: userData.email,
+          name: `${userData.first_name} ${userData.last_name}`.trim(),
+          emailVerified: userData.is_active
+        };
+        
+        setUser(unifiedUser);
+        
+        // Update stored user data in cookies and localStorage
+        setCookie('auth-user', JSON.stringify(unifiedUser));
+        localStorage.setItem('auth_user', JSON.stringify(unifiedUser));
+        
+        return unifiedUser;
+      }
+    } catch (error) {
+      console.error('Error fetching current user:', error);
+      // If fetching user fails, clear auth data
+      deleteCookie('auth-token');
+      deleteCookie('auth-user');
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('auth_user');
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('user');
+      apiClient.clearToken();
+      setToken(null);
+      setUser(null);
+    }
+    return null;
+  };
 
   useEffect(() => {
-    // Check if auth bypass is enabled
-    const bypassAuth = process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true';
-
-    if (bypassAuth) {
-      console.log('Auth bypass enabled - providing mock user data');
-      const mockUser: User = {
-        id: 'mock-user-id',
-        email: 'user@example.com',
-        name: 'Demo User',
-        emailVerified: true
-      };
-      const mockToken = 'mock-auth-token';
-
-      setUser(mockUser);
-      setToken(mockToken);
-      setAuthMethod('jwt');
-
-      // Store mock data in storage for consistency
-      localStorage.setItem('auth_token', mockToken);
-      localStorage.setItem('auth_user', JSON.stringify(mockUser));
-      localStorage.setItem('auth_method', 'jwt');
-      sessionStorage.setItem('token', mockToken);
-      sessionStorage.setItem('user', JSON.stringify(mockUser));
-
-      setLoading(false);
-      return;
-    }
-
-    // Check for stored auth data on mount
-    const storedToken = localStorage.getItem('auth_token');
-    const storedUser = localStorage.getItem('auth_user');
-    const storedMethod = localStorage.getItem('auth_method') as 'jwt' | 'firebase' | 'cognito' | null;
-
-    // Also check sessionStorage
-    const sessionToken = sessionStorage.getItem('token');
-    const sessionUser = sessionStorage.getItem('user');
-
-    if (storedToken && storedUser) {
-      try {
-        setToken(storedToken);
-        setUser(JSON.parse(storedUser));
-        setAuthMethod(storedMethod || 'jwt');
-
-        // Also ensure data is in sessionStorage
-        if (!sessionToken) {
-          sessionStorage.setItem('token', storedToken);
-        }
-        if (!sessionUser) {
-          sessionStorage.setItem('user', storedUser);
-        }
-      } catch (error) {
-        console.error('Error parsing stored user:', error);
-        // Clear invalid data
+    const initializeAuth = async () => {
+      // Check if this is the first initialization in this browser session
+      const sessionInitialized = sessionStorage.getItem('auth_session_initialized');
+      
+      if (!sessionInitialized) {
+        // First time in this browser session - clear any old tokens
+        console.log('First initialization - clearing any old session data');
+        deleteCookie('auth-token');
+        deleteCookie('auth-user');
         localStorage.removeItem('auth_token');
         localStorage.removeItem('auth_user');
-        localStorage.removeItem('auth_method');
         sessionStorage.removeItem('token');
         sessionStorage.removeItem('user');
+        apiClient.clearToken();
+        setToken(null);
+        setUser(null);
+        
+        // Mark session as initialized
+        sessionStorage.setItem('auth_session_initialized', 'true');
+      } else {
+        // Subsequent initializations in same session - restore auth state from storage
+        console.log('Session already initialized - restoring current auth state');
+        
+        // Try to restore token and user from cookies first (primary storage)
+        const storedToken = getCookie('auth-token');
+        const storedUserStr = getCookie('auth-user');
+        
+        if (storedToken && storedUserStr) {
+          try {
+            const storedUser = JSON.parse(storedUserStr);
+            console.log('Restoring auth state from cookies');
+            setToken(storedToken);
+            setUser(storedUser);
+            apiClient.setToken(storedToken);
+          } catch (error) {
+            console.error('Error parsing stored user data:', error);
+            // Clear corrupted data
+            deleteCookie('auth-token');
+            deleteCookie('auth-user');
+            apiClient.clearToken();
+          }
+        } else {
+          // Fallback to localStorage if cookies are not available
+          const localToken = localStorage.getItem('auth_token');
+          const localUserStr = localStorage.getItem('auth_user');
+          
+          if (localToken && localUserStr) {
+            try {
+              const localUser = JSON.parse(localUserStr);
+              console.log('Restoring auth state from localStorage');
+              setToken(localToken);
+              setUser(localUser);
+              apiClient.setToken(localToken);
+            } catch (error) {
+              console.error('Error parsing local user data:', error);
+              // Clear corrupted data
+              localStorage.removeItem('auth_token');
+              localStorage.removeItem('auth_user');
+              apiClient.clearToken();
+            }
+          } else {
+            // No stored auth data found
+            console.log('No stored auth data found');
+            apiClient.clearToken();
+          }
+        }
       }
-    } else if (sessionToken && sessionUser) {
-      // If data is only in sessionStorage, use that
-      try {
-        setToken(sessionToken);
-        setUser(JSON.parse(sessionUser));
-        setAuthMethod('jwt'); // Default to JWT for session-only data
+      
+      setLoading(false);
+    };
 
-        // Also store in localStorage for persistence
-        localStorage.setItem('auth_token', sessionToken);
-        localStorage.setItem('auth_user', sessionUser);
-        localStorage.setItem('auth_method', 'jwt');
-      } catch (error) {
-        console.error('Error parsing session user:', error);
-        // Clear invalid data
-        sessionStorage.removeItem('token');
-        sessionStorage.removeItem('user');
-      }
-    }
-    setLoading(false);
+    initializeAuth();
   }, []);
 
-  // Generic auth methods
+  useEffect(() => {
+    // Ensure apiClient always uses the latest token for Authorization header
+    if (token) {
+      apiClient.setToken(token);
+    } else {
+      apiClient.clearToken();
+    }
+  }, [token]);
+
+  // Auth methods
   const login = (newToken: string, newUser: User) => {
     setToken(newToken);
     setUser(newUser);
     setError(null);
 
-    // Store auth data in both localStorage and sessionStorage
+    // Store auth data in cookies (primary storage for middleware)
+    setCookie('auth-token', newToken);
+    setCookie('auth-user', JSON.stringify(newUser));
+
+    // Also store in localStorage for backward compatibility
     localStorage.setItem('auth_token', newToken);
     localStorage.setItem('auth_user', JSON.stringify(newUser));
-    localStorage.setItem('auth_method', authMethod || 'jwt');
 
-    // Also store in sessionStorage for components that use it
-    sessionStorage.setItem('token', newToken);
-    sessionStorage.setItem('user', JSON.stringify(newUser));
+    // Set the token directly in API client to ensure immediate availability
+    apiClient.setToken(newToken);
+    
+    console.log('Login successful - token stored in cookies and localStorage');
   };
 
   const logout = async () => {
     try {
-      // Call logout API if needed
-      await fetch('/api/logout', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      // Call logout API
+      if (token) {
+        await apiClient.logout();
+      }
     } catch (error) {
       console.error('Logout API error:', error);
     } finally {
       // Clear auth data regardless of API call success
       setToken(null);
       setUser(null);
-      setAuthMethod(null);
       setError(null);
 
+      // Clear API client token
+      apiClient.clearToken();
+
+      // Clear all possible storage locations to ensure complete logout
+      deleteCookie('auth-token');
+      deleteCookie('auth-user');
       localStorage.removeItem('auth_token');
       localStorage.removeItem('auth_user');
-      localStorage.removeItem('auth_method');
-
-      // Also clear from sessionStorage
       sessionStorage.removeItem('token');
       sessionStorage.removeItem('user');
-
-      // Clear Cognito auth if it was used
-      if (authMethod === 'cognito') {
-        cognitoAuth.signOut();
-      }
+      
+      // Also clear any other potential auth-related storage
+      localStorage.clear();
+      sessionStorage.clear();
+      
+      console.log('User logged out - all auth data cleared');
     }
   };
 
   const clearError = () => {
     setError(null);
-       cognitoAuth.clearError();
   };
 
-  // JWT/Traditional signup
-  const signup = async (email: string, password: string, name?: string) => {
+  // Signup using Python backend
+  const signup = async (email: string, password: string, firstName?: string, lastName?: string, phone?: string, dateOfBirth?: string, country?: string, bio?: string) => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password, name }),
+      const response = await apiClient.register({
+        email,
+        password,
+        first_name: firstName || email.split('@')[0],
+        last_name: lastName || '',
+        phone_number: phone || undefined,
+        date_of_birth: dateOfBirth || undefined,
+        country: country || undefined,
+        bio: bio || undefined,
+        terms_accepted: true,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Signup failed');
+      if (response.error) {
+        throw new Error(response.error);
       }
 
-      const data = await response.json();
-      setAuthMethod('jwt');
-      login(data.token, data.user);
+      if (response.data) {
+        // Registration successful, but user needs to sign in to get a token
+        // Clear any existing auth data and don't set user state
+        deleteCookie('auth-token');
+        deleteCookie('auth-user');
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('auth_user');
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('user');
+        apiClient.clearToken();
+        setToken(null);
+        setUser(null);
+        
+        console.log('Registration successful. User needs to sign in to get access token.');
+      }
     } catch (error: any) {
       console.error('Signup error:', error);
       setError(error.message);
@@ -222,38 +295,49 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  // AWS Cognito authentication methods
-  const signUpWithCognito = async (email: string, password: string, name?: string) => {
+  // Signin using Python backend
+  const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
       setError(null);
-      setAuthMethod('cognito');
 
-      const result = await cognitoAuth.signUpWithCognito(email, password, name);
+      const response = await apiClient.login(email, password);
 
-      // Convert Cognito user to our User interface
-      if (cognitoAuth.user) {
-        const unifiedUser: User = {
-          id: cognitoAuth.user.id,
-          email: cognitoAuth.user.email,
-          name: cognitoAuth.user.name,
-          emailVerified: cognitoAuth.user.emailVerified
-        };
-
-        setUser(unifiedUser);
-        setToken(cognitoAuth.accessToken || 'cognito-token');
-
-        // Store in localStorage
-        localStorage.setItem('auth_user', JSON.stringify(unifiedUser));
-        localStorage.setItem('auth_method', 'cognito');
-        if (cognitoAuth.accessToken) {
-          localStorage.setItem('auth_token', cognitoAuth.accessToken);
-        }
+      if (response.error) {
+        throw new Error(response.error);
       }
 
-      return result;
+      if (response.data) {
+        // Check if response.data has the nested structure from success_response
+        if (response.data.data) {
+          const loginData = response.data.data;
+          const unifiedUser: User = {
+            id: loginData.user.id,
+            email: loginData.user.email,
+            name: `${loginData.user.first_name} ${loginData.user.last_name}`.trim(),
+            emailVerified: loginData.user.email_verified
+          };
+
+          login(loginData.access_token, unifiedUser);
+        } else if (response.data.user) {
+          // Handle direct structure if backend doesn't use success_response wrapper
+          const unifiedUser: User = {
+            id: response.data.user.id,
+            email: response.data.user.email,
+            name: `${response.data.user.first_name} ${response.data.user.last_name}`.trim(),
+            emailVerified: response.data.user.email_verified
+          };
+
+          login(response.data.access_token, unifiedUser);
+        } else {
+          console.error('Unexpected response structure:', response.data);
+          throw new Error('Invalid response structure from server');
+        }
+      } else {
+        throw new Error('No data received from server');
+      }
     } catch (error: any) {
-      console.error('Cognito signup error:', error);
+      console.error('Signin error:', error);
       setError(error.message);
       throw error;
     } finally {
@@ -261,88 +345,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  const signInWithCognito = async (email: string, password: string) => {
-    try {
-      setLoading(true);
-      setError(null);
-      setAuthMethod('cognito');
-
-      await cognitoAuth.signInWithCognito(email, password);
-
-      // Convert Cognito user to our User interface
-      if (cognitoAuth.user) {
-        const unifiedUser: User = {
-          id: cognitoAuth.user.id,
-          email: cognitoAuth.user.email,
-          name: cognitoAuth.user.name,
-          emailVerified: cognitoAuth.user.emailVerified
-        };
-
-        setUser(unifiedUser);
-        setToken(cognitoAuth.accessToken || 'cognito-token');
-
-        // Store in localStorage
-        localStorage.setItem('auth_user', JSON.stringify(unifiedUser));
-        localStorage.setItem('auth_method', 'cognito');
-        if (cognitoAuth.accessToken) {
-          localStorage.setItem('auth_token', cognitoAuth.accessToken);
-        }
-      }
-    } catch (error: any) {
-      console.error('Cognito signin error:', error);
-      setError(error.message);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const confirmSignUp = async (email: string, confirmationCode: string) => {
-    await cognitoAuth.confirmSignUp(email, confirmationCode);
-  };
-
-  const resendConfirmationCode = async (email: string) => {
-    await cognitoAuth.resendConfirmationCode(email);
-  };
-
-  const signOutFromCognito = () => {
-    cognitoAuth.signOut();
-    logout();
-  };
-
-  // Create the unified context value
+  // Create the context value
   const value: AuthContextType = {
     // User and state
     user,
     token,
-    loading: loading || cognitoAuth.loading,
-    error: error || cognitoAuth.error,
+    loading,
+    error,
     isAuthenticated: !!user && !!token,
-    authMethod,
 
-    // Generic auth methods
+    // Auth methods
     signUp: signup,
-    signIn: signInWithCognito,
+    signIn,
     signOut: logout,
     login,
     logout,
     signup,
     clearError,
-    sendEmailVerification: async (userId: string) => {
-      // Placeholder implementation
-      console.log('Email verification not implemented for', userId);
-    },
-    verifyEmail: async (actionCode: string) => {
-      // Placeholder implementation
-      console.log('Email verification not implemented for', actionCode);
-    },
-
-    // AWS Cognito auth methods
-    signUpWithCognito,
-    signInWithCognito,
-    confirmSignUp,
-    resendConfirmationCode,
-    signOutFromCognito,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

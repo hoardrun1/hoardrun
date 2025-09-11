@@ -1,19 +1,18 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { useAppNavigation } from '@/hooks/useAppNavigation'
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 
 export const NavigationProgress = () => {
-  const { currentPage } = useAppNavigation()
   const pathname = usePathname()
   const [progress, setProgress] = useState(0)
   const [visible, setVisible] = useState(false)
+  const [previousPath, setPreviousPath] = useState<string | null>(null)
 
   useEffect(() => {
-    // Show progress when navigation starts
-    if (currentPage !== pathname) {
+    // Show progress when pathname changes
+    if (previousPath && previousPath !== pathname) {
       setVisible(true)
       setProgress(90)
       
@@ -28,7 +27,8 @@ export const NavigationProgress = () => {
       
       return () => clearTimeout(timer)
     }
-  }, [currentPage, pathname])
+    setPreviousPath(pathname)
+  }, [pathname, previousPath])
 
   if (!visible) return null
 

@@ -7,14 +7,12 @@ import { z } from "zod"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Loader2, Eye, EyeOff, Smartphone, Mail, Lock } from "lucide-react"
+import { Loader2, Eye, EyeOff, ArrowRight, Mail, Lock } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import Link from "next/link"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Image from "next/image"
-import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { useAwsCognitoAuth } from "@/hooks/useAwsCognitoAuth"
+import { useAuth } from "@/contexts/AuthContext"
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -31,10 +29,9 @@ export function SignInPage() {
   })
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
-  const [activeTab, setActiveTab] = useState("cognito")
   const router = useRouter()
   const { toast } = useToast()
-  const { signIn: cognitoSignIn, error: cognitoError, loading: cognitoLoading } = useAwsCognitoAuth()
+  const { signIn } = useAuth()
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -59,40 +56,28 @@ export function SignInPage() {
       // Clean up URL
       window.history.replaceState({}, document.title, window.location.pathname)
     }
+  }, [toast])
 
-    // Set error from Cognito hook
-    if (cognitoError) {
-      setError(cognitoError)
-    }
-  }, [toast, cognitoError])
-
-  const handleCognitoSignIn = async (e: React.FormEvent) => {
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError(null)
 
     try {
-      // AWS Cognito will handle the authentication via Hosted UI
-      // The email and password fields are not used directly, but we validate them for UX
-      if (!formData.email || !formData.password) {
-        throw new Error("Email and password are required")
-      }
+      // Validate form data
+      const validatedData = loginSchema.parse(formData)
 
-      if (formData.password.length < 8) {
-        throw new Error("Password must be at least 8 characters")
-      }
+      // Sign in using Python backend
+      await signIn(validatedData.email, validatedData.password)
 
-      // Validate with Zod
-      loginSchema.parse(formData)
-
+      // Success - redirect to dashboard
       toast({
-        title: "Redirecting...",
-        description: "Redirecting to AWS Cognito for authentication",
+        title: "Welcome back!",
+        description: "You have been signed in successfully.",
       })
 
-      // This will redirect to AWS Cognito Hosted UI
-      await cognitoSignIn(formData.email, formData.password)
-      
+      router.push('/home')
+
     } catch (err) {
       console.error('Login error:', err)
       
@@ -111,30 +96,6 @@ export function SignInPage() {
       })
     } finally {
       setIsLoading(false)
-    }
-  }
-
-  const handleDirectCognitoSignIn = async () => {
-    setError(null)
-    
-    try {
-      toast({
-        title: "Redirecting...",
-        description: "Redirecting to AWS Cognito for authentication",
-      })
-
-      // Direct sign in without form validation
-      await cognitoSignIn("", "")
-      
-    } catch (err) {
-      console.error('Direct Cognito login error:', err)
-      const errorMessage = err instanceof Error ? err.message : 'Authentication failed'
-      setError(errorMessage)
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      })
     }
   }
 
@@ -163,10 +124,10 @@ export function SignInPage() {
         transition={{ duration: 0.5 }}
         className="relative z-10 w-full max-w-md"
       >
-        <div className="bg-card/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6 sm:p-8">
+        <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6 sm:p-8">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-foreground mb-2">Welcome Back</h1>
-            <p className="text-muted-foreground">Sign in to your HoardRun account</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
+            <p className="text-gray-600">Sign in to your HoardRun account</p>
           </div>
 
           {error && (
@@ -175,129 +136,91 @@ export function SignInPage() {
             </Alert>
           )}
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="cognito" className="flex items-center gap-2">
-                <Lock className="w-4 h-4" />
-                AWS Cognito
-              </TabsTrigger>
-              <TabsTrigger value="form" className="flex items-center gap-2">
-                <Mail className="w-4 h-4" />
-                Form Login
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="cognito" className="space-y-4">
-              <Button
-                onClick={handleDirectCognitoSignIn}
-                className="w-full h-12 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700"
-                disabled={cognitoLoading}
-              >
-                {cognitoLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Redirecting...
-                  </>
-                ) : (
-                  <>
-                    <Lock className="mr-2 h-4 w-4" />
-                    Sign In with AWS Cognito
-                  </>
-                )}
-              </Button>
-              
-              <div className="text-center text-sm text-muted-foreground">
-                Secure authentication powered by AWS Cognito
+          <form onSubmit={handleSignIn} className="space-y-4">
+            <div className="space-y-2">
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Input
+                  type="email"
+                  name="email"
+                  placeholder="Enter your email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  className="pl-10 h-12 text-black"
+                  required
+                />
               </div>
-            </TabsContent>
+            </div>
 
-            <TabsContent value="form" className="space-y-4">
-              <form onSubmit={handleCognitoSignIn} className="space-y-4">
-                <div className="space-y-2">
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
-                    <Input
-                      type="email"
-                      name="email"
-                      placeholder="Enter your email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      className="pl-10 h-12"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
-                    <Input
-                      type={showPassword ? "text" : "password"}
-                      name="password"
-                      placeholder="Enter your password"
-                      value={formData.password}
-                      onChange={handleInputChange}
-                      className="pl-10 pr-10 h-12"
-                      required
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-0 top-0 h-12 px-3 hover:bg-transparent"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4 text-muted-foreground" />
-                      ) : (
-                        <Eye className="h-4 w-4 text-muted-foreground" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="rememberMe"
-                      name="rememberMe"
-                      checked={formData.rememberMe}
-                      onCheckedChange={(checked) => 
-                        setFormData(prev => ({ ...prev, rememberMe: checked as boolean }))
-                      }
-                    />
-                    <label htmlFor="rememberMe" className="text-sm text-muted-foreground">
-                      Remember me
-                    </label>
-                  </div>
-                  <Link href="/forgot-password" className="text-sm text-blue-600 hover:underline">
-                    Forgot password?
-                  </Link>
-                </div>
-
+            <div className="space-y-2">
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  placeholder="Enter your password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  className="pl-10 pr-10 h-12 text-black"
+                  required
+                />
                 <Button
-                  type="submit"
-                  className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                  disabled={isLoading || cognitoLoading}
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-12 px-3 hover:bg-transparent"
+                  onClick={() => setShowPassword(!showPassword)}
                 >
-                  {isLoading || cognitoLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Redirecting to Cognito...
-                    </>
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4 text-gray-400" />
                   ) : (
-                    "Sign In with Cognito"
+                    <Eye className="h-4 w-4 text-gray-400" />
                   )}
                 </Button>
-              </form>
-            </TabsContent>
-          </Tabs>
+              </div>
+            </div>
 
-          <Separator className="my-6" />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="rememberMe"
+                  name="rememberMe"
+                  checked={formData.rememberMe}
+                  onCheckedChange={(checked) => 
+                    setFormData(prev => ({ ...prev, rememberMe: checked as boolean }))
+                  }
+                />
+                <label htmlFor="rememberMe" className="text-sm text-gray-600">
+                  Remember me
+                </label>
+              </div>
+              <Link href="/forgot-password" className="text-sm text-black hover:underline">
+                Forgot password?
+              </Link>
+            </div>
 
-          <div className="text-center text-sm text-muted-foreground">
+            <Button
+              type="submit"
+              className="w-full h-12 bg-black hover:bg-gray-800 text-white"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Signing In...
+                </>
+              ) : (
+                <>
+                  Sign In
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </>
+              )}
+            </Button>
+          </form>
+
+          <div className="mt-6 text-center text-sm text-gray-600">
             Don't have an account?{" "}
-            <Link href="/signup" className="text-blue-600 hover:underline font-medium">
+            <Link href="/signup" className="text-black hover:underline font-medium">
               Sign up here
             </Link>
           </div>

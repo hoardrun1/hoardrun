@@ -2,19 +2,7 @@ import { useState, useEffect } from 'react';
 import { TransactionList } from './TransactionList';
 import { TransactionFilters } from './TransactionFilters';
 import { TransactionAnalytics } from './TransactionAnalytics';
-import { TransactionService } from '@/services/transaction/TransactionImplementation';
-
-interface Transaction {
-  id: string;
-  type: 'DEPOSIT' | 'WITHDRAWAL' | 'TRANSFER' | 'INVESTMENT';
-  amount: number;
-  description: string;
-  date: string;
-  status: 'COMPLETED' | 'PENDING' | 'FAILED';
-  category?: string;
-  beneficiary?: string;
-  accountId?: string;
-}
+import { apiClient, Transaction } from '@/lib/api-client';
 
 export function TransactionCenter() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -28,11 +16,19 @@ export function TransactionCenter() {
   }>({});
 
   useEffect(() => {
-    // Fetch transactions based on filters
     const fetchTransactions = async () => {
-      const service = TransactionService.getInstance();
-      const data = await service.getTransactions(filters);
-      setTransactions(data);
+      try {
+        const response = await apiClient.getTransactions({
+          limit: 50,
+          offset: 0,
+          type: filters.type,
+          status: filters.status,
+        });
+        setTransactions(response.data || []);
+      } catch (error) {
+        console.error('Failed to fetch transactions:', error);
+        setTransactions([]);
+      }
     };
 
     fetchTransactions();

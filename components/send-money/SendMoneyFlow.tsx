@@ -1,5 +1,5 @@
 import { useFinanceNavigation } from '@/hooks/useFinanceNavigation';
-import { transferService } from '@/services/transfer-service';
+// TODO: Replace with Python backend API call
 
 interface Beneficiary {
   id: string;
@@ -34,8 +34,8 @@ export function SendMoneyFlow() {
   const handleTransferConfirmation = async () => {
     const transferData = getCurrentPageData('transfer-confirmation');
     try {
-      // Process transfer
-      await transferService.sendMoney(transferData);
+      // TODO: Replace with Python backend API call for transfer processing
+      console.log('Transfer data:', transferData);
       await navigateTo('transfer-success', {
         transferId: 'generated-id',
         ...transferData

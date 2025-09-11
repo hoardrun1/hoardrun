@@ -1,16 +1,6 @@
 import { useState, useCallback } from 'react'
-import { useToast } from '@/components/ui/use-toast'
-
-interface Beneficiary {
-  id: string
-  name: string
-  accountNumber: string
-  bankName: string
-  bankCode?: string
-  email?: string
-  phoneNumber?: string
-  isActive: boolean
-}
+import { useToast } from '../components/ui/use-toast'
+import { apiClient, Beneficiary } from '../lib/api-client'
 
 interface CreateBeneficiaryData {
   name: string
@@ -39,7 +29,7 @@ export function useBeneficiaries() {
     totalPages: 1,
     hasMore: false,
   })
-  const { addToast } = useToast()
+  const { toast } = useToast()
 
   const fetchBeneficiaries = useCallback(async (
     page: number = 1,
@@ -50,33 +40,32 @@ export function useBeneficiaries() {
       setIsLoading(true)
       setError(null)
 
-      const params = new URLSearchParams({
-        page: page.toString(),
-        limit: limit.toString(),
-      })
+      const response = await apiClient.getBeneficiaries()
 
-      if (search) params.append('search', search)
-
-      const response = await fetch(`/api/beneficiaries?${params.toString()}`)
-      const data: BeneficiaryList = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch beneficiaries')
+      if (response.error) {
+        throw new Error(response.error || 'Failed to fetch beneficiaries')
       }
 
-      setBeneficiaries(data.beneficiaries)
+      const beneficiaries = response.data || []
+      setBeneficiaries(beneficiaries)
       setPagination({
-        total: data.total,
-        page: data.page,
-        totalPages: data.totalPages,
-        hasMore: data.hasMore,
+        total: beneficiaries.length,
+        page: 1,
+        totalPages: 1,
+        hasMore: false,
       })
 
-      return data
+      return {
+        beneficiaries,
+        total: beneficiaries.length,
+        page: 1,
+        totalPages: 1,
+        hasMore: false,
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to fetch beneficiaries'
       setError(message)
-      addToast({
+      toast({
         variant: "destructive",
         title: "Error",
         description: message,
@@ -85,38 +74,41 @@ export function useBeneficiaries() {
     } finally {
       setIsLoading(false)
     }
-  }, [addToast])
+  }, [toast])
 
   const addBeneficiary = useCallback(async (data: CreateBeneficiaryData) => {
     try {
       setIsLoading(true)
       setError(null)
 
-      const response = await fetch('/api/beneficiaries', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
+      const response = await apiClient.createBeneficiary({
+        name: data.name,
+        account_number: data.accountNumber,
+        bank_name: data.bankName,
+        bank_code: data.bankCode,
+        email: data.email,
+        phone_number: data.phoneNumber
       })
 
-      const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to add beneficiary')
+      if (response.error) {
+        throw new Error(response.error || 'Failed to add beneficiary')
       }
 
-      setBeneficiaries(prev => [result.beneficiary, ...prev])
-      addToast({
-        title: "Success",
-        description: "Beneficiary added successfully",
-      })
+      if (response.data) {
+        setBeneficiaries(prev => [response.data!, ...prev])
+        toast({
+          title: "Success",
+          description: "Beneficiary added successfully",
+        })
 
-      return result.beneficiary
+        return response.data
+      }
+
+      return null
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to add beneficiary'
       setError(message)
-      addToast({
+      toast({
         variant: "destructive",
         title: "Error",
         description: message,
@@ -125,7 +117,7 @@ export function useBeneficiaries() {
     } finally {
       setIsLoading(false)
     }
-  }, [addToast])
+  }, [toast])
 
   const updateBeneficiary = useCallback(async (
     id: string,
@@ -135,33 +127,38 @@ export function useBeneficiaries() {
       setIsLoading(true)
       setError(null)
 
-      const response = await fetch('/api/beneficiaries', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ id, ...data }),
-      })
-
-      const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to update beneficiary')
+      const updateData = {
+        name: data.name,
+        account_number: data.accountNumber,
+        bank_name: data.bankName,
+        bank_code: data.bankCode,
+        email: data.email,
+        phone_number: data.phoneNumber
       }
 
-      setBeneficiaries(prev =>
-        prev.map(b => (b.id === id ? result.beneficiary : b))
-      )
-      addToast({
-        title: "Success",
-        description: "Beneficiary updated successfully",
-      })
+      const response = await apiClient.updateBeneficiary(id, updateData)
 
-      return result.beneficiary
+      if (response.error) {
+        throw new Error(response.error || 'Failed to update beneficiary')
+      }
+
+      if (response.data) {
+        setBeneficiaries(prev =>
+          prev.map(b => (b.id === id ? response.data! : b))
+        )
+        toast({
+          title: "Success",
+          description: "Beneficiary updated successfully",
+        })
+
+        return response.data
+      }
+
+      return null
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to update beneficiary'
       setError(message)
-      addToast({
+      toast({
         variant: "destructive",
         title: "Error",
         description: message,
@@ -170,25 +167,21 @@ export function useBeneficiaries() {
     } finally {
       setIsLoading(false)
     }
-  }, [addToast])
+  }, [toast])
 
   const deleteBeneficiary = useCallback(async (id: string) => {
     try {
       setIsLoading(true)
       setError(null)
 
-      const response = await fetch(`/api/beneficiaries?id=${id}`, {
-        method: 'DELETE',
-      })
+      const response = await apiClient.deleteBeneficiary(id)
 
-      const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to delete beneficiary')
+      if (response.error) {
+        throw new Error(response.error || 'Failed to delete beneficiary')
       }
 
       setBeneficiaries(prev => prev.filter(b => b.id !== id))
-      addToast({
+      toast({
         title: "Success",
         description: "Beneficiary deleted successfully",
       })
@@ -197,7 +190,7 @@ export function useBeneficiaries() {
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to delete beneficiary'
       setError(message)
-      addToast({
+      toast({
         variant: "destructive",
         title: "Error",
         description: message,
@@ -206,7 +199,7 @@ export function useBeneficiaries() {
     } finally {
       setIsLoading(false)
     }
-  }, [addToast])
+  }, [toast])
 
   const getBeneficiaryById = useCallback((beneficiaryId: string) => {
     return beneficiaries.find(b => b.id === beneficiaryId)
@@ -216,8 +209,8 @@ export function useBeneficiaries() {
     const searchLower = query.toLowerCase()
     return beneficiaries.filter(b =>
       b.name.toLowerCase().includes(searchLower) ||
-      b.accountNumber.includes(query) ||
-      b.bankName.toLowerCase().includes(searchLower) ||
+      b.account_number.includes(query) ||
+      b.bank_name.toLowerCase().includes(searchLower) ||
       b.email?.toLowerCase().includes(searchLower)
     )
   }, [beneficiaries])
@@ -234,4 +227,4 @@ export function useBeneficiaries() {
     getBeneficiaryById,
     searchBeneficiaries,
   }
-} 
+}

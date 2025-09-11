@@ -44,7 +44,7 @@ export function Notifications({ isOpen, onClose, onMarkAllRead }: NotificationsP
       id: '1',
       type: 'transaction',
       title: 'Payment Received',
-      message: 'You received a payment from John Doe',
+      message: 'You received a payment',
       timestamp: new Date(Date.now() - 5 * 60 * 1000), // 5 minutes ago
       read: false,
       amount: 250.00,

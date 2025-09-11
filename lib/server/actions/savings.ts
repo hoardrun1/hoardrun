@@ -2,29 +2,7 @@
 
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth-config';
-import { mockSavingsGoals } from '@/lib/mock-data/savings';
-
-// Mock analytics data
-const mockAnalytics = {
-  totalSavings: 12500,
-  monthlyGrowth: 750,
-  nextMilestone: 15000,
-  projectedSavings: 25000,
-  insights: [
-    {
-      title: 'Savings Rate Increasing',
-      description: 'Your savings rate has increased by 12% in the last month. Keep it up!'
-    },
-    {
-      title: 'Emergency Fund Progress',
-      description: 'You\'re 75% of the way to your emergency fund goal.'
-    },
-    {
-      title: 'Optimization Opportunity',
-      description: 'Consider increasing your monthly contribution by $50 to reach your goal 2 months earlier.'
-    }
-  ]
-};
+import { apiClient } from '@/lib/api-client';
 
 // Server action to get savings goals
 export async function getSavingsGoals() {
@@ -35,9 +13,9 @@ export async function getSavingsGoals() {
       throw new Error('Unauthorized');
     }
     
-    // In a real app, you would fetch from the database here
-    // For now, return mock data
-    return { success: true, data: mockSavingsGoals };
+    // Use API client to fetch savings data from backend
+    const response = await apiClient.getSavings();
+    return { success: true, data: response };
   } catch (error) {
     console.error('Error fetching savings goals:', error);
     return { success: false, error: 'Failed to fetch savings goals' };
@@ -53,9 +31,9 @@ export async function getSavingsAnalytics() {
       throw new Error('Unauthorized');
     }
     
-    // In a real app, you would calculate analytics from the database
-    // For now, return mock data
-    return { success: true, data: mockAnalytics };
+    // Use API client to fetch savings insights from backend
+    const response = await apiClient.getSavingsInsights();
+    return { success: true, data: response };
   } catch (error) {
     console.error('Error fetching savings analytics:', error);
     return { success: false, error: 'Failed to fetch savings analytics' };
@@ -71,26 +49,14 @@ export async function createSavingsGoal(data: any) {
       throw new Error('Unauthorized');
     }
     
-    // In a real app, you would create a record in the database
-    // For now, return a mock response
-    const newGoal = {
-      id: `goal-${Date.now()}`,
-      userId: session.user.id,
+    // Use API client to create savings goal in backend
+    const response = await apiClient.createSavingsGoal({
       name: data.name,
-      targetAmount: data.targetAmount,
-      currentAmount: 0,
-      monthlyContribution: data.monthlyContribution,
-      category: data.category || 'General',
-      deadline: data.deadline,
-      isAutoSave: data.isAutoSave || false,
-      isCompleted: false,
-      progress: 0,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      daysLeft: 365 // Default to 1 year
-    };
+      target_amount: data.targetAmount,
+      description: data.description
+    });
     
-    return { success: true, data: newGoal };
+    return { success: true, data: response };
   } catch (error) {
     console.error('Error creating savings goal:', error);
     return { success: false, error: 'Failed to create savings goal' };

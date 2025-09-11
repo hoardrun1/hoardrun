@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { navigation } from '@/lib/navigation'
 import { useToast } from '@/components/ui/use-toast'
+import { apiClient } from '@/lib/api-client'
 
 export function CreateProfilePageComponent() {
   const [isLoading, setIsLoading] = useState(false)
@@ -137,17 +138,16 @@ export function CreateProfilePageComponent() {
     setIsLoading(true)
 
     try {
-      const response = await fetch('/api/user/profile', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          userId: sessionStorage.getItem('userId')
-        }),
+      const response = await apiClient.updateProfile({
+        first_name: formData.fullName.split(' ')[0] || '',
+        last_name: formData.fullName.split(' ').slice(1).join(' ') || '',
+        email: formData.email,
+        phone_number: formData.phone
       })
 
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.message)
+      if (response.error) {
+        throw new Error(response.error)
+      }
 
       // Connect to both dashboard and home page
       navigation.connect('create-profile', 'dashboard', {

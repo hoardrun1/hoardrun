@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTheme } from '@/contexts/ThemeContext'
 import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sidebar-layout'
 import { SidebarContent } from '@/components/ui/sidebar-content'
@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useTransactions } from '@/hooks/useTransactions'
 import { 
   Receipt, 
   ArrowUpRight, 
@@ -25,71 +26,37 @@ import {
   TrendingDown
 } from 'lucide-react'
 
-// Mock transaction data
-const transactions = [
-  {
-    id: '1',
-    type: 'income',
-    description: 'Salary Deposit',
-    amount: 5000,
-    date: '2024-01-15',
-    category: 'Salary',
-    status: 'completed'
-  },
-  {
-    id: '2',
-    type: 'expense',
-    description: 'Grocery Shopping',
-    amount: -120.50,
-    date: '2024-01-14',
-    category: 'Food',
-    status: 'completed'
-  },
-  {
-    id: '3',
-    type: 'expense',
-    description: 'Gas Station',
-    amount: -45.00,
-    date: '2024-01-13',
-    category: 'Transportation',
-    status: 'completed'
-  },
-  {
-    id: '4',
-    type: 'income',
-    description: 'Freelance Payment',
-    amount: 800,
-    date: '2024-01-12',
-    category: 'Freelance',
-    status: 'completed'
-  },
-  {
-    id: '5',
-    type: 'expense',
-    description: 'Netflix Subscription',
-    amount: -15.99,
-    date: '2024-01-11',
-    category: 'Entertainment',
-    status: 'completed'
-  }
-]
-
 export default function TransactionsPage() {
   const { theme } = useTheme()
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [selectedType, setSelectedType] = useState('all')
+  
+  const transactionHook = useTransactions()
+  const { transactions, isLoading, error, fetchTransactionHistory } = transactionHook
+
+  // Fetch transactions on component mount
+  useEffect(() => {
+    const loadTransactions = async () => {
+      if (fetchTransactionHistory) {
+        await fetchTransactionHistory()
+      }
+    }
+    loadTransactions()
+  }, [fetchTransactionHistory])
 
   const filteredTransactions = transactions.filter(transaction => {
-    const matchesSearch = transaction.description.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesSearch = transaction.description?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false
     const matchesCategory = selectedCategory === 'all' || transaction.category === selectedCategory
-    const matchesType = selectedType === 'all' || transaction.type === selectedType
+    const matchesType = selectedType === 'all' || 
+      (selectedType === 'income' && transaction.type === 'DEPOSIT') ||
+      (selectedType === 'expense' && transaction.type !== 'DEPOSIT')
     return matchesSearch && matchesCategory && matchesType
   })
 
-  const totalIncome = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0)
-  const totalExpenses = Math.abs(transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0))
+  const totalIncome = transactions.filter(t => t.type === 'DEPOSIT').reduce((sum, t) => sum + t.amount, 0)
+  const totalExpenses = Math.abs(transactions.filter(t => t.type !== 'DEPOSIT').reduce((sum, t) => sum + t.amount, 0))
   const netAmount = totalIncome - totalExpenses
 
   return (
@@ -236,12 +203,8 @@ export default function TransactionsPage() {
                       className="flex items-center justify-between p-3 sm:p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors"
                     >
                       <div className="flex items-center space-x-3 sm:space-x-4 flex-1 min-w-0">
-                        <div className={`p-1.5 sm:p-2 rounded-full ${
-                          transaction.type === 'income'
-                            ? 'bg-muted'
-                            : 'bg-muted'
-                        }`}>
-                          {transaction.type === 'income' ? (
+                        <div className={`p-1.5 sm:p-2 rounded-full bg-muted`}>
+                          {transaction.type === 'DEPOSIT' ? (
                             <ArrowDownLeft className="h-3 w-3 sm:h-4 sm:w-4 text-foreground" />
                           ) : (
                             <ArrowUpRight className="h-3 w-3 sm:h-4 sm:w-4 text-foreground" />
@@ -253,12 +216,10 @@ export default function TransactionsPage() {
                         </div>
                       </div>
                       <div className="text-right ml-2">
-                        <p className={`font-bold text-sm sm:text-base ${
-                          transaction.type === 'income' ? 'text-foreground' : 'text-foreground'
-                        }`}>
-                          {transaction.type === 'income' ? '+' : ''}${Math.abs(transaction.amount).toLocaleString()}
+                        <p className={`font-bold text-sm sm:text-base text-foreground`}>
+                          {transaction.type === 'DEPOSIT' ? '+' : '-'}${Math.abs(transaction.amount).toLocaleString()}
                         </p>
-                        <p className="text-xs sm:text-sm text-muted-foreground">{transaction.date}</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">{new Date(transaction.date).toLocaleDateString()}</p>
                       </div>
                     </div>
                   ))}

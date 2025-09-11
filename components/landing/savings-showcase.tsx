@@ -1,37 +1,15 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { PiggyBank, Target, Clock, TrendingUp, ArrowRight } from 'lucide-react';
+import { PiggyBank, Target, Clock, TrendingUp, ArrowRight, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { apiClient } from '@/lib/api-client';
+import { useToast } from "@/components/ui/use-toast";
 
-// Sample savings goals for showcase
-const sampleGoals = [
-  {
-    name: 'Emergency Fund',
-    description: 'Build a safety net for unexpected expenses',
-    icon: PiggyBank,
-    color: 'bg-gray-500',
-    progress: 75,
-  },
-  {
-    name: 'Dream Vacation',
-    description: 'Save for that perfect getaway',
-    icon: Target,
-    color: 'bg-gray-500',
-    progress: 45,
-  },
-  {
-    name: 'New Car',
-    description: 'Save up for your next vehicle purchase',
-    icon: Clock,
-    color: 'bg-gray-500',
-    progress: 30,
-  },
-];
-
-// Sample savings tips
+// Keep savings tips as they are educational content, not user data
 const savingsTips = [
   {
     title: '50/30/20 Rule',
@@ -56,6 +34,37 @@ const savingsTips = [
 ];
 
 export function SavingsShowcase() {
+  const [savingsGoals, setSavingsGoals] = useState<any[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const { toast } = useToast()
+
+  useEffect(() => {
+    loadSavingsGoals()
+  }, [])
+
+  const loadSavingsGoals = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      
+      // TODO: Replace with actual API call when savings showcase endpoints are available
+      // For now, we'll simulate an API call that returns empty data
+      // This is a landing page component, so it might show example/demo goals instead of user-specific data
+      const response = await new Promise(resolve => 
+        setTimeout(() => resolve({ data: [], success: true }), 500)
+      );
+      
+      setSavingsGoals([])
+    } catch (err) {
+      console.error('Error loading savings goals:', err)
+      setError('Failed to load savings goals')
+      // Don't show toast on landing page as it might be intrusive for visitors
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <section className="py-20 bg-gradient-to-b from-gray-900 to-black text-white">
       <div className="container mx-auto px-4">
@@ -83,35 +92,48 @@ export function SavingsShowcase() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-          {sampleGoals.map((goal, index) => (
-            <motion.div
-              key={goal.name}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              viewport={{ once: true }}
-            >
-              <Card className="bg-gray-800 border-0 shadow-lg hover:shadow-xl transition-all duration-300 h-full">
-                <CardContent className="p-6">
-                  <div className={`${goal.color} w-12 h-12 rounded-full flex items-center justify-center mb-4`}>
-                    <goal.icon className="w-6 h-6 text-white" />
-                  </div>
-                  <h3 className="text-xl font-semibold mb-2 text-white">{goal.name}</h3>
-                  <p className="text-gray-300 mb-4">{goal.description}</p>
-                  <div className="w-full bg-gray-700 rounded-full h-2.5 mb-4">
-                    <div 
-                      className={`${goal.color} h-2.5 rounded-full`} 
-                      style={{ width: `${goal.progress}%` }}
-                    ></div>
-                  </div>
-                  <div className="flex justify-between text-sm text-gray-400">
-                    <span>Progress</span>
-                    <span>{goal.progress}%</span>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
+          {loading ? (
+            <div className="col-span-full flex justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+            </div>
+          ) : savingsGoals.length === 0 ? (
+            <div className="col-span-full text-center py-8">
+              <PiggyBank className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-400 text-lg">
+                Start your savings journey today and see your goals here!
+              </p>
+            </div>
+          ) : (
+            savingsGoals.map((goal: any, index: number) => (
+              <motion.div
+                key={goal.name}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                viewport={{ once: true }}
+              >
+                <Card className="bg-gray-800 border-0 shadow-lg hover:shadow-xl transition-all duration-300 h-full">
+                  <CardContent className="p-6">
+                    <div className={`${goal.color} w-12 h-12 rounded-full flex items-center justify-center mb-4`}>
+                      <goal.icon className="w-6 h-6 text-white" />
+                    </div>
+                    <h3 className="text-xl font-semibold mb-2 text-white">{goal.name}</h3>
+                    <p className="text-gray-300 mb-4">{goal.description}</p>
+                    <div className="w-full bg-gray-700 rounded-full h-2.5 mb-4">
+                      <div 
+                        className={`${goal.color} h-2.5 rounded-full`} 
+                        style={{ width: `${goal.progress}%` }}
+                      ></div>
+                    </div>
+                    <div className="flex justify-between text-sm text-gray-400">
+                      <span>Progress</span>
+                      <span>{goal.progress}%</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))
+          )}
         </div>
 
         <div className="bg-gray-800/50 rounded-xl p-6 mb-12">

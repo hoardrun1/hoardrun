@@ -4,7 +4,7 @@ import React, { useState } from "react"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import Link from "next/link"
-import { EyeIcon, EyeOffIcon, MailIcon, UserIcon, Loader2, ArrowRight, Smartphone } from "lucide-react"
+import { EyeIcon, EyeOffIcon, MailIcon, UserIcon, PhoneIcon, MapPinIcon, CalendarIcon, Loader2, ArrowRight } from "lucide-react"
 import Image from "next/image"
 import { z } from "zod"
 
@@ -12,17 +12,19 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/components/ui/use-toast"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuth } from "@/contexts/AuthContext"
-
-// Firebase removed - using simple authentication without Firebase dependencies
-import { GoogleSignInButton } from "./GoogleSignInButton"
 
 // Validation schema
 const signupSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
+  firstName: z.string().min(2, "First name must be at least 2 characters"),
+  lastName: z.string().min(2, "Last name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
+  phone: z.string().optional(),
+  dateOfBirth: z.string().optional(),
+  country: z.string().optional(),
+  bio: z.string().optional(),
   password: z.string().min(8, "Password must be at least 8 characters"),
   confirmPassword: z.string().min(8, "Password confirmation is required"),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -40,21 +42,26 @@ export function SignupPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [activeTab, setActiveTab] = useState("social")
   
   const [formData, setFormData] = useState({
-    name: "",
+    firstName: "",
+    lastName: "",
     email: "",
+    phone: "",
+    dateOfBirth: "",
+    country: "",
+    bio: "",
     password: "",
     confirmPassword: "",
+    termsAccepted: false,
   })
   const { signUp } = useAuth()
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value, type, checked } = e.target as HTMLInputElement
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: type === 'checkbox' ? checked : value
     }))
   }
 
@@ -63,32 +70,22 @@ export function SignupPage() {
     setIsLoading(true)
     setError(null)
 
-    try {
-      // Use AWS Cognito Hosted UI for Google OAuth
-      // The signUp function will redirect to Cognito Hosted UI
-      await signUp('dummy@example.com', 'dummypassword', 'Dummy Name')
-    } catch (error) {
-      console.error('Failed to initiate Cognito sign-up:', error)
-      setError(error instanceof Error ? error.message : 'Failed to start sign-up. Please try again.')
-      setIsLoading(false)
-    }
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
-    setLoading(true)
-
     // Validation
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match")
-      setLoading(false)
+      setIsLoading(false)
       return
     }
 
     if (formData.password.length < 8) {
       setError("Password must be at least 8 characters")
-      setLoading(false)
+      setIsLoading(false)
+      return
+    }
+
+    if (!formData.termsAccepted) {
+      setError("You must accept the terms and conditions")
+      setIsLoading(false)
       return
     }
 
@@ -96,45 +93,26 @@ export function SignupPage() {
       // Validate form data
       const validatedData = signupSchema.parse(formData)
 
-      // Use the custom signup API route
-      const response = await fetch('/api/sign-up', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: validatedData.email,
-          password: validatedData.password,
-          name: validatedData.name,
-        }),
-      })
+      // Create account directly in database using Python backend
+      await signUp(
+        validatedData.email, 
+        validatedData.password, 
+        validatedData.firstName,
+        validatedData.lastName,
+        validatedData.phone,
+        validatedData.dateOfBirth,
+        validatedData.country,
+        validatedData.bio
+      )
 
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || data.message || 'Signup failed')
-      }
-
-      // Check if we need to use Cognito Hosted UI
-      if (data.useHostedUI) {
-        toast({
-          title: "Redirecting...",
-          description: "Taking you to the secure signup page.",
-        })
-
-        // Use the existing signUp function which redirects to Cognito Hosted UI
-        await signUp(formData.email, formData.password, formData.name)
-        return
-      }
-
-      // Success - redirect to email verification page
+      // Success - redirect to signin page
       toast({
         title: "Account Created!",
-        description: "Please check your email for verification instructions.",
+        description: "Your account has been created successfully. Please sign in.",
       })
 
-      // Redirect to check email page with the user's email
-      router.push(`/check-email?email=${encodeURIComponent(formData.email)}`)
+      // Redirect to signin page
+      router.push('/signin')
 
     } catch (err) {
       console.error('Signup error:', err)
@@ -153,7 +131,7 @@ export function SignupPage() {
         variant: "destructive",
       })
     } finally {
-      setLoading(false)
+      setIsLoading(false)
     }
   }
 
@@ -186,40 +164,34 @@ export function SignupPage() {
             </Alert>
           )}
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="social" className="flex items-center gap-2">
-                <Smartphone className="w-4 h-4" />
-                Social
-              </TabsTrigger>
-              <TabsTrigger value="email" className="flex items-center gap-2">
-                <MailIcon className="w-4 h-4" />
-                Email
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="social" className="space-y-4">
-              <GoogleSignInButton callbackUrl="/home" />
-              
-              <div className="text-center text-sm text-gray-500">
-                Quick and secure signup with your Google account
-              </div>
-            </TabsContent>
-
-            <TabsContent value="email" className="space-y-4">
-              <form onSubmit={handleSignup} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
-                  <div className="relative">
-                    <UserIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <form onSubmit={handleSignup} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="firstName">First Name</Label>
+                    <div className="relative">
+                      <UserIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                      <Input
+                        id="firstName"
+                        name="firstName"
+                        type="text"
+                        placeholder="First name"
+                        value={formData.firstName}
+                        onChange={handleInputChange}
+                        className="pl-10 h-12 text-black"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="lastName">Last Name</Label>
                     <Input
-                      id="name"
-                      name="name"
+                      id="lastName"
+                      name="lastName"
                       type="text"
-                      placeholder="Enter your full name"
-                      value={formData.name}
+                      placeholder="Last name"
+                      value={formData.lastName}
                       onChange={handleInputChange}
-                      className="pl-10 h-12"
+                      className="h-12 text-black"
                       required
                     />
                   </div>
@@ -236,10 +208,71 @@ export function SignupPage() {
                       placeholder="Enter your email"
                       value={formData.email}
                       onChange={handleInputChange}
-                      className="pl-10 h-12"
+                      className="pl-10 h-12 text-black"
                       required
                     />
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone Number (Optional)</Label>
+                  <div className="relative">
+                    <PhoneIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <Input
+                      id="phone"
+                      name="phone"
+                      type="tel"
+                      placeholder="Enter your phone number"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      className="pl-10 h-12 text-black"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="dateOfBirth">Date of Birth (Optional)</Label>
+                    <div className="relative">
+                      <CalendarIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                      <Input
+                        id="dateOfBirth"
+                        name="dateOfBirth"
+                        type="date"
+                        value={formData.dateOfBirth}
+                        onChange={handleInputChange}
+                        className="pl-10 h-12 text-black"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="country">Country (Optional)</Label>
+                    <div className="relative">
+                      <MapPinIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                      <Input
+                        id="country"
+                        name="country"
+                        type="text"
+                        placeholder="Your country"
+                        value={formData.country}
+                        onChange={handleInputChange}
+                        className="pl-10 h-12 text-black"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="bio">Bio (Optional)</Label>
+                  <Textarea
+                    id="bio"
+                    name="bio"
+                    placeholder="Tell us a bit about yourself"
+                    value={formData.bio}
+                    onChange={handleInputChange}
+                    className="text-black resize-none"
+                    rows={3}
+                  />
                 </div>
 
                 <div className="space-y-2">
@@ -252,7 +285,7 @@ export function SignupPage() {
                       placeholder="Create a password"
                       value={formData.password}
                       onChange={handleInputChange}
-                      className="pr-10 h-12"
+                      className="pr-10 h-12 text-black"
                       required
                     />
                     <Button
@@ -281,7 +314,7 @@ export function SignupPage() {
                       placeholder="Confirm your password"
                       value={formData.confirmPassword}
                       onChange={handleInputChange}
-                      className="pr-10 h-12"
+                      className="pr-10 h-12 text-black"
                       required
                     />
                     <Button
@@ -300,41 +333,61 @@ export function SignupPage() {
                   </div>
                 </div>
 
-                <Button
-                  type="submit"
-                  className="w-full h-12 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Creating Account...
-                    </>
-                  ) : (
-                    <>
-                      Create Account
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </>
-                  )}
-                </Button>
-              </form>
-            </TabsContent>
-          </Tabs>
+                <div className="flex items-start space-x-2">
+                  <input
+                    id="termsAccepted"
+                    name="termsAccepted"
+                    type="checkbox"
+                    checked={formData.termsAccepted}
+                    onChange={handleInputChange}
+                    className="mt-1 h-4 w-4 text-black focus:ring-black border-gray-300 rounded"
+                    required
+                  />
+                  <label htmlFor="termsAccepted" className="text-sm text-gray-600">
+                    I agree to the{" "}
+                    <Link href="/terms" className="text-black hover:underline">
+                      Terms of Service
+                    </Link>{" "}
+                    and{" "}
+                    <Link href="/privacy" className="text-black hover:underline">
+                      Privacy Policy
+                    </Link>
+                  </label>
+                </div>
+
+            <Button
+              type="submit"
+              className="w-full h-12 bg-black hover:bg-gray-800 text-white"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating Account...
+                </>
+              ) : (
+                <>
+                  Create Account
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </>
+              )}
+            </Button>
+          </form>
 
           <div className="mt-6 text-center text-sm text-gray-600">
             Already have an account?{" "}
-            <Link href="/signin" className="text-blue-600 hover:underline font-medium">
+            <Link href="/signin" className="text-black hover:underline font-medium">
               Sign in here
             </Link>
           </div>
 
           <div className="mt-4 text-center text-xs text-gray-500">
             By creating an account, you agree to our{" "}
-            <Link href="/terms" className="text-blue-600 hover:underline">
+            <Link href="/terms" className="text-black hover:underline">
               Terms of Service
             </Link>{" "}
             and{" "}
-            <Link href="/privacy" className="text-blue-600 hover:underline">
+            <Link href="/privacy" className="text-black hover:underline">
               Privacy Policy
             </Link>
           </div>

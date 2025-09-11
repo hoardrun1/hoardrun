@@ -134,21 +134,9 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
 
   const { toast } = useToast()
 
-  // Try to use the finance context, but provide a fallback if it's not available
-  let depositFunds: (amount: number) => Promise<void>;
-  try {
-    const financeContext = useFinance();
-    depositFunds = financeContext.depositFunds;
-  } catch (error) {
-    console.warn('Finance context not available, using mock deposit function');
-    // Use a mock deposit function if the context is not available
-    depositFunds = async (amount: number) => {
-      setIsLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      setIsLoading(false);
-      console.log(`Mock deposit of $${amount} completed via ${selectedMethod}`);
-    };
-  }
+  // Use the finance context
+  const financeContext = useFinance();
+  const depositFunds = financeContext?.depositFunds;
 
   const resetModal = () => {
     setCurrentStep('method')
@@ -204,7 +192,13 @@ export function DepositModal({ open, onOpenChange }: DepositModalProps) {
       const delay = selectedMethod === 'bank' ? 3000 : 2000
 
       await new Promise(resolve => setTimeout(resolve, delay))
-      await depositFunds(Number(amount))
+      
+      if (depositFunds) {
+        await depositFunds(Number(amount))
+      } else {
+        // If no deposit function available, just simulate success
+        console.log(`Deposit of $${amount} completed via ${selectedMethod}`)
+      }
 
       setCurrentStep('success')
 

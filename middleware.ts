@@ -17,11 +17,9 @@ export function middleware(request: NextRequest) {
   // Get the token from cookies - optimized single operation
   const token = request.cookies.get('auth-token')?.value;
 
-  // If user is authenticated and trying to access signin page, redirect to home
-  if (token && path === '/signin') {
-    const callbackUrl = request.nextUrl.searchParams.get('callbackUrl')
-    return NextResponse.redirect(new URL(callbackUrl || '/home', request.url))
-  }
+  // Allow access to signin page even if token exists
+  // Users should be able to sign in again manually
+  // The AuthContext will handle clearing old tokens and requiring fresh authentication
 
   // Allow public routes for unauthenticated users
   if (publicRoutes.includes(path) && !token) {

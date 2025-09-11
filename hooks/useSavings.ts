@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ui/use-toast'
-import { mockSavingsGoals } from '@/lib/mock-data/savings'
+import { apiClient } from '@/lib/api-client'
 
 // Check if auth bypass is enabled
 const bypassAuth = process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true'
@@ -54,22 +54,14 @@ export function useSavings() {
     setError(null)
 
     try {
-      if (bypassAuth) {
-        // Use mock data when bypass is enabled
-        console.log('Using mock savings data with auth bypass enabled');
-        setTimeout(() => {
-          setSavingsGoals(mockSavingsGoals);
-          setIsLoading(false);
-        }, 500); // Simulate network delay
-        return;
+      // Use the backend API for savings goals
+      const response = await apiClient.getSavings()
+      
+      if (response.data) {
+        setSavingsGoals(response.data)
+      } else if (response.error) {
+        throw new Error(response.error)
       }
-
-      // In production, fetch from API
-      const response = await fetch('/api/savings')
-      if (!response.ok) throw new Error('Failed to fetch savings goals')
-
-      const data = await response.json()
-      setSavingsGoals(data)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
       toast({

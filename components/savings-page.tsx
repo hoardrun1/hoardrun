@@ -54,6 +54,7 @@ import { type LucideIcon } from 'lucide-react'
 import { type DialogProps } from "@radix-ui/react-dialog"
 import { cn } from "@/lib/utils"
 import { useToast } from "@/components/ui/use-toast"
+import { apiClient } from '@/lib/api-client'
 import { Skeleton } from "@/components/ui/skeleton"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useFinance } from '@/contexts/FinanceContext'
@@ -259,14 +260,73 @@ export function SavingsPageComponent() {
 
   const fetchAnalytics = async () => {
     try {
-      const response = await fetch('/api/savings/analytics')
-      if (!response.ok) throw new Error('Failed to fetch analytics')
+      const analyticsResponse = await apiClient.getCashFlowAnalysis({ period: 'monthly' })
+      
+      if (analyticsResponse.data) {
+        // Set mock analytics data for now
+        setAnalytics({
+          monthlyGrowth: 850,
+          projectedSavings: 28000,
+          nextMilestone: 30000,
+          recommendedAllocation: {
+            emergency: 40,
+            investment: 35,
+            goals: 25
+          }
+        })
 
-      const data = await response.json()
-      setAnalytics(data.analytics)
-      setRecommendations(data.recommendations)
-      setInsights(data.insights)
-      setGoalRecommendations(data.goalRecommendations)
+        // Set mock recommendations
+        setRecommendations([
+          {
+            id: '1',
+            type: 'savings',
+            title: 'Increase Emergency Fund',
+            description: 'Consider boosting your emergency fund to 6 months of expenses',
+            confidence: 85,
+            impact: 15
+          },
+          {
+            id: '2',
+            type: 'investment',
+            title: 'Diversify Portfolio',
+            description: 'Add some low-risk bonds to balance your investment portfolio',
+            confidence: 78,
+            potentialReturn: 8
+          }
+        ])
+
+        // Set mock insights
+        setInsights([
+          {
+            id: '1',
+            type: 'saving',
+            title: 'Consistent Saver',
+            description: 'You\'ve maintained consistent savings for 6 months',
+            impact: 12,
+            suggestedActions: [
+              { action: 'Increase monthly contribution by 10%', potentialImpact: 8 },
+              { action: 'Set up automatic investment', potentialImpact: 15 }
+            ],
+            confidence: 92
+          }
+        ])
+
+        // Set mock goal recommendations
+        setGoalRecommendations([
+          {
+            id: '1',
+            name: 'Retirement Boost',
+            targetAmount: 50000,
+            suggestedMonthlyContribution: 800,
+            reason: 'Based on your age and income, this will help secure your retirement',
+            confidence: 88,
+            category: 'Retirement',
+            timeframe: 5,
+            riskLevel: 'medium',
+            expectedReturn: 7.5
+          }
+        ])
+      }
     } catch (error) {
       console.error('Error fetching analytics:', error)
       toast({

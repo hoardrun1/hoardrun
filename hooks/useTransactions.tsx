@@ -1,30 +1,13 @@
 import { useState, useCallback } from 'react'
-import { TransactionType, TransactionStatus } from '@prisma/client'
-import { useToast } from '@/components/ui/use-toast'
-
-interface Transaction {
-  id: string
-  type: TransactionType
-  amount: number
-  currency: string
-  description?: string
-  status: TransactionStatus
-  reference: string
-  createdAt: string
-  beneficiary?: {
-    name: string
-    accountNumber: string
-    bankName: string
-  }
-}
+import { useToast } from '../components/ui/use-toast'
+import { apiClient, Transaction } from '../lib/api-client'
+import { useAuth } from '../contexts/AuthContext'
 
 interface TransactionData {
-  accountId: string
-  type: TransactionType
+  type: string
   amount: number
   description?: string
-  beneficiaryId?: string
-  currency?: string
+  category?: string
 }
 
 interface TransactionHistory {
@@ -46,36 +29,38 @@ export function useTransactions() {
     hasMore: false,
   })
   const { toast } = useToast()
+  const { user } = useAuth()
 
   const createTransaction = useCallback(async (data: TransactionData) => {
     try {
       setIsLoading(true)
       setError(null)
 
-      const response = await fetch('/api/transactions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
+      const response = await apiClient.createTransaction({
+        type: data.type,
+        amount: data.amount,
+        description: data.description || '',
+        category: data.category
       })
 
-      const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Transaction failed')
+      if (response.error) {
+        throw new Error(response.error || 'Transaction failed')
       }
 
-      setTransactions(prev => [result.transaction, ...prev])
-      toast({
-        title: "Success",
-        description: "Transaction completed successfully",
-      })
+      if (response.data) {
+        setTransactions(prev => [response.data!, ...prev])
+        toast({
+          title: "Success",
+          description: "Transaction completed successfully",
+        })
 
-      return {
-        transaction: result.transaction,
-        newBalance: result.newBalance,
+        return {
+          transaction: response.data,
+          newBalance: response.data.amount,
+        }
       }
+
+      return null
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Transaction failed'
       setError(message)
@@ -91,10 +76,10 @@ export function useTransactions() {
   }, [toast])
 
   const fetchTransactionHistory = useCallback(async (
-    accountId: string,
+    accountId?: string,
     page: number = 1,
     limit: number = 10,
-    type?: TransactionType,
+    type?: string,
     startDate?: Date,
     endDate?: Date
   ) => {
@@ -102,32 +87,48 @@ export function useTransactions() {
       setIsLoading(true)
       setError(null)
 
-      const params = new URLSearchParams({
-        accountId,
-        page: page.toString(),
-        limit: limit.toString(),
-      })
-
-      if (type) params.append('type', type)
-      if (startDate) params.append('startDate', startDate.toISOString())
-      if (endDate) params.append('endDate', endDate.toISOString())
-
-      const response = await fetch(`/api/transactions?${params.toString()}`)
-      const data: TransactionHistory = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch transactions')
+      // Check if user is authenticated
+      if (!user?.id) {
+        throw new Error('User not authenticated')
       }
 
-      setTransactions(data.transactions)
-      setPagination({
-        total: data.total,
-        page: data.page,
-        totalPages: data.totalPages,
-        hasMore: data.hasMore,
+      const offset = (page - 1) * limit
+      const response = await apiClient.getTransactions({
+        user_id: user.id,
+        limit,
+        offset,
+        type,
+        status: undefined
       })
 
-      return data
+      if (response.error) {
+        throw new Error(response.error || 'Failed to fetch transactions')
+      }
+
+      if (response.data) {
+        const transactions = Array.isArray(response.data) ? response.data : []
+        setTransactions(transactions)
+        
+        const total = transactions.length
+        const totalPages = Math.ceil(total / limit)
+        
+        setPagination({
+          total,
+          page,
+          totalPages,
+          hasMore: page < totalPages,
+        })
+
+        return {
+          transactions,
+          total,
+          page,
+          totalPages,
+          hasMore: page < totalPages,
+        }
+      }
+
+      return null
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to fetch transactions'
       setError(message)
@@ -140,9 +141,9 @@ export function useTransactions() {
     } finally {
       setIsLoading(false)
     }
-  }, [toast])
+  }, [toast, user])
 
-  const getTransactionsByType = useCallback((type: TransactionType) => {
+  const getTransactionsByType = useCallback((type: string) => {
     return transactions.filter(transaction => transaction.type === type)
   }, [transactions])
 
@@ -150,7 +151,7 @@ export function useTransactions() {
     return transactions.find(transaction => transaction.id === transactionId)
   }, [transactions])
 
-  const calculateTotalAmount = useCallback((type?: TransactionType) => {
+  const calculateTotalAmount = useCallback((type?: string) => {
     return transactions
       .filter(t => !type || t.type === type)
       .reduce((total, t) => total + t.amount, 0)
@@ -166,8 +167,8 @@ export function useTransactions() {
     })
   }, [])
 
-  const getTransactionStatus = useCallback((status: TransactionStatus) => {
-    const statusMap = {
+  const getTransactionStatus = useCallback((status: string) => {
+    const statusMap: Record<string, { label: string; color: string }> = {
       PENDING: { label: 'Pending', color: 'yellow' },
       COMPLETED: { label: 'Completed', color: 'green' },
       FAILED: { label: 'Failed', color: 'red' },
@@ -190,4 +191,4 @@ export function useTransactions() {
     formatTransactionDate,
     getTransactionStatus,
   }
-} 
+}

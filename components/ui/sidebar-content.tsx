@@ -36,6 +36,7 @@ import { Separator } from '@/components/ui/separator'
 import { useAuth } from '@/contexts/AuthContext'
 import { navigation } from '@/lib/navigation'
 import { useSidebar } from './sidebar-layout'
+import { useNotificationCount } from '@/hooks/useNotificationCount'
 
 interface SidebarContentProps {
   onAddMoney?: () => void
@@ -83,6 +84,7 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
   const pathname = usePathname()
   const { user } = useAuth()
   const { setIsOpen } = useSidebar()
+  const { unreadCount, isLoading: notificationLoading } = useNotificationCount()
   const sidebarRef = useRef<HTMLDivElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const [canScrollUp, setCanScrollUp] = useState(false)
@@ -136,171 +138,100 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
     setIsOpen(false)
   }
 
-  const renderMenuSection = (title: string, items: MenuItem[]) => (
-    <motion.div 
-      className="mb-4 lg:mb-5"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-    >
-      <div className="flex items-center gap-2 mb-3 lg:mb-3 px-1 lg:px-2">
-        <motion.div
-          className="w-1 h-4 bg-gradient-to-b from-white/60 to-white/20 rounded-full"
-          animate={{ scaleY: [1, 1.2, 1] }}
-          transition={{ duration: 2, repeat: Infinity }}
-        />
-        <h3 className="text-[10px] lg:text-xs font-bold text-white/60 uppercase tracking-wider">
-          {title}
-        </h3>
-        <div className="flex-1 h-px bg-gradient-to-r from-white/20 to-transparent" />
-      </div>
-      <div className="space-y-1 lg:space-y-1">
-        {items.map((item, index) => (
-          <motion.button
-            key={item.id}
-            onClick={() => handleNavigation(item.href)}
-            onMouseEnter={() => setHoveredItem(item.id)}
-            onMouseLeave={() => setHoveredItem(null)}
-            className={`w-full flex items-center gap-3 lg:gap-3 p-2 lg:p-2 rounded-xl lg:rounded-xl transition-all duration-500 group relative overflow-hidden ${
-              isActiveRoute(item.href)
-                ? 'bg-gradient-to-r from-white/20 to-white/10 text-white shadow-2xl border border-white/30'
-                : 'text-white/70 hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 hover:text-white hover:shadow-xl'
-            }`}
-            whileHover={{ scale: 1.02, x: 4 }}
-            whileTap={{ scale: 0.98 }}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.3, delay: index * 0.1 }}
-          >
-            {/* Animated background glow */}
-            <AnimatePresence>
-              {(isActiveRoute(item.href) || hoveredItem === item.id) && (
-                <motion.div
-                  layoutId={`glow-${item.id}`}
-                  className={`absolute inset-0 bg-gradient-to-r ${item.color || 'from-white/10 to-white/5'} opacity-20 rounded-xl lg:rounded-2xl`}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 0.3, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  transition={{ duration: 0.3 }}
-                />
-              )}
-            </AnimatePresence>
-
-            {/* Active indicator with gradient */}
-            {isActiveRoute(item.href) && (
-              <motion.div
-                layoutId="activeIndicator"
-                className={`absolute left-0 top-0 w-1 lg:w-1.5 h-full bg-gradient-to-b ${item.color || 'from-white to-white/50'} rounded-r-full`}
-                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-              />
-            )}
+  const renderMenuSection = (title: string, items: MenuItem[]) => {
+    return (
+      <div className="mb-4 lg:mb-5">
+        <div className="flex items-center gap-2 mb-3 lg:mb-3 px-1 lg:px-2">
+          <div className="w-1 h-4 bg-gradient-to-b from-white/60 to-white/20 rounded-full" />
+          <h3 className="text-[10px] lg:text-xs font-bold text-white/60 uppercase tracking-wider">
+            {title}
+          </h3>
+          <div className="flex-1 h-px bg-gradient-to-r from-white/20 to-transparent" />
+        </div>
+        <div className="space-y-1 lg:space-y-1">
+          {items.map((item, index) => {
+            // Use real notification count for notifications item
+            const displayBadge = item.id === 'notifications' 
+              ? (unreadCount > 0 ? unreadCount.toString() : undefined)
+              : item.badge
             
-            {/* Icon container with enhanced styling */}
-            <div className={`relative p-2 lg:p-2 rounded-lg lg:rounded-lg transition-all duration-500 ${
-              isActiveRoute(item.href)
-                ? `bg-gradient-to-br ${item.color || 'from-white/20 to-white/10'} shadow-lg backdrop-blur-sm`
-                : 'bg-white/10 group-hover:bg-white/20 backdrop-blur-sm'
-            }`}>
-              {/* Premium badge */}
-              {item.premium && (
-                <motion.div
-                  className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-br from-white to-gray-200 rounded-full flex items-center justify-center border border-black"
-                  animate={{ rotate: [0, 10, -10, 0] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                >
-                  <Crown className="w-1.5 h-1.5 text-black" />
-                </motion.div>
-              )}
-              
-              <motion.div
-                animate={isActiveRoute(item.href) ? { rotate: [0, 5, -5, 0] } : {}}
-                transition={{ duration: 2, repeat: Infinity }}
-              >
-                <item.icon className={`h-4 w-4 lg:h-4 lg:w-4 transition-all duration-500 ${
-                  isActiveRoute(item.href) ? 'text-white drop-shadow-lg' : 'text-white/70 group-hover:text-white'
-                }`} />
-              </motion.div>
-            </div>
-            
-            {/* Content */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between">
-                <span className={`font-semibold text-[11px] lg:text-xs transition-all duration-500 ${
-                  isActiveRoute(item.href) ? 'text-white drop-shadow-sm' : 'group-hover:text-white'
-                }`}>
-                  {item.label}
-                </span>
-                {item.badge && (
-                  <motion.div
-                    animate={{ scale: [1, 1.1, 1] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  >
-                    <Badge
-                      className={`ml-2 text-[8px] lg:text-[9px] font-bold px-1.5 lg:px-1.5 py-0.5 transition-all duration-500 ${
-                        isActiveRoute(item.href)
-                          ? `bg-gradient-to-r ${item.color || 'from-white/30 to-white/20'} text-white border border-white/30`
-                          : 'bg-white/20 text-white/70 group-hover:bg-white/30 group-hover:text-white border border-white/20'
-                      }`}
-                    >
-                      {item.badge}
-                    </Badge>
-                  </motion.div>
-                )}
-              </div>
-              {item.description && (
-                <p className={`text-[9px] lg:text-[10px] mt-0.5 lg:mt-0.5 transition-all duration-500 hidden lg:block ${
+            return (
+              <button
+                key={item.id}
+                onClick={() => handleNavigation(item.href)}
+                onMouseEnter={() => setHoveredItem(item.id)}
+                onMouseLeave={() => setHoveredItem(null)}
+                className={`w-full flex items-center gap-3 lg:gap-3 p-2 lg:p-2 rounded-xl lg:rounded-xl transition-all duration-500 group relative overflow-hidden ${
                   isActiveRoute(item.href)
-                    ? 'text-white/80'
-                    : 'text-white/50 group-hover:text-white/70'
+                    ? 'bg-gradient-to-r from-white/20 to-white/10 text-white shadow-2xl border border-white/30'
+                    : 'text-white/70 hover:bg-gradient-to-r hover:from-white/10 hover:to-white/5 hover:text-white hover:shadow-xl'
+                }`}
+              >
+                {/* Active indicator with gradient */}
+                {isActiveRoute(item.href) && (
+                  <div className={`absolute left-0 top-0 w-1 lg:w-1.5 h-full bg-gradient-to-b ${item.color || 'from-white to-white/50'} rounded-r-full`} />
+                )}
+                
+                {/* Icon container with enhanced styling */}
+                <div className={`relative p-2 lg:p-2 rounded-lg lg:rounded-lg transition-all duration-500 ${
+                  isActiveRoute(item.href)
+                    ? `bg-gradient-to-br ${item.color || 'from-white/20 to-white/10'} shadow-lg backdrop-blur-sm`
+                    : 'bg-white/10 group-hover:bg-white/20 backdrop-blur-sm'
                 }`}>
-                  {item.description}
-                </p>
-              )}
-            </div>
-            
-            {/* Arrow with enhanced animation */}
-            <motion.div
-              animate={{ 
-                x: isActiveRoute(item.href) ? 0 : -4,
-                opacity: isActiveRoute(item.href) ? 1 : 0.5,
-                rotate: hoveredItem === item.id ? 90 : 0
-              }}
-              transition={{ duration: 0.3 }}
-            >
-              <ChevronRight className={`h-3 w-3 lg:h-3 lg:w-3 transition-all duration-500 ${
-                isActiveRoute(item.href) ? 'text-white drop-shadow-sm' : 'text-white/50 group-hover:text-white/70'
-              }`} />
-            </motion.div>
-
-            {/* Sparkle effects for premium items */}
-            {item.premium && hoveredItem === item.id && (
-              <div className="absolute inset-0 pointer-events-none">
-                {[...Array(3)].map((_, i) => (
-                  <motion.div
-                    key={i}
-                    className="absolute w-1 h-1 bg-white rounded-full"
-                    style={{
-                      left: `${20 + i * 30}%`,
-                      top: `${30 + i * 20}%`,
-                    }}
-                    animate={{
-                      scale: [0, 1, 0],
-                      opacity: [0, 1, 0],
-                    }}
-                    transition={{
-                      duration: 1,
-                      repeat: Infinity,
-                      delay: i * 0.2,
-                    }}
-                  />
-                ))}
-              </div>
-            )}
-          </motion.button>
-        ))}
+                  {/* Premium badge */}
+                  {item.premium && (
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-br from-white to-gray-200 rounded-full flex items-center justify-center border border-black">
+                      <Crown className="w-1.5 h-1.5 text-black" />
+                    </div>
+                  )}
+                  
+                  <item.icon className={`h-4 w-4 lg:h-4 lg:w-4 transition-all duration-500 ${
+                    isActiveRoute(item.href) ? 'text-white drop-shadow-lg' : 'text-white/70 group-hover:text-white'
+                  }`} />
+                </div>
+                
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <span className={`font-semibold text-[11px] lg:text-xs transition-all duration-500 ${
+                      isActiveRoute(item.href) ? 'text-white drop-shadow-sm' : 'group-hover:text-white'
+                    }`}>
+                      {item.label}
+                    </span>
+                    {displayBadge && (
+                      <Badge
+                        className={`ml-2 text-[8px] lg:text-[9px] font-bold px-1.5 lg:px-1.5 py-0.5 transition-all duration-500 ${
+                          isActiveRoute(item.href)
+                            ? `bg-gradient-to-r ${item.color || 'from-white/30 to-white/20'} text-white border border-white/30`
+                            : 'bg-white/20 text-white/70 group-hover:bg-white/30 group-hover:text-white border border-white/20'
+                        }`}
+                      >
+                        {displayBadge}
+                      </Badge>
+                    )}
+                  </div>
+                  {item.description && (
+                    <p className={`text-[9px] lg:text-[10px] mt-0.5 lg:mt-0.5 transition-all duration-500 hidden lg:block ${
+                      isActiveRoute(item.href)
+                        ? 'text-white/80'
+                        : 'text-white/50 group-hover:text-white/70'
+                    }`}>
+                      {item.description}
+                    </p>
+                  )}
+                </div>
+                
+                {/* Arrow */}
+                <ChevronRight className={`h-3 w-3 lg:h-3 lg:w-3 transition-all duration-500 ${
+                  isActiveRoute(item.href) ? 'text-white drop-shadow-sm' : 'text-white/50 group-hover:text-white/70'
+                }`} />
+              </button>
+            )
+          })}
+        </div>
       </div>
-    </motion.div>
-  )
+    )
+  }
 
   return (
     <div
@@ -318,9 +249,10 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
       </div>
 
       {/* Enhanced scroll indicators */}
-      <AnimatePresence>
+      <AnimatePresence key="scroll-indicators">
         {canScrollUp && (
           <motion.div
+            key="scroll-up"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
@@ -335,6 +267,7 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
         )}
         {canScrollDown && (
           <motion.div
+            key="scroll-down"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
@@ -427,10 +360,10 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-bold text-white text-[11px] lg:text-xs truncate">
-                {user?.name || 'Demo User'}
+                {user?.name || 'Guest'}
               </p>
               <p className="text-[9px] lg:text-[10px] text-white/60 truncate">
-                {user?.email || 'user@example.com'}
+                {user?.email || 'Please sign in'}
               </p>
             </div>
             <motion.div

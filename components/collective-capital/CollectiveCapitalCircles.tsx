@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/components/ui/use-toast"
+import { apiClient } from '@/lib/api-client'
 import { CollectiveCircle, CircleStats, CircleFilters } from '@/types/collective-capital'
 import { CircleCard } from './CircleCard'
 import { CreateCircleModal } from './CreateCircleModal'
@@ -56,93 +57,12 @@ export function CollectiveCapitalCircles({ className }: CollectiveCapitalCircles
   const loadCircles = async () => {
     try {
       setIsLoading(true)
-      // Mock data for now - replace with actual API call
-      const mockCircles: CollectiveCircle[] = [
-        {
-          id: '1',
-          name: 'Green Tech Pioneers',
-          description: 'Investing in sustainable technology and renewable energy companies',
-          category: 'GREEN_TECH',
-          createdBy: 'user1',
-          createdAt: new Date('2024-01-15'),
-          updatedAt: new Date('2024-01-20'),
-          isPrivate: false,
-          maxMembers: 50,
-          currentMembers: 23,
-          totalPoolValue: 125000,
-          minimumContribution: 50,
-          status: 'ACTIVE',
-          blockchainNetwork: 'ETHEREUM',
-          votingThreshold: 60,
-          proposalDuration: 72,
-          autoDistribution: true,
-          totalReturns: 18500,
-          averageReturn: 14.8,
-          riskScore: 65,
-          aiRecommendations: [],
-          members: [],
-          investments: [],
-          proposals: [],
-          activities: []
-        },
-        {
-          id: '2',
-          name: 'Crypto Innovators',
-          description: 'Focused on emerging cryptocurrencies and DeFi protocols',
-          category: 'CRYPTO',
-          createdBy: 'user2',
-          createdAt: new Date('2024-01-10'),
-          updatedAt: new Date('2024-01-22'),
-          isPrivate: true,
-          inviteCode: 'CRYPTO2024',
-          maxMembers: 25,
-          currentMembers: 18,
-          totalPoolValue: 89000,
-          minimumContribution: 10,
-          status: 'ACTIVE',
-          blockchainNetwork: 'POLYGON',
-          votingThreshold: 70,
-          proposalDuration: 48,
-          autoDistribution: false,
-          totalReturns: 22100,
-          averageReturn: 24.8,
-          riskScore: 85,
-          aiRecommendations: [],
-          members: [],
-          investments: [],
-          proposals: [],
-          activities: []
-        },
-        {
-          id: '3',
-          name: 'AI & Robotics Future',
-          description: 'Investing in artificial intelligence and robotics companies',
-          category: 'AI_TECH',
-          createdBy: 'user3',
-          createdAt: new Date('2024-01-05'),
-          updatedAt: new Date('2024-01-21'),
-          isPrivate: false,
-          maxMembers: 40,
-          currentMembers: 31,
-          totalPoolValue: 156000,
-          minimumContribution: 25,
-          status: 'ACTIVE',
-          blockchainNetwork: 'ETHEREUM',
-          votingThreshold: 65,
-          proposalDuration: 96,
-          autoDistribution: true,
-          totalReturns: 31200,
-          averageReturn: 20.0,
-          riskScore: 70,
-          aiRecommendations: [],
-          members: [],
-          investments: [],
-          proposals: [],
-          activities: []
-        }
-      ]
+      // TODO: Replace with actual API call when collective capital endpoints are available
+      // const response = await apiClient.getCollectiveCircles()
+      // setCircles(response.data || [])
       
-      setCircles(mockCircles)
+      // For now, use empty array until API is implemented
+      setCircles([])
     } catch (error) {
       console.error('Error loading circles:', error)
       addToast({
@@ -157,20 +77,29 @@ export function CollectiveCapitalCircles({ className }: CollectiveCapitalCircles
 
   const loadStats = async () => {
     try {
-      // Mock stats - replace with actual API call
-      const mockStats: CircleStats = {
-        totalCircles: 127,
-        totalMembers: 2840,
-        totalPoolValue: 12500000,
-        averageReturn: 18.5,
-        topPerformingCircle: circles[0],
-        userCircles: 3,
-        userTotalInvested: 15000,
-        userTotalReturns: 2850
+      // TODO: Replace with actual API call when collective capital endpoints are available
+      // const response = await apiClient.getCollectiveCircleStats()
+      // setStats(response.data)
+      
+      // For now, use empty stats until API is implemented
+      const emptyStats: CircleStats = {
+        totalCircles: 0,
+        totalMembers: 0,
+        totalPoolValue: 0,
+        averageReturn: 0,
+        topPerformingCircle: undefined,
+        userCircles: 0,
+        userTotalInvested: 0,
+        userTotalReturns: 0
       }
-      setStats(mockStats)
+      setStats(emptyStats)
     } catch (error) {
       console.error('Error loading stats:', error)
+      addToast({
+        title: "Error",
+        description: "Failed to load circle statistics",
+        variant: "destructive"
+      })
     }
   }
 
@@ -232,13 +161,16 @@ export function CollectiveCapitalCircles({ className }: CollectiveCapitalCircles
 
   const joinCircle = async (circleId: string) => {
     try {
-      // API call to join circle
+      // TODO: Replace with actual API call when collective capital endpoints are available
+      // await apiClient.joinCollectiveCircle(circleId)
+      
       addToast({
         title: "Success",
         description: "Successfully joined the investment circle!",
       })
       loadCircles() // Refresh data
     } catch (error) {
+      console.error('Error joining circle:', error)
       addToast({
         title: "Error",
         description: "Failed to join circle",

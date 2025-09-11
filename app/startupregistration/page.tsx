@@ -169,22 +169,10 @@ export default function StartupRegistration() {
     try {
       await new Promise(resolve => setTimeout(resolve, 2000))
       
-      let mockMetrics = {}
-      switch (apiType) {
-        case 'shopify':
-          mockMetrics = { totalSales: 125000, monthlyOrders: 450, customerCount: 1250 }
-          break
-        case 'google-analytics':
-          mockMetrics = { monthlyVisitors: 15000, pageViews: 45000, conversionRate: 2.8 }
-          break
-        case 'stripe':
-          mockMetrics = { monthlyRevenue: 98000, transactionCount: 1200 }
-          break
-        default:
-          mockMetrics = { verified: true }
-      }
+      // Empty metrics - should be populated from actual API connections
+      const emptyMetrics = {}
       
-      setVerifiedMetrics(prev => ({ ...prev, [apiType]: mockMetrics }))
+      setVerifiedMetrics(prev => ({ ...prev, [apiType]: emptyMetrics }))
       setApiConnections(prev => ({ ...prev, [apiType]: true }))
       
       addToast({
@@ -222,30 +210,18 @@ export default function StartupRegistration() {
       try {
         await new Promise(resolve => setTimeout(resolve, 3000))
         
-        const mockOcrResult = {
-          companyName: 'TechStart Inc.',
-          registrationNumber: 'REG123456789',
-          incorporationDate: '2023-01-15',
-          jurisdiction: 'Delaware, USA'
-        }
-        
-        setFormData(prev => ({
-          ...prev,
-          companyName: mockOcrResult.companyName,
-          registrationNumber: mockOcrResult.registrationNumber,
-          incorporationDate: mockOcrResult.incorporationDate,
-          jurisdiction: mockOcrResult.jurisdiction
-        }))
+        // OCR processing would extract actual data from uploaded document
+        // For now, no auto-filling occurs
         
         addToast({
-          title: "OCR Processing Complete",
-          description: "Document information has been extracted and auto-filled",
+          title: "Document Uploaded",
+          description: "Business registration document uploaded successfully",
         })
         
       } catch (error) {
         addToast({
-          title: "OCR Processing Failed",
-          description: "Could not extract information from document",
+          title: "Upload Failed",
+          description: "Could not process document",
           variant: "destructive",
         })
       }

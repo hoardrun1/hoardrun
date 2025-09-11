@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTheme } from '@/contexts/ThemeContext'
 import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sidebar-layout'
 import { SidebarContent } from '@/components/ui/sidebar-content'
@@ -9,6 +9,7 @@ import { DepositModal } from '@/components/deposit-modal'
 import { SectionFooter } from '@/components/ui/section-footer'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { apiClient } from '@/lib/api-client'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, PieChart, Pie, Cell, AreaChart, Area
@@ -17,48 +18,158 @@ import {
   TrendingUp,
   TrendingDown,
   DollarSign,
-  Target
+  Target,
+  Loader2
 } from 'lucide-react'
-
-// Mock analytics data
-const monthlyData = [
-  { month: 'Jan', income: 5000, expenses: 3200, savings: 1800 },
-  { month: 'Feb', income: 5200, expenses: 3400, savings: 1800 },
-  { month: 'Mar', income: 4800, expenses: 3100, savings: 1700 },
-  { month: 'Apr', income: 5500, expenses: 3600, savings: 1900 },
-  { month: 'May', income: 5300, expenses: 3300, savings: 2000 },
-  { month: 'Jun', income: 5800, expenses: 3800, savings: 2000 }
-]
-
-const categoryData = [
-  { name: 'Housing', value: 1200, color: '#000000' },
-  { name: 'Food', value: 800, color: '#333333' },
-  { name: 'Transportation', value: 400, color: '#666666' },
-  { name: 'Entertainment', value: 300, color: '#999999' },
-  { name: 'Shopping', value: 250, color: '#CCCCCC' },
-  { name: 'Other', value: 200, color: '#EEEEEE' }
-]
-
-const weeklySpending = [
-  { day: 'Mon', amount: 45 },
-  { day: 'Tue', amount: 120 },
-  { day: 'Wed', amount: 80 },
-  { day: 'Thu', amount: 200 },
-  { day: 'Fri', amount: 150 },
-  { day: 'Sat', amount: 300 },
-  { day: 'Sun', amount: 90 }
-]
 
 export default function AnalyticsPage() {
   const { theme } = useTheme()
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  
+  // Analytics data state
+  const [cashFlowData, setCashFlowData] = useState<any>(null)
+  const [spendingData, setSpendingData] = useState<any[]>([])
+  const [monthlyData, setMonthlyData] = useState<any[]>([])
+  const [categoryData, setCategoryData] = useState<any[]>([])
+  const [weeklySpending, setWeeklySpending] = useState<any[]>([])
 
-  const totalIncome = monthlyData.reduce((sum, month) => sum + month.income, 0)
-  const totalExpenses = monthlyData.reduce((sum, month) => sum + month.expenses, 0)
-  const totalSavings = monthlyData.reduce((sum, month) => sum + month.savings, 0)
-  const avgMonthlyIncome = totalIncome / monthlyData.length
-  const avgMonthlyExpenses = totalExpenses / monthlyData.length
-  const savingsRate = ((totalSavings / totalIncome) * 100).toFixed(1)
+  useEffect(() => {
+    const fetchAnalyticsData = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+
+        // Fetch cash flow analysis for the last 6 months
+        const cashFlowResponse = await apiClient.getCashFlowAnalysis({
+          period: 'monthly',
+          start_date: new Date(Date.now() - 6 * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          end_date: new Date().toISOString().split('T')[0]
+        })
+
+        if (cashFlowResponse.error) {
+          throw new Error(cashFlowResponse.error)
+        }
+
+        setCashFlowData(cashFlowResponse.data)
+
+        // Fetch spending analysis by category
+        const spendingResponse = await apiClient.getSpendingAnalysis({
+          period: 'monthly',
+          group_by: 'category',
+          start_date: new Date(Date.now() - 6 * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          end_date: new Date().toISOString().split('T')[0]
+        })
+
+        if (spendingResponse.error) {
+          throw new Error(spendingResponse.error)
+        }
+
+        setSpendingData(spendingResponse.data || [])
+
+        // Transform cash flow data for charts
+        if (cashFlowResponse.data) {
+          const monthlyChartData = cashFlowResponse.data.monthly_breakdown?.map((month: any) => ({
+            month: new Date(month.period).toLocaleDateString('en-US', { month: 'short' }),
+            income: month.total_income || 0,
+            expenses: month.total_expenses || 0,
+            savings: (month.total_income || 0) - (month.total_expenses || 0)
+          })) || []
+          setMonthlyData(monthlyChartData)
+        }
+
+        // Transform spending data for pie chart
+        if (spendingResponse.data) {
+          const categoryChartData = spendingResponse.data.map((category: any, index: number) => ({
+            name: category.category || 'Other',
+            value: category.total_amount || 0,
+            color: `hsl(${(index * 45) % 360}, 70%, 50%)`
+          }))
+          setCategoryData(categoryChartData)
+        }
+
+        // Fetch weekly spending data from API
+        const weeklySpendingResponse = await apiClient.getSpendingAnalysis({
+          period: 'weekly',
+          group_by: 'day',
+          start_date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          end_date: new Date().toISOString().split('T')[0]
+        })
+
+        if (weeklySpendingResponse.data && !weeklySpendingResponse.error) {
+          // Transform API data for weekly chart
+          const weeklyData = weeklySpendingResponse.data.map((day: any) => ({
+            day: new Date(day.period || day.date).toLocaleDateString('en-US', { weekday: 'short' }),
+            amount: day.total_amount || day.amount || 0
+          }))
+          setWeeklySpending(weeklyData)
+        } else {
+          // Fallback to empty data if API fails
+          console.warn('Failed to fetch weekly spending data:', weeklySpendingResponse.error)
+          setWeeklySpending([])
+        }
+
+      } catch (err) {
+        console.error('Error fetching analytics data:', err)
+        setError(err instanceof Error ? err.message : 'Failed to load analytics data')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchAnalyticsData()
+  }, [])
+
+  // Calculate metrics from the fetched data
+  const totalIncome = monthlyData.reduce((sum, month) => sum + (month.income || 0), 0)
+  const totalExpenses = monthlyData.reduce((sum, month) => sum + (month.expenses || 0), 0)
+  const totalSavings = monthlyData.reduce((sum, month) => sum + (month.savings || 0), 0)
+  const avgMonthlyIncome = monthlyData.length > 0 ? totalIncome / monthlyData.length : 0
+  const avgMonthlyExpenses = monthlyData.length > 0 ? totalExpenses / monthlyData.length : 0
+  const savingsRate = totalIncome > 0 ? ((totalSavings / totalIncome) * 100).toFixed(1) : '0.0'
+
+  if (loading) {
+    return (
+      <SidebarProvider>
+        <ResponsiveSidebarLayout
+          sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
+        >
+          <SidebarToggle />
+          <div className="min-h-screen bg-background pt-16 pb-32 px-4 sm:pt-20 sm:pb-32 sm:px-6">
+            <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
+              <div className="flex items-center justify-center h-64">
+                <Loader2 className="h-8 w-8 animate-spin" />
+                <span className="ml-2">Loading analytics...</span>
+              </div>
+            </div>
+          </div>
+        </ResponsiveSidebarLayout>
+      </SidebarProvider>
+    )
+  }
+
+  if (error) {
+    return (
+      <SidebarProvider>
+        <ResponsiveSidebarLayout
+          sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
+        >
+          <SidebarToggle />
+          <div className="min-h-screen bg-background pt-16 pb-32 px-4 sm:pt-20 sm:pb-32 sm:px-6">
+            <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
+              <div className="flex items-center justify-center h-64">
+                <div className="text-center">
+                  <p className="text-red-500 mb-2">Error loading analytics</p>
+                  <p className="text-sm text-muted-foreground">{error}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </ResponsiveSidebarLayout>
+      </SidebarProvider>
+    )
+  }
 
   return (
     <SidebarProvider>

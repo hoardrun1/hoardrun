@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ui/use-toast'
+import { apiClient } from '@/lib/api-client'
 
 interface FinanceContextType {
   balance: number
@@ -31,11 +32,12 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     setError(null)
 
     try {
-      const response = await fetch('/api/accounts/balance')
-      if (!response.ok) throw new Error('Failed to fetch balance')
-
-      const data = await response.json()
-      setBalance(data.balance)
+      const response = await apiClient.getDashboard()
+      if (response.data) {
+        setBalance(response.data.balance || 0)
+      } else {
+        throw new Error(response.error || 'Failed to fetch balance')
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch balance')
       // Remove toast for better performance - let components handle error display
@@ -51,22 +53,15 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     setError(null)
 
     try {
-      const response = await fetch('/api/transactions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          type: 'TRANSFER',
-          amount,
-          category: 'SAVINGS',
-          description: 'Transfer to savings'
-        }),
+      const response = await apiClient.createTransaction({
+        type: 'TRANSFER',
+        amount,
+        category: 'SAVINGS',
+        description: 'Transfer to savings'
       })
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || 'Transfer failed')
+      if (response.error) {
+        throw new Error(response.error)
       }
 
       await refreshBalance()
@@ -95,22 +90,15 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     setError(null)
 
     try {
-      const response = await fetch('/api/transactions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          type: 'INVESTMENT',
-          amount,
-          category: 'INVESTMENT',
-          description: 'Transfer to investment'
-        }),
+      const response = await apiClient.createTransaction({
+        type: 'INVESTMENT',
+        amount,
+        category: 'INVESTMENT',
+        description: 'Transfer to investment'
       })
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || 'Transfer failed')
+      if (response.error) {
+        throw new Error(response.error)
       }
 
       await refreshBalance()
@@ -139,22 +127,15 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     setError(null)
 
     try {
-      const response = await fetch('/api/transactions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          type: 'DEPOSIT',
-          amount,
-          category: 'DEPOSIT',
-          description: 'Deposit funds'
-        }),
+      const response = await apiClient.createTransaction({
+        type: 'DEPOSIT',
+        amount,
+        category: 'DEPOSIT',
+        description: 'Deposit funds'
       })
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || 'Deposit failed')
+      if (response.error) {
+        throw new Error(response.error)
       }
 
       await refreshBalance()
@@ -183,22 +164,15 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     setError(null)
 
     try {
-      const response = await fetch('/api/transactions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          type: 'WITHDRAWAL',
-          amount,
-          category: 'WITHDRAWAL',
-          description: 'Withdraw funds'
-        }),
+      const response = await apiClient.createTransaction({
+        type: 'WITHDRAWAL',
+        amount,
+        category: 'WITHDRAWAL',
+        description: 'Withdraw funds'
       })
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || 'Withdrawal failed')
+      if (response.error) {
+        throw new Error(response.error)
       }
 
       await refreshBalance()

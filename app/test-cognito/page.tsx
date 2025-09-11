@@ -17,9 +17,9 @@ export default function TestCognitoPage() {
     clearError 
   } = useCognitoAuth()
 
-  const [email, setEmail] = useState('test@example.com')
-  const [password, setPassword] = useState('TestPassword123!')
-  const [name, setName] = useState('Test User')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [name, setName] = useState('')
   const [confirmationCode, setConfirmationCode] = useState('')
   const [message, setMessage] = useState('')
   const [needsVerification, setNeedsVerification] = useState(false)

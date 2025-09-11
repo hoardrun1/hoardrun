@@ -1,15 +1,21 @@
 'use client'
 
 import { Clock, ArrowRight } from 'lucide-react'
-import { useAppNavigation } from '@/hooks/useAppNavigation'
+import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState } from 'react'
 
 export const NavigationHistory = () => {
-  const { navigationStack, navigate } = useAppNavigation()
+  const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
 
-  const recentPages = navigationStack.slice(-5).reverse()
+  // TODO: Replace with proper navigation history from Python backend or local storage
+  const recentPages = [
+    '/dashboard',
+    '/transactions',
+    '/analytics',
+    '/profile'
+  ]
 
   return (
     <div className="relative">
@@ -34,7 +40,7 @@ export const NavigationHistory = () => {
                 <button
                   key={index}
                   onClick={() => {
-                    navigate(page)
+                    router.push(page)
                     setIsOpen(false)
                   }}
                   className="w-full flex items-center justify-between px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors"

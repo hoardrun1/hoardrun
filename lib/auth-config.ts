@@ -1,15 +1,7 @@
 import CredentialsProvider from 'next-auth/providers/credentials'
 import GoogleProvider from 'next-auth/providers/google'
-import bcrypt from 'bcryptjs'
 import { AuthOptions } from 'next-auth'
-
-// Mock user for development
-const mockUser = {
-  id: 'user-1',
-  email: 'user@example.com',
-  name: 'Test User',
-  password: '$2a$10$8VEZeIRjuUDQPRGiHv0Kv.Zr3jXHQNRPDxjUdyLh1Vr8HMJvQX9Vy', // hashed 'password123'
-}
+import { apiClient } from './api-client'
 
 export const authConfig: AuthOptions = {
   providers: [
@@ -35,30 +27,25 @@ export const authConfig: AuthOptions = {
           throw new Error('Please enter an email and password')
         }
 
-        // In development, use mock user
-        if (process.env.NODE_ENV === 'development') {
-          // Check if credentials match mock user
-          if (credentials.email === mockUser.email) {
-            const passwordMatch = await bcrypt.compare(credentials.password, mockUser.password);
+        try {
+          // Use the backend API for authentication
+          const response = await apiClient.login(credentials.email, credentials.password)
 
-            if (passwordMatch) {
-              return {
-                id: mockUser.id,
-                email: mockUser.email,
-                name: mockUser.name,
-              };
+          if (response.data && response.status === 200) {
+            // Extract user data from the response
+            const userData = response.data.user || response.data
+            return {
+              id: userData.id || userData.user_id || 'temp-id',
+              email: userData.email || credentials.email,
+              name: userData.name || userData.first_name || credentials.email,
             }
-            throw new Error('Incorrect password');
           }
-          throw new Error('No user found with this email');
+        } catch (error) {
+          console.error('Authentication error:', error)
+          throw new Error('Invalid credentials')
         }
 
-        // For now, just allow any login in development
-        return {
-          id: 'user-1',
-          email: credentials.email,
-          name: 'Test User',
-        };
+        return null
       }
     })
   ],

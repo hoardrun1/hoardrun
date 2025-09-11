@@ -205,7 +205,7 @@ export function MobileQuickActions({ onAddMoney }: { onAddMoney?: () => void }) 
             <Wallet className="h-5 w-5" />
           </Button>
         </motion.div>
-      </div>
+      </motion.div>
     </div>
   )
 }

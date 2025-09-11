@@ -1,7 +1,7 @@
 'use client'
 
 import { ChevronRight, Home } from 'lucide-react'
-import { useAppNavigation } from '@/hooks/useAppNavigation'
+import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 
 interface BreadcrumbsProps {
@@ -9,9 +9,9 @@ interface BreadcrumbsProps {
 }
 
 export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ className = '' }) => {
-  const { currentPage } = useAppNavigation()
+  const pathname = usePathname()
   
-  const pathSegments = currentPage
+  const pathSegments = (pathname || '')
     .split('/')
     .filter(Boolean)
     .map((segment) => ({

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,33 +8,29 @@ import { PiggyBank, Target, Plus } from 'lucide-react';
 import { Progress } from "@/components/ui/progress";
 import { useRouter } from 'next/navigation';
 import { navigation } from '@/lib/navigation';
-
-// Sample savings goals for preview
-const sampleGoals = [
-  {
-    id: '1',
-    name: 'Emergency Fund',
-    description: 'For unexpected expenses',
-    icon: PiggyBank,
-    color: 'bg-muted-foreground',
-    progress: 75,
-    amount: 7500,
-    target: 10000,
-  },
-  {
-    id: '2',
-    name: 'Vacation',
-    description: 'Summer trip to Europe',
-    icon: Target,
-    color: 'bg-muted-foreground',
-    progress: 45,
-    amount: 2250,
-    target: 5000,
-  },
-];
+import { apiClient } from '@/lib/api-client';
 
 export function SavingsPreview() {
+  const [savingsGoals, setSavingsGoals] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
+
+  useEffect(() => {
+    loadSavingsGoals();
+  }, []);
+
+  const loadSavingsGoals = async () => {
+    try {
+      setLoading(true);
+      const response = await apiClient.getSavings();
+      setSavingsGoals(response.data || []);
+    } catch (error) {
+      console.error('Failed to load savings goals:', error);
+      setSavingsGoals([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleNavigateToSavings = () => {
     // Connect the navigation flow
@@ -67,7 +64,12 @@ export function SavingsPreview() {
       </CardHeader>
       <CardContent className="pb-6">
         <div className="space-y-4">
-          {sampleGoals.map((goal, index) => (
+          {loading ? (
+            <div className="flex items-center justify-center p-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+            </div>
+          ) : savingsGoals.length > 0 ? (
+            savingsGoals.map((goal, index) => (
             <motion.div
               key={goal.id}
               initial={{ opacity: 0, y: 10 }}
@@ -96,7 +98,16 @@ export function SavingsPreview() {
                 </div>
               </div>
             </motion.div>
-          ))}
+            ))
+          ) : (
+            <div className="text-center py-8">
+              <PiggyBank className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-sm font-medium text-foreground mb-2">No Savings Goals</h3>
+              <p className="text-xs text-muted-foreground mb-4">
+                Start saving for your future by creating your first goal.
+              </p>
+            </div>
+          )}
           <Button
             variant="outline"
             className="w-full mt-4 border-dashed border-border text-muted-foreground hover:text-foreground hover:bg-secondary"

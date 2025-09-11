@@ -9,8 +9,19 @@ import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { TrendingUp, TrendingDown, AlertCircle, ChevronRight, BarChart2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { type Investment } from '@/services/investment-service'
 import { ResponsiveContainer, Area, AreaChart } from 'recharts'
+
+// TODO: Replace with proper type from Python backend API
+interface Investment {
+  id: string
+  name: string
+  type: string
+  amount: number
+  return: number
+  risk: 'LOW' | 'MEDIUM' | 'HIGH'
+  performance: Array<{ value: number }>
+  holdings: string[]
+}
 
 interface InvestmentCardProps {
   investment: Investment

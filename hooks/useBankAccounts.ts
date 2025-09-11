@@ -1,21 +1,13 @@
 import { useState, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ui/use-toast'
-
-interface BankAccount {
-  id: string
-  type: 'CHECKING' | 'SAVINGS' | 'INVESTMENT'
-  number: string
-  balance: number
-  currency: string
-  isActive: boolean
-  createdAt: string
-  updatedAt: string
-}
+import { apiClient, BankAccount } from '@/lib/api-client'
 
 interface CreateAccountData {
-  type: BankAccount['type']
+  account_type: 'CHECKING' | 'SAVINGS' | 'INVESTMENT'
+  name?: string
   currency?: string
+  initial_deposit?: number
 }
 
 export function useBankAccounts() {
@@ -26,17 +18,20 @@ export function useBankAccounts() {
   const [error, setError] = useState<string | null>(null)
 
   const fetchAccounts = useCallback(async () => {
-    if (!user) return
+    if (!user?.id) return
 
     setIsLoading(true)
     setError(null)
 
     try {
-      const response = await fetch('/api/accounts')
-      if (!response.ok) throw new Error('Failed to fetch accounts')
+      const response = await apiClient.getAccounts(user.id)
+      if (response.error) {
+        throw new Error(response.error)
+      }
 
-      const data = await response.json()
-      setAccounts(data)
+      if (response.data) {
+        setAccounts(response.data.accounts)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
       toast({
@@ -50,34 +45,28 @@ export function useBankAccounts() {
   }, [user, toast])
 
   const createAccount = useCallback(async (data: CreateAccountData) => {
-    if (!user) return
+    if (!user?.id) return
 
     setIsLoading(true)
     setError(null)
 
     try {
-      const response = await fetch('/api/accounts', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || 'Failed to create account')
+      const response = await apiClient.createAccount(user.id, data)
+      if (response.error) {
+        throw new Error(response.error)
       }
 
-      const newAccount = await response.json()
-      setAccounts(prev => [newAccount, ...prev])
+      if (response.data) {
+        const newAccount = response.data.account
+        setAccounts(prev => [newAccount, ...prev])
 
-      toast({
-        title: 'Success',
-        description: 'Account created successfully',
-      })
+        toast({
+          title: 'Success',
+          description: 'Account created successfully',
+        })
 
-      return newAccount
+        return newAccount
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
       toast({
@@ -91,28 +80,20 @@ export function useBankAccounts() {
     }
   }, [user, toast])
 
-  const closeAccount = useCallback(async (id: string) => {
-    if (!user) return
+  const closeAccount = useCallback(async (id: string, reason?: string) => {
+    if (!user?.id) return
 
     setIsLoading(true)
     setError(null)
 
     try {
-      const response = await fetch(`/api/accounts/${id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ isActive: false }),
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || 'Failed to close account')
+      const response = await apiClient.closeAccount(id, user.id, reason)
+      if (response.error) {
+        throw new Error(response.error)
       }
 
       setAccounts(prev => prev.map(account => 
-        account.id === id ? { ...account, isActive: false } : account
+        account.id === id ? { ...account, status: 'closed' } : account
       ))
 
       toast({
@@ -136,17 +117,17 @@ export function useBankAccounts() {
     return accounts.find(account => account.id === id)
   }, [accounts])
 
-  const getAccountsByType = useCallback((type: BankAccount['type']) => {
-    return accounts.filter(account => account.type === type)
+  const getAccountsByType = useCallback((type: BankAccount['account_type']) => {
+    return accounts.filter(account => account.account_type === type)
   }, [accounts])
 
   const getActiveAccounts = useCallback(() => {
-    return accounts.filter(account => account.isActive)
+    return accounts.filter(account => account.status === 'active')
   }, [accounts])
 
   const calculateTotalBalance = useCallback(() => {
     return accounts.reduce((total, account) => {
-      if (account.isActive) {
+      if (account.status === 'active') {
         return total + account.balance
       }
       return total

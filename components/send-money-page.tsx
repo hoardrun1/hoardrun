@@ -362,8 +362,8 @@ export function SendMoneyPage() {
                         <SelectItem key={account.id} value={account.id}>
                           <div className="flex justify-between items-center w-full">
                             <div>
-                              <div className="font-medium">{account.type}</div>
-                              <div className="text-sm text-muted-foreground">•••• {account.number?.slice(-4) || '****'}</div>
+                              <div className="font-medium">{account.account_type}</div>
+                              <div className="text-sm text-muted-foreground">•••• {account.account_number?.slice(-4) || '****'}</div>
                             </div>
                             <div className="text-sm font-medium">
                               {formatCurrency(account.balance)}

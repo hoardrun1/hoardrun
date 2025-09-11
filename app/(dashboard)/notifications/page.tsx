@@ -1,7 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useTheme } from '@/contexts/ThemeContext'
+import { useAuth } from '@/contexts/AuthContext'
+import { apiClient } from '@/lib/api-client'
+import { toast } from 'sonner'
 import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sidebar-layout'
 import { SidebarContent } from '@/components/ui/sidebar-content'
 import { SidebarToggle } from '@/components/ui/sidebar-toggle'
@@ -26,93 +29,163 @@ import {
 } from 'lucide-react'
 import { SectionFooter } from '@/components/ui/section-footer'
 
-// Mock notifications data
-const notifications = [
-  {
-    id: '1',
-    type: 'transaction',
-    title: 'Payment Received',
-    message: 'You received $500 from John Smith',
-    timestamp: '2 minutes ago',
-    read: false,
-    icon: DollarSign,
-    color: 'text-black'
-  },
-  {
-    id: '2',
-    type: 'security',
-    title: 'New Login Detected',
-    message: 'Someone signed in from a new device in New York',
-    timestamp: '1 hour ago',
-    read: false,
-    icon: Shield,
-    color: 'text-black'
-  },
-  {
-    id: '3',
-    type: 'card',
-    title: 'Card Payment',
-    message: 'Your card ending in 1234 was charged $89.99',
-    timestamp: '3 hours ago',
-    read: true,
-    icon: CreditCard,
-    color: 'text-black'
-  },
-  {
-    id: '4',
-    type: 'investment',
-    title: 'Portfolio Update',
-    message: 'Your portfolio gained 2.5% today (+$125.50)',
-    timestamp: '5 hours ago',
-    read: true,
-    icon: TrendingUp,
-    color: 'text-black'
-  },
-  {
-    id: '5',
-    type: 'system',
-    title: 'Maintenance Complete',
-    message: 'Scheduled maintenance has been completed successfully',
-    timestamp: '1 day ago',
-    read: true,
-    icon: CheckCircle,
-    color: 'text-black'
-  }
-]
-
 export default function NotificationsPage() {
   const { theme } = useTheme()
+  const { user } = useAuth()
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false)
-  const [notificationList, setNotificationList] = useState(notifications)
+  const [notificationList, setNotificationList] = useState<any[]>([])
+  const [notificationSummary, setNotificationSummary] = useState<any>(null)
   const [selectedTab, setSelectedTab] = useState('all')
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const unreadCount = notificationList.filter(n => !n.read).length
+  const unreadCount = notificationList.filter(n => n.status === 'unread').length
 
-  const markAsRead = (id: string) => {
-    setNotificationList(prev => 
-      prev.map(notification => 
-        notification.id === id 
-          ? { ...notification, read: true }
-          : notification
+  // Fetch notifications data from API
+  const fetchNotifications = useCallback(async () => {
+    if (!user) return
+
+    try {
+      setIsLoading(true)
+      setError(null)
+
+      // Fetch notifications and summary in parallel
+      const [notificationsResponse, summaryResponse] = await Promise.all([
+        apiClient.getNotifications({
+          limit: 50,
+          skip: 0
+        }),
+        apiClient.getNotificationSummary()
+      ])
+
+      // Handle notifications
+      if (notificationsResponse.data) {
+        const formattedNotifications = notificationsResponse.data.map((notification: any) => ({
+          ...notification,
+          icon: getNotificationTypeIcon(notification.type),
+          read: notification.status === 'read',
+          timestamp: formatTimestamp(notification.created_at)
+        }))
+        setNotificationList(formattedNotifications)
+      }
+
+      // Handle summary
+      if (summaryResponse.data) {
+        setNotificationSummary(summaryResponse.data)
+      }
+
+    } catch (err) {
+      const errorMessage = 'Failed to load notifications. Please try again.'
+      setError(errorMessage)
+      toast.error(errorMessage)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [user])
+
+  // Format timestamp to relative time
+  const formatTimestamp = (timestamp: string) => {
+    const date = new Date(timestamp)
+    const now = new Date()
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
+
+    if (diffInMinutes < 1) return 'Just now'
+    if (diffInMinutes < 60) return `${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''} ago`
+    
+    const diffInHours = Math.floor(diffInMinutes / 60)
+    if (diffInHours < 24) return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`
+    
+    const diffInDays = Math.floor(diffInHours / 24)
+    if (diffInDays < 7) return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`
+    
+    return date.toLocaleDateString()
+  }
+
+  // Mark notification as read
+  const markAsRead = async (id: string) => {
+    try {
+      const response = await apiClient.markNotificationAsRead(id)
+      
+      if (response.error) {
+        toast.error('Failed to mark notification as read')
+        return
+      }
+
+      setNotificationList(prev => 
+        prev.map(notification => 
+          notification.id === id 
+            ? { ...notification, read: true, status: 'read' }
+            : notification
+        )
       )
-    )
+
+      toast.success('Notification marked as read')
+    } catch (error) {
+      toast.error('Failed to mark notification as read')
+    }
   }
 
-  const markAllAsRead = () => {
-    setNotificationList(prev => 
-      prev.map(notification => ({ ...notification, read: true }))
-    )
+  // Mark all notifications as read
+  const markAllAsRead = async () => {
+    try {
+      const unreadIds = notificationList
+        .filter(n => n.status === 'unread')
+        .map(n => n.id)
+
+      if (unreadIds.length === 0) return
+
+      const response = await apiClient.bulkUpdateNotifications({
+        notification_ids: unreadIds,
+        status: 'read'
+      })
+
+      if (response.error) {
+        toast.error('Failed to mark all notifications as read')
+        return
+      }
+
+      setNotificationList(prev => 
+        prev.map(notification => ({ 
+          ...notification, 
+          read: true, 
+          status: 'read' 
+        }))
+      )
+
+      toast.success('All notifications marked as read')
+    } catch (error) {
+      toast.error('Failed to mark all notifications as read')
+    }
   }
 
-  const deleteNotification = (id: string) => {
-    setNotificationList(prev => prev.filter(n => n.id !== id))
+  // Delete notification
+  const deleteNotification = async (id: string) => {
+    try {
+      const response = await apiClient.deleteNotification(id)
+      
+      if (response.error) {
+        toast.error('Failed to delete notification')
+        return
+      }
+
+      setNotificationList(prev => prev.filter(n => n.id !== id))
+      toast.success('Notification deleted')
+    } catch (error) {
+      toast.error('Failed to delete notification')
+    }
   }
 
+  // Filter notifications based on selected tab
   const filteredNotifications = notificationList.filter(notification => {
     if (selectedTab === 'all') return true
-    if (selectedTab === 'unread') return !notification.read
+    if (selectedTab === 'unread') return notification.status === 'unread'
     return notification.type === selectedTab
   })
+
+  // Load notifications on component mount
+  useEffect(() => {
+    fetchNotifications()
+  }, [fetchNotifications])
 
   const getNotificationTypeIcon = (type: string) => {
     switch (type) {
@@ -160,6 +233,27 @@ export default function NotificationsPage() {
               )}
             </div>
 
+            {/* Error State */}
+            {error && (
+              <Card className="border-destructive">
+                <CardContent className="flex items-center space-x-2 p-4">
+                  <AlertTriangle className="h-5 w-5 text-destructive" />
+                  <div>
+                    <p className="text-sm font-medium text-destructive">Error loading notifications</p>
+                    <p className="text-xs text-muted-foreground">{error}</p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={fetchNotifications}
+                    className="ml-auto"
+                  >
+                    Retry
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Summary Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               <Card>
@@ -169,7 +263,7 @@ export default function NotificationsPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-foreground">
-                    {notificationList.length}
+                    {isLoading ? '...' : notificationList.length}
                   </div>
                   <p className="text-xs text-muted-foreground">All notifications</p>
                 </CardContent>
@@ -182,7 +276,7 @@ export default function NotificationsPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-foreground">
-                    {unreadCount}
+                    {isLoading ? '...' : unreadCount}
                   </div>
                   <p className="text-xs text-muted-foreground">Need attention</p>
                 </CardContent>
@@ -195,7 +289,7 @@ export default function NotificationsPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-foreground">
-                    {notificationList.filter(n => n.type === 'security').length}
+                    {isLoading ? '...' : notificationList.filter(n => n.type === 'security').length}
                   </div>
                   <p className="text-xs text-muted-foreground">Security alerts</p>
                 </CardContent>
@@ -208,7 +302,7 @@ export default function NotificationsPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-foreground">
-                    {notificationList.filter(n => ['transaction', 'card', 'investment'].includes(n.type)).length}
+                    {isLoading ? '...' : notificationList.filter(n => ['transaction', 'card', 'investment'].includes(n.type)).length}
                   </div>
                   <p className="text-xs text-muted-foreground">Money related</p>
                 </CardContent>

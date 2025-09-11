@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { 
   Users, TrendingUp, Shield, Globe, Clock, 
   Vote, DollarSign, Target, Calendar, 
   Activity, BarChart3, PieChart, ArrowRight,
-  Crown, Star, Award, Zap
+  Crown, Star, Award, Zap, Loader2
 } from 'lucide-react'
 import {
   Dialog,
@@ -25,6 +25,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { CollectiveCircle } from '@/types/collective-capital'
 import { cn } from '@/lib/utils'
+import { apiClient } from '@/lib/api-client'
+import { useToast } from "@/components/ui/use-toast"
 
 interface CircleDetailsModalProps {
   circle: CollectiveCircle
@@ -35,6 +37,45 @@ interface CircleDetailsModalProps {
 
 export function CircleDetailsModal({ circle, open, onOpenChange, onJoin }: CircleDetailsModalProps) {
   const [activeTab, setActiveTab] = useState('overview')
+  const [members, setMembers] = useState<any[]>([])
+  const [investments, setInvestments] = useState<any[]>([])
+  const [activities, setActivities] = useState<any[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const { toast } = useToast()
+
+  useEffect(() => {
+    if (open && circle.id) {
+      loadCircleDetails()
+    }
+  }, [open, circle.id])
+
+  const loadCircleDetails = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      
+      // TODO: Replace with actual API calls when collective capital endpoints are available
+      // For now, we'll simulate API calls that return empty data
+      const response = await new Promise(resolve => 
+        setTimeout(() => resolve({ data: [], success: true }), 500)
+      );
+      
+      setMembers([])
+      setInvestments([])
+      setActivities([])
+    } catch (err) {
+      console.error('Error loading circle details:', err)
+      setError('Failed to load circle details')
+      toast({
+        title: "Error",
+        description: "Failed to load circle details. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const formatCurrency = (amount: number) => {
     if (amount >= 1000000) {
@@ -63,29 +104,6 @@ export function CircleDetailsModal({ circle, open, onOpenChange, onJoin }: Circl
   }
 
   const membershipProgress = (circle.currentMembers / circle.maxMembers) * 100
-
-  // Mock data for demonstration
-  const mockMembers = [
-    { id: '1', name: 'Alice Johnson', avatar: '', role: 'CREATOR', contribution: 15000, returns: 2250 },
-    { id: '2', name: 'Bob Smith', avatar: '', role: 'ADMIN', contribution: 12000, returns: 1800 },
-    { id: '3', name: 'Carol Davis', avatar: '', role: 'MEMBER', contribution: 8000, returns: 1200 },
-    { id: '4', name: 'David Wilson', avatar: '', role: 'MEMBER', contribution: 10000, returns: 1500 },
-    { id: '5', name: 'Eva Brown', avatar: '', role: 'MEMBER', contribution: 6000, returns: 900 }
-  ]
-
-  const mockInvestments = [
-    { id: '1', name: 'Tesla Inc.', symbol: 'TSLA', amount: 45000, returns: 8100, percentage: 18 },
-    { id: '2', name: 'Solar Panel ETF', symbol: 'ICLN', amount: 35000, returns: 5250, percentage: 15 },
-    { id: '3', name: 'Wind Energy Corp', symbol: 'WIND', amount: 25000, returns: 3000, percentage: 12 },
-    { id: '4', name: 'Green Hydrogen', symbol: 'HGEN', amount: 20000, returns: 2150, percentage: 10.75 }
-  ]
-
-  const mockActivities = [
-    { id: '1', type: 'INVESTMENT_EXECUTED', description: 'Invested $45,000 in Tesla Inc.', time: '2 hours ago' },
-    { id: '2', type: 'PROPOSAL_VOTED', description: 'Proposal for Wind Energy Corp approved', time: '1 day ago' },
-    { id: '3', type: 'MEMBER_JOINED', description: 'Eva Brown joined the circle', time: '3 days ago' },
-    { id: '4', type: 'RETURNS_DISTRIBUTED', description: 'Quarterly returns distributed to members', time: '1 week ago' }
-  ]
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -224,15 +242,22 @@ export function CircleDetailsModal({ circle, open, onOpenChange, onJoin }: Circl
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {mockActivities.slice(0, 3).map((activity) => (
-                      <div key={activity.id} className="flex items-center gap-3">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                        <div className="flex-1">
-                          <p className="text-sm">{activity.description}</p>
-                          <p className="text-xs text-gray-500">{activity.time}</p>
-                        </div>
+                    {activities.length === 0 ? (
+                      <div className="text-center py-4">
+                        <Activity className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                        <p className="text-sm text-gray-500">No recent activity</p>
                       </div>
-                    ))}
+                    ) : (
+                      activities.slice(0, 3).map((activity: any) => (
+                        <div key={activity.id} className="flex items-center gap-3">
+                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                          <div className="flex-1">
+                            <p className="text-sm">{activity.description}</p>
+                            <p className="text-xs text-gray-500">{activity.time}</p>
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -240,76 +265,97 @@ export function CircleDetailsModal({ circle, open, onOpenChange, onJoin }: Circl
 
             <TabsContent value="members" className="space-y-4">
               <div className="space-y-3">
-                {mockMembers.map((member) => (
-                  <Card key={member.id}>
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <Avatar>
-                            <AvatarFallback>
-                              {member.name.split(' ').map(n => n[0]).join('')}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <div className="font-medium flex items-center gap-2">
-                              {member.name}
-                              {member.role === 'CREATOR' && <Crown className="h-4 w-4 text-yellow-500" />}
-                              {member.role === 'ADMIN' && <Star className="h-4 w-4 text-blue-500" />}
+                {members.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-sm text-gray-500">No members to display</p>
+                  </div>
+                ) : (
+                  members.map((member: any) => (
+                    <Card key={member.id}>
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <Avatar>
+                              <AvatarFallback>
+                                {member.name.split(' ').map((n: string) => n[0]).join('')}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <div className="font-medium flex items-center gap-2">
+                                {member.name}
+                                {member.role === 'CREATOR' && <Crown className="h-4 w-4 text-yellow-500" />}
+                                {member.role === 'ADMIN' && <Star className="h-4 w-4 text-blue-500" />}
+                              </div>
+                              <div className="text-sm text-gray-500">{member.role}</div>
                             </div>
-                            <div className="text-sm text-gray-500">{member.role}</div>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-medium">{formatCurrency(member.contribution)}</div>
+                            <div className="text-sm text-green-600">
+                              +{formatCurrency(member.returns)} returns
+                            </div>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <div className="font-medium">{formatCurrency(member.contribution)}</div>
-                          <div className="text-sm text-green-600">
-                            +{formatCurrency(member.returns)} returns
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
               </div>
             </TabsContent>
 
             <TabsContent value="investments" className="space-y-4">
               <div className="space-y-3">
-                {mockInvestments.map((investment) => (
-                  <Card key={investment.id}>
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="font-medium">{investment.name}</div>
-                          <div className="text-sm text-gray-500">{investment.symbol}</div>
-                        </div>
-                        <div className="text-right">
-                          <div className="font-medium">{formatCurrency(investment.amount)}</div>
-                          <div className="text-sm text-green-600">
-                            +{formatCurrency(investment.returns)} ({investment.percentage}%)
+                {investments.length === 0 ? (
+                  <div className="text-center py-8">
+                    <TrendingUp className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-sm text-gray-500">No investments to display</p>
+                  </div>
+                ) : (
+                  investments.map((investment: any) => (
+                    <Card key={investment.id}>
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="font-medium">{investment.name}</div>
+                            <div className="text-sm text-gray-500">{investment.symbol}</div>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-medium">{formatCurrency(investment.amount)}</div>
+                            <div className="text-sm text-green-600">
+                              +{formatCurrency(investment.returns)} ({investment.percentage}%)
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
               </div>
             </TabsContent>
 
             <TabsContent value="activity" className="space-y-4">
               <div className="space-y-3">
-                {mockActivities.map((activity) => (
-                  <Card key={activity.id}>
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-3">
-                        <Activity className="h-4 w-4 text-blue-500" />
-                        <div className="flex-1">
-                          <p className="text-sm">{activity.description}</p>
-                          <p className="text-xs text-gray-500">{activity.time}</p>
+                {activities.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-sm text-gray-500">No activity to display</p>
+                  </div>
+                ) : (
+                  activities.map((activity: any) => (
+                    <Card key={activity.id}>
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-3">
+                          <Activity className="h-4 w-4 text-blue-500" />
+                          <div className="flex-1">
+                            <p className="text-sm">{activity.description}</p>
+                            <p className="text-xs text-gray-500">{activity.time}</p>
+                          </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
               </div>
             </TabsContent>
           </ScrollArea>

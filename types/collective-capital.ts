@@ -250,7 +250,7 @@ export interface CircleStats {
   totalMembers: number
   totalPoolValue: number
   averageReturn: number
-  topPerformingCircle: CollectiveCircle
+  topPerformingCircle?: CollectiveCircle
   userCircles: number
   userTotalInvested: number
   userTotalReturns: number

@@ -44,8 +44,34 @@ import { SidebarToggle } from '@/components/ui/sidebar-toggle'
 import { SidebarContent } from '@/components/ui/sidebar-content'
 import { LayoutWrapper } from '@/components/ui/layout-wrapper'
 
+// Define the valid category types
+type InvestmentCategory = 'private-equity' | 'real-estate' | 'fixed-income'
+
+// Define the opportunity type
+interface InvestmentOpportunity {
+  id: number
+  name: string
+  category: string
+  description: string
+  minInvestment: number
+  targetReturn: string
+  duration: string
+  riskLevel: string
+  location: string
+  fundingGoal: number
+  currentFunding: number
+  investors: number
+  rating: number
+  founded: number
+  employees: number
+  revenue: string
+  growth: string
+  highlights: string[]
+  image: string
+}
+
 // Mock data for investment opportunities
-const investmentOpportunities = {
+const investmentOpportunities: Record<InvestmentCategory, InvestmentOpportunity[]> = {
   'private-equity': [
     {
       id: 1,
@@ -180,13 +206,13 @@ const investmentOpportunities = {
   ]
 }
 
-const categoryTitles = {
+const categoryTitles: Record<InvestmentCategory, string> = {
   'private-equity': 'Private Equity Opportunities',
   'real-estate': 'Real Estate Investments',
   'fixed-income': 'Fixed Income Securities'
 }
 
-const categoryDescriptions = {
+const categoryDescriptions: Record<InvestmentCategory, string> = {
   'private-equity': 'Invest in high-growth private companies with significant return potential',
   'real-estate': 'Diversify your portfolio with commercial and residential real estate',
   'fixed-income': 'Generate steady income with bonds and fixed-return securities'
@@ -195,13 +221,14 @@ const categoryDescriptions = {
 export function InvestmentOpportunitiesPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const category = searchParams.get('category') || 'private-equity'
+  const categoryParam = searchParams?.get('category') || 'private-equity'
+  const category = (categoryParam in investmentOpportunities ? categoryParam : 'private-equity') as InvestmentCategory
   
   const [searchQuery, setSearchQuery] = useState('')
   const [sortBy, setSortBy] = useState('rating')
   const [filterRisk, setFilterRisk] = useState('all')
-  const [selectedOpportunity, setSelectedOpportunity] = useState(null)
-  const [favorites, setFavorites] = useState(new Set())
+  const [selectedOpportunity, setSelectedOpportunity] = useState<InvestmentOpportunity | null>(null)
+  const [favorites, setFavorites] = useState(new Set<number>())
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false)
 
   const opportunities = investmentOpportunities[category] || []
@@ -229,7 +256,7 @@ export function InvestmentOpportunitiesPage() {
       }
     })
 
-  const toggleFavorite = (id) => {
+  const toggleFavorite = (id: number) => {
     const newFavorites = new Set(favorites)
     if (newFavorites.has(id)) {
       newFavorites.delete(id)
@@ -239,7 +266,7 @@ export function InvestmentOpportunitiesPage() {
     setFavorites(newFavorites)
   }
 
-  const formatCurrency = (amount) => {
+  const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
@@ -248,7 +275,7 @@ export function InvestmentOpportunitiesPage() {
     }).format(amount)
   }
 
-  const getRiskColor = (risk) => {
+  const getRiskColor = (risk: string) => {
     switch (risk.toLowerCase()) {
       case 'very low':
         return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'

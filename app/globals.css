@@ -49,6 +49,38 @@
   input[type="email"],
   input[type="password"],
   input[type="number"],
+  input[type="search"],
+  textarea,
+  select {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+
+  /* Mobile-first button sizing */
+  .btn-mobile {
+    min-height: 44px; /* Apple's recommended minimum touch target */
+    min-width: 44px;
+  }
+
+  /* Mobile-friendly scrollbars */
+  .mobile-scroll::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  .mobile-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .mobile-scroll::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 2px;
+  }
+
+  /* Mobile navigation spacing */
+  .mobile-nav-spacing {
+    padding-bottom: env(safe-area-inset-bottom, 20px);
+  }
+  input[type="number"],
   input[type="tel"],
   input[type="url"],
   input[type="search"],

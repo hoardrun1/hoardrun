@@ -1,14 +1,18 @@
 // Mobile-first responsive design utilities for HoardRun
 
 export const mobileStyles = {
-  // Container and layout
+  // Container and layout - Mobile First
   container: 'w-full max-w-full px-3 sm:px-4 md:px-6 lg:px-8',
-  pageContainer: 'min-h-screen bg-background overflow-x-hidden',
+  pageContainer: 'min-h-screen-mobile bg-background overflow-x-hidden safe-area-inset-top safe-area-inset-bottom',
   contentWrapper: 'w-full max-w-full',
-  
-  // Dashboard specific
-  dashboardContainer: 'min-h-screen bg-background pt-14 sm:pt-16 pb-20 sm:pb-6 px-3 sm:px-4 md:px-6',
+
+  // Dashboard specific - Mobile First
+  dashboardContainer: 'min-h-screen-mobile bg-background pt-14 sm:pt-16 pb-20 sm:pb-6 px-3 sm:px-4 md:px-6',
   dashboardContent: 'max-w-7xl mx-auto space-y-3 sm:space-y-4 md:space-y-6',
+
+  // Headers - Mobile First
+  stickyHeader: 'sticky top-14 sm:top-16 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border',
+  headerContent: 'flex items-center justify-between py-3 sm:py-4 px-3 sm:px-4 md:px-6',
   
   // Typography - Mobile-first approach
   heading: {
@@ -42,21 +46,25 @@ export const mobileStyles = {
     twoCol: 'grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6',
   },
   
-  // Buttons
+  // Buttons - Mobile First with Touch Targets
   button: {
-    default: 'h-9 sm:h-10 px-3 sm:px-4 text-sm sm:text-base',
-    small: 'h-8 px-2 sm:px-3 text-xs sm:text-sm',
-    large: 'h-10 sm:h-11 px-4 sm:px-6 text-sm sm:text-base',
-    icon: 'h-8 w-8 sm:h-9 sm:w-9',
+    default: 'h-11 sm:h-10 px-4 sm:px-4 text-sm sm:text-base btn-mobile',
+    small: 'h-9 sm:h-8 px-3 sm:px-3 text-xs sm:text-sm btn-mobile',
+    large: 'h-12 sm:h-11 px-5 sm:px-6 text-sm sm:text-base btn-mobile',
+    icon: 'h-11 w-11 sm:h-9 sm:w-9 btn-mobile',
+    mobile: 'min-h-[44px] min-w-[44px] px-4 py-2 text-sm font-medium',
     iconSmall: 'h-6 w-6 sm:h-8 sm:w-8',
   },
   
-  // Form elements
+  // Form elements - Mobile First (16px font prevents zoom on iOS)
   form: {
-    input: 'h-9 sm:h-10 px-3 text-sm sm:text-base',
-    inputSmall: 'h-8 px-2 text-xs sm:text-sm',
-    label: 'text-sm sm:text-base font-medium',
-    group: 'space-y-2 sm:space-y-3',
+    input: 'h-12 sm:h-10 px-4 sm:px-3 text-base sm:text-sm rounded-lg sm:rounded-md',
+    inputSmall: 'h-10 sm:h-8 px-3 sm:px-2 text-sm sm:text-xs rounded-lg sm:rounded-md',
+    textarea: 'min-h-[100px] sm:min-h-[80px] px-4 sm:px-3 py-3 sm:py-2 text-base sm:text-sm rounded-lg sm:rounded-md',
+    select: 'h-12 sm:h-10 px-4 sm:px-3 text-base sm:text-sm rounded-lg sm:rounded-md',
+    searchInput: 'h-12 sm:h-10 pl-12 sm:pl-9 pr-4 sm:pr-3 text-base sm:text-sm rounded-lg sm:rounded-md',
+    label: 'text-sm sm:text-base font-medium mb-2',
+    group: 'space-y-3 sm:space-y-2',
   },
   
   // Cards and surfaces

@@ -554,18 +554,18 @@ export function InvestmentPage() {
         sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
       >
         <SidebarToggle />
-        <LayoutWrapper className="min-h-screen bg-background">
+        <LayoutWrapper className="min-h-screen-mobile bg-background">
           {/* Sticky Quick Navigation - Mobile First */}
-          <div className="sticky top-14 sm:top-16 z-40 bg-background border-b border-border">
-            <div className="flex items-center justify-between p-2">
-              <h1 className="text-xs sm:text-base font-bold text-foreground">Investments</h1>
+          <div className="sticky top-14 sm:top-16 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
+            <div className="flex items-center justify-between p-3 sm:p-4">
+              <h1 className="text-base sm:text-lg md:text-xl font-bold text-foreground">Investments</h1>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowQuickNav(!showQuickNav)}
-                className="p-1 h-auto"
+                className="p-2 h-auto btn-mobile"
               >
-                {showQuickNav ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+                {showQuickNav ? <X className="h-4 w-4 sm:h-5 sm:w-5" /> : <Menu className="h-4 w-4 sm:h-5 sm:w-5" />}
               </Button>
             </div>
             
@@ -603,30 +603,30 @@ export function InvestmentPage() {
           {/* Spacer to prevent sticky header overlap */}
           <div className="h-4"></div>
 
-          {/* Portfolio Overview Section */}
-          <section id="overview" className="p-3 bg-primary text-primary-foreground">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
+          {/* Portfolio Overview Section - Mobile Optimized */}
+          <section id="overview" className="p-3 sm:p-4 md:p-6 bg-primary text-primary-foreground">
+            <div className="space-y-3 sm:space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
                 <div>
-                  <h2 className="text-xs sm:text-base font-bold">Portfolio Overview</h2>
+                  <h2 className="text-sm sm:text-base md:text-lg font-bold">Portfolio Overview</h2>
                   <p className="text-xs sm:text-sm text-primary-foreground/60">AI-Powered Management</p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 sm:gap-3">
                   <Button
                     size="sm"
                     onClick={() => setShowInvestModal(true)}
-                    className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 text-xs sm:text-sm px-2 py-1 h-auto"
+                    className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 text-xs sm:text-sm px-3 py-2 h-auto btn-mobile flex-1 sm:flex-none"
                   >
-                    <DollarSign className="w-3 h-3 mr-1" />
+                    <DollarSign className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                     Invest
                   </Button>
                   <Button
                     size="sm"
                     onClick={() => router.push('/startupregistration')}
                     variant="outline"
-                    className="border-primary-foreground/50 text-primary-foreground bg-transparent hover:bg-primary-foreground hover:text-primary text-xs sm:text-sm px-2 py-1 h-auto"
+                    className="border-primary-foreground/50 text-primary-foreground bg-transparent hover:bg-primary-foreground hover:text-primary text-xs sm:text-sm px-3 py-2 h-auto btn-mobile flex-1 sm:flex-none"
                   >
-                    <Building2 className="w-3 h-3 mr-1" />
+                    <Building2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                     Register
                   </Button>
                 </div>
@@ -757,7 +757,7 @@ export function InvestmentPage() {
               <p className="text-xs sm:text-sm text-muted-foreground">Diversified portfolio opportunities</p>
             </div>
             
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {investmentCategories.map((category) => (
                 <Card
                   key={category.id}

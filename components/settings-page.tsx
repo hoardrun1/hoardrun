@@ -212,15 +212,15 @@ export function SettingsPageComponent() {
   }
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${isDarkMode ? 'dark bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
+    <div className={`min-h-screen-mobile transition-colors duration-300 pb-20 sm:pb-6 overflow-x-hidden ${isDarkMode ? 'dark bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
       <header className="sticky top-14 sm:top-16 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-14 items-center">
-          <div className="mr-4 hidden md:flex">
-            <Link href="/home" className="mr-6 flex items-center space-x-2">
+        <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8 flex h-12 sm:h-14 items-center">
+          <div className="mr-3 sm:mr-4 hidden md:flex">
+            <Link href="/home" className="mr-4 sm:mr-6 flex items-center space-x-2">
               <motion.span
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="hidden font-bold sm:inline-block"
+                className="hidden font-bold sm:inline-block text-sm sm:text-base"
               >
                 Hoardrun
               </motion.span>

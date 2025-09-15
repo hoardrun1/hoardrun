@@ -13,10 +13,27 @@ import { FloatingNotificationBell } from '@/components/ui/floating-notification-
 
 export const metadata: Metadata = {
   title: 'Hoardrun',
-  description: 'Your digital banking solution',
-  viewport: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no',
-  themeColor: '#000000',
+  description: 'Your digital banking solution - Mobile-first digital banking',
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+    viewportFit: 'cover'
+  },
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#000000' }
+  ],
   manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Hoardrun'
+  },
+  formatDetection: {
+    telephone: false
+  }
 }
 
 export default function RootLayout({
@@ -33,14 +50,14 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
-      <body className="font-sans antialiased overflow-x-hidden">
+      <body className="font-sans antialiased overflow-x-hidden safe-area-inset-top safe-area-inset-bottom">
         {/* Using AWS Cognito authentication instead of NextAuth */}
         <ThemeProvider>
           <ClientAuthProvider>
             <FinanceProvider>
               <NavigationProvider>
                 <NotificationProvider>
-                  <div className="min-h-screen bg-background">
+                  <div className="min-h-screen-mobile bg-background">
                     {children}
                     <FloatingNotificationBell />
                   </div>

@@ -19,13 +19,19 @@ export function LayoutWrapper({
   withTransition = true,
 }: LayoutWrapperProps) {
   const content = (
-    <div className={cn('min-h-screen flex flex-col', className)}>
+    <div className={cn(
+      'min-h-screen-mobile flex flex-col overflow-x-hidden',
+      'safe-area-inset-top safe-area-inset-bottom',
+      className
+    )}>
       {showBreadcrumbs && (
-        <div className="container mx-auto px-4 py-2">
+        <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8 py-2">
           <Breadcrumbs />
         </div>
       )}
-      {children}
+      <div className="flex-1 w-full">
+        {children}
+      </div>
     </div>
   )
 

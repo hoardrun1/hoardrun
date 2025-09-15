@@ -353,15 +353,15 @@ export function HomePageComponent() {
         <SidebarToggle />
         <LayoutWrapper className="bg-background min-h-screen" showBreadcrumbs={false}>
 
-      {/* Header */}
+      {/* Header - Mobile Optimized */}
       <header className="sticky top-14 sm:top-16 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
         <div className="w-full px-3 sm:px-4 lg:px-6">
-          <div className="flex h-14 sm:h-16 items-center justify-between">
-            <div className="flex items-center gap-2 sm:gap-4 lg:ml-16 min-w-0 flex-1">
+          <div className="flex h-12 sm:h-14 md:h-16 items-center justify-between">
+            <div className="flex items-center gap-2 sm:gap-3 md:gap-4 min-w-0 flex-1">
               <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                <Wallet className="h-6 w-6 sm:h-8 sm:w-8 text-foreground flex-shrink-0" />
+                <Wallet className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 text-foreground flex-shrink-0" />
                 <div className="min-w-0">
-                  <h1 className="text-sm sm:text-lg lg:text-xl font-bold text-foreground truncate">
+                  <h1 className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-foreground truncate">
                     Welcome back, {user?.name || 'User'}
                   </h1>
                   <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">
@@ -441,21 +441,21 @@ export function HomePageComponent() {
           transition={{ duration: 0.3, delay: 0.1 }}
           className="mb-8"
         >
-          {/* Primary Quick Actions */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+          {/* Primary Quick Actions - Mobile First */}
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6">
             <motion.button
               whileHover={{ scale: 1.02, y: -2 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setShowDepositModal(true)}
-              className="bg-primary text-primary-foreground p-8 rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-500 group border-2 border-transparent hover:border-border"
+              className="bg-primary text-primary-foreground p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl shadow-lg sm:shadow-2xl hover:shadow-xl sm:hover:shadow-3xl transition-all duration-500 group border-2 border-transparent hover:border-border btn-mobile"
             >
-              <div className="flex flex-col items-center gap-4">
-                <div className="bg-primary-foreground/10 p-4 rounded-2xl group-hover:bg-primary-foreground/20 transition-all duration-300 group-hover:scale-110">
-                  <Plus className="h-8 w-8" />
+              <div className="flex flex-col items-center gap-2 sm:gap-3 md:gap-4">
+                <div className="bg-primary-foreground/10 p-2 sm:p-3 md:p-4 rounded-xl sm:rounded-2xl group-hover:bg-primary-foreground/20 transition-all duration-300 group-hover:scale-110">
+                  <Plus className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8" />
                 </div>
                 <div className="text-center">
-                  <p className="font-bold text-lg">Add Money</p>
-                  <p className="text-sm opacity-70 mt-1">Top up instantly</p>
+                  <p className="font-bold text-sm sm:text-base md:text-lg">Add Money</p>
+                  <p className="text-xs sm:text-sm opacity-70 mt-0.5 sm:mt-1 hidden sm:block">Top up instantly</p>
                 </div>
               </div>
             </motion.button>

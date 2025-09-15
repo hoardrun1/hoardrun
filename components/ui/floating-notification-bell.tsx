@@ -86,16 +86,16 @@ export function FloatingNotificationBell() {
 
   return (
     <>
-      {/* Floating Bell Button */}
+      {/* Floating Bell Button - Mobile Optimized Position */}
       <motion.div
-        className="fixed bottom-6 right-6 z-[90]"
+        className="fixed top-20 sm:top-24 right-3 sm:right-6 lg:bottom-6 lg:top-auto z-[90]"
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ type: 'spring', stiffness: 200, damping: 20 }}
       >
         <motion.button
           onClick={handleBellClick}
-          className="relative bg-gray-900 hover:bg-gray-800 text-white p-3 rounded-full shadow-2xl transition-colors duration-200"
+          className="relative bg-gray-900 hover:bg-gray-800 text-white p-3 sm:p-3 rounded-full shadow-2xl transition-colors duration-200 min-h-[44px] min-w-[44px] flex items-center justify-center"
           animate={shouldPeep ? {
             scale: [1, 1.1, 1, 1.05, 1],
             rotate: [0, -10, 10, -5, 0],
@@ -108,14 +108,14 @@ export function FloatingNotificationBell() {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
-          <Bell className="h-5 w-5" />
+          <Bell className="h-5 w-5 sm:h-5 sm:w-5" />
           
-          {/* Notification Count Badge */}
+          {/* Notification Count Badge - Mobile Optimized */}
           {unreadCount > 0 && (
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center"
+              className="absolute -top-1 sm:-top-2 -right-1 sm:-right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 sm:h-6 sm:w-6 flex items-center justify-center shadow-lg"
             >
               {unreadCount > 99 ? '99+' : unreadCount}
             </motion.div>
@@ -146,13 +146,13 @@ export function FloatingNotificationBell() {
               onClick={() => setIsOpen(false)}
             />
 
-            {/* Notification Panel */}
+            {/* Notification Panel - Mobile Optimized Position */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              initial={{ opacity: 0, scale: 0.9, y: -20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              exit={{ opacity: 0, scale: 0.9, y: -20 }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed bottom-24 right-6 w-80 max-w-[calc(100vw-3rem)] bg-white rounded-lg shadow-2xl border border-gray-200 z-[90]"
+              className="fixed top-32 sm:top-36 right-3 sm:right-6 lg:bottom-24 lg:top-auto w-80 max-w-[calc(100vw-1.5rem)] sm:max-w-[calc(100vw-3rem)] bg-white rounded-lg shadow-2xl border border-gray-200 z-[90]"
             >
               {/* Header */}
               <div className="p-4 border-b border-gray-200">

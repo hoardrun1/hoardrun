@@ -86,9 +86,9 @@ export function FloatingNotificationBell() {
 
   return (
     <>
-      {/* Floating Bell Button - Mobile Optimized Position */}
+      {/* Floating Bell Button - Desktop Only */}
       <motion.div
-        className="fixed top-20 sm:top-24 right-3 sm:right-6 lg:bottom-6 lg:top-auto z-[90]"
+        className="hidden lg:block fixed bottom-6 right-6 z-[90]"
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ type: 'spring', stiffness: 200, damping: 20 }}
@@ -146,13 +146,13 @@ export function FloatingNotificationBell() {
               onClick={() => setIsOpen(false)}
             />
 
-            {/* Notification Panel - Mobile Optimized Position */}
+            {/* Notification Panel - Desktop Only */}
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: -20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: -20 }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed top-32 sm:top-36 right-3 sm:right-6 lg:bottom-24 lg:top-auto w-80 max-w-[calc(100vw-1.5rem)] sm:max-w-[calc(100vw-3rem)] bg-white rounded-lg shadow-2xl border border-gray-200 z-[90]"
+              className="fixed bottom-24 right-6 w-80 bg-white rounded-lg shadow-2xl border border-gray-200 z-[90]"
             >
               {/* Header */}
               <div className="p-4 border-b border-gray-200">

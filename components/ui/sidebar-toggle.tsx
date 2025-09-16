@@ -12,6 +12,11 @@ interface SidebarToggleProps {
 export function SidebarToggle({ className = '' }: SidebarToggleProps) {
   const { isOpen, toggle, isLargeScreen } = useSidebar()
 
+  // Only render on large screens
+  if (!isLargeScreen) {
+    return null
+  }
+
   return (
     <Button
       variant="ghost"

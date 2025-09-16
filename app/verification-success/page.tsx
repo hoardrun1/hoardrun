@@ -30,7 +30,7 @@ function VerificationContent() {
   }, [router, email]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-black to-blue-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-xl shadow-xl p-8 text-center">
         <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
           <CheckCircle className="h-8 w-8 text-green-600" />

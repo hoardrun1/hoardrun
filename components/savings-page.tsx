@@ -3,9 +3,9 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { 
-  ArrowUpRight, 
-  ArrowDownRight, 
+import {
+  ArrowUpRight,
+  ArrowDownRight,
   PiggyBank,
   Target,
   TrendingUp,
@@ -33,7 +33,15 @@ import {
   BarChart3,
   Coins,
   TrendingDown,
-  Gift
+  Gift,
+  Lock,
+  Calculator,
+  DollarSign,
+  Percent,
+  CheckCircle,
+  ArrowRight,
+  Building,
+  CreditCard
 } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -219,6 +227,39 @@ interface AIBehaviorInsight {
   confidence: number
 }
 
+interface FixedDepositTerm {
+  id: string
+  duration: string
+  months: number
+  interestRate: number
+  minAmount: number
+  features: string[]
+  popular?: boolean
+}
+
+interface FixedDeposit {
+  id: string
+  amount: number
+  term: FixedDepositTerm
+  startDate: Date
+  maturityDate: Date
+  interestEarned: number
+  status: 'active' | 'matured' | 'pending'
+  autoRenew: boolean
+  saveToInvest: boolean
+  investmentThreshold?: number
+}
+
+interface SaveToInvestOption {
+  id: string
+  name: string
+  description: string
+  riskLevel: 'Low' | 'Medium' | 'High'
+  expectedReturn: number
+  minAmount: number
+  icon: any
+}
+
 export function SavingsPageComponent() {
   const router = useRouter()
   const { toast } = useToast()
@@ -240,6 +281,104 @@ export function SavingsPageComponent() {
   const [goalRecommendations, setGoalRecommendations] = useState<AIGoalRecommendation[]>([])
   const [selectedPeriod, setSelectedPeriod] = useState('6months')
   const [isNewGoalDialogOpen, setIsNewGoalDialogOpen] = useState(false)
+
+  // Fixed Deposit State
+  const [fixedDeposits, setFixedDeposits] = useState<FixedDeposit[]>([])
+  const [isFixedDepositDialogOpen, setIsFixedDepositDialogOpen] = useState(false)
+  const [selectedTab, setSelectedTab] = useState('goals')
+  const [fdForm, setFdForm] = useState({
+    amount: '',
+    termId: '',
+    autoRenew: false,
+    saveToInvest: false,
+    investmentOption: '',
+    investmentThreshold: ''
+  })
+
+  // Fixed Deposit Terms
+  const fixedDepositTerms: FixedDepositTerm[] = [
+    {
+      id: '3m',
+      duration: '3 Months',
+      months: 3,
+      interestRate: 4.5,
+      minAmount: 1000,
+      features: ['Flexible withdrawal', 'Monthly interest payout option']
+    },
+    {
+      id: '6m',
+      duration: '6 Months',
+      months: 6,
+      interestRate: 5.2,
+      minAmount: 1000,
+      features: ['Higher returns', 'Quarterly interest payout'],
+      popular: true
+    },
+    {
+      id: '1y',
+      duration: '1 Year',
+      months: 12,
+      interestRate: 6.1,
+      minAmount: 2000,
+      features: ['Best returns', 'Tax benefits', 'Auto-renewal option']
+    },
+    {
+      id: '2y',
+      duration: '2 Years',
+      months: 24,
+      interestRate: 6.8,
+      minAmount: 5000,
+      features: ['Premium returns', 'Compound interest', 'Investment ladder option']
+    },
+    {
+      id: '3y',
+      duration: '3 Years',
+      months: 36,
+      interestRate: 7.2,
+      minAmount: 10000,
+      features: ['Maximum returns', 'Tax optimization', 'Wealth building']
+    }
+  ]
+
+  // Save to Invest Options
+  const saveToInvestOptions: SaveToInvestOption[] = [
+    {
+      id: 'conservative',
+      name: 'Conservative Growth',
+      description: 'Low-risk bonds and stable funds',
+      riskLevel: 'Low',
+      expectedReturn: 8.5,
+      minAmount: 500,
+      icon: Shield
+    },
+    {
+      id: 'balanced',
+      name: 'Balanced Portfolio',
+      description: 'Mix of stocks and bonds for steady growth',
+      riskLevel: 'Medium',
+      expectedReturn: 12.3,
+      minAmount: 1000,
+      icon: BarChart3
+    },
+    {
+      id: 'growth',
+      name: 'Growth Focused',
+      description: 'Equity-heavy portfolio for maximum returns',
+      riskLevel: 'High',
+      expectedReturn: 16.8,
+      minAmount: 2000,
+      icon: TrendingUp
+    },
+    {
+      id: 'tech',
+      name: 'Tech Innovation',
+      description: 'Technology and innovation focused investments',
+      riskLevel: 'High',
+      expectedReturn: 18.2,
+      minAmount: 2500,
+      icon: Zap
+    }
+  ]
   const [newGoalForm, setNewGoalForm] = useState<NewGoalFormData>({
     name: '',
     targetAmount: '',
@@ -398,6 +537,91 @@ export function SavingsPageComponent() {
     }
   }
 
+  // Fixed Deposit Terms
+  const fixedDepositTerms: FixedDepositTerm[] = [
+    {
+      id: '3m',
+      duration: '3 Months',
+      months: 3,
+      interestRate: 4.5,
+      minAmount: 1000,
+      features: ['Flexible withdrawal', 'Monthly interest payout option']
+    },
+    {
+      id: '6m',
+      duration: '6 Months',
+      months: 6,
+      interestRate: 5.2,
+      minAmount: 1000,
+      features: ['Higher returns', 'Quarterly interest payout'],
+      popular: true
+    },
+    {
+      id: '1y',
+      duration: '1 Year',
+      months: 12,
+      interestRate: 6.1,
+      minAmount: 2000,
+      features: ['Best returns', 'Tax benefits', 'Auto-renewal option']
+    },
+    {
+      id: '2y',
+      duration: '2 Years',
+      months: 24,
+      interestRate: 6.8,
+      minAmount: 5000,
+      features: ['Premium returns', 'Compound interest', 'Investment ladder option']
+    },
+    {
+      id: '3y',
+      duration: '3 Years',
+      months: 36,
+      interestRate: 7.2,
+      minAmount: 10000,
+      features: ['Maximum returns', 'Tax optimization', 'Wealth building']
+    }
+  ]
+
+  // Save to Invest Options
+  const saveToInvestOptions: SaveToInvestOption[] = [
+    {
+      id: 'conservative',
+      name: 'Conservative Growth',
+      description: 'Low-risk bonds and stable funds',
+      riskLevel: 'Low',
+      expectedReturn: 8.5,
+      minAmount: 500,
+      icon: Shield
+    },
+    {
+      id: 'balanced',
+      name: 'Balanced Portfolio',
+      description: 'Mix of stocks and bonds for steady growth',
+      riskLevel: 'Medium',
+      expectedReturn: 12.3,
+      minAmount: 1000,
+      icon: BarChart3
+    },
+    {
+      id: 'growth',
+      name: 'Growth Focused',
+      description: 'Equity-heavy portfolio for maximum returns',
+      riskLevel: 'High',
+      expectedReturn: 16.8,
+      minAmount: 2000,
+      icon: TrendingUp
+    },
+    {
+      id: 'tech',
+      name: 'Tech Innovation',
+      description: 'Technology and innovation focused investments',
+      riskLevel: 'High',
+      expectedReturn: 18.2,
+      minAmount: 2500,
+      icon: Zap
+    }
+  ]
+
   const handleCreateGoal = async () => {
     try {
       if (!newGoalForm.name || !newGoalForm.targetAmount || !newGoalForm.monthlyContribution) {
@@ -437,6 +661,70 @@ export function SavingsPageComponent() {
         variant: 'destructive',
       })
     }
+  }
+
+  const handleCreateFixedDeposit = async () => {
+    try {
+      if (!fdForm.amount || !fdForm.termId) {
+        throw new Error('Please fill in all required fields')
+      }
+
+      const selectedTerm = fixedDepositTerms.find(term => term.id === fdForm.termId)
+      if (!selectedTerm) {
+        throw new Error('Invalid term selected')
+      }
+
+      const amount = parseFloat(fdForm.amount)
+      if (amount < selectedTerm.minAmount) {
+        throw new Error(`Minimum amount for this term is $${selectedTerm.minAmount}`)
+      }
+
+      const startDate = new Date()
+      const maturityDate = new Date()
+      maturityDate.setMonth(maturityDate.getMonth() + selectedTerm.months)
+
+      const interestEarned = (amount * selectedTerm.interestRate * selectedTerm.months) / (12 * 100)
+
+      const newFixedDeposit: FixedDeposit = {
+        id: `fd_${Date.now()}`,
+        amount,
+        term: selectedTerm,
+        startDate,
+        maturityDate,
+        interestEarned,
+        status: 'active',
+        autoRenew: fdForm.autoRenew,
+        saveToInvest: fdForm.saveToInvest,
+        investmentThreshold: fdForm.investmentThreshold ? parseFloat(fdForm.investmentThreshold) : undefined
+      }
+
+      setFixedDeposits(prev => [...prev, newFixedDeposit])
+      setIsFixedDepositDialogOpen(false)
+      setFdForm({
+        amount: '',
+        termId: '',
+        autoRenew: false,
+        saveToInvest: false,
+        investmentOption: '',
+        investmentThreshold: ''
+      })
+
+      toast({
+        title: 'Success',
+        description: 'Fixed deposit created successfully',
+      })
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to create fixed deposit',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  const calculateMaturityAmount = (amount: number, term: FixedDepositTerm) => {
+    const interest = (amount * term.interestRate * term.months) / (12 * 100)
+    return amount + interest
   }
 
   const renderAnalytics = () => {
@@ -633,7 +921,7 @@ export function SavingsPageComponent() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6 space-y-6">
+      <main className="container mx-auto px-4 lg:py-6 space-y-6">
         {/* AI Recommendations */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -954,15 +1242,29 @@ export function SavingsPageComponent() {
           </Card>
         </motion.div>
 
-        {/* Savings Goals */}
+        {/* Savings & Fixed Deposits Tabs */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.5 }}
         >
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-semibold dark:text-white">Savings Goals</h2>
-            <Dialog open={isNewGoalDialogOpen} onOpenChange={setIsNewGoalDialogOpen}>
+          <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsTrigger value="goals" className="flex items-center gap-2">
+                <Target className="h-4 w-4" />
+                Savings Goals
+              </TabsTrigger>
+              <TabsTrigger value="fixed-deposits" className="flex items-center gap-2">
+                <Lock className="h-4 w-4" />
+                Fixed Deposits
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Savings Goals Tab */}
+            <TabsContent value="goals">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-semibold dark:text-white">Savings Goals</h2>
+                <Dialog open={isNewGoalDialogOpen} onOpenChange={setIsNewGoalDialogOpen}>
               <DialogTrigger asChild>
                 <Button>
                   <Plus className="h-4 w-4 mr-2" />
@@ -1038,9 +1340,307 @@ export function SavingsPageComponent() {
             </Dialog>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {savingsGoals.map((goal) => renderGoalCard(goal))}
-          </div>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {savingsGoals.map((goal) => renderGoalCard(goal))}
+              </div>
+            </TabsContent>
+
+            {/* Fixed Deposits Tab */}
+            <TabsContent value="fixed-deposits">
+              <div className="space-y-6">
+                {/* Fixed Deposit Header */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-2xl font-semibold dark:text-white">Fixed Deposits</h2>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Secure your savings with guaranteed returns
+                    </p>
+                  </div>
+                  <Dialog open={isFixedDepositDialogOpen} onOpenChange={setIsFixedDepositDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button>
+                        <Plus className="h-4 w-4 mr-2" />
+                        New Fixed Deposit
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[600px]">
+                      <DialogHeader>
+                        <DialogTitle>Create Fixed Deposit</DialogTitle>
+                        <DialogDescription>
+                          Choose your deposit amount and term for guaranteed returns
+                        </DialogDescription>
+                      </DialogHeader>
+
+                      <div className="space-y-6 py-4">
+                        {/* Amount Input */}
+                        <div className="space-y-2">
+                          <Label htmlFor="fd-amount">Deposit Amount</Label>
+                          <div className="relative">
+                            <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                            <Input
+                              id="fd-amount"
+                              type="number"
+                              placeholder="Enter amount"
+                              value={fdForm.amount}
+                              onChange={(e) => setFdForm(prev => ({ ...prev, amount: e.target.value }))}
+                              className="pl-10"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Term Selection */}
+                        <div className="space-y-3">
+                          <Label>Select Term</Label>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {fixedDepositTerms.map((term) => (
+                              <Card
+                                key={term.id}
+                                className={`cursor-pointer transition-all hover:shadow-md ${
+                                  fdForm.termId === term.id
+                                    ? 'ring-2 ring-primary border-primary'
+                                    : 'hover:border-primary/50'
+                                } ${term.popular ? 'border-orange-200 bg-orange-50/50' : ''}`}
+                                onClick={() => setFdForm(prev => ({ ...prev, termId: term.id }))}
+                              >
+                                <CardContent className="p-4">
+                                  <div className="flex items-center justify-between mb-2">
+                                    <h3 className="font-semibold">{term.duration}</h3>
+                                    {term.popular && (
+                                      <Badge variant="secondary" className="bg-orange-100 text-orange-700">
+                                        Popular
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  <div className="space-y-1">
+                                    <div className="flex items-center gap-2">
+                                      <Percent className="h-4 w-4 text-green-600" />
+                                      <span className="text-lg font-bold text-green-600">
+                                        {term.interestRate}% p.a.
+                                      </span>
+                                    </div>
+                                    <p className="text-sm text-muted-foreground">
+                                      Min: ${term.minAmount.toLocaleString()}
+                                    </p>
+                                    {fdForm.amount && fdForm.termId === term.id && (
+                                      <div className="mt-2 p-2 bg-green-50 rounded-lg">
+                                        <p className="text-sm font-medium text-green-800">
+                                          Maturity Amount: ${calculateMaturityAmount(parseFloat(fdForm.amount), term).toLocaleString()}
+                                        </p>
+                                      </div>
+                                    )}
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Options */}
+                        <div className="space-y-4">
+                          <div className="flex items-center space-x-2">
+                            <Switch
+                              id="auto-renew"
+                              checked={fdForm.autoRenew}
+                              onCheckedChange={(checked) => setFdForm(prev => ({ ...prev, autoRenew: checked }))}
+                            />
+                            <Label htmlFor="auto-renew" className="text-sm">
+                              Auto-renew at maturity
+                            </Label>
+                          </div>
+
+                          <div className="flex items-center space-x-2">
+                            <Switch
+                              id="save-to-invest"
+                              checked={fdForm.saveToInvest}
+                              onCheckedChange={(checked) => setFdForm(prev => ({ ...prev, saveToInvest: checked }))}
+                            />
+                            <Label htmlFor="save-to-invest" className="text-sm">
+                              Enable "Save to Invest" at maturity
+                            </Label>
+                          </div>
+
+                          {fdForm.saveToInvest && (
+                            <div className="ml-6 space-y-3 p-4 bg-blue-50 rounded-lg">
+                              <Label className="text-sm font-medium">Investment Options</Label>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                {saveToInvestOptions.map((option) => {
+                                  const Icon = option.icon
+                                  return (
+                                    <Card
+                                      key={option.id}
+                                      className={`cursor-pointer transition-all hover:shadow-sm ${
+                                        fdForm.investmentOption === option.id
+                                          ? 'ring-2 ring-blue-500 border-blue-500'
+                                          : 'hover:border-blue-300'
+                                      }`}
+                                      onClick={() => setFdForm(prev => ({ ...prev, investmentOption: option.id }))}
+                                    >
+                                      <CardContent className="p-3">
+                                        <div className="flex items-center gap-2 mb-1">
+                                          <Icon className="h-4 w-4 text-blue-600" />
+                                          <span className="font-medium text-sm">{option.name}</span>
+                                        </div>
+                                        <p className="text-xs text-muted-foreground mb-1">
+                                          {option.description}
+                                        </p>
+                                        <div className="flex items-center justify-between">
+                                          <Badge
+                                            variant={option.riskLevel === 'Low' ? 'secondary' : option.riskLevel === 'Medium' ? 'default' : 'destructive'}
+                                            className="text-xs"
+                                          >
+                                            {option.riskLevel} Risk
+                                          </Badge>
+                                          <span className="text-xs font-medium text-green-600">
+                                            {option.expectedReturn}% return
+                                          </span>
+                                        </div>
+                                      </CardContent>
+                                    </Card>
+                                  )
+                                })}
+                              </div>
+
+                              <div className="space-y-2">
+                                <Label htmlFor="investment-threshold" className="text-sm">
+                                  Investment Threshold (Optional)
+                                </Label>
+                                <Input
+                                  id="investment-threshold"
+                                  type="number"
+                                  placeholder="Minimum amount to invest"
+                                  value={fdForm.investmentThreshold}
+                                  onChange={(e) => setFdForm(prev => ({ ...prev, investmentThreshold: e.target.value }))}
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                  Only invest if maturity amount exceeds this threshold
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsFixedDepositDialogOpen(false)}>
+                          Cancel
+                        </Button>
+                        <Button onClick={handleCreateFixedDeposit}>
+                          Create Fixed Deposit
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+
+                {/* Fixed Deposits Summary */}
+                {fixedDeposits.length > 0 && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Calculator className="h-4 w-4 text-blue-600" />
+                          <span className="text-sm font-medium">Total Deposits</span>
+                        </div>
+                        <p className="text-2xl font-bold">
+                          ${fixedDeposits.reduce((sum, fd) => sum + fd.amount, 0).toLocaleString()}
+                        </p>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <TrendingUp className="h-4 w-4 text-green-600" />
+                          <span className="text-sm font-medium">Expected Returns</span>
+                        </div>
+                        <p className="text-2xl font-bold text-green-600">
+                          ${fixedDeposits.reduce((sum, fd) => sum + fd.interestEarned, 0).toLocaleString()}
+                        </p>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Wallet className="h-4 w-4 text-purple-600" />
+                          <span className="text-sm font-medium">Maturity Value</span>
+                        </div>
+                        <p className="text-2xl font-bold">
+                          ${fixedDeposits.reduce((sum, fd) => sum + fd.amount + fd.interestEarned, 0).toLocaleString()}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
+
+                {/* Fixed Deposits Grid */}
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {fixedDeposits.length === 0 ? (
+                    <Card className="col-span-full">
+                      <CardContent className="flex flex-col items-center justify-center py-12">
+                        <Lock className="h-12 w-12 text-muted-foreground mb-4" />
+                        <h3 className="text-lg font-semibold mb-2">No Fixed Deposits Yet</h3>
+                        <p className="text-muted-foreground text-center mb-4">
+                          Start securing your savings with guaranteed returns
+                        </p>
+                        <Button onClick={() => setIsFixedDepositDialogOpen(true)}>
+                          Create Your First Fixed Deposit
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    fixedDeposits.map((fd) => (
+                      <Card key={fd.id} className="hover:shadow-md transition-shadow">
+                        <CardContent className="p-6">
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2">
+                              <Lock className="h-5 w-5 text-green-600" />
+                              <span className="font-semibold">{fd.term.duration}</span>
+                            </div>
+                            <Badge
+                              variant={fd.status === 'active' ? 'default' : fd.status === 'matured' ? 'secondary' : 'outline'}
+                            >
+                              {fd.status}
+                            </Badge>
+                          </div>
+
+                          <div className="space-y-3">
+                            <div>
+                              <p className="text-sm text-muted-foreground">Principal Amount</p>
+                              <p className="text-2xl font-bold">${fd.amount.toLocaleString()}</p>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <p className="text-sm text-muted-foreground">Interest Rate</p>
+                                <p className="font-semibold text-green-600">{fd.term.interestRate}% p.a.</p>
+                              </div>
+                              <div>
+                                <p className="text-sm text-muted-foreground">Maturity Amount</p>
+                                <p className="font-semibold">${(fd.amount + fd.interestEarned).toLocaleString()}</p>
+                              </div>
+                            </div>
+
+                            <div>
+                              <p className="text-sm text-muted-foreground">Maturity Date</p>
+                              <p className="font-medium">{fd.maturityDate.toLocaleDateString()}</p>
+                            </div>
+
+                            {fd.saveToInvest && (
+                              <div className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg">
+                                <ArrowRight className="h-4 w-4 text-blue-600" />
+                                <span className="text-sm text-blue-800">Save to Invest enabled</span>
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))
+                  )}
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
         </motion.div>
 
         {/* Savings Tips */}

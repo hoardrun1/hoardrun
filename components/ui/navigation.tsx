@@ -21,7 +21,7 @@ export function Navigation() {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between p-4 bg-[#1a1b1f] border-b border-gray-800">
       <div className="flex items-center space-x-8">
-        <Link href="/" className="text-xl font-bold bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
+        <Link href="/" className="text-xl font-bold bg-gradient-to-r from-gray-200 to-white bg-clip-text text-transparent">
           HoardRun
         </Link>
         

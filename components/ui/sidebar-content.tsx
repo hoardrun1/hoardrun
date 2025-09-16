@@ -388,7 +388,7 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
           >
             {/* Animated background */}
             <motion.div
-              className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+              className="absolute inset-0 bg-gradient-to-r from-gray-500/20 to-gray-700/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
               animate={{ x: [-100, 100] }}
               transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
             />

@@ -152,13 +152,12 @@ export function ResponsiveSidebarLayout({ children, sidebar, className = '' }: S
 
   return (
     <div className={`flex min-h-screen bg-white ${className}`}>
-      {/* Collapsible Sidebar for Large Screens (lg+) */}
+      {/* Sidebar - Only show on large screens (lg+) */}
       <AnimatePresence>
-        {isOpen && isLargeScreen && (
+        {isLargeScreen && (
           <motion.div
-            initial={{ x: -360 }}
-            animate={{ x: 0 }}
-            exit={{ x: -360 }}
+            initial={{ x: isOpen ? 0 : -360 }}
+            animate={{ x: isOpen ? 0 : -360 }}
             transition={{
               duration: 0.3,
               ease: [0.23, 1, 0.320, 1]
@@ -170,7 +169,7 @@ export function ResponsiveSidebarLayout({ children, sidebar, className = '' }: S
         )}
       </AnimatePresence>
 
-      {/* Mobile/Tablet Sidebar Overlay */}
+      {/* Mobile Sidebar Overlay - Only for mobile/tablet */}
       <AnimatePresence>
         {isOpen && !isLargeScreen && (
           <>
@@ -182,7 +181,7 @@ export function ResponsiveSidebarLayout({ children, sidebar, className = '' }: S
               className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 lg:hidden"
               onClick={handleMobileOverlayClick}
             />
-            
+
             {/* Mobile Sidebar */}
             <motion.div
               initial={{ x: -280 }}
@@ -192,7 +191,7 @@ export function ResponsiveSidebarLayout({ children, sidebar, className = '' }: S
                 duration: 0.3,
                 ease: [0.23, 1, 0.320, 1]
               }}
-              className="fixed left-0 top-0 h-full w-[280px] sm:w-[320px] lg:w-[360px] z-50 lg:hidden overflow-y-auto"
+              className="fixed left-0 top-0 h-full w-[280px] sm:w-[320px] z-50 lg:hidden overflow-y-auto"
             >
               {sidebar}
             </motion.div>

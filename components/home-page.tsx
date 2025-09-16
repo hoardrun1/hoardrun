@@ -47,12 +47,10 @@ import { navigation } from '@/lib/navigation'
 import { FeatureNavigation } from './home/feature-navigation'
 import { SavingsPreview } from './home/savings-preview'
 import { InvestmentPreview } from './home/investment-preview'
-import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sidebar-layout'
-import { SidebarContent } from '@/components/ui/sidebar-content'
-import { SidebarToggle } from '@/components/ui/sidebar-toggle'
-import { Notifications } from './ui/notifications'
+
+
 import { Settings as SettingsPanel } from './ui/settings'
-import { MobileNavigation } from '@/components/ui/mobile-navigation'
+
 
 interface Transaction {
   id: string
@@ -119,8 +117,7 @@ export function HomePageComponent() {
   const [, setFinancialSummary] = useState<FinancialSummary | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
   const [showDepositModal, setShowDepositModal] = useState(false)
-  const [showNotifications, setShowNotifications] = useState(false)
-  const [notificationCount, setNotificationCount] = useState(3)
+
   const [showSettings, setShowSettings] = useState(false)
 
   // Transfer modal state
@@ -346,12 +343,7 @@ export function HomePageComponent() {
   }
 
   return (
-    <SidebarProvider>
-      <ResponsiveSidebarLayout
-        sidebar={<SidebarContent onAddMoney={() => setShowDepositModal(true)} />}
-      >
-        <SidebarToggle />
-        <LayoutWrapper className="bg-background min-h-screen" showBreadcrumbs={false}>
+    <LayoutWrapper className="bg-background min-h-screen" showBreadcrumbs={false}>
 
       {/* Header - Mobile Optimized */}
       <header className="sticky top-14 sm:top-16 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
@@ -391,19 +383,7 @@ export function HomePageComponent() {
                   className="w-64 pl-9 bg-secondary border-border"
                 />
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="relative"
-                onClick={() => setShowNotifications(true)}
-              >
-                <Bell className="h-5 w-5" />
-                {notificationCount > 0 && (
-                  <span className="absolute -top-1 -right-1 h-5 w-5 bg-primary text-primary-foreground text-xs rounded-full flex items-center justify-center">
-                    {notificationCount > 9 ? '9+' : notificationCount}
-                  </span>
-                )}
-              </Button>
+
               <Button
                 variant="ghost"
                 size="icon"
@@ -416,7 +396,7 @@ export function HomePageComponent() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 lg:px-6 py-6 max-w-7xl ml-16">
+      <main className="container mx-auto px-4 lg:px-6 lg:py-6 max-w-7xl ml-16">
         {/* Balance Display */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -522,7 +502,6 @@ export function HomePageComponent() {
               { icon: Settings, label: 'Settings', onClick: () => setShowSettings(true) },
               { icon: RefreshCcw, label: 'Help', onClick: () => router.push('/help') },
               { icon: Download, label: 'Export', onClick: () => router.push('/profile') },
-              { icon: Bell, label: 'Alerts', onClick: () => setShowNotifications(true), hasNotification: true },
             ].map((item, index) => (
               <motion.button
                 key={item.label}
@@ -536,11 +515,6 @@ export function HomePageComponent() {
                     <item.icon className="h-5 w-5" />
                   </div>
                   <span className="text-xs font-semibold text-foreground">{item.label}</span>
-                  {item.hasNotification && notificationCount > 0 && (
-                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground text-xs rounded-full flex items-center justify-center font-bold">
-                      {notificationCount}
-                    </div>
-                  )}
                 </div>
               </motion.button>
             ))}
@@ -944,12 +918,7 @@ export function HomePageComponent() {
         </Dialog>
       </main>
 
-      {/* Notifications Panel */}
-      <Notifications
-        isOpen={showNotifications}
-        onClose={() => setShowNotifications(false)}
-        onMarkAllRead={() => setNotificationCount(0)}
-      />
+
 
       {/* Settings Panel */}
       <SettingsPanel
@@ -957,12 +926,6 @@ export function HomePageComponent() {
         onClose={() => setShowSettings(false)}
       />
 
-      {/* Mobile Navigation - Only show on mobile */}
-      <div className="lg:hidden">
-        <MobileNavigation onAddMoney={() => setShowDepositModal(true)} />
-      </div>
-        </LayoutWrapper>
-      </ResponsiveSidebarLayout>
-    </SidebarProvider>
+    </LayoutWrapper>
   )
 }

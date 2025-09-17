@@ -32,6 +32,7 @@ interface User {
   email: string;
   name?: string;
   emailVerified?: boolean;
+  profilePictureUrl?: string;
 }
 
 interface AuthContextType {
@@ -81,7 +82,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
           id: userData.id,
           email: userData.email,
           name: `${userData.first_name} ${userData.last_name}`.trim(),
-          emailVerified: userData.is_active
+          emailVerified: userData.is_active,
+          profilePictureUrl: userData.profile_picture_url
         };
         
         setUser(unifiedUser);
@@ -315,7 +317,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
             id: loginData.user.id,
             email: loginData.user.email,
             name: `${loginData.user.first_name} ${loginData.user.last_name}`.trim(),
-            emailVerified: loginData.user.email_verified
+            emailVerified: loginData.user.email_verified,
+            profilePictureUrl: loginData.user.profile_picture_url
           };
 
           login(loginData.access_token, unifiedUser);
@@ -325,7 +328,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
             id: response.data.user.id,
             email: response.data.user.email,
             name: `${response.data.user.first_name} ${response.data.user.last_name}`.trim(),
-            emailVerified: response.data.user.email_verified
+            emailVerified: response.data.user.email_verified,
+            profilePictureUrl: response.data.user.profile_picture_url
           };
 
           login(response.data.access_token, unifiedUser);

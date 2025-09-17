@@ -19,9 +19,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useToast } from "@/components/ui/use-toast"
 
-import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sidebar-layout'
-import { SidebarContent } from '@/components/ui/sidebar-content'
-import { SidebarToggle } from '@/components/ui/sidebar-toggle'
+
 import { DepositModal } from '@/components/deposit-modal'
 import { SectionFooter } from '@/components/ui/section-footer'
 import { useTheme } from '@/contexts/ThemeContext'
@@ -227,12 +225,8 @@ export default function BudgetPage() {
   // Error state
   if (error) {
     return (
-      <SidebarProvider>
-        <ResponsiveSidebarLayout
-          sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
-        >
-          <SidebarToggle />
-          <div className="flex items-center justify-center min-h-screen bg-background">
+      <div className="min-h-screen bg-background">
+        <div className="flex items-center justify-center min-h-screen bg-background">
             <Alert variant="destructive" className="max-w-md">
               <AlertDescription>{error}</AlertDescription>
               <Button 
@@ -245,18 +239,13 @@ export default function BudgetPage() {
               </Button>
             </Alert>
           </div>
-        </ResponsiveSidebarLayout>
-      </SidebarProvider>
+      </div>
     )
   }
 
   return (
-    <SidebarProvider>
-      <ResponsiveSidebarLayout
-        sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
-      >
-        <SidebarToggle />
-        <div className="min-h-screen bg-background pt-16 pb-4 px-3 sm:pt-20 sm:pb-6 sm:px-4 mb-20">
+    <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background pt-16 pb-4 px-3 sm:pt-20 sm:pb-6 sm:px-4 mb-20">
           <div className="max-w-7xl mx-auto space-y-3 sm:space-y-4">
         <div className="flex items-center justify-between">
           <div>
@@ -675,7 +664,6 @@ export default function BudgetPage() {
           onOpenChange={setIsDepositModalOpen}
         />
         <SectionFooter section="main" activePage="/budget" />
-      </ResponsiveSidebarLayout>
-    </SidebarProvider>
+    </div>
   )
 }

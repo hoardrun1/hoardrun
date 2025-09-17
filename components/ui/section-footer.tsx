@@ -61,7 +61,7 @@ export function SectionFooter({ section, activePage }: SectionFooterProps) {
   const gridCols = items.length === 2 ? 'grid-cols-2' : items.length === 4 ? 'grid-cols-4' : 'grid-cols-5'
 
   return (
-    <footer className="fixed bottom-0 left-0 right-0 lg:left-64 bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800 py-2 z-40">
+    <footer className="fixed bottom-0 left-0 right-0 lg:left-64 bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800 py-2 z-40 lg:hidden">
       <div className="container mx-auto px-4">
         <nav className={`grid ${gridCols} gap-1 sm:gap-2`}>
           {items.map((item, index) => {

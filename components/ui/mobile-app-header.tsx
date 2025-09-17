@@ -82,9 +82,9 @@ export function MobileAppHeader({ onProfileClick, onNotificationClick }: MobileA
               onClick={handleProfileClick}
               className="h-10 w-10 rounded-full hover:bg-gray-100"
             >
-              {user?.photoURL ? (
+              {user?.profilePictureUrl ? (
                 <img
-                  src={user.photoURL}
+                  src={user.profilePictureUrl}
                   alt="Profile"
                   className="h-6 w-6 rounded-full object-cover"
                 />

@@ -36,7 +36,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
 
-import { LayoutWrapper } from "@/components/ui/layout-wrapper"
+
 
 import { useAuth } from '@/contexts/AuthContext'
 import { useNavigationContext } from '@/providers/NavigationProvider'
@@ -343,7 +343,7 @@ export function HomePageComponent() {
   }
 
   return (
-    <LayoutWrapper className="bg-background min-h-screen" showBreadcrumbs={false}>
+    <div className="bg-background min-h-screen">
 
       {/* Header - Mobile Optimized */}
       <header className="sticky top-14 sm:top-16 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
@@ -396,7 +396,7 @@ export function HomePageComponent() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 lg:px-6 lg:py-6 max-w-7xl ml-16">
+      <main className="container mx-auto px-4 lg:px-6 lg:py-6 max-w-7xl">
         {/* Balance Display */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -926,6 +926,6 @@ export function HomePageComponent() {
         onClose={() => setShowSettings(false)}
       />
 
-    </LayoutWrapper>
+    </div>
   )
 }

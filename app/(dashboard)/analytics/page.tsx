@@ -2,9 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useTheme } from '@/contexts/ThemeContext'
-import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sidebar-layout'
-import { SidebarContent } from '@/components/ui/sidebar-content'
-import { SidebarToggle } from '@/components/ui/sidebar-toggle'
+
 import { DepositModal } from '@/components/deposit-modal'
 import { SectionFooter } from '@/components/ui/section-footer'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -131,53 +129,35 @@ export default function AnalyticsPage() {
 
   if (loading) {
     return (
-      <SidebarProvider>
-        <ResponsiveSidebarLayout
-          sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
-        >
-          <SidebarToggle />
-          <div className="min-h-screen bg-background pt-16 pb-32 px-4 sm:pt-20 sm:pb-32 sm:px-6">
-            <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
-              <div className="flex items-center justify-center h-64">
-                <Loader2 className="h-8 w-8 animate-spin" />
-                <span className="ml-2">Loading analytics...</span>
-              </div>
-            </div>
+      <div className="min-h-screen bg-background pt-16 pb-32 px-4 sm:pt-20 sm:pb-32 sm:px-6">
+        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
+          <div className="flex items-center justify-center h-64">
+            <Loader2 className="h-8 w-8 animate-spin" />
+            <span className="ml-2">Loading analytics...</span>
           </div>
-        </ResponsiveSidebarLayout>
-      </SidebarProvider>
+        </div>
+      </div>
     )
   }
 
   if (error) {
     return (
-      <SidebarProvider>
-        <ResponsiveSidebarLayout
-          sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
-        >
-          <SidebarToggle />
-          <div className="min-h-screen bg-background pt-16 pb-32 px-4 sm:pt-20 sm:pb-32 sm:px-6">
-            <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
-              <div className="flex items-center justify-center h-64">
-                <div className="text-center">
-                  <p className="text-red-500 mb-2">Error loading analytics</p>
-                  <p className="text-sm text-muted-foreground">{error}</p>
-                </div>
-              </div>
+      <div className="min-h-screen bg-background pt-16 pb-32 px-4 sm:pt-20 sm:pb-32 sm:px-6">
+        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <p className="text-red-500 mb-2">Error loading analytics</p>
+              <p className="text-sm text-muted-foreground">{error}</p>
             </div>
           </div>
-        </ResponsiveSidebarLayout>
-      </SidebarProvider>
+        </div>
+      </div>
     )
   }
 
   return (
-    <SidebarProvider>
-      <ResponsiveSidebarLayout
-        sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
-      >
-        <SidebarToggle />
-        <div className="min-h-screen bg-background pt-16 pb-32 px-4 sm:pt-20 sm:pb-32 sm:px-6">
+    <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background pt-16 pb-32 px-4 sm:pt-20 sm:pb-32 sm:px-6">
           <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
             {/* Header */}
             <div className="flex items-center justify-between">
@@ -405,7 +385,6 @@ export default function AnalyticsPage() {
           onOpenChange={setIsDepositModalOpen}
         />
         <SectionFooter section="financial" activePage="/analytics" />
-      </ResponsiveSidebarLayout>
-    </SidebarProvider>
+    </div>
   )
 }

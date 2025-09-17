@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter, usePathname } from 'next/navigation'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import {
   Home,
@@ -64,6 +65,18 @@ interface MobileNavigationProps {
 export function MobileNavigation({ onAddMoney }: MobileNavigationProps) {
   const router = useRouter()
   const pathname = usePathname()
+  const [isMobile, setIsMobile] = useState(true)
+
+  // Check if screen is mobile size
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth < 1024) // lg breakpoint is 1024px
+    }
+
+    checkScreenSize()
+    window.addEventListener('resize', checkScreenSize)
+    return () => window.removeEventListener('resize', checkScreenSize)
+  }, [])
 
   const isActiveRoute = (href: string) => {
     if (href === '/home') return pathname === '/home' || pathname === '/'
@@ -74,11 +87,16 @@ export function MobileNavigation({ onAddMoney }: MobileNavigationProps) {
     router.push(href)
   }
 
+  // Don't render on desktop screens
+  if (!isMobile) {
+    return null
+  }
+
   return (
     <motion.nav
       initial={{ y: 100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-t border-border lg:hidden"
+      className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-t border-border"
     >
       <div className="flex items-center justify-around px-2 py-2 safe-area-inset-bottom">
         {navigationItems.map((item) => {
@@ -166,8 +184,26 @@ export function MobileNavigation({ onAddMoney }: MobileNavigationProps) {
 
 // Quick action buttons for mobile
 export function MobileQuickActions({ onAddMoney }: { onAddMoney?: () => void }) {
+  const [isMobile, setIsMobile] = useState(true)
+
+  // Check if screen is mobile size
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth < 1024) // lg breakpoint is 1024px
+    }
+
+    checkScreenSize()
+    window.addEventListener('resize', checkScreenSize)
+    return () => window.removeEventListener('resize', checkScreenSize)
+  }, [])
+
+  // Don't render on desktop screens
+  if (!isMobile) {
+    return null
+  }
+
   return (
-    <div className="fixed bottom-20 right-4 z-40 lg:hidden">
+    <div className="fixed bottom-20 right-4 z-40">
       <motion.div
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}

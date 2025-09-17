@@ -3,9 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sidebar-layout'
-import { SidebarContent } from '@/components/ui/sidebar-content'
-import { SidebarToggle } from '@/components/ui/sidebar-toggle'
+
 import { RightSidebar } from '@/components/ui/right-sidebar'
 import { RightSidebarToggle } from '@/components/ui/right-sidebar-toggle'
 import { DepositModal } from '@/components/deposit-modal'
@@ -120,20 +118,16 @@ export default function HomePage() {
   ]
 
   return (
-    <SidebarProvider>
-      <ResponsiveSidebarLayout
-        sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
-      >
-        <SidebarToggle />
-        <RightSidebarToggle
-          isOpen={isRightSidebarOpen}
-          onToggle={() => setIsRightSidebarOpen(!isRightSidebarOpen)}
-          notificationCount={2}
-        />
+    <div className="min-h-screen bg-background">
+      <RightSidebarToggle
+        isOpen={isRightSidebarOpen}
+        onToggle={() => setIsRightSidebarOpen(!isRightSidebarOpen)}
+        notificationCount={2}
+      />
 
-        {/* Welcome Animation Overlay */}
-        <AnimatePresence>
-          {showWelcomeAnimation && (
+      {/* Welcome Animation Overlay */}
+      <AnimatePresence>
+        {showWelcomeAnimation && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -368,11 +362,11 @@ export default function HomePage() {
               </motion.div>
             </motion.div>
           )}
-        </AnimatePresence>
+      </AnimatePresence>
 
-        {/* Main Content - Only show after welcome animation */}
-        <AnimatePresence>
-          {!showWelcomeAnimation && (
+      {/* Main Content - Only show after welcome animation */}
+      <AnimatePresence>
+        {!showWelcomeAnimation && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -598,30 +592,29 @@ export default function HomePage() {
             </div>
           </div>
             </motion.div>
-          )}
-        </AnimatePresence>
-
-        <DepositModal
-          open={isDepositModalOpen}
-          onOpenChange={setIsDepositModalOpen}
-        />
-
-        {/* Right Sidebar */}
-        <RightSidebar
-          isOpen={isRightSidebarOpen}
-          onClose={() => setIsRightSidebarOpen(false)}
-        />
-
-        {/* Right Sidebar Overlay for Mobile */}
-        {isRightSidebarOpen && (
-          <div
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 md:hidden"
-            onClick={() => setIsRightSidebarOpen(false)}
-          />
         )}
+      </AnimatePresence>
 
-        <SectionFooter section="main" activePage="/home" />
-      </ResponsiveSidebarLayout>
-    </SidebarProvider>
+      <DepositModal
+        open={isDepositModalOpen}
+        onOpenChange={setIsDepositModalOpen}
+      />
+
+      {/* Right Sidebar */}
+      <RightSidebar
+        isOpen={isRightSidebarOpen}
+        onClose={() => setIsRightSidebarOpen(false)}
+      />
+
+      {/* Right Sidebar Overlay for Mobile */}
+      {isRightSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 md:hidden"
+          onClick={() => setIsRightSidebarOpen(false)}
+        />
+      )}
+
+      <SectionFooter section="main" activePage="/home" />
+    </div>
   )
 }

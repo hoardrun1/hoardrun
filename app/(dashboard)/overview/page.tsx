@@ -36,9 +36,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import { DepositModal } from '@/components/deposit-modal';
-import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sidebar-layout';
-import { SidebarContent } from '@/components/ui/sidebar-content';
-import { SidebarToggle } from '@/components/ui/sidebar-toggle';
+
 import { SectionFooter } from '@/components/ui/section-footer';
 
 interface FinancialSummary {
@@ -300,12 +298,8 @@ export default function OverviewPage() {
   }
 
   return (
-    <SidebarProvider>
-      <ResponsiveSidebarLayout
-        sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
-      >
-        <SidebarToggle />
-        <div className="min-h-screen bg-background pt-14 sm:pt-16 pb-20 sm:pb-6 px-3 sm:px-4">
+    <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background pt-14 sm:pt-16 pb-20 sm:pb-6 px-3 sm:px-4">
           <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
@@ -931,7 +925,6 @@ export default function OverviewPage() {
           onOpenChange={setIsDepositModalOpen}
         />
         <SectionFooter section="main" activePage="/overview" />
-      </ResponsiveSidebarLayout>
-    </SidebarProvider>
+    </div>
   );
 }

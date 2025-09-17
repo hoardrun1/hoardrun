@@ -859,8 +859,8 @@ export function FinancePageComponent() {
           </div>
         </div>
 
-        {/* Navigation Footer */}
-        <footer className="fixed bottom-0 left-0 right-0 bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800 py-2">
+        {/* Navigation Footer - Only show on mobile */}
+        <footer className="fixed bottom-0 left-0 right-0 bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800 py-2 lg:hidden">
           <div className="container mx-auto px-4">
             <nav className="grid grid-cols-5 gap-1 sm:gap-2">
               {[

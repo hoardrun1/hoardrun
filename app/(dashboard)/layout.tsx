@@ -57,17 +57,20 @@ export default function DashboardLayout({
             {/* Mobile Header - Only show on mobile */}
             <MobileAppHeader />
 
-            <div
-              className="w-full max-w-full lg:pt-0"
-              style={{ paddingTop: 'calc(4rem + env(safe-area-inset-top, 0px))' }}
-            >
-              {children}
+            <div className="w-full max-w-full lg:pt-0">
+              <div
+                className="lg:hidden"
+                style={{ paddingTop: 'calc(4rem + env(safe-area-inset-top, 0px))' }}
+              >
+                {children}
+              </div>
+              <div className="hidden lg:block">
+                {children}
+              </div>
             </div>
 
             {/* Mobile Navigation - Only show on mobile */}
-            <div className="lg:hidden">
-              <MobileNavigation onAddMoney={() => {}} />
-            </div>
+            <MobileNavigation onAddMoney={() => {}} />
           </ResponsiveSidebarLayout>
         </SidebarProvider>
       </FinanceProvider>

@@ -19,9 +19,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { motion } from 'framer-motion'
 import { formatCurrency } from '@/lib/banking'
 import { PiggyBank, Target, Clock, TrendingUp, AlertCircle, Plus, ChevronRight } from 'lucide-react'
-import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sidebar-layout'
-import { SidebarContent } from '@/components/ui/sidebar-content'
-import { SidebarToggle } from '@/components/ui/sidebar-toggle'
+
 import { DepositModal } from '@/components/deposit-modal'
 import { SectionFooter } from '@/components/ui/section-footer'
 import { useTheme } from '@/contexts/ThemeContext'
@@ -219,12 +217,8 @@ export default function SavingsPage() {
   }
 
   return (
-    <SidebarProvider>
-      <ResponsiveSidebarLayout
-        sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
-      >
-        <SidebarToggle />
-        <div className="min-h-screen bg-background pt-16 pb-4 px-3 sm:pt-20 sm:pb-6 sm:px-4 mb-20">
+    <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background pt-16 pb-4 px-3 sm:pt-20 sm:pb-6 sm:px-4 mb-20">
           <div className="max-w-7xl mx-auto space-y-3 sm:space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -384,7 +378,6 @@ export default function SavingsPage() {
           onOpenChange={setIsDepositModalOpen}
         />
         <SectionFooter section="main" activePage="/savings" />
-      </ResponsiveSidebarLayout>
-    </SidebarProvider>
+    </div>
   )
 }

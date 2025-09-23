@@ -632,14 +632,7 @@ export function InvestmentPage() {
                   <p className="text-xs sm:text-sm text-primary-foreground/60">AI-Powered Management</p>
                 </div>
                 <div className="flex gap-2 sm:gap-3">
-                  <Button
-                    size="sm"
-                    onClick={() => setShowInvestModal(true)}
-                    className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 text-xs sm:text-sm px-3 py-2 h-auto btn-mobile flex-1 sm:flex-none"
-                  >
-                    <DollarSign className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-                    Invest
-                  </Button>
+
                   <Button
                     size="sm"
                     onClick={() => router.push('/startupregistration')}
@@ -765,13 +758,7 @@ export function InvestmentPage() {
                           Start investing to see your portfolio performance
                         </p>
                       </div>
-                      <Button
-                        size="sm"
-                        onClick={() => setShowInvestModal(true)}
-                        className="mt-2"
-                      >
-                        Start Investing
-                      </Button>
+
                     </div>
                   </div>
                 ) : (
@@ -1060,98 +1047,7 @@ export function InvestmentPage() {
             <CollectiveCapitalCircles />
           </section>
 
-          {/* Investment Modal */}
-          <Dialog open={showInvestModal} onOpenChange={setShowInvestModal}>
-            <DialogContent className="sm:max-w-[90vw] max-w-[350px] bg-background border-border">
-              <DialogHeader>
-                <DialogTitle className="text-foreground text-sm">New Investment</DialogTitle>
-                <DialogDescription className="text-muted-foreground text-xs">
-                  Available Balance: ${balance?.toLocaleString() ?? '0'}
-                </DialogDescription>
-              </DialogHeader>
 
-              <div className="grid gap-3 py-3">
-                <div className="space-y-2">
-                  <Label className="text-foreground text-xs">Investment Amount</Label>
-                  <div className="relative">
-                    <DollarSign className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground h-3 w-3" />
-                    <Input
-                      type="number"
-                      value={investmentAmount}
-                      onChange={(e) => setInvestmentAmount(e.target.value)}
-                      placeholder="Enter amount"
-                      className="pl-8 text-xs h-8"
-                      min={0}
-                      max={balance}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-foreground text-xs">Risk Tolerance</Label>
-                  <Slider
-                    value={[riskTolerance]}
-                    onValueChange={(value) => setRiskTolerance(value[0])}
-                    max={100}
-                    step={1}
-                    className="mt-2"
-                  />
-                  <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                    <span>Conservative</span>
-                    <span>Aggressive</span>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-foreground text-xs">Investment Strategy</Label>
-                  <Select>
-                    <SelectTrigger className="h-8 text-xs">
-                      <SelectValue placeholder="Select strategy" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="growth" className="text-xs">Growth</SelectItem>
-                      <SelectItem value="value" className="text-xs">Value</SelectItem>
-                      <SelectItem value="dividend" className="text-xs">Dividend</SelectItem>
-                      <SelectItem value="blend" className="text-xs">Blend</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    checked={autoInvest}
-                    onCheckedChange={setAutoInvest}
-                  />
-                  <Label className="text-foreground text-xs">Enable Auto-Invest</Label>
-                </div>
-              </div>
-
-              <DialogFooter>
-                <Button
-                  onClick={() => {
-                    addToast({
-                      title: "Investment Successful",
-                      description: `Successfully invested $${investmentAmount}`,
-                    })
-                    setShowInvestModal(false)
-                  }}
-                  disabled={isLoading || !investmentAmount ||
-                    Number(investmentAmount) <= 0 ||
-                    Number(investmentAmount) > (balance ?? 0)}
-                  className="text-xs px-3 py-1 h-auto"
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                      Processing...
-                    </>
-                  ) : (
-                    'Invest Now'
-                  )}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
 
           {/* Startup Investment Modal */}
           <Dialog open={showStartupModal} onOpenChange={setShowStartupModal}>

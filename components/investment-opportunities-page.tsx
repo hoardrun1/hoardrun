@@ -37,12 +37,15 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sidebar-layout'
 import { SidebarToggle } from '@/components/ui/sidebar-toggle'
 import { SidebarContent } from '@/components/ui/sidebar-content'
 import { LayoutWrapper } from '@/components/ui/layout-wrapper'
+import { useToast } from '@/components/ui/use-toast'
 
 // Define the valid category types
 type InvestmentCategory = 'private-equity' | 'real-estate' | 'fixed-income'
@@ -223,6 +226,7 @@ export function InvestmentOpportunitiesPage() {
   const searchParams = useSearchParams()
   const categoryParam = searchParams?.get('category') || 'private-equity'
   const category = (categoryParam in investmentOpportunities ? categoryParam : 'private-equity') as InvestmentCategory
+  const { toast } = useToast()
   
   const [searchQuery, setSearchQuery] = useState('')
   const [sortBy, setSortBy] = useState('rating')
@@ -230,6 +234,10 @@ export function InvestmentOpportunitiesPage() {
   const [selectedOpportunity, setSelectedOpportunity] = useState<InvestmentOpportunity | null>(null)
   const [favorites, setFavorites] = useState(new Set<number>())
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false)
+  const [showInvestModal, setShowInvestModal] = useState(false)
+  const [investmentAmount, setInvestmentAmount] = useState<string>('')
+  const [investmentOpportunity, setInvestmentOpportunity] = useState<InvestmentOpportunity | null>(null)
+  const [dialogMode, setDialogMode] = useState<'details' | 'invest' | null>(null)
 
   const opportunities = investmentOpportunities[category] || []
 
@@ -505,9 +513,12 @@ export function InvestmentOpportunitiesPage() {
 
                           {/* Actions */}
                           <div className="flex gap-2 pt-2">
-                            <Button 
+                            <Button
                               className="flex-1"
-                              onClick={() => setSelectedOpportunity(opportunity)}
+                              onClick={() => {
+                                setSelectedOpportunity(opportunity)
+                                setDialogMode('details')
+                              }}
                             >
                               <Eye className="h-4 w-4 mr-2" />
                               View Details
@@ -535,7 +546,15 @@ export function InvestmentOpportunitiesPage() {
         </LayoutWrapper>
 
         {/* Detailed Opportunity Modal */}
-        <Dialog open={!!selectedOpportunity} onOpenChange={() => setSelectedOpportunity(null)}>
+        <Dialog
+          open={dialogMode === 'details'}
+          onOpenChange={(open) => {
+            if (!open) {
+              setDialogMode(null)
+              setSelectedOpportunity(null)
+            }
+          }}
+        >
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             {selectedOpportunity && (
               <>
@@ -730,7 +749,17 @@ export function InvestmentOpportunitiesPage() {
 
                   {/* Investment Actions */}
                   <div className="flex gap-4 pt-4 border-t">
-                    <Button className="flex-1" size="lg">
+                    <Button
+                      className="flex-1"
+                      size="lg"
+                      onClick={() => {
+                        console.log('Invest Now clicked!', selectedOpportunity?.name)
+                        // Store the investment opportunity data
+                        setInvestmentOpportunity(selectedOpportunity)
+                        // Switch to invest mode
+                        setDialogMode('invest')
+                      }}
+                    >
                       <DollarSign className="h-4 w-4 mr-2" />
                       Invest Now
                     </Button>
@@ -746,6 +775,89 @@ export function InvestmentOpportunitiesPage() {
                 </div>
               </>
             )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Investment Modal - Separate from opportunity details */}
+        <Dialog
+          open={dialogMode === 'invest'}
+          onOpenChange={(open) => {
+            console.log('Investment Modal state changing to:', open)
+            if (!open) {
+              setDialogMode(null)
+              setInvestmentOpportunity(null)
+              setInvestmentAmount('')
+            }
+          }}
+        >
+          <DialogContent className="sm:max-w-[90vw] max-w-[350px] bg-background border-border">
+            <DialogHeader>
+              <DialogTitle className="text-foreground text-sm">
+                Invest in {investmentOpportunity?.name}
+              </DialogTitle>
+              <DialogDescription className="text-muted-foreground text-xs">
+                Enter the amount you would like to invest
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3 py-3">
+              <div className="space-y-2">
+                <Label className="text-foreground text-xs">Investment Amount</Label>
+                <Input
+                  type="number"
+                  placeholder="Enter amount"
+                  value={investmentAmount}
+                  onChange={(e) => setInvestmentAmount(e.target.value)}
+                  className="text-xs h-8"
+                />
+              </div>
+
+              {investmentOpportunity && (
+                <div className="space-y-2 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Minimum Investment:</span>
+                    <span className="font-medium">${investmentOpportunity.minInvestment.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Expected Return:</span>
+                    <span className="font-medium text-green-600">{investmentOpportunity.expectedReturn}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Investment Period:</span>
+                    <span className="font-medium">{investmentOpportunity.duration}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="flex gap-2 pt-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  console.log('Cancel clicked')
+                  setDialogMode(null)
+                  setInvestmentOpportunity(null)
+                  setInvestmentAmount('')
+                }}
+                className="flex-1 text-xs px-3 py-1 h-auto"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  console.log('Investment confirmed')
+                  toast({
+                    title: "Investment Successful",
+                    description: `Successfully invested $${investmentAmount} in ${investmentOpportunity?.name}`,
+                  })
+                  setDialogMode(null)
+                  setInvestmentAmount('')
+                  setInvestmentOpportunity(null)
+                }}
+                disabled={!investmentAmount || Number(investmentAmount) < (investmentOpportunity?.minInvestment || 0)}
+                className="flex-1 text-xs px-3 py-1 h-auto"
+              >
+                Invest Now
+              </Button>
+            </div>
           </DialogContent>
         </Dialog>
       </ResponsiveSidebarLayout>

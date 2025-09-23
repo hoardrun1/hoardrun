@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Plus, Home, BarChart2, CreditCard, PieChart, Settings, ChevronRight, Lock, Eye, EyeOff, Shield, AlertCircle, Loader2 } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -9,9 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { LayoutWrapper } from "@/components/ui/layout-wrapper"
-import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sidebar-layout'
-import { SidebarContent } from '@/components/ui/sidebar-content'
-import { SidebarToggle } from '@/components/ui/sidebar-toggle'
+
 import { DepositModal } from '@/components/deposit-modal'
 import { responsiveStyles as rs } from '@/styles/responsive-utilities'
 import { useToast } from "@/components/ui/use-toast"
@@ -224,12 +222,8 @@ export function CardsPageComponent() {
   };
 
   return (
-    <SidebarProvider>
-      <ResponsiveSidebarLayout
-        sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
-      >
-        <SidebarToggle />
-        <LayoutWrapper className="bg-gray-50 dark:bg-gray-950 min-h-screen pb-4 px-4 sm:pb-6 sm:px-6" showBreadcrumbs={false}>
+    <React.Fragment>
+      <LayoutWrapper className="bg-gray-50 dark:bg-gray-950 min-h-screen pb-4 px-4 sm:pb-6 sm:px-6" showBreadcrumbs={false}>
 
       {/* Header */}
       <header className={`sticky top-14 sm:top-16 z-30 bg-background border-b border-border ${rs.padding}`}>
@@ -502,13 +496,12 @@ export function CardsPageComponent() {
       </main>
 
       <SectionFooter section="financial" activePage="/cards" />
-    </LayoutWrapper>
 
-        <DepositModal
-          open={isDepositModalOpen}
-          onOpenChange={setIsDepositModalOpen}
-        />
-      </ResponsiveSidebarLayout>
-    </SidebarProvider>
+      <DepositModal
+        open={isDepositModalOpen}
+        onOpenChange={setIsDepositModalOpen}
+      />
+      </LayoutWrapper>
+    </React.Fragment>
   )
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
@@ -41,9 +41,7 @@ import {
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sidebar-layout'
-import { SidebarToggle } from '@/components/ui/sidebar-toggle'
-import { SidebarContent } from '@/components/ui/sidebar-content'
+
 import { LayoutWrapper } from '@/components/ui/layout-wrapper'
 import { useToast } from '@/components/ui/use-toast'
 
@@ -303,12 +301,8 @@ export function InvestmentOpportunitiesPage() {
   }
 
   return (
-    <SidebarProvider>
-      <ResponsiveSidebarLayout
-        sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
-      >
-        <SidebarToggle />
-        <LayoutWrapper className="min-h-screen bg-background">
+    <React.Fragment>
+      <LayoutWrapper className="min-h-screen bg-background">
           {/* Header */}
           <div className="sticky top-14 sm:top-16 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
             <div className="flex items-center justify-between p-4">
@@ -543,10 +537,9 @@ export function InvestmentOpportunitiesPage() {
               </div>
             )}
           </div>
-        </LayoutWrapper>
 
-        {/* Detailed Opportunity Modal */}
-        <Dialog
+          {/* Detailed Opportunity Modal */}
+          <Dialog
           open={dialogMode === 'details'}
           onOpenChange={(open) => {
             if (!open) {
@@ -860,7 +853,7 @@ export function InvestmentOpportunitiesPage() {
             </div>
           </DialogContent>
         </Dialog>
-      </ResponsiveSidebarLayout>
-    </SidebarProvider>
+      </LayoutWrapper>
+    </React.Fragment>
   )
 }

@@ -37,6 +37,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { navigation } from '@/lib/navigation'
 import { useSidebar } from './sidebar-layout'
 import { useNotificationCount } from '@/hooks/useNotificationCount'
+import { useAppNavigation } from '@/hooks/useAppNavigation'
 
 interface SidebarContentProps {
   onAddMoney?: () => void
@@ -82,9 +83,10 @@ const menuSections = {
 export function SidebarContent({ onAddMoney }: SidebarContentProps) {
   const router = useRouter()
   const pathname = usePathname()
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
   const { setIsOpen } = useSidebar()
   const { unreadCount, isLoading: notificationLoading } = useNotificationCount()
+  const { navigate } = useAppNavigation()
   const sidebarRef = useRef<HTMLDivElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const [canScrollUp, setCanScrollUp] = useState(false)
@@ -124,18 +126,33 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
   }
 
   const handleNavigation = (href: string) => {
-    // Use direct router.push for faster navigation
-    router.push(href)
-    // Close sidebar on mobile after navigation
+    // Use enhanced navigation with prefetching for faster navigation
+    navigate(href, { prefetch: true, immediate: false })
+    // Close sidebar on mobile after navigation with a small delay
     if (typeof window !== 'undefined' && window.innerWidth < 1024) {
-      setIsOpen(false)
+      // Add delay to ensure navigation completes before closing
+      setTimeout(() => {
+        setIsOpen(false)
+      }, 100)
     }
   }
 
-  const handleLogout = () => {
-    // Add logout logic here
-    console.log('Logout clicked')
-    setIsOpen(false)
+  const handleLogout = async () => {
+    try {
+      console.log('Logout clicked - starting logout process')
+      await logout()
+      console.log('Logout successful - redirecting to landing page')
+      // Close sidebar first
+      setIsOpen(false)
+      // Redirect to landing page
+      router.push('/')
+    } catch (error) {
+      console.error('Logout error:', error)
+      // Still close sidebar even if logout fails
+      setIsOpen(false)
+      // Still redirect to landing page as a fallback
+      router.push('/')
+    }
   }
 
   const renderMenuSection = (title: string, items: MenuItem[]) => {
@@ -237,6 +254,7 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
     <div
       ref={sidebarRef}
       className="h-full w-full overflow-hidden relative bg-gradient-to-b from-gray-900 via-black to-gray-900 border-r border-white/20"
+      onClick={(e) => e.stopPropagation()} // Prevent clicks from bubbling to overlay
     >
       {/* Animated background pattern */}
       <div className="absolute inset-0 opacity-5">
@@ -288,7 +306,9 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
         className="h-full overflow-y-auto overflow-x-hidden sidebar-scrollbar pt-6 pb-6 relative z-0"
         style={{
           scrollbarWidth: 'thin',
-          scrollbarColor: '#000000 #000000'
+          scrollbarColor: 'rgba(255,255,255,0.3) transparent',
+          WebkitOverflowScrolling: 'touch', // Enable smooth scrolling on iOS
+          overscrollBehavior: 'contain', // Prevent scroll chaining
         }}
       >
         {/* Enhanced Header */}

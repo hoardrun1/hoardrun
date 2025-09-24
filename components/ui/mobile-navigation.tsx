@@ -12,10 +12,12 @@ import {
   Plus,
   Wallet,
   TrendingUp,
-  Settings
+  Settings,
+  MoreHorizontal
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { useSidebar } from './sidebar-layout'
 
 interface MobileNavItem {
   id: string
@@ -50,12 +52,6 @@ const navigationItems: MobileNavItem[] = [
     icon: CreditCard,
     href: '/cards',
   },
-  {
-    id: 'profile',
-    label: 'Profile',
-    icon: User,
-    href: '/profile',
-  },
 ]
 
 interface MobileNavigationProps {
@@ -65,6 +61,7 @@ interface MobileNavigationProps {
 export function MobileNavigation({ onAddMoney }: MobileNavigationProps) {
   const router = useRouter()
   const pathname = usePathname()
+  const { toggle: toggleSidebar } = useSidebar()
   const [isMobile, setIsMobile] = useState(true)
 
   // Check if screen is mobile size
@@ -145,6 +142,19 @@ export function MobileNavigation({ onAddMoney }: MobileNavigationProps) {
             </motion.button>
           )
         })}
+
+        {/* More Button - Opens Sidebar */}
+        <motion.button
+          onClick={toggleSidebar}
+          className="flex flex-col items-center justify-center p-2 rounded-lg min-h-[60px] min-w-[60px] relative
+                     text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors duration-200"
+          whileTap={{ scale: 0.95 }}
+          whileHover={{ scale: 1.05 }}
+          aria-label="Open full navigation menu"
+        >
+          <MoreHorizontal className="h-5 w-5" />
+          <span className="text-xs mt-1 font-medium">More</span>
+        </motion.button>
         
         {/* Add Money FAB */}
         <motion.div

@@ -2,7 +2,7 @@
  * API Client for connecting to the Python FastAPI backend
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://hoardrun-backend-py-1.onrender.com/api/v1'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
 
 export interface ApiResponse<T = any> {
   data?: T
@@ -164,10 +164,47 @@ class ApiClient {
     this.baseUrl = baseUrl
   }
 
+  private getCookie(name: string): string | null {
+    if (typeof document === 'undefined') return null
+    const nameEQ = name + "=";
+    const ca = document.cookie.split(';');
+    for (let i = 0; i < ca.length; i++) {
+      let c = ca[i];
+      while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+      if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+    }
+    return null;
+  }
+
   private getCurrentToken(): void {
     if (typeof window !== 'undefined') {
-      // Try to get token from localStorage or cookies
-      this._token = localStorage.getItem('auth_token') || null
+      // First try to get token from cookies (primary storage)
+      const cookieToken = this.getCookie('auth-token')
+      if (cookieToken) {
+        this._token = cookieToken
+        console.log('Token retrieved from cookies')
+        return
+      }
+
+      // Fallback to localStorage
+      const localToken = localStorage.getItem('auth_token')
+      if (localToken) {
+        this._token = localToken
+        console.log('Token retrieved from localStorage (auth_token)')
+        return
+      }
+
+      // Final fallback to alternative localStorage key
+      const altLocalToken = localStorage.getItem('auth-token')
+      if (altLocalToken) {
+        this._token = altLocalToken
+        console.log('Token retrieved from localStorage (auth-token)')
+        return
+      }
+
+      // No token found
+      this._token = null
+      console.log('No token found in any storage location')
     }
   }
 
@@ -176,6 +213,7 @@ class ApiClient {
     if (typeof window !== 'undefined') {
       localStorage.setItem('auth_token', token)
     }
+    console.log('Token set in API client')
   }
 
   public clearToken(): void {
@@ -183,6 +221,7 @@ class ApiClient {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('auth_token')
     }
+    console.log('Token cleared from API client')
   }
 
   private async request<T>(
@@ -201,9 +240,13 @@ class ApiClient {
 
     if (this._token) {
       headers.Authorization = `Bearer ${this._token}`
+      console.log('API Request with Authorization header:', `Bearer ${this._token.substring(0, 20)}...`)
+    } else {
+      console.log('API Request without Authorization header - no token available')
     }
 
-    console.log('API Request Headers:', headers); // Debug log
+    console.log('API Request URL:', url)
+    console.log('API Request Headers:', headers)
 
     try {
       const response = await fetch(url, {
@@ -214,17 +257,20 @@ class ApiClient {
       const data = await response.json()
 
       if (!response.ok) {
+        console.error('API Request failed:', response.status, data)
         return {
           error: data.detail || data.message || 'An error occurred',
           status: response.status,
         }
       }
 
+      console.log('API Request successful:', response.status)
       return {
         data,
         status: response.status,
       }
     } catch (error) {
+      console.error('API Request network error:', error)
       return {
         error: error instanceof Error ? error.message : 'Network error',
         status: 0,
@@ -945,6 +991,8 @@ class ApiClient {
     return this.request('/health')
   }
 }
+
+//
 
 // Create and export a singleton instance
 export const apiClient = new ApiClient()

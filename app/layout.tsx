@@ -3,11 +3,8 @@ import type { Metadata } from 'next'
 // import { Inter } from 'next/font/google'
 import './globals.css'
 import ClientAuthProvider from '../components/client-auth-provider'
-import { NavigationProvider } from '@/providers/NavigationProvider'
-import { FinanceProvider } from '@/contexts/FinanceContext'
-import { NotificationProvider } from '@/contexts/NotificationContext'
+import { ConditionalProviders } from '@/components/providers/conditional-providers'
 import { ThemeProvider } from '@/contexts/ThemeContext'
-import { FloatingNotificationBell } from '@/components/ui/floating-notification-bell'
 
 // const inter = Inter({ subsets: ['latin'] })
 
@@ -54,16 +51,11 @@ export default function RootLayout({
         {/* Using AWS Cognito authentication instead of NextAuth */}
         <ThemeProvider>
           <ClientAuthProvider>
-            <FinanceProvider>
-              <NavigationProvider>
-                <NotificationProvider>
-                  <div className="min-h-screen-mobile bg-background">
-                    {children}
-                    <FloatingNotificationBell />
-                  </div>
-                </NotificationProvider>
-              </NavigationProvider>
-            </FinanceProvider>
+            <ConditionalProviders>
+              <div className="min-h-screen-mobile bg-background">
+                {children}
+              </div>
+            </ConditionalProviders>
           </ClientAuthProvider>
         </ThemeProvider>
       </body>

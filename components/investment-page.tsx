@@ -573,9 +573,9 @@ export function InvestmentPage() {
   }
 
   return (
-    <LayoutWrapper className="min-h-screen-mobile bg-background">
+    <LayoutWrapper className="min-h-screen-mobile bg-background" showBreadcrumbs={false}>
       {/* Sticky Quick Navigation - Mobile First */}
-      <div className="sticky top-14 sm:top-16 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
+      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
             <div className="flex items-center justify-between p-3 sm:p-4">
           <h1 className="text-base sm:text-lg md:text-xl font-bold text-foreground">Investments</h1>
           <Button
@@ -618,9 +618,6 @@ export function InvestmentPage() {
               )}
             </AnimatePresence>
           </div>
-
-          {/* Spacer to prevent sticky header overlap */}
-          <div className="h-4"></div>
 
           {/* Portfolio Overview Section - Mobile Optimized */}
           <section id="overview" className="p-3 sm:p-4 md:p-6 bg-primary text-primary-foreground">

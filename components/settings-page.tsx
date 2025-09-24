@@ -18,6 +18,7 @@ import { Progress } from "@/components/ui/progress"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { apiClient } from '@/lib/api-client'
 import { useAuth } from '@/contexts/AuthContext'
+import { useRouter } from 'next/navigation'
 
 export function SettingsPageComponent() {
   const [isDarkMode, setIsDarkMode] = useState(false)
@@ -33,6 +34,7 @@ export function SettingsPageComponent() {
   })
   const { toast } = useToast()
   const { user, logout } = useAuth()
+  const router = useRouter()
 
   // Fetch user profile and settings on component mount
   useEffect(() => {
@@ -195,8 +197,12 @@ export function SettingsPageComponent() {
         title: "Logged out successfully",
         description: "You have been logged out of your account.",
       })
+      // Redirect to landing page after successful logout
+      router.push('/')
     } catch (error) {
       console.error('Logout error:', error)
+      // Still redirect to landing page even if logout fails
+      router.push('/')
     }
   }
 

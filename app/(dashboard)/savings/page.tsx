@@ -83,6 +83,7 @@ export default function SavingsPage() {
   const [isAutomatedSavingDialogOpen, setIsAutomatedSavingDialogOpen] = useState(false)
   const [fixedDeposits, setFixedDeposits] = useState<FixedDeposit[]>([])
   const [automatedSavings, setAutomatedSavings] = useState<AutomatedSaving[]>([])
+  const [createdGoals, setCreatedGoals] = useState<any[]>([])
   const [activeTab, setActiveTab] = useState('active')
 
   const [newGoalForm, setNewGoalForm] = useState<{
@@ -128,11 +129,13 @@ export default function SavingsPage() {
   // Calculate analytics when savings goals, fixed deposits, or automated savings change
   useEffect(() => {
     const goalsSavings = savingsGoals.reduce((sum, goal) => sum + goal.currentAmount, 0)
+    const createdGoalsSavings = createdGoals.reduce((sum, goal) => sum + goal.currentAmount, 0)
     const fdSavings = fixedDeposits.reduce((sum, fd) => sum + fd.amount, 0)
     const autoSavings = automatedSavings.reduce((sum, saving) => sum + saving.totalSaved, 0)
-    const totalSavings = goalsSavings + fdSavings + autoSavings
+    const totalSavings = goalsSavings + createdGoalsSavings + fdSavings + autoSavings
 
     const goalsMonthlyGrowth = savingsGoals.reduce((sum, goal) => sum + (goal.autoSaveAmount || 0), 0)
+    const createdGoalsMonthlyGrowth = createdGoals.reduce((sum, goal) => sum + (goal.isAutoSave ? goal.monthlyContribution : 0), 0)
     const autoMonthlyGrowth = automatedSavings
       .filter(saving => saving.isActive)
       .reduce((sum, saving) => {
@@ -140,10 +143,11 @@ export default function SavingsPage() {
         if (saving.frequency === 'WEEKLY') return sum + (saving.amount * 4.33)
         return sum + saving.amount
       }, 0)
-    const monthlyGrowth = goalsMonthlyGrowth + autoMonthlyGrowth
+    const monthlyGrowth = goalsMonthlyGrowth + createdGoalsMonthlyGrowth + autoMonthlyGrowth
 
-    const nextMilestone = savingsGoals.length > 0 
-      ? Math.min(...savingsGoals.map(goal => goal.targetAmount - goal.currentAmount).filter(diff => diff > 0)) || 0
+    const allGoals = [...savingsGoals, ...createdGoals]
+    const nextMilestone = allGoals.length > 0
+      ? Math.min(...allGoals.map(goal => goal.targetAmount - goal.currentAmount).filter(diff => diff > 0)) || 0
       : 0
     
     const projectedSavings = totalSavings + (monthlyGrowth * 12)
@@ -175,7 +179,7 @@ export default function SavingsPage() {
       projectedSavings,
       insights
     })
-  }, [savingsGoals, fixedDeposits, automatedSavings])
+  }, [savingsGoals, fixedDeposits, automatedSavings, createdGoals])
 
   // Fixed Deposit Interest Calculation
   const calculateFixedDepositInterest = (amount: number, term: number, rate: number = 4.5) => {
@@ -312,6 +316,55 @@ export default function SavingsPage() {
     }
   }
 
+  // Handle New Goal Creation
+  const handleCreateGoal = async () => {
+    try {
+      if (!newGoalForm.name || !newGoalForm.targetAmount || !newGoalForm.monthlyContribution) {
+        throw new Error('Please fill in all required fields')
+      }
+
+      const goalData = {
+        id: `goal_${Date.now()}`,
+        name: newGoalForm.name,
+        targetAmount: parseFloat(newGoalForm.targetAmount),
+        currentAmount: 0,
+        monthlyContribution: parseFloat(newGoalForm.monthlyContribution),
+        category: newGoalForm.category || 'General',
+        deadline: (newGoalForm.deadline instanceof Date)
+          ? newGoalForm.deadline.toISOString()
+          : new Date(Date.now() + 31536000000).toISOString(),
+        isAutoSave: newGoalForm.isAutoSave,
+        status: 'ACTIVE',
+        createdAt: new Date().toISOString(),
+        progress: 0,
+      }
+
+      // Add the goal to our local state
+      setCreatedGoals(prev => [...prev, goalData])
+      console.log('Creating savings goal:', goalData)
+      setIsNewGoalDialogOpen(false)
+      setNewGoalForm({
+        name: '',
+        targetAmount: '',
+        monthlyContribution: '',
+        category: '',
+        deadline: null,
+        isAutoSave: true,
+      })
+
+      addToast({
+        title: 'Success',
+        description: `Savings goal "${goalData.name}" created successfully`,
+      })
+    } catch (error) {
+      addToast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to create savings goal',
+        variant: 'destructive',
+      })
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <div className="min-h-screen bg-background pt-16 pb-4 px-3 sm:pt-20 sm:pb-6 sm:px-4 mb-20">
@@ -402,15 +455,114 @@ export default function SavingsPage() {
             </TabsList>
 
             <TabsContent value="active">
-              <Card>
-                <CardContent className="p-6 text-center">
-                  <PiggyBank className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-sm font-medium mb-2">Savings Goals Coming Soon</h3>
-                  <p className="text-xs text-muted-foreground">
-                    Create and track your savings goals
-                  </p>
-                </CardContent>
-              </Card>
+              <div className="space-y-3">
+                {createdGoals.length === 0 ? (
+                  <Card>
+                    <CardContent className="p-6 text-center">
+                      <PiggyBank className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                      <h3 className="text-sm font-medium mb-2">No Savings Goals Yet</h3>
+                      <p className="text-xs text-muted-foreground mb-4">
+                        Create your first savings goal to start tracking your progress
+                      </p>
+                      <Button
+                        onClick={() => setIsNewGoalDialogOpen(true)}
+                        className="text-xs"
+                      >
+                        Create Your First Goal
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  createdGoals.map((goal) => (
+                    <motion.div
+                      key={goal.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <Card>
+                        <CardHeader className="p-3 sm:p-4">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <CardTitle className="text-xs sm:text-base">
+                                {goal.name}
+                              </CardTitle>
+                              <CardDescription className="text-xs sm:text-sm">
+                                {goal.category} • {formatCurrency(goal.monthlyContribution)}/month
+                              </CardDescription>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-xs sm:text-sm font-semibold">
+                                {formatCurrency(goal.currentAmount)}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                of {formatCurrency(goal.targetAmount)}
+                              </div>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="p-3 sm:p-4">
+                          <div className="space-y-3">
+                            <div className="flex justify-between text-xs sm:text-sm">
+                              <span>Progress</span>
+                              <span>{((goal.currentAmount / goal.targetAmount) * 100).toFixed(1)}%</span>
+                            </div>
+                            <Progress
+                              value={(goal.currentAmount / goal.targetAmount) * 100}
+                              className="h-1.5 sm:h-2"
+                            />
+                            <div className="flex justify-between text-xs sm:text-sm text-muted-foreground">
+                              <span>Target Date: {new Date(goal.deadline).toLocaleDateString()}</span>
+                              <span>
+                                {(() => {
+                                  const remaining = goal.targetAmount - goal.currentAmount
+                                  const monthsLeft = Math.ceil(remaining / goal.monthlyContribution)
+                                  return `${monthsLeft} months left`
+                                })()}
+                              </span>
+                            </div>
+                            {goal.isAutoSave && (
+                              <div className="flex items-center text-xs text-green-600">
+                                <Repeat className="h-3 w-3 mr-1" />
+                                Auto-save enabled
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex gap-2 mt-3">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-xs flex-1"
+                              onClick={() => {
+                                // Simulate adding money to the goal
+                                setCreatedGoals(prev =>
+                                  prev.map(g => g.id === goal.id ? {
+                                    ...g,
+                                    currentAmount: Math.min(g.currentAmount + g.monthlyContribution, g.targetAmount)
+                                  } : g)
+                                )
+                                addToast({
+                                  title: 'Contribution Added',
+                                  description: `Added ${formatCurrency(goal.monthlyContribution)} to ${goal.name}`,
+                                })
+                              }}
+                            >
+                              Add Money
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-xs"
+                            >
+                              Edit Goal
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))
+                )}
+              </div>
             </TabsContent>
 
             <TabsContent value="fixed-deposits">
@@ -885,6 +1037,148 @@ export default function SavingsPage() {
 
             <Button onClick={handleCreateAutomatedSaving} className="w-full text-xs sm:text-sm">
               Create Automated Saving
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* New Goal Dialog */}
+      <Dialog open={isNewGoalDialogOpen} onOpenChange={setIsNewGoalDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-sm sm:text-base">Create New Savings Goal</DialogTitle>
+            <DialogDescription className="text-xs sm:text-sm">
+              Set up a new savings goal with regular contributions
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            {/* Goal Name */}
+            <div>
+              <Label htmlFor="goal-name" className="text-xs sm:text-sm">Goal Name</Label>
+              <Input
+                id="goal-name"
+                placeholder="e.g., Emergency Fund, New Car"
+                className="text-xs sm:text-sm"
+                value={newGoalForm.name}
+                onChange={(e) => setNewGoalForm(prev => ({ ...prev, name: e.target.value }))}
+              />
+            </div>
+
+            {/* Target Amount */}
+            <div>
+              <Label htmlFor="goal-target" className="text-xs sm:text-sm">Target Amount</Label>
+              <Input
+                id="goal-target"
+                type="number"
+                placeholder="Enter target amount"
+                className="text-xs sm:text-sm"
+                value={newGoalForm.targetAmount}
+                onChange={(e) => setNewGoalForm(prev => ({ ...prev, targetAmount: e.target.value }))}
+              />
+            </div>
+
+            {/* Monthly Contribution */}
+            <div>
+              <Label htmlFor="goal-monthly" className="text-xs sm:text-sm">Monthly Contribution</Label>
+              <Input
+                id="goal-monthly"
+                type="number"
+                placeholder="How much per month?"
+                className="text-xs sm:text-sm"
+                value={newGoalForm.monthlyContribution}
+                onChange={(e) => setNewGoalForm(prev => ({ ...prev, monthlyContribution: e.target.value }))}
+              />
+            </div>
+
+            {/* Category */}
+            <div>
+              <Label className="text-xs sm:text-sm">Category</Label>
+              <Select
+                value={newGoalForm.category}
+                onValueChange={(value) => setNewGoalForm(prev => ({ ...prev, category: value }))}
+              >
+                <SelectTrigger className="text-xs sm:text-sm">
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Emergency">Emergency Fund</SelectItem>
+                  <SelectItem value="Retirement">Retirement</SelectItem>
+                  <SelectItem value="Education">Education</SelectItem>
+                  <SelectItem value="Travel">Travel</SelectItem>
+                  <SelectItem value="Home">Home</SelectItem>
+                  <SelectItem value="Vehicle">Vehicle</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Deadline */}
+            <div>
+              <Label htmlFor="goal-deadline" className="text-xs sm:text-sm">Target Date (Optional)</Label>
+              <Input
+                id="goal-deadline"
+                type="date"
+                className="text-xs sm:text-sm"
+                value={newGoalForm.deadline ? newGoalForm.deadline.toISOString().split('T')[0] : ''}
+                onChange={(e) => setNewGoalForm(prev => ({
+                  ...prev,
+                  deadline: e.target.value ? new Date(e.target.value) : null
+                }))}
+              />
+            </div>
+
+            {/* Goal Progress Preview */}
+            {newGoalForm.targetAmount && newGoalForm.monthlyContribution && (
+              <div className="bg-muted p-3 rounded-lg">
+                <div className="text-xs sm:text-sm font-medium mb-2">Goal Timeline</div>
+                {(() => {
+                  const target = parseFloat(newGoalForm.targetAmount) || 0
+                  const monthly = parseFloat(newGoalForm.monthlyContribution) || 0
+
+                  if (target > 0 && monthly > 0) {
+                    const monthsToGoal = Math.ceil(target / monthly)
+                    const yearsToGoal = (monthsToGoal / 12).toFixed(1)
+
+                    return (
+                      <div className="space-y-1 text-xs sm:text-sm">
+                        <div className="flex justify-between">
+                          <span>Target Amount:</span>
+                          <span>{formatCurrency(target)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Monthly Savings:</span>
+                          <span>{formatCurrency(monthly)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Time to Goal:</span>
+                          <span className="text-green-600">
+                            {monthsToGoal} months ({yearsToGoal} years)
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Total Contributions:</span>
+                          <span className="text-green-600">{formatCurrency(monthly * monthsToGoal)}</span>
+                        </div>
+                      </div>
+                    )
+                  }
+                  return null
+                })()}
+              </div>
+            )}
+
+            {/* Auto-Save Option */}
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="goal-autosave"
+                checked={newGoalForm.isAutoSave}
+                onCheckedChange={(checked) => setNewGoalForm(prev => ({ ...prev, isAutoSave: checked }))}
+              />
+              <Label htmlFor="goal-autosave" className="text-xs sm:text-sm">Enable Auto-Save</Label>
+            </div>
+
+            <Button onClick={handleCreateGoal} className="w-full text-xs sm:text-sm">
+              Create Savings Goal
             </Button>
           </div>
         </DialogContent>

@@ -130,7 +130,7 @@ export default function HomePage() {
       {/* Primary Actions - Enhanced Design */}
       <div className="dashboard-section">
         <h2 className="heading-tertiary text-center">Quick Actions</h2>
-        <div className="flex overflow-x-auto lg:justify-center gap-4 pb-2">
+        <div className="flex overflow-x-auto lg:justify-center gap-2 sm:gap-4 pb-2">
           {[
             { label: 'Send', href: '/send', icon: ArrowUpRight, color: 'btn-gradient' },
             { label: 'Add Money', action: () => setIsDepositModalOpen(true), icon: ArrowDownLeft, color: 'btn-surface' },
@@ -140,11 +140,11 @@ export default function HomePage() {
           ].map((action, index) => (
             <Button
               key={index}
-              className={`${action.color} btn-enhanced min-w-[90px] h-18 flex flex-col items-center justify-center space-y-2 hover-lift`}
+              className={`${action.color} btn-enhanced min-w-[80px] w-auto h-12 sm:h-14 lg:h-16 flex flex-col items-center justify-center space-y-2 hover-lift`}
               onClick={() => handleQuickAction(action)}
             >
-              <action.icon className="h-5 w-5" />
-              <span className="text-xs font-medium">{action.label}</span>
+              <action.icon className="h-4 w-4 sm:h-5 w-5" />
+              <span className="text-xs sm:text-sm font-medium">{action.label}</span>
             </Button>
           ))}
         </div>
@@ -152,7 +152,7 @@ export default function HomePage() {
 
       {/* Secondary Actions */}
       <div className="card-enhanced p-4">
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
           {[
             { label: 'Analytics', href: '/analytics', icon: DollarSign },
             { label: 'Notifications', action: testNotifications, icon: Bell },
@@ -161,11 +161,11 @@ export default function HomePage() {
             <Button
               key={index}
               variant="ghost"
-              className="h-16 flex flex-col items-center justify-center space-y-2 text-muted-foreground hover:text-foreground hover:bg-surface-hover transition-all duration-200"
+              className="h-12 sm:h-14 lg:h-16 flex flex-col items-center justify-center space-y-2 text-muted-foreground hover:text-foreground hover:bg-surface-hover transition-all duration-200"
               onClick={() => handleQuickAction(action)}
             >
-              <action.icon className="h-5 w-5" />
-              <span className="text-xs">{action.label}</span>
+              <action.icon className="h-4 w-4 sm:h-5 w-5" />
+              <span className="text-xs sm:text-sm">{action.label}</span>
             </Button>
           ))}
         </div>

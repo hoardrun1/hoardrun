@@ -47,7 +47,10 @@ const ContentWrapper = memo(({ children }: { children: React.ReactNode }) => (
     {/* Mobile Layout */}
     <div
       className="lg:hidden min-h-screen bg-background"
-      style={{ paddingTop: 'calc(4rem + env(safe-area-inset-top, 0px))' }}
+      style={{
+        paddingTop: 'calc(4rem + env(safe-area-inset-top, 0px))',
+        paddingBottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))'
+      }}
     >
       <div className="dashboard-container">
         {children}

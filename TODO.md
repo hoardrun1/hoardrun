@@ -1,9 +1,7 @@
-- [x] Fix register button visibility in dark mode in investment-page.tsx
-- [x] Fix syntax error in investment-opportunities-page.tsx (expectedReturn -> targetReturn)
-- [x] Reduce main welcome heading font sizes in signup page
-- [x] Reduce welcome paragraph font sizes in signup page
-- [x] Reduce form title font size in signup page
-- [x] Adjust feature highlights font sizes in signup page
-- [x] Adjust trust indicators font sizes in signup page
-- [x] Reduce form labels font sizes to make form less tall
-- [x] Reduce form description text size
+# Task: Remove the Floating Notification
+
+## Steps:
+- [x] Edit `components/providers/conditional-providers.tsx` to remove the import of `FloatingNotificationBell`
+- [x] Edit `components/providers/conditional-providers.tsx` to remove the `<FloatingNotificationBell />` component from the JSX
+- [x] Verify the changes: Run `npm run dev`, navigate to an authenticated page, and confirm the floating bell is no longer visible
+- [x] Update this TODO.md to mark completion and close the task.

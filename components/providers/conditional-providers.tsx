@@ -5,7 +5,7 @@ import { ReactNode } from 'react'
 import { FinanceProvider } from '@/contexts/FinanceContext'
 import { NavigationProvider } from '@/providers/NavigationProvider'
 import { NotificationProvider } from '@/contexts/NotificationContext'
-import { FloatingNotificationBell } from '@/components/ui/floating-notification-bell'
+
 
 interface ConditionalProvidersProps {
   children: ReactNode
@@ -84,7 +84,6 @@ export function ConditionalProviders({ children }: ConditionalProvidersProps) {
         <NavigationProvider>
           <NotificationProvider>
             {children}
-            <FloatingNotificationBell />
           </NotificationProvider>
         </NavigationProvider>
       </FinanceProvider>

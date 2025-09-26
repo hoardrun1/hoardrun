@@ -112,7 +112,7 @@ export default function HomePage() {
   ]
 
   return (
-    <div className="dashboard-content">
+    <div className="dashboard-content pb-4">
       {/* Hero Balance Card */}
       <div className="card-primary p-6 sm:p-8 text-center animate-fade-in">
         <div className="space-y-3">
@@ -234,7 +234,7 @@ export default function HomePage() {
         {/* Recent Transactions */}
         <div className="card-enhanced overflow-hidden">
           <div className="card-primary p-4 -m-px rounded-t-xl">
-            <h3 className="heading-tertiary text-primary-foreground">Recent Transactions</h3>
+            <h3 className="heading-tertiary text-foreground dark:text-white">Recent Transactions</h3>
           </div>
           <div className="p-4">
             <div className="space-y-3">
@@ -275,7 +275,7 @@ export default function HomePage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="card-enhanced overflow-hidden">
           <div className="card-primary p-4 -m-px rounded-t-xl">
-            <h3 className="heading-tertiary text-primary-foreground">Financial Health</h3>
+            <h3 className="heading-tertiary text-foreground dark:text-white">Financial Health</h3>
           </div>
           <div className="p-4 space-y-4">
             <div className="flex items-center justify-between">
@@ -295,7 +295,7 @@ export default function HomePage() {
 
         <div className="card-enhanced overflow-hidden">
           <div className="card-primary p-4 -m-px rounded-t-xl">
-            <h3 className="heading-tertiary text-primary-foreground">Investment Performance</h3>
+            <h3 className="heading-tertiary text-foreground dark:text-white">Investment Performance</h3>
           </div>
           <div className="p-4 space-y-4">
             <div className="flex items-center justify-between">

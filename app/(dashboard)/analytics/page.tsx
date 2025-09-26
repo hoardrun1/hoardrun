@@ -23,7 +23,7 @@ import {
 export default function AnalyticsPage() {
   const { theme } = useTheme()
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   
   // Analytics data state
@@ -127,18 +127,7 @@ export default function AnalyticsPage() {
   const avgMonthlyExpenses = monthlyData.length > 0 ? totalExpenses / monthlyData.length : 0
   const savingsRate = totalIncome > 0 ? ((totalSavings / totalIncome) * 100).toFixed(1) : '0.0'
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background pt-16 pb-32 px-2">
-        <div className="w-full space-y-4 sm:space-y-6">
-          <div className="flex items-center justify-center h-64">
-            <Loader2 className="h-8 w-8 animate-spin" />
-            <span className="ml-2">Loading analytics...</span>
-          </div>
-        </div>
-      </div>
-    )
-  }
+
 
   if (error) {
     return (

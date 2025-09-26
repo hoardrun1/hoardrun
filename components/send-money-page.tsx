@@ -263,11 +263,6 @@ export function SendMoneyPage() {
   // Get selected account
   const selectedAccount = selectedAccountId ? getAccountById(selectedAccountId) : null
 
-  // Loading state
-  if (accountsLoading || beneficiariesLoading) {
-    return <LoadingSkeleton />
-  }
-
   // Error state
   if (accountsError || beneficiariesError) {
     return (

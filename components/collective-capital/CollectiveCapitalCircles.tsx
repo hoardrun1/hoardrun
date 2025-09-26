@@ -342,15 +342,15 @@ export function CollectiveCapitalCircles({ className }: CollectiveCapitalCircles
           
           {!isLoading && filteredCircles.length === 0 && (
             <div className="text-center py-6 sm:py-12">
-              <Users className="h-8 w-8 sm:h-12 sm:w-12 text-black/60 mx-auto mb-2 sm:mb-4" />
-              <h3 className="text-xs sm:text-base font-semibold text-black mb-1 sm:mb-2">
+              <Users className="h-8 w-8 sm:h-12 sm:w-12 text-muted-foreground mx-auto mb-2 sm:mb-4" />
+              <h3 className="text-xs sm:text-base font-semibold text-foreground mb-1 sm:mb-2">
                 No circles found
               </h3>
-              <p className="text-xs sm:text-sm text-black/60 mb-2 sm:mb-4">
+              <p className="text-xs sm:text-sm text-muted-foreground mb-2 sm:mb-4">
                 Try adjusting your search or filters, or create a new circle
               </p>
-              <Button 
-                onClick={() => setShowCreateModal(true)} 
+              <Button
+                onClick={() => setShowCreateModal(true)}
                 size="sm"
                 className="bg-black text-white hover:bg-black/90 text-xs sm:text-sm"
               >

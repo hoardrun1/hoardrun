@@ -35,7 +35,7 @@ export default function ProfilePage() {
   const { theme } = useTheme()
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [profileData, setProfileData] = useState({
     firstName: '',
@@ -196,18 +196,7 @@ export default function ProfilePage() {
     }))
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background pt-16 pb-32 px-4 sm:pt-20 sm:pb-32 sm:px-6">
-        <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
-          <div className="flex items-center justify-center h-64">
-            <Loader2 className="h-8 w-8 animate-spin" />
-            <span className="ml-2">Loading profile...</span>
-          </div>
-        </div>
-      </div>
-    )
-  }
+
 
   return (
     <div className="min-h-screen bg-background">

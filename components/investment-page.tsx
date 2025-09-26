@@ -555,7 +555,7 @@ export function InvestmentPage() {
                     variant="outline"
                     size="sm"
                     onClick={() => setIsDepositModalOpen(true)}
-                    className="text-xs"
+                    className="text-xs border-white text-white hover:bg-white/10 dark:border-white dark:text-white"
                   >
                     <Wallet className="h-3 w-3 mr-1" />
                     Deposit
@@ -943,10 +943,10 @@ export function InvestmentPage() {
                         Check back later for new startup investment opportunities.
                       </p>
                       <Button
-                        variant="outline"
+                        variant="default"
                         size="sm"
                         onClick={() => router.push('/startupregistration')}
-                        className="text-xs dark:text-foreground dark:border-foreground dark:hover:bg-muted"
+                        className="text-xs bg-primary text-primary-foreground hover:bg-primary/90"
                       >
                         Register Your Startup
                       </Button>

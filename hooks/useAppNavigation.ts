@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState, startTransition } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import { useNavigationCache, COMMON_ROUTES, ROUTE_GROUPS } from '@/lib/navigation-cache'
 
 interface NavigationOptions {
   replace?: boolean
@@ -8,21 +7,48 @@ interface NavigationOptions {
   immediate?: boolean
 }
 
+// Common routes for prefetching
+const COMMON_ROUTES = [
+  '/home',
+  '/overview', 
+  '/savings',
+  '/send',
+  '/cards',
+  '/transactions',
+  '/analytics',
+  '/profile'
+]
+
+// Route groups for intelligent prefetching
+const ROUTE_GROUPS = {
+  financial: ['/home', '/overview', '/savings', '/investment', '/analytics'],
+  transactions: ['/send', '/transactions', '/cards'],
+  account: ['/profile', '/settings', '/security', '/notifications']
+}
+
 export const useAppNavigation = () => {
   const router = useRouter()
   const pathname = usePathname()
-  const cache = useNavigationCache()
+  const [isNavigating, setIsNavigating] = useState(false)
   const navigationTimeoutRef = useRef<NodeJS.Timeout>()
+  const prefetchedRoutes = useRef(new Set<string>())
+
+  // Prefetch using Next.js built-in prefetching
+  const prefetchRoute = useCallback((route: string) => {
+    if (!prefetchedRoutes.current.has(route)) {
+      router.prefetch(route)
+      prefetchedRoutes.current.add(route)
+    }
+  }, [router])
 
   // Prefetch common routes on mount
   useEffect(() => {
-    // Prefetch common routes after a short delay
     const prefetchTimeout = setTimeout(() => {
-      cache.prefetch(COMMON_ROUTES)
-    }, 1000)
+      COMMON_ROUTES.forEach(route => prefetchRoute(route))
+    }, 100) // Reduced delay
 
     return () => clearTimeout(prefetchTimeout)
-  }, [cache])
+  }, [prefetchRoute])
 
   // Intelligent prefetching based on current route
   useEffect(() => {
@@ -31,30 +57,29 @@ export const useAppNavigation = () => {
     )
 
     if (currentGroup) {
-      // Prefetch related routes in the same group
-      const [groupName, routes] = currentGroup
+      const [, routes] = currentGroup
       const otherRoutes = routes.filter(route => !pathname?.startsWith(route))
       
-      if (otherRoutes.length > 0) {
-        cache.prefetch(otherRoutes)
-      }
+      otherRoutes.forEach(route => prefetchRoute(route))
     }
-  }, [pathname, cache])
+  }, [pathname, prefetchRoute])
 
-  const navigate = useCallback(async (to: string, options: NavigationOptions = {}) => {
-    const { replace = false, prefetch = true, immediate = false } = options
+  const navigate = useCallback((to: string, options: NavigationOptions = {}) => {
+    const { replace = false, prefetch = true, immediate = true } = options // Changed immediate to true by default
 
     // Clear any pending navigation
     if (navigationTimeoutRef.current) {
       clearTimeout(navigationTimeoutRef.current)
     }
 
-    // Prefetch the target route if not already cached
-    if (prefetch && !cache.has(`prefetch:${to}`)) {
-      cache.prefetch([to])
+    // Prefetch the target route if not already prefetched
+    if (prefetch) {
+      prefetchRoute(to)
     }
 
     const performNavigation = () => {
+      setIsNavigating(true)
+      
       startTransition(() => {
         if (replace) {
           router.replace(to)
@@ -62,44 +87,49 @@ export const useAppNavigation = () => {
           router.push(to)
         }
       })
+
+      // Reset loading state after a short delay
+      setTimeout(() => setIsNavigating(false), 300)
     }
 
     if (immediate) {
       performNavigation()
     } else {
-      // Small delay to allow prefetching to complete
-      navigationTimeoutRef.current = setTimeout(performNavigation, 50)
+      // Minimal delay for non-immediate navigation
+      navigationTimeoutRef.current = setTimeout(performNavigation, 10)
     }
-  }, [router, cache])
+  }, [router, prefetchRoute])
 
-  const goBack = useCallback(async () => {
+  const goBack = useCallback(() => {
+    setIsNavigating(true)
     startTransition(() => {
       router.back()
     })
+    setTimeout(() => setIsNavigating(false), 300)
   }, [router])
 
-  const goForward = useCallback(async () => {
+  const goForward = useCallback(() => {
+    setIsNavigating(true)
     startTransition(() => {
       router.forward()
     })
+    setTimeout(() => setIsNavigating(false), 300)
   }, [router])
 
   const reset = useCallback(() => {
+    setIsNavigating(true)
     startTransition(() => {
       router.push('/')
     })
+    setTimeout(() => setIsNavigating(false), 300)
   }, [router])
-
-  const prefetchRoute = useCallback((route: string) => {
-    cache.prefetch([route])
-  }, [cache])
 
   const prefetchRouteGroup = useCallback((groupName: keyof typeof ROUTE_GROUPS) => {
     const routes = ROUTE_GROUPS[groupName]
     if (routes) {
-      cache.prefetch(routes)
+      routes.forEach(route => prefetchRoute(route))
     }
-  }, [cache])
+  }, [prefetchRoute])
 
   // Cleanup on unmount
   useEffect(() => {
@@ -118,34 +148,17 @@ export const useAppNavigation = () => {
     prefetchRoute,
     prefetchRouteGroup,
     currentPath: pathname,
-    cache: {
-      clear: cache.clear,
-      has: cache.has,
-      get: cache.get,
-      set: cache.set
-    }
+    isNavigating
   }
 }
 
-// Hook for navigation with loading states
+// Hook for navigation with loading states (kept for backward compatibility)
 export const useAppNavigationWithLoading = () => {
   const navigation = useAppNavigation()
-  const [isNavigating, setIsNavigating] = useState(false)
-
-  const navigateWithLoading = useCallback(async (to: string, options?: NavigationOptions) => {
-    setIsNavigating(true)
-    try {
-      await navigation.navigate(to, options)
-    } finally {
-      // Reset loading state after navigation completes
-      setTimeout(() => setIsNavigating(false), 100)
-    }
-  }, [navigation])
-
+  
   return {
     ...navigation,
-    navigate: navigateWithLoading,
-    isNavigating
+    navigateWithLoading: navigation.navigate // Alias for backward compatibility
   }
 }
 

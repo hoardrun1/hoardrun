@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { useRouter } from "next/navigation"
 import { z } from "zod"
@@ -124,11 +124,11 @@ export function SignInPage() {
         transition={{ duration: 0.5 }}
         className="relative z-10 w-full max-w-md"
       >
-        <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6 sm:p-8">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
-            <p className="text-gray-600">Sign in to your HoardRun account</p>
-          </div>
+          <div className="auth-signin-card bg-card text-card-foreground rounded-2xl shadow-2xl p-6 sm:p-8">
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-foreground mb-2">Welcome Back</h1>
+              <p className="text-muted-foreground">Sign in to your HoardRun account</p>
+            </div>
 
           {error && (
             <Alert className="mb-6" variant="destructive">
@@ -139,14 +139,14 @@ export function SignInPage() {
           <form onSubmit={handleSignIn} className="space-y-4">
             <div className="space-y-2">
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
                 <Input
                   type="email"
                   name="email"
                   placeholder="Enter your email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="pl-10 h-12 text-black"
+                  className="auth-input pl-10 h-12 text-foreground"
                   required
                 />
               </div>
@@ -154,14 +154,14 @@ export function SignInPage() {
 
             <div className="space-y-2">
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
                 <Input
                   type={showPassword ? "text" : "password"}
                   name="password"
                   placeholder="Enter your password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  className="pl-10 pr-10 h-12 text-black"
+                  className="auth-input pl-10 pr-10 h-12 text-foreground"
                   required
                 />
                 <Button
@@ -172,9 +172,9 @@ export function SignInPage() {
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? (
-                    <EyeOff className="h-4 w-4 text-gray-400" />
+                    <EyeOff className="h-4 w-4 text-muted-foreground" />
                   ) : (
-                    <Eye className="h-4 w-4 text-gray-400" />
+                    <Eye className="h-4 w-4 text-muted-foreground" />
                   )}
                 </Button>
               </div>
@@ -190,18 +190,18 @@ export function SignInPage() {
                     setFormData(prev => ({ ...prev, rememberMe: checked as boolean }))
                   }
                 />
-                <label htmlFor="rememberMe" className="text-sm text-gray-600">
+                <label htmlFor="rememberMe" className="text-sm text-muted-foreground">
                   Remember me
                 </label>
               </div>
-              <Link href="/forgot-password" className="text-sm text-black hover:underline">
+              <Link href="/forgot-password" className="text-sm text-primary hover:text-primary/80 hover:underline">
                 Forgot password?
               </Link>
             </div>
 
             <Button
               type="submit"
-              className="w-full h-12 bg-black hover:bg-gray-800 text-white"
+              className="w-full h-12 btn-interactive"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -218,9 +218,9 @@ export function SignInPage() {
             </Button>
           </form>
 
-          <div className="mt-6 text-center text-sm text-gray-600">
+          <div className="mt-6 text-center text-sm text-muted-foreground">
             Don't have an account?{" "}
-            <Link href="/signup" className="text-black hover:underline font-medium">
+            <Link href="/signup" className="text-primary hover:text-primary/80 hover:underline font-medium">
               Sign up here
             </Link>
           </div>

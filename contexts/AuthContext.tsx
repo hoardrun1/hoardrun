@@ -112,70 +112,49 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   useEffect(() => {
     const initializeAuth = async () => {
-      // Check if this is the first initialization in this browser session
-      const sessionInitialized = sessionStorage.getItem('auth_session_initialized');
+      console.log('Initializing auth state...');
       
-      if (!sessionInitialized) {
-        // First time in this browser session - clear any old tokens
-        console.log('First initialization - clearing any old session data');
-        deleteCookie('auth-token');
-        deleteCookie('auth-user');
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('auth_user');
-        sessionStorage.removeItem('token');
-        sessionStorage.removeItem('user');
-        apiClient.clearToken();
-        setToken(null);
-        setUser(null);
-        
-        // Mark session as initialized
-        sessionStorage.setItem('auth_session_initialized', 'true');
+      // Try to restore token and user from cookies first (primary storage)
+      const storedToken = getCookie('auth-token');
+      const storedUserStr = getCookie('auth-user');
+      
+      if (storedToken && storedUserStr) {
+        try {
+          const storedUser = JSON.parse(storedUserStr);
+          console.log('Restoring auth state from cookies');
+          setToken(storedToken);
+          setUser(storedUser);
+          apiClient.setToken(storedToken);
+        } catch (error) {
+          console.error('Error parsing stored user data:', error);
+          // Clear corrupted data
+          deleteCookie('auth-token');
+          deleteCookie('auth-user');
+          apiClient.clearToken();
+        }
       } else {
-        // Subsequent initializations in same session - restore auth state from storage
-        console.log('Session already initialized - restoring current auth state');
+        // Fallback to localStorage if cookies are not available
+        const localToken = localStorage.getItem('auth_token');
+        const localUserStr = localStorage.getItem('auth_user');
         
-        // Try to restore token and user from cookies first (primary storage)
-        const storedToken = getCookie('auth-token');
-        const storedUserStr = getCookie('auth-user');
-        
-        if (storedToken && storedUserStr) {
+        if (localToken && localUserStr) {
           try {
-            const storedUser = JSON.parse(storedUserStr);
-            console.log('Restoring auth state from cookies');
-            setToken(storedToken);
-            setUser(storedUser);
-            apiClient.setToken(storedToken);
+            const localUser = JSON.parse(localUserStr);
+            console.log('Restoring auth state from localStorage');
+            setToken(localToken);
+            setUser(localUser);
+            apiClient.setToken(localToken);
           } catch (error) {
-            console.error('Error parsing stored user data:', error);
+            console.error('Error parsing local user data:', error);
             // Clear corrupted data
-            deleteCookie('auth-token');
-            deleteCookie('auth-user');
+            localStorage.removeItem('auth_token');
+            localStorage.removeItem('auth_user');
             apiClient.clearToken();
           }
         } else {
-          // Fallback to localStorage if cookies are not available
-          const localToken = localStorage.getItem('auth_token');
-          const localUserStr = localStorage.getItem('auth_user');
-          
-          if (localToken && localUserStr) {
-            try {
-              const localUser = JSON.parse(localUserStr);
-              console.log('Restoring auth state from localStorage');
-              setToken(localToken);
-              setUser(localUser);
-              apiClient.setToken(localToken);
-            } catch (error) {
-              console.error('Error parsing local user data:', error);
-              // Clear corrupted data
-              localStorage.removeItem('auth_token');
-              localStorage.removeItem('auth_user');
-              apiClient.clearToken();
-            }
-          } else {
-            // No stored auth data found
-            console.log('No stored auth data found');
-            apiClient.clearToken();
-          }
+          // No stored auth data found
+          console.log('No stored auth data found');
+          apiClient.clearToken();
         }
       }
       
@@ -183,6 +162,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
     };
 
     initializeAuth();
+
+    // Listen for token expiration events from API client
+    const handleTokenExpiration = () => {
+      console.log('Token expiration event received - logging out user');
+      setToken(null);
+      setUser(null);
+      setError('Your session has expired. Please sign in again.');
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('auth:token-expired', handleTokenExpiration);
+      
+      // Cleanup event listener
+      return () => {
+        window.removeEventListener('auth:token-expired', handleTokenExpiration);
+      };
+    }
   }, []);
 
   useEffect(() => {

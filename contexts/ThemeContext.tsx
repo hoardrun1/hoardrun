@@ -16,32 +16,59 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>('light')
   const [mounted, setMounted] = useState(false)
 
-  // Load theme from localStorage on mount
+  // Initialize theme immediately to prevent flash
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') as Theme
-    if (savedTheme && (savedTheme === 'light' || savedTheme === 'dark')) {
-      setTheme(savedTheme)
-    } else {
+    // Get initial theme from localStorage or system preference
+    const getInitialTheme = (): Theme => {
+      if (typeof window === 'undefined') return 'light'
+      
+      const savedTheme = localStorage.getItem('theme') as Theme
+      if (savedTheme && (savedTheme === 'light' || savedTheme === 'dark')) {
+        return savedTheme
+      }
+      
       // Check system preference
       const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-      setTheme(systemPrefersDark ? 'dark' : 'light')
+      return systemPrefersDark ? 'dark' : 'light'
     }
-    setMounted(true)
-  }, [])
 
-  // Apply theme to document
-  useEffect(() => {
-    if (!mounted) return
-
+    const initialTheme = getInitialTheme()
+    setTheme(initialTheme)
+    
+    // Apply theme immediately to prevent flash
     const root = document.documentElement
-    if (theme === 'dark') {
+    if (initialTheme === 'dark') {
       root.classList.add('dark')
     } else {
       root.classList.remove('dark')
     }
+    
+    setMounted(true)
+  }, [])
+
+  // Apply theme to document and save to localStorage
+  useEffect(() => {
+    if (!mounted) return
+
+    const root = document.documentElement
+    const body = document.body
+    
+    if (theme === 'dark') {
+      root.classList.add('dark')
+      body.classList.add('dark')
+    } else {
+      root.classList.remove('dark')
+      body.classList.remove('dark')
+    }
 
     // Save to localStorage
     localStorage.setItem('theme', theme)
+    
+    // Update meta theme-color for mobile browsers
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]')
+    if (metaThemeColor) {
+      metaThemeColor.setAttribute('content', theme === 'dark' ? '#000000' : '#ffffff')
+    }
   }, [theme, mounted])
 
   const toggleTheme = () => {
@@ -50,7 +77,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   // Prevent hydration mismatch by not rendering until mounted
   if (!mounted) {
-    return <>{children}</>
+    return <div className="bg-background text-foreground">{children}</div>
   }
 
   return (
@@ -63,7 +90,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 export function useTheme() {
   const context = useContext(ThemeContext)
   if (context === undefined) {
-    // During SSR/static generation, return default values instead of throwing
+    // During SSR/static generation or before hydration, return default values instead of throwing
     if (typeof window === 'undefined') {
       return {
         theme: 'light' as Theme,
@@ -71,7 +98,15 @@ export function useTheme() {
         toggleTheme: () => {}
       }
     }
-    throw new Error('useTheme must be used within a ThemeProvider')
+    
+    // Check if we're in a hydration phase by looking for the mounted state
+    // If ThemeProvider hasn't mounted yet, return default values
+    const isHydrating = document.documentElement.classList.contains('dark') ? 'dark' : 'light'
+    return {
+      theme: isHydrating as Theme,
+      setTheme: () => {},
+      toggleTheme: () => {}
+    }
   }
   return context
 }

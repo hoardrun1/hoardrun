@@ -63,20 +63,20 @@ export const PortfolioOverview: React.FC<PortfolioOverviewProps> = ({
       <CardContent>
         <div className="space-y-4">
           {/* Summary */}
-          <div className="grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
+          <div className="grid grid-cols-3 gap-4 p-4 bg-surface rounded-lg">
             <div className="text-center">
-              <div className="text-sm text-gray-600">Total Value</div>
+              <div className="text-sm text-content-secondary">Total Value</div>
               <div className="text-xl font-bold">${totalValue.toLocaleString()}</div>
             </div>
             <div className="text-center">
-              <div className="text-sm text-gray-600">Total Gain/Loss</div>
-              <div className={`text-xl font-bold ${totalGain >= 0 ? 'text-gray-600' : 'text-gray-600'}`}>
+              <div className="text-sm text-content-secondary">Total Gain/Loss</div>
+              <div className={`text-xl font-bold ${totalGain >= 0 ? 'text-status-success' : 'text-status-error'}`}>
                 {totalGain >= 0 ? '+' : ''}${totalGain.toLocaleString()}
               </div>
             </div>
             <div className="text-center">
-              <div className="text-sm text-gray-600">Return</div>
-              <div className={`text-xl font-bold ${totalGainPercent >= 0 ? 'text-gray-600' : 'text-gray-600'}`}>
+              <div className="text-sm text-content-secondary">Return</div>
+              <div className={`text-xl font-bold ${totalGainPercent >= 0 ? 'text-status-success' : 'text-status-error'}`}>
                 {totalGainPercent >= 0 ? '+' : ''}{totalGainPercent.toFixed(2)}%
               </div>
             </div>
@@ -90,13 +90,13 @@ export const PortfolioOverview: React.FC<PortfolioOverviewProps> = ({
                 <div className="flex items-center space-x-3">
                   <div>
                     <div className="font-medium">{item.symbol}</div>
-                    <div className="text-sm text-gray-500">{item.name}</div>
+                    <div className="text-sm text-content-tertiary">{item.name}</div>
                   </div>
                 </div>
                 
                 <div className="text-right">
                   <div className="font-semibold">${item.totalValue.toLocaleString()}</div>
-                  <div className="text-sm text-gray-500">
+                  <div className="text-sm text-content-tertiary">
                     {item.shares} shares @ ${item.currentPrice}
                   </div>
                 </div>
@@ -104,11 +104,11 @@ export const PortfolioOverview: React.FC<PortfolioOverviewProps> = ({
                 <div className="text-right">
                   <Badge 
                     variant={item.gain >= 0 ? "default" : "destructive"}
-                    className={item.gain >= 0 ? "bg-gray-100 text-gray-800" : ""}
+                    className={item.gain >= 0 ? "bg-status-success/10 text-status-success" : ""}
                   >
                     {item.gain >= 0 ? '+' : ''}${item.gain.toLocaleString()}
                   </Badge>
-                  <div className={`text-sm ${item.gainPercent >= 0 ? 'text-gray-600' : 'text-gray-600'}`}>
+                  <div className={`text-sm ${item.gainPercent >= 0 ? 'text-status-success' : 'text-status-error'}`}>
                     {item.gainPercent >= 0 ? '+' : ''}{item.gainPercent.toFixed(2)}%
                   </div>
                 </div>

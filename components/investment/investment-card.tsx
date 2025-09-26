@@ -43,20 +43,20 @@ export function InvestmentCard({
   const getRiskColor = (risk: string) => {
     switch (risk) {
       case 'LOW':
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
+        return 'bg-success-light text-status-success'
       case 'MEDIUM': // Fixed from MODERATE to match Prisma RiskLevel enum
-        return 'bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-100'
+        return 'bg-warning-light text-status-warning'
       case 'HIGH':
-        return 'bg-gray-300 text-black dark:bg-gray-600 dark:text-white'
+        return 'bg-red-100 dark:bg-red-900/20 text-status-error'
       default:
-        return 'bg-gray-100 text-gray-600'
+        return 'bg-muted text-muted-foreground'
     }
   }
 
   const getReturnColor = (returnValue: number) => {
-    if (returnValue > 0) return 'text-gray-800 dark:text-gray-200'
-    if (returnValue < 0) return 'text-gray-600 dark:text-gray-400'
-    return 'text-gray-600'
+    if (returnValue > 0) return 'text-status-success'
+    if (returnValue < 0) return 'text-status-error'
+    return 'text-muted-foreground'
   }
 
   return (
@@ -66,11 +66,11 @@ export function InvestmentCard({
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
       onClick={() => onSelect?.(investment)}
-      className={cn(
-        'cursor-pointer transition-all duration-200',
-        isSelected && 'ring-2 ring-gray-400 dark:ring-gray-600',
-        className
-      )}
+        className={cn(
+          'cursor-pointer transition-all duration-200',
+          isSelected && 'ring-2 ring-primary',
+          className
+        )}
     >
       <Card>
         <CardHeader className="pb-2">
@@ -89,13 +89,13 @@ export function InvestmentCard({
             {/* Amount and Return */}
             <div className="flex justify-between items-center">
               <div>
-                <div className="text-sm text-gray-500">Invested Amount</div>
+                <div className="text-sm text-muted-foreground">Invested Amount</div>
                 <div className="text-base font-semibold">
                   ${investment.amount.toLocaleString()}
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-sm text-gray-500">Return</div>
+                <div className="text-sm text-muted-foreground">Return</div>
                 <div className={cn(
                   "text-base font-semibold flex items-center gap-1",
                   getReturnColor(investment.return)
@@ -117,14 +117,14 @@ export function InvestmentCard({
                   <AreaChart data={investment.performance}>
                     <defs>
                       <linearGradient id={`gradient-${investment.id}`} x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor={investment.return > 0 ? '#6b7280' : '#374151'} stopOpacity={0.2} />
-                        <stop offset="100%" stopColor={investment.return > 0 ? '#6b7280' : '#374151'} stopOpacity={0} />
+                        <stop offset="0%" stopColor={investment.return > 0 ? '#10b981' : '#ef4444'} stopOpacity={0.2} />
+                        <stop offset="100%" stopColor={investment.return > 0 ? '#10b981' : '#ef4444'} stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <Area
                       type="monotone"
                       dataKey="value"
-                      stroke={investment.return > 0 ? '#6b7280' : '#374151'}
+                      stroke={investment.return > 0 ? '#10b981' : '#ef4444'}
                       fill={`url(#gradient-${investment.id})`}
                       strokeWidth={2}
                     />
@@ -132,7 +132,7 @@ export function InvestmentCard({
                 </ResponsiveContainer>
               ) : (
                 <div className="h-full flex items-center justify-center">
-                  <div className="text-sm text-gray-500 flex items-center gap-2">
+                  <div className="text-sm text-muted-foreground flex items-center gap-2">
                     <AlertCircle className="h-4 w-4" />
                     No performance data available
                   </div>
@@ -142,7 +142,7 @@ export function InvestmentCard({
 
             {/* Holdings */}
             <div>
-              <div className="text-sm text-gray-500 mb-2">Holdings</div>
+              <div className="text-sm text-muted-foreground mb-2">Holdings</div>
               <div className="flex flex-wrap gap-2">
                 {investment.holdings.map((holding, index) => (
                   <Badge key={index} variant="secondary">

@@ -120,7 +120,7 @@ export function SidebarLayout({ children, sidebar, className = '' }: SidebarLayo
   }
 
   return (
-    <div className={`flex min-h-screen bg-white ${className}`}>
+    <div className={`flex min-h-screen bg-background ${className}`}>
       {/* Sidebar Container */}
       <div className="relative">
         {/* Sidebar */}
@@ -285,7 +285,7 @@ export function ResponsiveSidebarLayout({ children, sidebar, className = '' }: S
   }, [])
 
   return (
-    <div className={`flex min-h-screen bg-white ${className}`}>
+    <div className={`flex min-h-screen bg-background ${className}`}>
       {/* Sidebar - Only show on large screens (lg+) */}
       <AnimatePresence>
         {isLargeScreen && (

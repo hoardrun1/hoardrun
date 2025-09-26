@@ -218,7 +218,7 @@ export function SettingsPageComponent() {
   }
 
   return (
-    <div className={`min-h-screen-mobile transition-colors duration-300 pb-20 sm:pb-6 overflow-x-hidden ${isDarkMode ? 'dark bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'}`}>
+    <div className="min-h-screen-mobile transition-colors duration-300 pb-20 sm:pb-6 overflow-x-hidden bg-background text-foreground">
       <header className="sticky top-14 sm:top-16 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8 flex h-12 sm:h-14 items-center">
           <div className="mr-3 sm:mr-4 hidden md:flex">
@@ -232,11 +232,11 @@ export function SettingsPageComponent() {
               </motion.span>
             </Link>
             <nav className="flex items-center space-x-6 text-sm font-medium">
-              <Link href="/home" className="transition-colors hover:text-gray-600">Home</Link>
-              <Link href="/finance" className="transition-colors hover:text-gray-600">Finance</Link>
-              <Link href="/cards" className="transition-colors hover:text-gray-600">Cards</Link>
-              <Link href="/investment" className="transition-colors hover:text-gray-600">Investment</Link>
-              <Link href="/settings" className="text-gray-600">Settings</Link>
+              <Link href="/home" className="transition-colors hover:text-content-secondary">Home</Link>
+              <Link href="/finance" className="transition-colors hover:text-content-secondary">Finance</Link>
+              <Link href="/cards" className="transition-colors hover:text-content-secondary">Cards</Link>
+              <Link href="/investment" className="transition-colors hover:text-content-secondary">Investment</Link>
+              <Link href="/settings" className="text-content-secondary">Settings</Link>
             </nav>
           </div>
           <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
@@ -285,7 +285,7 @@ export function SettingsPageComponent() {
                   <Lock className="mr-2 h-4 w-4" />
                   Settings
                 </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer text-gray-600">
+                <DropdownMenuItem className="cursor-pointer text-content-secondary">
                   <LogOut className="mr-2 h-4 w-4" />
                   Log out
                 </DropdownMenuItem>
@@ -323,11 +323,11 @@ export function SettingsPageComponent() {
 
           <Tabs defaultValue="account" className="w-full">
             <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 gap-2">
-              <TabsTrigger value="account" className="data-[state=active]:bg-gray-600 data-[state=active]:text-white">Account</TabsTrigger>
-              <TabsTrigger value="security" className="data-[state=active]:bg-gray-600 data-[state=active]:text-white">Security</TabsTrigger>
-              <TabsTrigger value="notifications" className="data-[state=active]:bg-gray-600 data-[state=active]:text-white">Notifications</TabsTrigger>
-              <TabsTrigger value="billing" className="data-[state=active]:bg-gray-600 data-[state=active]:text-white">Billing</TabsTrigger>
-              <TabsTrigger value="support" className="data-[state=active]:bg-gray-600 data-[state=active]:text-white">Support</TabsTrigger>
+              <TabsTrigger value="account" className="data-[state=active]:bg-interactive data-[state=active]:text-interactive-foreground">Account</TabsTrigger>
+              <TabsTrigger value="security" className="data-[state=active]:bg-interactive data-[state=active]:text-interactive-foreground">Security</TabsTrigger>
+              <TabsTrigger value="notifications" className="data-[state=active]:bg-interactive data-[state=active]:text-interactive-foreground">Notifications</TabsTrigger>
+              <TabsTrigger value="billing" className="data-[state=active]:bg-interactive data-[state=active]:text-interactive-foreground">Billing</TabsTrigger>
+              <TabsTrigger value="support" className="data-[state=active]:bg-interactive data-[state=active]:text-interactive-foreground">Support</TabsTrigger>
             </TabsList>
 
             <AnimatePresence mode="wait">
@@ -367,12 +367,12 @@ export function SettingsPageComponent() {
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="email">Email</Label>
-                        <Input 
-                          id="email" 
-                          value={userProfile?.email || ''}
-                          disabled
-                          className="transition-all focus:ring-2 focus:ring-blue-500 bg-gray-100"
-                        />
+                          <Input 
+                            id="email" 
+                            value={userProfile?.email || ''}
+                            disabled
+                            className="transition-all focus:ring-2 focus:ring-blue-500 bg-muted"
+                          />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="phone">Phone Number</Label>
@@ -667,7 +667,7 @@ export function SettingsPageComponent() {
             <Button 
               variant="destructive"
               onClick={handleLogout}
-              className="group hover:bg-gray-700 transition-colors"
+              className="group hover:bg-destructive/90 transition-colors"
             >
               <LogOut className="mr-2 h-4 w-4 group-hover:rotate-180 transition-transform" />
               Log Out
@@ -677,7 +677,7 @@ export function SettingsPageComponent() {
       </main>
 
       {/* Navigation Footer - Only show on mobile */}
-      <footer className="fixed bottom-0 left-0 right-0 bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800 py-2 lg:hidden">
+      <footer className="fixed bottom-0 left-0 right-0 bg-background border-t border-border py-2 lg:hidden">
         <div className="container mx-auto px-4">
           <nav className="grid grid-cols-5 gap-1 sm:gap-2">
             {[

@@ -1,6 +1,6 @@
 export const responsiveStyles = {
-  // Container widths - Mobile-first with better small screen support
-  container: 'w-full max-w-[98%] sm:max-w-[95%] md:max-w-[720px] lg:max-w-[960px] xl:max-w-[1140px] mx-auto px-2 sm:px-4 md:px-6',
+  // Container widths - Full width layout
+  container: 'w-full px-2 sm:px-4 md:px-6',
   
   // Typography - Mobile-first responsive design with much smaller mobile fonts
   heading1: 'text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl font-bold',

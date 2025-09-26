@@ -150,26 +150,99 @@ export function SignupPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="relative z-10 w-full max-w-md"
+        className="relative z-10 w-full max-w-md lg:max-w-6xl 3xl:max-w-7xl"
       >
-        <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6 sm:p-8">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h1>
-            <p className="text-gray-600">Join HoardRun and start your journey</p>
+        {/* Large screen two-column layout */}
+        <div className="lg:grid lg:grid-cols-2 lg:gap-12 xl:gap-16 3xl:gap-20">
+          {/* Left Column - Welcome Content (Hidden on mobile/tablet) */}
+          <div className="hidden lg:flex lg:flex-col lg:justify-center lg:items-start lg:pr-8 xl:pr-12">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="text-white"
+            >
+              <h1 className="text-3xl xl:text-4xl 3xl:text-5xl font-bold mb-6 xl:mb-8">
+                Welcome to <span className="text-primary">HoardRun</span>
+              </h1>
+              <p className="text-lg xl:text-xl 3xl:text-2xl text-gray-200 mb-8 xl:mb-12 leading-relaxed">
+                Your journey to financial freedom starts here
+              </p>
+              
+              {/* Feature highlights */}
+              <div className="space-y-6 xl:space-y-8">
+                <div className="flex items-start space-x-4">
+                  <div className="flex-shrink-0 w-8 h-8 xl:w-10 xl:h-10 bg-primary/20 rounded-full flex items-center justify-center">
+                    <div className="w-4 h-4 xl:w-5 xl:h-5 bg-primary rounded-full"></div>
+                  </div>
+                  <div>
+                    <h3 className="text-base xl:text-lg font-semibold mb-2">Smart Savings</h3>
+                    <p className="text-gray-300 text-sm xl:text-base">Automated savings plans that grow with your goals</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start space-x-4">
+                  <div className="flex-shrink-0 w-8 h-8 xl:w-10 xl:h-10 bg-primary/20 rounded-full flex items-center justify-center">
+                    <div className="w-4 h-4 xl:w-5 xl:h-5 bg-primary rounded-full"></div>
+                  </div>
+                  <div>
+                    <h3 className="text-base xl:text-lg font-semibold mb-2">Investment Opportunities</h3>
+                    <p className="text-gray-300 text-sm xl:text-base">Access to diverse investment portfolios and market insights</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start space-x-4">
+                  <div className="flex-shrink-0 w-8 h-8 xl:w-10 xl:h-10 bg-primary/20 rounded-full flex items-center justify-center">
+                    <div className="w-4 h-4 xl:w-5 xl:h-5 bg-primary rounded-full"></div>
+                  </div>
+                  <div>
+                    <h3 className="text-base xl:text-lg font-semibold mb-2">Secure Transactions</h3>
+                    <p className="text-gray-300 text-sm xl:text-base">Bank-level security for all your financial activities</p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Trust indicators */}
+              <div className="mt-12 xl:mt-16 pt-8 xl:pt-12 border-t border-gray-600">
+                <p className="text-xs xl:text-sm text-gray-400 mb-4">Trusted by thousands of users</p>
+                <div className="flex items-center space-x-6">
+                  <div className="text-center">
+                    <div className="text-xl xl:text-2xl font-bold text-primary">10K+</div>
+                    <div className="text-xs text-gray-400">Active Users</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xl xl:text-2xl font-bold text-primary">$2M+</div>
+                    <div className="text-xs text-gray-400">Saved</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xl xl:text-2xl font-bold text-primary">99.9%</div>
+                    <div className="text-xs text-gray-400">Uptime</div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
           </div>
 
-          {error && (
-            <Alert className="mb-6" variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
+          {/* Right Column - Signup Form */}
+          <div className="lg:flex lg:items-center lg:justify-center">
+            <div className="bg-card/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6 sm:p-8 w-full lg:max-w-lg xl:max-w-xl">
+              <div className="text-center mb-8">
+                <h1 className="text-2xl font-bold text-foreground mb-2">Create Account</h1>
+                <p className="text-sm text-muted-foreground">Join HoardRun and start your journey</p>
+              </div>
 
-          <form onSubmit={handleSignup} className="space-y-4">
+              {error && (
+                <Alert className="mb-6" variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+
+              <form onSubmit={handleSignup} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="firstName">First Name</Label>
+                    <Label htmlFor="firstName" className="text-sm text-foreground">First Name</Label>
                     <div className="relative">
-                      <UserIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                      <UserIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
                       <Input
                         id="firstName"
                         name="firstName"
@@ -177,13 +250,13 @@ export function SignupPage() {
                         placeholder="First name"
                         value={formData.firstName}
                         onChange={handleInputChange}
-                        className="pl-10 h-12 text-black"
+                        className="pl-10 h-12"
                         required
                       />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="lastName">Last Name</Label>
+                    <Label htmlFor="lastName" className="text-sm text-foreground">Last Name</Label>
                     <Input
                       id="lastName"
                       name="lastName"
@@ -191,16 +264,16 @@ export function SignupPage() {
                       placeholder="Last name"
                       value={formData.lastName}
                       onChange={handleInputChange}
-                      className="h-12 text-black"
+                      className="h-12"
                       required
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email" className="text-sm text-foreground">Email</Label>
                   <div className="relative">
-                    <MailIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <MailIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
                     <Input
                       id="email"
                       name="email"
@@ -208,16 +281,16 @@ export function SignupPage() {
                       placeholder="Enter your email"
                       value={formData.email}
                       onChange={handleInputChange}
-                      className="pl-10 h-12 text-black"
+                      className="pl-10 h-12"
                       required
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number (Optional)</Label>
+                  <Label htmlFor="phone" className="text-sm text-foreground">Phone Number (Optional)</Label>
                   <div className="relative">
-                    <PhoneIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <PhoneIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
                     <Input
                       id="phone"
                       name="phone"
@@ -225,30 +298,30 @@ export function SignupPage() {
                       placeholder="Enter your phone number"
                       value={formData.phone}
                       onChange={handleInputChange}
-                      className="pl-10 h-12 text-black"
+                      className="pl-10 h-12"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="dateOfBirth">Date of Birth (Optional)</Label>
+                    <Label htmlFor="dateOfBirth" className="text-sm text-foreground">Date of Birth (Optional)</Label>
                     <div className="relative">
-                      <CalendarIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                      <CalendarIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
                       <Input
                         id="dateOfBirth"
                         name="dateOfBirth"
                         type="date"
                         value={formData.dateOfBirth}
                         onChange={handleInputChange}
-                        className="pl-10 h-12 text-black"
+                        className="pl-10 h-12"
                       />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="country">Country (Optional)</Label>
+                    <Label htmlFor="country" className="text-sm text-foreground">Country (Optional)</Label>
                     <div className="relative">
-                      <MapPinIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                      <MapPinIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
                       <Input
                         id="country"
                         name="country"
@@ -256,27 +329,27 @@ export function SignupPage() {
                         placeholder="Your country"
                         value={formData.country}
                         onChange={handleInputChange}
-                        className="pl-10 h-12 text-black"
+                        className="pl-10 h-12"
                       />
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="bio">Bio (Optional)</Label>
+                  <Label htmlFor="bio" className="text-sm text-foreground">Bio (Optional)</Label>
                   <Textarea
                     id="bio"
                     name="bio"
                     placeholder="Tell us a bit about yourself"
                     value={formData.bio}
                     onChange={handleInputChange}
-                    className="text-black resize-none"
+                    className="resize-none"
                     rows={3}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password" className="text-sm text-foreground">Password</Label>
                   <div className="relative">
                     <Input
                       id="password"
@@ -285,7 +358,7 @@ export function SignupPage() {
                       placeholder="Create a password"
                       value={formData.password}
                       onChange={handleInputChange}
-                      className="pr-10 h-12 text-black"
+                      className="pr-10 h-12"
                       required
                     />
                     <Button
@@ -296,16 +369,16 @@ export function SignupPage() {
                       onClick={() => setShowPassword(!showPassword)}
                     >
                       {showPassword ? (
-                        <EyeOffIcon className="h-4 w-4 text-gray-400" />
+                        <EyeOffIcon className="h-4 w-4 text-muted-foreground" />
                       ) : (
-                        <EyeIcon className="h-4 w-4 text-gray-400" />
+                        <EyeIcon className="h-4 w-4 text-muted-foreground" />
                       )}
                     </Button>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirm Password</Label>
+                  <Label htmlFor="confirmPassword" className="text-sm text-foreground">Confirm Password</Label>
                   <div className="relative">
                     <Input
                       id="confirmPassword"
@@ -314,7 +387,7 @@ export function SignupPage() {
                       placeholder="Confirm your password"
                       value={formData.confirmPassword}
                       onChange={handleInputChange}
-                      className="pr-10 h-12 text-black"
+                      className="pr-10 h-12"
                       required
                     />
                     <Button
@@ -325,9 +398,9 @@ export function SignupPage() {
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     >
                       {showConfirmPassword ? (
-                        <EyeOffIcon className="h-4 w-4 text-gray-400" />
+                        <EyeOffIcon className="h-4 w-4 text-muted-foreground" />
                       ) : (
-                        <EyeIcon className="h-4 w-4 text-gray-400" />
+                        <EyeIcon className="h-4 w-4 text-muted-foreground" />
                       )}
                     </Button>
                   </div>
@@ -340,56 +413,58 @@ export function SignupPage() {
                     type="checkbox"
                     checked={formData.termsAccepted}
                     onChange={handleInputChange}
-                    className="mt-1 h-4 w-4 text-black focus:ring-black border-gray-300 rounded"
+                    className="mt-1 h-4 w-4 text-primary focus:ring-primary border-border rounded"
                     required
                   />
-                  <label htmlFor="termsAccepted" className="text-sm text-gray-600">
+                  <label htmlFor="termsAccepted" className="text-sm text-muted-foreground">
                     I agree to the{" "}
-                    <Link href="/terms" className="text-black hover:underline">
+                    <Link href="/terms" className="text-primary hover:text-primary/80 hover:underline">
                       Terms of Service
                     </Link>{" "}
                     and{" "}
-                    <Link href="/privacy" className="text-black hover:underline">
+                    <Link href="/privacy" className="text-primary hover:text-primary/80 hover:underline">
                       Privacy Policy
                     </Link>
                   </label>
                 </div>
 
-            <Button
-              type="submit"
-              className="w-full h-12 bg-black hover:bg-gray-800 text-white"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating Account...
-                </>
-              ) : (
-                <>
-                  Create Account
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </>
-              )}
-            </Button>
-          </form>
+                <Button
+                  type="submit"
+                  className="w-full h-12 btn-interactive"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Creating Account...
+                    </>
+                  ) : (
+                    <>
+                      Create Account
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </>
+                  )}
+                </Button>
+              </form>
 
-          <div className="mt-6 text-center text-sm text-gray-600">
-            Already have an account?{" "}
-            <Link href="/signin" className="text-black hover:underline font-medium">
-              Sign in here
-            </Link>
-          </div>
+              <div className="mt-6 text-center text-sm text-muted-foreground">
+                Already have an account?{" "}
+                <Link href="/signin" className="text-primary hover:text-primary/80 hover:underline font-medium">
+                  Sign in here
+                </Link>
+              </div>
 
-          <div className="mt-4 text-center text-xs text-gray-500">
-            By creating an account, you agree to our{" "}
-            <Link href="/terms" className="text-black hover:underline">
-              Terms of Service
-            </Link>{" "}
-            and{" "}
-            <Link href="/privacy" className="text-black hover:underline">
-              Privacy Policy
-            </Link>
+              <div className="mt-4 text-center text-xs text-muted-foreground">
+                By creating an account, you agree to our{" "}
+                <Link href="/terms" className="text-primary hover:text-primary/80 hover:underline">
+                  Terms of Service
+                </Link>{" "}
+                and{" "}
+                <Link href="/privacy" className="text-primary hover:text-primary/80 hover:underline">
+                  Privacy Policy
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </motion.div>

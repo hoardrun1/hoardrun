@@ -84,13 +84,6 @@ export default function StartupRegistration() {
   const [currentStep, setCurrentStep] = useState(1)
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({})
 
-  // Always set security checks to true when auth bypass is enabled
-  const bypassAuth = process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true'
-  const [securityChecks, setSecurityChecks] = useState({
-    isEmailVerified: bypassAuth,
-    isIdentityVerified: bypassAuth,
-    isCompanyVerified: bypassAuth,
-  })
   
   const [apiConnections, setApiConnections] = useState<{ [key: string]: boolean }>({})
   const [verifiedMetrics, setVerifiedMetrics] = useState<{ [key: string]: any }>({})
@@ -109,26 +102,6 @@ export default function StartupRegistration() {
     }
   }, [loading, user, router])
 
-  useEffect(() => {
-    const bypassAuth = process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true';
-    if (bypassAuth) {
-      setSecurityChecks({
-        isEmailVerified: true,
-        isIdentityVerified: true,
-        isCompanyVerified: true,
-      });
-      return;
-    }
-    if (user) {
-      setTimeout(() => {
-        setSecurityChecks({
-          isEmailVerified: true,
-          isIdentityVerified: true,
-          isCompanyVerified: false,
-        })
-      }, 1000)
-    }
-  }, [user])
 
   const [formData, setFormData] = useState({
     companyName: '',
@@ -281,9 +254,6 @@ export default function StartupRegistration() {
     setIsSubmitting(true)
 
     try {
-      if (!securityChecks.isEmailVerified || !securityChecks.isIdentityVerified) {
-        throw new Error("Please complete security verification first")
-      }
 
       const submitData = new FormData()
       Object.entries(formData).forEach(([key, value]) => {
@@ -315,47 +285,9 @@ export default function StartupRegistration() {
     }
   }
 
-  // Show security verification first (unless auth bypass is enabled)
-  if (!bypassAuth && (!securityChecks.isEmailVerified || !securityChecks.isIdentityVerified)) {
-    return (
-      <div className="min-h-screen bg-white py-8">
-        <div className="container mx-auto px-4 max-w-md">
-          <Card className="border-black/10">
-            <CardHeader>
-              <CardTitle className="flex items-center text-black text-sm sm:text-base">
-                <Lock className="w-5 h-5 mr-2" />
-                Security Verification Required
-              </CardTitle>
-              <CardDescription className="text-black/60 text-xs sm:text-sm">
-                Please complete the verification process to continue
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center space-x-2">
-                {securityChecks.isEmailVerified ? (
-                  <CheckCircle className="w-5 h-5 text-black" />
-                ) : (
-                  <AlertTriangle className="w-5 h-5 text-black/60" />
-                )}
-                <span className="text-black text-xs sm:text-sm">Email Verification</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                {securityChecks.isIdentityVerified ? (
-                  <CheckCircle className="w-5 h-5 text-black" />
-                ) : (
-                  <AlertTriangle className="w-5 h-5 text-black/60" />
-                )}
-                <span className="text-black text-xs sm:text-sm">Identity Verification</span>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    )
-  }
 
   return (
-    <div className="min-h-screen bg-white py-8">
+    <div className="min-h-screen bg-background py-8">
       <div className="container mx-auto px-4 max-w-6xl">
 
         <motion.div
@@ -368,7 +300,7 @@ export default function StartupRegistration() {
             <Button
               variant="ghost"
               onClick={() => router.push('/investment')}
-              className="flex items-center text-black hover:text-black/80 hover:bg-black/5 p-2"
+              className="flex items-center text-foreground hover:text-foreground/80 hover:bg-foreground/5 p-2"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Investment
@@ -382,10 +314,10 @@ export default function StartupRegistration() {
                 <Building2 className="w-8 h-8 text-white" />
               </div>
             </div>
-            <h1 className="text-xl sm:text-2xl md:text-4xl font-bold text-black mb-2">
+            <h1 className="text-xl sm:text-2xl md:text-4xl font-bold text-foreground mb-2">
               Register Your Startup
             </h1>
-            <p className="text-xs sm:text-sm md:text-lg text-black/60 max-w-2xl mx-auto">
+            <p className="text-xs sm:text-sm md:text-lg text-foreground/60 max-w-2xl mx-auto">
               Join our investment platform and connect with investors worldwide.
               Secure funding with fractional shares starting from $10.
             </p>
@@ -393,7 +325,7 @@ export default function StartupRegistration() {
 
           {/* Enhanced Progress Steps */}
           <div className="mb-4 sm:mb-8">
-            <div className="bg-white rounded-xl p-3 sm:p-6 shadow-lg border border-black/10">
+            <div className="bg-card rounded-xl p-3 sm:p-6 shadow-lg border border-border">
               <div className="flex items-center justify-between mb-2 sm:mb-4">
                 {[
                   { step: 1, title: 'Company Info', icon: Building2, description: 'Basic details & business type' },
@@ -405,18 +337,18 @@ export default function StartupRegistration() {
                   <div key={item.step} className="flex-1 flex flex-col items-center">
                     <div className={`w-8 h-8 sm:w-12 sm:h-12 rounded-full flex items-center justify-center mb-1 sm:mb-2 transition-all duration-300 ${
                       item.step <= currentStep
-                        ? 'bg-black text-white shadow-lg'
-                        : 'bg-black/10 text-black/40'
+                        ? 'bg-primary text-primary-foreground shadow-lg'
+                        : 'bg-muted text-muted-foreground'
                     }`}>
                       <item.icon className="w-3 h-3 sm:w-5 sm:h-5" />
                     </div>
                     <div className="text-center">
                       <div className={`text-xs sm:text-sm font-medium ${
-                        item.step <= currentStep ? 'text-black' : 'text-black/40'
+                        item.step <= currentStep ? 'text-foreground' : 'text-muted-foreground'
                       }`}>
                         {item.title}
                       </div>
-                      <div className="text-xs text-black/40 mt-1 hidden sm:block">
+                      <div className="text-xs text-muted-foreground mt-1 hidden sm:block">
                         {item.description}
                       </div>
                     </div>
@@ -437,13 +369,13 @@ export default function StartupRegistration() {
                 transition={{ duration: 0.3 }}
                 className="space-y-6"
               >
-                <Card className="border border-black/10 shadow-xl bg-white">
-                  <CardHeader className="bg-black text-white rounded-t-lg">
+                <Card className="border border-border shadow-xl bg-card">
+                  <CardHeader className="bg-primary text-primary-foreground rounded-t-lg">
                     <CardTitle className="flex items-center text-sm sm:text-base md:text-xl">
                       <Building2 className="w-6 h-6 mr-3" />
                       Company Information
                     </CardTitle>
-                    <CardDescription className="text-white/80 text-xs sm:text-sm">
+                    <CardDescription className="text-primary-foreground/80 text-xs sm:text-sm">
                       Tell us about your company and what makes it unique
                     </CardDescription>
                   </CardHeader>
@@ -461,7 +393,7 @@ export default function StartupRegistration() {
                         value={formData.companyName}
                         onChange={(e) => setFormData(prev => ({ ...prev, companyName: e.target.value }))}
                         placeholder="Enter your company name"
-                        className="h-12 text-xs sm:text-sm md:text-lg border-2 focus:border-black transition-colors"
+                        className="h-12 text-xs sm:text-sm md:text-lg border-2 focus:border-primary transition-colors"
                         required
                       />
                       {formErrors.companyName && (
@@ -484,8 +416,8 @@ export default function StartupRegistration() {
                             onClick={() => setFormData(prev => ({ ...prev, businessType: type.value }))}
                             className={`p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 hover:shadow-md ${
                               formData.businessType === type.value
-                                ? 'border-black bg-black/5'
-                                : 'border-black/20 hover:border-black/40'
+                                ? 'border-primary bg-primary/5'
+                                : 'border-border hover:border-primary/40'
                             }`}
                           >
                             <div className="text-center">
@@ -516,7 +448,7 @@ export default function StartupRegistration() {
                         value={formData.description}
                         onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                         placeholder="Describe your company, products/services, and target market..."
-                        className="min-h-[120px] border-2 focus:border-black transition-colors text-xs sm:text-sm"
+                        className="min-h-[120px] border-2 focus:border-primary transition-colors text-xs sm:text-sm"
                         maxLength={1000}
                         required
                       />
@@ -538,7 +470,7 @@ export default function StartupRegistration() {
                         value={formData.missionStatement}
                         onChange={(e) => setFormData(prev => ({ ...prev, missionStatement: e.target.value }))}
                         placeholder="What is your company's mission and vision?"
-                        className="min-h-[80px] border-2 focus:border-black transition-colors text-xs sm:text-sm"
+                        className="min-h-[80px] border-2 focus:border-primary transition-colors text-xs sm:text-sm"
                         maxLength={500}
                         required
                       />
@@ -562,7 +494,7 @@ export default function StartupRegistration() {
                         value={formData.website}
                         onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))}
                         placeholder="https://yourcompany.com"
-                        className="h-12 border-2 focus:border-black transition-colors text-xs sm:text-sm"
+                        className="h-12 border-2 focus:border-primary transition-colors text-xs sm:text-sm"
                       />
                     </div>
                   </CardContent>
@@ -578,15 +510,15 @@ export default function StartupRegistration() {
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.3 }}
               >
-                <Card className="border border-black/10 shadow-xl bg-white">
-                  <CardHeader className="bg-black text-white rounded-t-lg">
+                <Card className="border border-border shadow-xl bg-card">
+                  <CardHeader className="bg-primary text-primary-foreground rounded-t-lg">
                     <CardTitle className="flex items-center text-sm sm:text-base md:text-xl">
                       {currentStep === 2 && <><Shield className="w-6 h-6 mr-3" />Verification & Documents</>}
                       {currentStep === 3 && <><DollarSign className="w-6 h-6 mr-3" />Financial Information</>}
                       {currentStep === 4 && <><Target className="w-6 h-6 mr-3" />Investment Configuration</>}
                       {currentStep === 5 && <><FileCheck className="w-6 h-6 mr-3" />Legal & Compliance</>}
                     </CardTitle>
-                    <CardDescription className="text-white/80 text-xs sm:text-sm">
+                    <CardDescription className="text-primary-foreground/80 text-xs sm:text-sm">
                       {currentStep === 2 && "Upload documents and connect your business platforms"}
                       {currentStep === 3 && "Provide your company's financial details"}
                       {currentStep === 4 && "Configure your share offering and investment terms"}
@@ -602,7 +534,7 @@ export default function StartupRegistration() {
                             <Upload className="w-4 h-4 mr-2" />
                             Business Registration Certificate <span className="text-red-500 ml-1">*</span>
                           </Label>
-                          <div className="border-2 border-dashed border-black/20 rounded-lg p-8 text-center hover:border-black transition-colors">
+                          <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary transition-colors">
                             <input
                               type="file"
                               accept=".pdf,.jpg,.jpeg,.png"
@@ -615,23 +547,23 @@ export default function StartupRegistration() {
                             />
                             <label htmlFor="businessRegistration" className="cursor-pointer">
                               <div className="space-y-4">
-                                <div className="mx-auto w-16 h-16 bg-black/10 rounded-full flex items-center justify-center">
-                                  <Upload className="w-8 h-8 text-black" />
+                                <div className="mx-auto w-16 h-16 bg-muted rounded-full flex items-center justify-center">
+                                  <Upload className="w-8 h-8 text-foreground" />
                                 </div>
                                 <div>
-                                  <p className="text-xs sm:text-sm md:text-lg font-medium">Upload Business Registration</p>
-                                  <p className="text-xs sm:text-sm text-black/60">PDF, JPG, PNG up to 10MB</p>
+                                  <p className="text-xs sm:text-sm md:text-lg font-medium text-foreground">Upload Business Registration</p>
+                                  <p className="text-xs sm:text-sm text-muted-foreground">PDF, JPG, PNG up to 10MB</p>
                                 </div>
                               </div>
                             </label>
                           </div>
 
                           {uploadedFiles.businessRegistration && (
-                            <div className="bg-black/5 p-4 rounded-lg">
+                            <div className="bg-muted p-4 rounded-lg">
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center">
-                                  <CheckCircle className="w-5 h-5 text-black mr-2" />
-                                  <span className="text-xs sm:text-sm font-medium text-black">
+                                  <CheckCircle className="w-5 h-5 text-foreground mr-2" />
+                                  <span className="text-xs sm:text-sm font-medium text-foreground">
                                     {uploadedFiles.businessRegistration.name}
                                   </span>
                                 </div>
@@ -654,7 +586,7 @@ export default function StartupRegistration() {
                               value={formData.registrationNumber}
                               onChange={(e) => setFormData(prev => ({ ...prev, registrationNumber: e.target.value }))}
                               placeholder="REG123456789"
-                              className="h-12 border-2 focus:border-black text-xs sm:text-sm"
+                              className="h-12 border-2 focus:border-primary text-xs sm:text-sm"
                               required
                             />
                             {formErrors.registrationNumber && (
@@ -671,7 +603,7 @@ export default function StartupRegistration() {
                               type="date"
                               value={formData.incorporationDate}
                               onChange={(e) => setFormData(prev => ({ ...prev, incorporationDate: e.target.value }))}
-                              className="h-12 border-2 focus:border-black text-xs sm:text-sm"
+                              className="h-12 border-2 focus:border-primary text-xs sm:text-sm"
                               required
                             />
                             {formErrors.incorporationDate && (
@@ -688,7 +620,7 @@ export default function StartupRegistration() {
                               value={formData.jurisdiction}
                               onChange={(e) => setFormData(prev => ({ ...prev, jurisdiction: e.target.value }))}
                               placeholder="Delaware, USA"
-                              className="h-12 border-2 focus:border-black text-xs sm:text-sm"
+                              className="h-12 border-2 focus:border-primary text-xs sm:text-sm"
                               required
                             />
                             {formErrors.jurisdiction && (
@@ -710,13 +642,13 @@ export default function StartupRegistration() {
                                   <div className="flex items-center">
                                     <span className="text-2xl mr-3">{api.icon}</span>
                                     <div>
-                                      <h4 className="text-xs sm:text-sm font-medium text-black">{api.label}</h4>
-                                      <p className="text-xs sm:text-sm text-black/60 capitalize">{api.type} metrics</p>
+                                      <h4 className="text-xs sm:text-sm font-medium text-foreground">{api.label}</h4>
+                                      <p className="text-xs sm:text-sm text-muted-foreground capitalize">{api.type} metrics</p>
                                     </div>
                                   </div>
                                   <div className="flex items-center space-x-2">
                                     {apiConnections[api.value] ? (
-                                      <Badge variant="default" className="bg-black text-white">
+                                      <Badge variant="default" className="bg-primary text-primary-foreground">
                                         <CheckCircle className="w-3 h-3 mr-1" />
                                         Connected
                                       </Badge>
@@ -745,12 +677,12 @@ export default function StartupRegistration() {
                                 </div>
 
                                 {verifiedMetrics[api.value] && (
-                                  <div className="bg-black/5 rounded p-3 text-sm">
-                                    <p className="text-xs sm:text-sm font-medium mb-2 text-black">Verified Metrics:</p>
+                                  <div className="bg-muted rounded p-3 text-sm">
+                                    <p className="text-xs sm:text-sm font-medium mb-2 text-foreground">Verified Metrics:</p>
                                     {Object.entries(verifiedMetrics[api.value]).map(([key, value]) => (
                                       <div key={key} className="flex justify-between">
-                                        <span className="text-xs sm:text-sm capitalize text-black/60">{key.replace(/([A-Z])/g, ' $1').toLowerCase()}:</span>
-                                        <span className="text-xs sm:text-sm font-medium text-black">
+                                        <span className="text-xs sm:text-sm capitalize text-muted-foreground">{key.replace(/([A-Z])/g, ' $1').toLowerCase()}:</span>
+                                        <span className="text-xs sm:text-sm font-medium text-foreground">
                                           {typeof value === 'number' && (key.includes('Revenue') || key.includes('Sales') || key.includes('Value'))
                                             ? `$${value.toLocaleString()}`
                                             : typeof value === 'number'
@@ -774,15 +706,15 @@ export default function StartupRegistration() {
                           <Label htmlFor="valuation" className="text-xs sm:text-sm font-medium">
                             Company Valuation ($) <span className="text-red-500">*</span>
                           </Label>
-                          <Input
-                            id="valuation"
-                            type="number"
-                            value={formData.valuation}
-                            onChange={(e) => setFormData(prev => ({ ...prev, valuation: e.target.value }))}
-                            placeholder="1000000"
-                            className="h-12 border-2 focus:border-black text-xs sm:text-sm"
-                            required
-                          />
+                            <Input
+                              id="valuation"
+                              type="number"
+                              value={formData.valuation}
+                              onChange={(e) => setFormData(prev => ({ ...prev, valuation: e.target.value }))}
+                              placeholder="1000000"
+                              className="h-12 border-2 focus:border-primary text-xs sm:text-sm"
+                              required
+                            />
                           {formErrors.valuation && (
                             <p className="text-red-500 text-sm">{formErrors.valuation}</p>
                           )}
@@ -792,15 +724,15 @@ export default function StartupRegistration() {
                           <Label htmlFor="annualRevenue" className="text-xs sm:text-sm font-medium">
                             Annual Revenue ($) <span className="text-red-500">*</span>
                           </Label>
-                          <Input
-                            id="annualRevenue"
-                            type="number"
-                            value={formData.annualRevenue}
-                            onChange={(e) => setFormData(prev => ({ ...prev, annualRevenue: e.target.value }))}
-                            placeholder="500000"
-                            className="h-12 border-2 focus:border-black text-xs sm:text-sm"
-                            required
-                          />
+                            <Input
+                              id="annualRevenue"
+                              type="number"
+                              value={formData.annualRevenue}
+                              onChange={(e) => setFormData(prev => ({ ...prev, annualRevenue: e.target.value }))}
+                              placeholder="500000"
+                              className="h-12 border-2 focus:border-primary text-xs sm:text-sm"
+                              required
+                            />
                           {formErrors.annualRevenue && (
                             <p className="text-red-500 text-sm">{formErrors.annualRevenue}</p>
                           )}
@@ -818,16 +750,16 @@ export default function StartupRegistration() {
                             {shareTypes.map((type) => (
                               <div
                                 key={type.value}
-                                onClick={() => setFormData(prev => ({ ...prev, shareType: type.value }))}
-                                className={`p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 hover:shadow-md ${
-                                  formData.shareType === type.value
-                                    ? 'border-black bg-black/5'
-                                    : 'border-black/20 hover:border-black/40'
-                                }`}
+                              onClick={() => setFormData(prev => ({ ...prev, shareType: type.value }))}
+                              className={`p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 hover:shadow-md ${
+                                formData.shareType === type.value
+                                  ? 'border-primary bg-primary/5'
+                                  : 'border-border hover:border-primary/40'
+                              }`}
                               >
                                 <div className="text-center">
-                                  <div className="text-xs sm:text-sm font-medium mb-2 text-black">{type.label}</div>
-                                  <div className="text-xs sm:text-sm text-black/60">{type.description}</div>
+                                  <div className="text-xs sm:text-sm font-medium mb-2 text-foreground">{type.label}</div>
+                                  <div className="text-xs sm:text-sm text-muted-foreground">{type.description}</div>
                                 </div>
                               </div>
                             ))}

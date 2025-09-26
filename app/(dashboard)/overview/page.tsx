@@ -299,8 +299,8 @@ export default function OverviewPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="min-h-screen bg-background pt-14 sm:pt-16 pb-20 sm:pb-6 px-3 sm:px-4">
-          <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
+      <div className="min-h-screen bg-background pt-14 sm:pt-16 pb-20 sm:pb-6 px-2">
+          <div className="w-full space-y-4 sm:space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
           <div className="min-w-0">

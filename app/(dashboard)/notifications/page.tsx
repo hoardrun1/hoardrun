@@ -198,8 +198,8 @@ export default function NotificationsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="min-h-screen bg-background pt-16 pb-32 px-4 sm:pt-20 sm:pb-32 sm:px-6">
-          <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
+      <div className="min-h-screen bg-background pt-16 pb-32 px-2">
+          <div className="w-full space-y-4 sm:space-y-6">
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
               <div>

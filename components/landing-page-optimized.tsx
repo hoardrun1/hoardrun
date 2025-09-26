@@ -113,7 +113,7 @@ export function LandingPageOptimized() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white overflow-x-hidden">
+    <div className="landing-page min-h-screen bg-black !text-white overflow-x-hidden" style={{ color: 'white' }}>
       <header
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? "bg-black/90 backdrop-blur-lg shadow-2xl shadow-black/50 py-2 border-b border-white/10" : "bg-transparent py-3"}`}
       >
@@ -130,14 +130,14 @@ export function LandingPageOptimized() {
             <div className="hidden md:flex space-x-6">
               <button
                 onClick={() => scrollToSection(aboutRef)}
-                className="text-gray-300 hover:text-white transition-colors duration-300 relative group text-sm"
+                className="text-white hover:text-white transition-colors duration-300 relative group text-sm"
               >
                 About
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-white group-hover:w-full transition-all duration-300"></span>
               </button>
               <button
                 onClick={() => scrollToSection(servicesRef)}
-                className="text-gray-300 hover:text-white transition-colors duration-300 relative group text-sm"
+                className="text-white hover:text-white transition-colors duration-300 relative group text-sm"
               >
                 Services
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-white group-hover:w-full transition-all duration-300"></span>
@@ -148,13 +148,13 @@ export function LandingPageOptimized() {
               <Button
                 variant="ghost"
                 onClick={() => router.push('/signin')}
-                className="text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-300 text-sm px-3 py-1.5"
+                className="text-white hover:text-white hover:bg-white/10 transition-all duration-300 text-sm px-3 py-1.5"
               >
                 Log In
               </Button>
               <Button
                 onClick={() => router.push('/signup')}
-                className="bg-white text-black hover:bg-gray-200 transition-all duration-300 transform hover:scale-105 text-sm px-4 py-1.5"
+                className="bg-black text-white hover:bg-gray-800 border border-white/20 transition-all duration-300 transform hover:scale-105 text-sm px-4 py-1.5"
               >
                 Sign up
               </Button>
@@ -175,13 +175,13 @@ export function LandingPageOptimized() {
               <div className="flex flex-col space-y-4 px-4">
                 <button
                   onClick={() => scrollToSection(aboutRef)}
-                  className="text-gray-300 hover:text-white transition-colors duration-300 text-left py-2"
+                  className="text-white hover:text-white transition-colors duration-300 text-left py-2"
                 >
                   About
                 </button>
                 <button
                   onClick={() => scrollToSection(servicesRef)}
-                  className="text-gray-300 hover:text-white transition-colors duration-300 text-left py-2"
+                  className="text-white hover:text-white transition-colors duration-300 text-left py-2"
                 >
                   Services
                 </button>
@@ -219,19 +219,19 @@ export function LandingPageOptimized() {
                     <span className="block text-white mb-2 sm:mb-3">
                       Banking
                     </span>
-                    <span className="block bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-300 to-white">
+                    <span className="block text-white">
                       Reimagined
                     </span>
                   </h1>
                   
-                  <p className="text-xs sm:text-sm md:text-base lg:text-lg text-gray-300 max-w-2xl mx-auto leading-relaxed mb-4 sm:mb-6 md:mb-8 px-2 sm:px-4">
+                  <p className="text-xs sm:text-sm md:text-base lg:text-lg text-white max-w-2xl mx-auto leading-relaxed mb-4 sm:mb-6 md:mb-8 px-2 sm:px-4">
                     Experience seamless financial management with cutting-edge security and user-centric design for the digital age.
                   </p>
                   
                   <div className="flex flex-row gap-2 sm:gap-3 md:gap-4 justify-center items-center relative z-20">
                     <Button
                       onClick={() => router.push('/signup')}
-                      className="bg-white text-black hover:bg-gray-200 text-xs sm:text-sm md:text-base px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-full transition-all duration-300 transform hover:scale-110 shadow-xl cursor-pointer relative z-10"
+                      className="bg-black text-white hover:bg-gray-800 border border-white/20 text-xs sm:text-sm md:text-base px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-full transition-all duration-300 transform hover:scale-110 shadow-xl cursor-pointer relative z-10"
                     >
                       Get Started →
                     </Button>
@@ -271,7 +271,7 @@ export function LandingPageOptimized() {
                       <Zap className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-7 lg:h-7 text-white" />
                     </div>
                     <h3 className="text-xs sm:text-sm md:text-base lg:text-lg font-bold text-white mb-1 sm:mb-2 md:mb-3">Lightning Fast</h3>
-                    <p className="text-gray-300 leading-tight sm:leading-relaxed text-xs sm:text-sm">
+                    <p className="text-white leading-tight sm:leading-relaxed text-xs sm:text-sm">
                       Process transactions in milliseconds with our advanced infrastructure.
                     </p>
                   </SimpleCard>
@@ -281,7 +281,7 @@ export function LandingPageOptimized() {
                       <Shield className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-7 lg:h-7 text-white" />
                     </div>
                     <h3 className="text-xs sm:text-sm md:text-base lg:text-lg font-bold text-white mb-1 sm:mb-2 md:mb-3">Bank-Level Security</h3>
-                    <p className="text-gray-300 leading-tight sm:leading-relaxed text-xs sm:text-sm">
+                    <p className="text-white leading-tight sm:leading-relaxed text-xs sm:text-sm">
                       Military-grade encryption and multi-layered security protocols.
                     </p>
                   </SimpleCard>
@@ -291,7 +291,7 @@ export function LandingPageOptimized() {
                       <Globe className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-7 lg:h-7 text-white" />
                     </div>
                     <h3 className="text-xs sm:text-sm md:text-base lg:text-lg font-bold text-white mb-1 sm:mb-2 md:mb-3">Global Access</h3>
-                    <p className="text-gray-300 leading-tight sm:leading-relaxed text-xs sm:text-sm">
+                    <p className="text-white leading-tight sm:leading-relaxed text-xs sm:text-sm">
                       Access your accounts from anywhere in the world with full compliance.
                     </p>
                   </SimpleCard>
@@ -310,7 +310,7 @@ export function LandingPageOptimized() {
                     <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-white mb-1 sm:mb-2">
                       {stat.number}
                     </div>
-                    <div className="text-gray-400 text-xs sm:text-sm uppercase tracking-wide">
+                    <div className="text-white text-xs sm:text-sm uppercase tracking-wide">
                       {stat.label}
                     </div>
                   </div>
@@ -321,7 +321,7 @@ export function LandingPageOptimized() {
           
           {/* Scroll Indicator */}
           <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 animate-bounce">
-            <ChevronDown className="w-6 h-6 text-gray-400" />
+            <ChevronDown className="w-6 h-6 text-white" />
           </div>
         </section>
 
@@ -384,7 +384,7 @@ export function LandingPageOptimized() {
                     <h3 className="text-sm sm:text-base md:text-lg font-bold text-white mb-2 sm:mb-3">
                       {feature.title}
                     </h3>
-                    <p className="text-gray-300 leading-relaxed flex-grow text-sm">
+                    <p className="text-white leading-relaxed flex-grow text-sm">
                       {feature.description}
                     </p>
                   </CardContent>
@@ -420,11 +420,11 @@ export function LandingPageOptimized() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center">
               <div>
-                <p className="text-sm sm:text-base text-gray-300 mb-4 sm:mb-6 leading-relaxed">
+                <p className="text-sm sm:text-base text-white mb-4 sm:mb-6 leading-relaxed">
                   At Hoardrun, we offer comprehensive universal banking services tailored for corporations, investors,
                   and individuals. Our mission is to empower you with low-cost investment opportunities.
                 </p>
-                <p className="text-sm sm:text-base text-gray-300 leading-relaxed">
+                <p className="text-sm sm:text-base text-white leading-relaxed">
                   We specialize in identifying promising startups and providing innovative financial solutions
                   with AI-powered insights to help you make informed decisions.
                 </p>
@@ -462,13 +462,13 @@ export function LandingPageOptimized() {
                 <li>
                   <button
                     onClick={() => scrollToSection(aboutRef)}
-                    className="text-gray-300 hover:text-white transition-colors duration-300 text-xs sm:text-sm"
+                    className="text-white hover:text-white transition-colors duration-300 text-xs sm:text-sm"
                   >
                     About Us
                   </button>
                 </li>
                 <li>
-                  <a href="#" className="text-gray-300 hover:text-white transition-colors duration-300 text-xs sm:text-sm">
+                  <a href="#" className="text-white hover:text-white transition-colors duration-300 text-xs sm:text-sm">
                     Careers
                   </a>
                 </li>
@@ -480,13 +480,13 @@ export function LandingPageOptimized() {
                 <li>
                   <button
                     onClick={() => scrollToSection(servicesRef)}
-                    className="text-gray-300 hover:text-white transition-colors duration-300 text-xs sm:text-sm"
+                    className="text-white hover:text-white transition-colors duration-300 text-xs sm:text-sm"
                   >
                     Features
                   </button>
                 </li>
                 <li>
-                  <a href="#" className="text-gray-300 hover:text-white transition-colors duration-300 text-xs sm:text-sm">
+                  <a href="#" className="text-white hover:text-white transition-colors duration-300 text-xs sm:text-sm">
                     Pricing
                   </a>
                 </li>
@@ -496,12 +496,12 @@ export function LandingPageOptimized() {
               <h3 className="text-sm sm:text-base font-semibold mb-4 sm:mb-6">Resources</h3>
               <ul className="space-y-2 sm:space-y-3">
                 <li>
-                  <a href="#" className="text-gray-300 hover:text-white transition-colors duration-300 text-xs sm:text-sm">
+                  <a href="#" className="text-white hover:text-white transition-colors duration-300 text-xs sm:text-sm">
                     Blog
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="text-gray-300 hover:text-white transition-colors duration-300 text-xs sm:text-sm">
+                  <a href="#" className="text-white hover:text-white transition-colors duration-300 text-xs sm:text-sm">
                     Help Center
                   </a>
                 </li>
@@ -511,12 +511,12 @@ export function LandingPageOptimized() {
               <h3 className="text-sm sm:text-base font-semibold mb-4 sm:mb-6">Legal</h3>
               <ul className="space-y-2 sm:space-y-3">
                 <li>
-                  <a href="#" className="text-gray-300 hover:text-white transition-colors duration-300 text-xs sm:text-sm">
+                  <a href="#" className="text-white hover:text-white transition-colors duration-300 text-xs sm:text-sm">
                     Privacy Policy
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="text-gray-300 hover:text-white transition-colors duration-300 text-xs sm:text-sm">
+                  <a href="#" className="text-white hover:text-white transition-colors duration-300 text-xs sm:text-sm">
                     Terms of Service
                   </a>
                 </li>
@@ -531,7 +531,7 @@ export function LandingPageOptimized() {
               <span className="text-white">Hoard</span>
               <span className="text-gray-400">run</span>
             </button>
-            <p className="text-gray-400 text-center sm:text-right text-xs sm:text-sm">
+            <p className="text-white text-center sm:text-right text-xs sm:text-sm">
               &copy; 2024 Hoardrun. All rights reserved.
             </p>
           </div>

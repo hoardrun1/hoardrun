@@ -49,6 +49,42 @@ const config: Config = {
   				'3': 'hsl(var(--chart-3))',
   				'4': 'hsl(var(--chart-4))',
   				'5': 'hsl(var(--chart-5))'
+  			},
+  			// Enhanced semantic color system for proper contrast
+  			content: {
+  				primary: 'hsl(var(--content-primary, var(--foreground)))',
+  				secondary: 'hsl(var(--content-secondary, var(--muted-foreground)))',
+  				tertiary: 'hsl(var(--content-tertiary, var(--muted-foreground)))',
+  				inverse: 'hsl(var(--content-inverse, var(--background)))',
+  				subtle: 'hsl(var(--content-subtle, var(--muted-foreground)))',
+  				disabled: 'hsl(var(--content-disabled, var(--muted-foreground)))'
+  			},
+  			surface: {
+  				DEFAULT: 'hsl(var(--surface))',
+  				foreground: 'hsl(var(--surface-foreground))',
+  				hover: 'hsl(var(--surface-hover))',
+  				elevated: 'hsl(var(--surface-elevated, var(--card)))',
+  				overlay: 'hsl(var(--surface-overlay, var(--popover)))'
+  			},
+  			// Status colors with proper contrast
+  			status: {
+  				success: 'hsl(var(--status-success, var(--success)))',
+  				'success-foreground': 'hsl(var(--status-success-foreground, var(--success-foreground)))',
+  				warning: 'hsl(var(--status-warning, var(--warning)))',
+  				'warning-foreground': 'hsl(var(--status-warning-foreground, var(--warning-foreground)))',
+  				error: 'hsl(var(--status-error, var(--destructive)))',
+  				'error-foreground': 'hsl(var(--status-error-foreground, var(--destructive-foreground)))',
+  				info: 'hsl(var(--status-info, var(--info)))',
+  				'info-foreground': 'hsl(var(--status-info-foreground, var(--info-foreground)))'
+  			},
+  			// Interactive element colors
+  			interactive: {
+  				DEFAULT: 'hsl(var(--interactive, var(--primary)))',
+  				foreground: 'hsl(var(--interactive-foreground, var(--primary-foreground)))',
+  				hover: 'hsl(var(--interactive-hover, var(--primary)))',
+  				active: 'hsl(var(--interactive-active, var(--primary)))',
+  				disabled: 'hsl(var(--interactive-disabled, var(--muted)))',
+  				'disabled-foreground': 'hsl(var(--interactive-disabled-foreground, var(--muted-foreground)))'
   			}
   		},
   		borderRadius: {

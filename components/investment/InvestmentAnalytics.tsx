@@ -58,7 +58,7 @@ export const InvestmentAnalytics: React.FC<InvestmentAnalyticsProps> = ({
                   </div>
                   <div className="text-right">
                     <div className="font-semibold">${asset.value.toLocaleString()}</div>
-                    <div className="text-sm text-gray-500">{asset.percentage}%</div>
+                    <div className="text-sm text-muted-foreground">{asset.percentage}%</div>
                   </div>
                 </div>
                 <Progress value={asset.percentage} className="h-2" />
@@ -87,10 +87,10 @@ export const InvestmentAnalytics: React.FC<InvestmentAnalyticsProps> = ({
                 <div className="flex justify-between items-center">
                   <span className="font-medium">{metric.period}</span>
                   <div className="text-right">
-                    <div className={`font-semibold ${metric.return >= 0 ? 'text-gray-600' : 'text-gray-600'}`}>
+                    <div className={`font-semibold ${metric.return >= 0 ? 'text-status-success' : 'text-status-error'}`}>
                       {metric.return >= 0 ? '+' : ''}{metric.return.toFixed(1)}%
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-muted-foreground">
                       Benchmark: {metric.benchmark >= 0 ? '+' : ''}{metric.benchmark.toFixed(1)}%
                     </div>
                   </div>
@@ -98,23 +98,23 @@ export const InvestmentAnalytics: React.FC<InvestmentAnalyticsProps> = ({
                 
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <div className="text-xs text-gray-500 mb-1">Your Return</div>
-                    <Progress 
-                      value={Math.abs(metric.return)} 
-                      className={`h-2 ${metric.return >= 0 ? '' : 'bg-gray-100'}`}
+                    <div className="text-xs text-muted-foreground mb-1">Your Return</div>
+                    <Progress
+                      value={Math.abs(metric.return)}
+                      className={`h-2 ${metric.return >= 0 ? '' : 'bg-muted'}`}
                     />
                   </div>
                   <div>
-                    <div className="text-xs text-gray-500 mb-1">Benchmark</div>
-                    <Progress 
-                      value={Math.abs(metric.benchmark)} 
-                      className="h-2 bg-gray-200"
+                    <div className="text-xs text-muted-foreground mb-1">Benchmark</div>
+                    <Progress
+                      value={Math.abs(metric.benchmark)}
+                      className="h-2 bg-muted"
                     />
                   </div>
                 </div>
                 
                 <div className="text-xs text-center">
-                  <span className={metric.return > metric.benchmark ? 'text-gray-600' : 'text-gray-600'}>
+                  <span className={metric.return > metric.benchmark ? 'text-status-success' : 'text-status-warning'}>
                     {metric.return > metric.benchmark ? 'Outperforming' : 'Underperforming'} by{' '}
                     {Math.abs(metric.return - metric.benchmark).toFixed(1)}%
                   </span>

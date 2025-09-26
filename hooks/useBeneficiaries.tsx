@@ -43,6 +43,24 @@ export function useBeneficiaries() {
       const response = await apiClient.getBeneficiaries()
 
       if (response.error) {
+        // Handle specific error cases
+        if (response.status === 401) {
+          // Token expired - don't show toast as AuthContext will handle this
+          console.log('Authentication required for beneficiaries')
+          return null
+        }
+        
+        if (response.status === 403) {
+          const message = 'You do not have permission to view beneficiaries'
+          setError(message)
+          toast({
+            variant: "destructive",
+            title: "Access Denied",
+            description: message,
+          })
+          return null
+        }
+        
         throw new Error(response.error || 'Failed to fetch beneficiaries')
       }
 

@@ -24,11 +24,16 @@ const AUTHENTICATED_ROUTES = [
   '/security',
   '/notifications',
   '/send',
+  '/send-money',
   '/receive-money',
   '/transfer',
   '/finance',
   '/cards',
-  '/overview'
+  '/overview',
+  '/market',
+  '/create-profile',
+  '/face-verification',
+  '/api-test'
 ]
 
 // Routes that are public and don't need heavy contexts
@@ -44,11 +49,9 @@ const PUBLIC_ROUTES = [
   '/privacy'
 ]
 
-// Check if a route is a dashboard route (starts with /dashboard or is in authenticated routes)
+// Check if a route is a dashboard route (only routes that start with /dashboard)
 const isDashboardRoute = (pathname: string): boolean => {
-  return pathname.startsWith('/dashboard') || 
-         pathname.includes('dashboard') ||
-         AUTHENTICATED_ROUTES.some(route => pathname.startsWith(route) || pathname.includes(route))
+  return pathname.startsWith('/dashboard')
 }
 
 export function ConditionalProviders({ children }: ConditionalProvidersProps) {
@@ -59,13 +62,8 @@ export function ConditionalProviders({ children }: ConditionalProvidersProps) {
     return <>{children}</>
   }
   
-  // Check if current route needs heavy contexts
-  const needsHeavyContexts = AUTHENTICATED_ROUTES.some(route => 
-    pathname.startsWith(route) || pathname.includes('dashboard')
-  )
-  
   // For public routes, only provide minimal contexts
-  if (PUBLIC_ROUTES.includes(pathname) || !needsHeavyContexts) {
+  if (PUBLIC_ROUTES.includes(pathname)) {
     return <>{children}</>
   }
   
@@ -74,15 +72,25 @@ export function ConditionalProviders({ children }: ConditionalProvidersProps) {
     return <>{children}</>
   }
   
-  // For other authenticated routes, provide all contexts including FloatingNotificationBell
-  return (
-    <FinanceProvider>
-      <NavigationProvider>
-        <NotificationProvider>
-          {children}
-          <FloatingNotificationBell />
-        </NotificationProvider>
-      </NavigationProvider>
-    </FinanceProvider>
+  // Check if current route needs heavy contexts
+  const needsHeavyContexts = AUTHENTICATED_ROUTES.some(route => 
+    pathname.startsWith(route) || pathname === route
   )
+  
+  // For authenticated routes that need contexts, provide all contexts
+  if (needsHeavyContexts) {
+    return (
+      <FinanceProvider>
+        <NavigationProvider>
+          <NotificationProvider>
+            {children}
+            <FloatingNotificationBell />
+          </NotificationProvider>
+        </NavigationProvider>
+      </FinanceProvider>
+    )
+  }
+  
+  // For all other routes, provide minimal contexts
+  return <>{children}</>
 }

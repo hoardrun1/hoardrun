@@ -30,20 +30,20 @@ function VerificationContent() {
   }, [router, email]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-xl shadow-xl p-8 text-center">
-        <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-          <CheckCircle className="h-8 w-8 text-green-600" />
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="max-w-md w-full bg-card rounded-xl shadow-xl p-8 text-center border border-border">
+        <div className="mx-auto w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mb-4">
+          <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
         </div>
         
-        <h1 className="text-2xl font-bold mb-2">Email Verified Successfully!</h1>
+        <h1 className="text-2xl font-bold mb-2 text-foreground">Email Verified Successfully!</h1>
         
-        <p className="text-gray-600 mb-6">
+        <p className="text-muted-foreground mb-6">
           Your email address has been verified. You can now sign in to your account.
         </p>
         
         <div className="space-y-4">
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-center text-muted-foreground">
             <Loader2 className="animate-spin mr-2 h-4 w-4" />
             <span>Redirecting to sign in page in {countdown} seconds...</span>
           </div>
@@ -62,10 +62,10 @@ function VerificationContent() {
 export default function VerificationSuccess() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
-          <Loader2 className="h-16 w-16 text-blue-500 mx-auto mb-6 animate-spin" />
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Loading...</h1>
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="bg-card rounded-2xl shadow-xl p-8 max-w-md w-full text-center border border-border">
+          <Loader2 className="h-16 w-16 text-primary mx-auto mb-6 animate-spin" />
+          <h1 className="text-2xl font-bold text-foreground mb-4">Loading...</h1>
         </div>
       </div>
     }>

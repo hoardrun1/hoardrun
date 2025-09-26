@@ -367,8 +367,8 @@ export default function SavingsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="min-h-screen bg-background pt-16 pb-4 px-3 sm:pt-20 sm:pb-6 sm:px-4 mb-20">
-        <div className="max-w-7xl mx-auto space-y-3 sm:space-y-4">
+      <div className="min-h-screen bg-background pt-16 pb-4 px-2 mb-20">
+        <div className="w-full space-y-3 sm:space-y-4">
           {/* Header */}
           <div className="flex items-center justify-between">
             <div>

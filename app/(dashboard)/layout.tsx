@@ -1,17 +1,17 @@
 'use client';
 
 import { useEffect, memo, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { FinanceProvider } from '@/contexts/FinanceContext';
 import { NotificationProvider } from '@/contexts/NotificationContext';
 import { Toaster } from '@/components/ui/toast';
 import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sidebar-layout';
-import { SidebarContent } from '@/components/ui/sidebar-content';
+import { SidebarContent } from '@/components/ui/sidebar-content-unified';
 import { SidebarToggle } from '@/components/ui/sidebar-toggle';
 import { MobileAppHeader } from '@/components/ui/mobile-app-header';
 import { MobileNavigation } from '@/components/ui/mobile-navigation';
-import { NavigationLoader } from '@/components/ui/navigation-loader';
+import { NavigationLoader } from '@/components/ui/navigation-loader-simple';
 
 // Memoized loading component to prevent re-renders
 const LoadingSpinner = memo(() => (
@@ -41,17 +41,24 @@ const MemoizedMobileNavigation = memo(() => (
 ));
 MemoizedMobileNavigation.displayName = 'MemoizedMobileNavigation';
 
-// Memoized content wrapper to prevent re-renders
+// Enhanced content wrapper with better spacing and layout
 const ContentWrapper = memo(({ children }: { children: React.ReactNode }) => (
-  <div className="w-full max-w-full lg:pt-0">
+  <div className="w-full max-w-full">
+    {/* Mobile Layout */}
     <div
-      className="lg:hidden"
+      className="lg:hidden min-h-screen bg-background"
       style={{ paddingTop: 'calc(4rem + env(safe-area-inset-top, 0px))' }}
     >
-      {children}
+      <div className="dashboard-container">
+        {children}
+      </div>
     </div>
-    <div className="hidden lg:block">
-      {children}
+    
+    {/* Desktop Layout */}
+    <div className="hidden lg:block min-h-screen bg-background">
+      <div className="dashboard-container">
+        {children}
+      </div>
     </div>
   </div>
 ));
@@ -64,6 +71,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, loading } = useAuth();
 
   // Memoize authentication check to prevent unnecessary re-renders
@@ -91,6 +99,9 @@ export default function DashboardLayout({
     return null; // Don't render anything while redirecting
   }
 
+  // Check if current page should bypass sidebar layout
+  const shouldBypassSidebar = false;
+
   // Always use the real FinanceProvider with API client integration
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
@@ -99,23 +110,31 @@ export default function DashboardLayout({
       
       <FinanceProvider>
         <NotificationProvider>
-          <SidebarProvider>
-            <ResponsiveSidebarLayout
-              sidebar={<MemoizedSidebarContent />}
-            >
-              <SidebarToggle />
+          {shouldBypassSidebar ? (
+            // Full-width layout for transactions page
+            <div className="w-full">
+              {children}
+            </div>
+          ) : (
+            // Standard dashboard layout with sidebar
+            <SidebarProvider>
+              <ResponsiveSidebarLayout
+                sidebar={<MemoizedSidebarContent />}
+              >
+                <SidebarToggle />
 
-              {/* Mobile Header - Only show on mobile */}
-              <MemoizedMobileAppHeader />
+                {/* Mobile Header - Only show on mobile */}
+                <MemoizedMobileAppHeader />
 
-              <ContentWrapper>
-                {children}
-              </ContentWrapper>
+                <ContentWrapper>
+                  {children}
+                </ContentWrapper>
 
-              {/* Mobile Navigation - Only show on mobile */}
-              <MemoizedMobileNavigation />
-            </ResponsiveSidebarLayout>
-          </SidebarProvider>
+                {/* Mobile Navigation - Only show on mobile */}
+                <MemoizedMobileNavigation />
+              </ResponsiveSidebarLayout>
+            </SidebarProvider>
+          )}
         </NotificationProvider>
       </FinanceProvider>
       <Toaster />

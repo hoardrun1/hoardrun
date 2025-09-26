@@ -129,8 +129,8 @@ export default function AnalyticsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background pt-16 pb-32 px-4 sm:pt-20 sm:pb-32 sm:px-6">
-        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
+      <div className="min-h-screen bg-background pt-16 pb-32 px-2">
+        <div className="w-full space-y-4 sm:space-y-6">
           <div className="flex items-center justify-center h-64">
             <Loader2 className="h-8 w-8 animate-spin" />
             <span className="ml-2">Loading analytics...</span>
@@ -142,8 +142,8 @@ export default function AnalyticsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-background pt-16 pb-32 px-4 sm:pt-20 sm:pb-32 sm:px-6">
-        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
+      <div className="min-h-screen bg-background pt-16 pb-32 px-2">
+        <div className="w-full space-y-4 sm:space-y-6">
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
               <p className="text-red-500 mb-2">Error loading analytics</p>
@@ -157,8 +157,8 @@ export default function AnalyticsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="min-h-screen bg-background pt-16 pb-32 px-4 sm:pt-20 sm:pb-32 sm:px-6">
-          <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
+        <div className="min-h-screen bg-background pt-16 pb-32 px-2">
+          <div className="w-full space-y-4 sm:space-y-6">
             {/* Header */}
             <div className="flex items-center justify-between">
               <div>

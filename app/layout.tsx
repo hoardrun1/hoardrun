@@ -39,20 +39,50 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-        <meta name="theme-color" content="#000000" />
+        <meta name="theme-color" content="#ffffff" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var theme = localStorage.getItem('theme');
+                  var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                  var shouldBeDark = theme === 'dark' || (!theme && prefersDark);
+                  
+                  // Set initial theme class on html element
+                  if (shouldBeDark) {
+                    document.documentElement.classList.add('dark');
+                    document.documentElement.className = 'dark bg-background';
+                    var metaTheme = document.querySelector('meta[name="theme-color"]');
+                    if (metaTheme) metaTheme.setAttribute('content', '#000000');
+                  } else {
+                    document.documentElement.classList.remove('dark');
+                    document.documentElement.className = 'bg-background';
+                    var metaTheme = document.querySelector('meta[name="theme-color"]');
+                    if (metaTheme) metaTheme.setAttribute('content', '#ffffff');
+                  }
+                } catch (e) {
+                  // Fallback to light theme
+                  document.documentElement.classList.remove('dark');
+                  document.documentElement.className = 'bg-background';
+                }
+              })();
+            `,
+          }}
+        />
       </head>
-      <body className="font-sans antialiased overflow-x-hidden safe-area-inset-top safe-area-inset-bottom">
+      <body className="font-sans antialiased overflow-x-hidden safe-area-inset-top safe-area-inset-bottom bg-background text-foreground transition-colors duration-300" suppressHydrationWarning>
         {/* Using AWS Cognito authentication instead of NextAuth */}
         <ThemeProvider>
           <ClientAuthProvider>
             <ConditionalProviders>
-              <div className="min-h-screen-mobile bg-background">
+              <div className="min-h-screen-mobile bg-background text-foreground transition-colors duration-300">
                 {children}
               </div>
             </ConditionalProviders>

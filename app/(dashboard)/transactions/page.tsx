@@ -2,9 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { useTheme } from '@/contexts/ThemeContext'
-import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sidebar-layout'
-import { SidebarContent } from '@/components/ui/sidebar-content'
-import { SidebarToggle } from '@/components/ui/sidebar-toggle'
 import { DepositModal } from '@/components/deposit-modal'
 import { SectionFooter } from '@/components/ui/section-footer'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -60,13 +57,8 @@ export default function TransactionsPage() {
   const netAmount = totalIncome - totalExpenses
 
   return (
-    <SidebarProvider>
-      <ResponsiveSidebarLayout
-        sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
-      >
-        <SidebarToggle />
-        <div className="min-h-screen bg-background pt-16 pb-32 px-4 sm:pt-20 sm:pb-32 sm:px-6">
-          <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
+    <div className="min-h-screen bg-background w-full">
+      <div className="w-full px-2 pt-16 pb-32 space-y-4 sm:space-y-6">
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
               <div>
@@ -226,15 +218,13 @@ export default function TransactionsPage() {
                 </div>
               </CardContent>
             </Card>
-          </div>
-        </div>
 
         <DepositModal
           open={isDepositModalOpen}
           onOpenChange={setIsDepositModalOpen}
         />
         <SectionFooter section="financial" activePage="/transactions" />
-      </ResponsiveSidebarLayout>
-    </SidebarProvider>
+      </div>
+    </div>
   )
 }

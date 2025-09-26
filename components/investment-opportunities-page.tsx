@@ -812,7 +812,7 @@ export function InvestmentOpportunitiesPage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Expected Return:</span>
-                    <span className="font-medium text-green-600">{investmentOpportunity.expectedReturn}</span>
+                    <span className="font-medium text-green-600">{investmentOpportunity.targetReturn}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Investment Period:</span>

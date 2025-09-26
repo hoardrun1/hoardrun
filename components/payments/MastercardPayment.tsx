@@ -126,20 +126,20 @@ export const MastercardPayment: React.FC<MastercardPaymentProps> = ({
     return (
       <Card className="w-full max-w-md mx-auto">
         <CardHeader className="text-center">
-          <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
-            <CheckCircle className="w-6 h-6 text-green-600" />
+          <div className="mx-auto w-12 h-12 bg-success-light rounded-full flex items-center justify-center mb-4">
+            <CheckCircle className="w-6 h-6 text-status-success" />
           </div>
-          <CardTitle className="text-green-600">Payment Successful!</CardTitle>
+          <CardTitle className="text-status-success">Payment Successful!</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="text-center space-y-2">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-muted-foreground">
               Payment ID: {paymentResult?.payment_id}
             </p>
             <p className="text-lg font-semibold">
               {paymentData.currency} {paymentData.amount}
             </p>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-muted-foreground">
               Status: {paymentResult?.status}
             </p>
           </div>
@@ -273,8 +273,8 @@ export const MastercardPayment: React.FC<MastercardPaymentProps> = ({
 
         {step === 'payment' && (
           <>
-            <div className="bg-green-50 p-3 rounded-lg">
-              <p className="text-sm text-green-700 flex items-center gap-2">
+            <div className="bg-success-light p-3 rounded-lg">
+              <p className="text-sm text-status-success flex items-center gap-2">
                 <CheckCircle className="w-4 h-4" />
                 Card validated successfully
               </p>

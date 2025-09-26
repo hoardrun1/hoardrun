@@ -1,0 +1,9 @@
+- [x] Fix register button visibility in dark mode in investment-page.tsx
+- [x] Fix syntax error in investment-opportunities-page.tsx (expectedReturn -> targetReturn)
+- [x] Reduce main welcome heading font sizes in signup page
+- [x] Reduce welcome paragraph font sizes in signup page
+- [x] Reduce form title font size in signup page
+- [x] Adjust feature highlights font sizes in signup page
+- [x] Adjust trust indicators font sizes in signup page
+- [x] Reduce form labels font sizes to make form less tall
+- [x] Reduce form description text size

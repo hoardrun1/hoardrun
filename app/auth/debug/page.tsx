@@ -12,7 +12,7 @@ export default function AuthDebugPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
+    <div className="min-h-screen bg-background p-8">
       <div className="max-w-2xl mx-auto space-y-6">
         <Card>
           <CardHeader>
@@ -51,7 +51,7 @@ export default function AuthDebugPage() {
               </div>
             )}
 
-            <div className="mt-6 p-4 bg-gray-50 rounded">
+            <div className="mt-6 p-4 bg-secondary rounded border border-border">
               <strong>Environment Check:</strong>
               <ul className="mt-2 space-y-1 text-sm">
                 <li>NEXTAUTH_URL: {process.env.NEXTAUTH_URL || 'Not set'}</li>
@@ -62,15 +62,15 @@ export default function AuthDebugPage() {
               </ul>
             </div>
 
-            <div className="mt-4 p-4 bg-blue-50 rounded">
-              <strong>Google OAuth Setup Instructions:</strong>
-              <ol className="mt-2 space-y-1 text-sm list-decimal list-inside">
-                <li>Go to <a href="https://console.cloud.google.com/" target="_blank" className="text-blue-600 underline">Google Cloud Console</a></li>
+            <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
+              <strong className="text-blue-800 dark:text-blue-200">Google OAuth Setup Instructions:</strong>
+              <ol className="mt-2 space-y-1 text-sm list-decimal list-inside text-blue-800 dark:text-blue-200">
+                <li>Go to <a href="https://console.cloud.google.com/" target="_blank" className="text-blue-600 dark:text-blue-400 underline">Google Cloud Console</a></li>
                 <li>Create or select a project</li>
                 <li>Enable Google+ API or Google Identity API</li>
                 <li>Go to "APIs & Services" → "Credentials"</li>
                 <li>Create "OAuth 2.0 Client IDs" for "Web application"</li>
-                <li>Add this redirect URI: <code className="bg-gray-200 px-1 rounded">{typeof window !== 'undefined' ? `${window.location.origin}/api/auth/callback/google` : 'Loading...'}</code></li>
+                <li>Add this redirect URI: <code className="bg-secondary px-1 rounded">{typeof window !== 'undefined' ? `${window.location.origin}/api/auth/callback/google` : 'Loading...'}</code></li>
                 <li>Copy Client ID and Secret to your .env.local file</li>
               </ol>
             </div>

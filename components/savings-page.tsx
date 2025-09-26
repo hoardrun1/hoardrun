@@ -814,9 +814,9 @@ export function SavingsPageComponent() {
   )
 
   return (
-    <LayoutWrapper className="bg-gray-50 dark:bg-gray-900 min-h-screen">
+    <LayoutWrapper className="bg-background min-h-screen">
       {/* Header */}
-      <header className="sticky top-0 z-50 w-full bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+      <header className="sticky top-0 z-50 w-full bg-background border-b border-border">
         <div className="container mx-auto px-4">
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center gap-4">

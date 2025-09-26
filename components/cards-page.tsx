@@ -223,7 +223,7 @@ export function CardsPageComponent() {
 
   return (
     <React.Fragment>
-      <LayoutWrapper className="bg-gray-50 dark:bg-gray-950 min-h-screen pb-4 px-4 sm:pb-6 sm:px-6" showBreadcrumbs={false}>
+      <LayoutWrapper className="bg-surface min-h-screen pb-4 px-4 sm:pb-6 sm:px-6" showBreadcrumbs={false}>
 
       {/* Header */}
       <header className={`sticky top-14 sm:top-16 z-30 bg-background border-b border-border ${rs.padding}`}>
@@ -231,7 +231,7 @@ export function CardsPageComponent() {
           <div className={`${rs.flexBetween} py-4`}>
             <div className="flex items-center gap-2">
               <h1 className={`${rs.heading2} text-foreground font-bold`}>Cards</h1>
-              <span className="px-3 py-1 text-xs font-semibold bg-primary text-primary-foreground rounded-full">
+              <span className="px-3 py-1 text-xs font-semibold bg-interactive text-interactive-foreground rounded-full">
                 {loading ? '...' : `${cards.filter(card => card.status === 'active').length} Active`}
               </span>
             </div>

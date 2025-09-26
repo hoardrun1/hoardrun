@@ -427,10 +427,10 @@ export function HomePageComponent() {
               whileHover={{ scale: 1.02, y: -2 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setShowDepositModal(true)}
-              className="bg-primary text-primary-foreground p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl shadow-lg sm:shadow-2xl hover:shadow-xl sm:hover:shadow-3xl transition-all duration-500 group border-2 border-transparent hover:border-border btn-mobile"
+              className="bg-interactive text-interactive-foreground p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl shadow-lg sm:shadow-2xl hover:shadow-xl sm:hover:shadow-3xl transition-all duration-500 group border-2 border-transparent hover:border-border btn-mobile"
             >
               <div className="flex flex-col items-center gap-2 sm:gap-3 md:gap-4">
-                <div className="bg-primary-foreground/10 p-2 sm:p-3 md:p-4 rounded-xl sm:rounded-2xl group-hover:bg-primary-foreground/20 transition-all duration-300 group-hover:scale-110">
+                <div className="bg-content-inverse/10 p-2 sm:p-3 md:p-4 rounded-xl sm:rounded-2xl group-hover:bg-content-inverse/20 transition-all duration-300 group-hover:scale-110">
                   <Plus className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8" />
                 </div>
                 <div className="text-center">
@@ -511,7 +511,7 @@ export function HomePageComponent() {
                 className="bg-card border-2 border-border p-4 rounded-2xl hover:shadow-lg transition-all duration-300 group hover:border-muted-foreground relative"
               >
                 <div className="flex flex-col items-center gap-3">
-                  <div className={`${item.label === 'Cards' ? 'bg-black text-white' : 'bg-secondary text-foreground'} p-3 rounded-xl group-hover:bg-opacity-80 transition-all duration-300 group-hover:scale-110`}>
+                  <div className={`${item.label === 'Cards' ? 'bg-interactive text-interactive-foreground' : 'bg-secondary text-secondary-foreground'} p-3 rounded-xl group-hover:bg-opacity-80 transition-all duration-300 group-hover:scale-110`}>
                     <item.icon className="h-5 w-5" />
                   </div>
                   <span className="text-xs font-semibold text-foreground">{item.label}</span>
@@ -534,15 +534,15 @@ export function HomePageComponent() {
           </div>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {/* Total Balance Card */}
-            <Card className="bg-primary text-primary-foreground border-0 shadow-xl hover:shadow-2xl transition-all duration-300 group">
+            <Card className="bg-interactive text-interactive-foreground border-0 shadow-xl hover:shadow-2xl transition-all duration-300 group">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-primary-foreground/70 text-sm font-medium">Total Balance</p>
+                    <p className="text-content-inverse/70 text-sm font-medium">Total Balance</p>
                     <p className="text-3xl font-bold mt-2">${balance.toLocaleString()}</p>
                     <div className="flex items-center mt-2">
-                      <ArrowUpRight className="h-4 w-4 text-primary-foreground/60 mr-1" />
-                      <span className="text-primary-foreground/60 text-sm">+2.5% from last month</span>
+                      <ArrowUpRight className="h-4 w-4 text-content-inverse/60 mr-1" />
+                      <span className="text-content-inverse/60 text-sm">+2.5% from last month</span>
                     </div>
                   </div>
                   <div className="bg-primary-foreground/10 p-3 rounded-2xl group-hover:scale-110 transition-transform duration-300">

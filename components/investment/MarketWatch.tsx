@@ -93,13 +93,13 @@ export const MarketWatch: React.FC<MarketWatchProps> = ({
       <CardContent>
         <div className="space-y-3">
           {watchlist.map((stock) => (
-            <div key={stock.symbol} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
+            <div key={stock.symbol} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50">
               <div className="flex-1">
                 <div className="flex items-center space-x-2">
                   <span className="font-semibold">{stock.symbol}</span>
-                  <span className="text-sm text-gray-500 truncate">{stock.name}</span>
+                  <span className="text-sm text-muted-foreground truncate">{stock.name}</span>
                 </div>
-                <div className="text-xs text-gray-400">
+                <div className="text-xs text-muted-foreground/70">
                   Vol: {formatVolume(stock.volume)}
                 </div>
               </div>
@@ -109,11 +109,11 @@ export const MarketWatch: React.FC<MarketWatchProps> = ({
                 <div className="flex items-center space-x-1">
                   <Badge 
                     variant={stock.change >= 0 ? "default" : "destructive"}
-                    className={`text-xs ${stock.change >= 0 ? "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200" : "bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-100"}`}
+                    className="text-xs"
                   >
                     {stock.change >= 0 ? '+' : ''}${stock.change.toFixed(2)}
                   </Badge>
-                  <span className={`text-xs ${stock.changePercent >= 0 ? 'text-gray-600 dark:text-gray-400' : 'text-gray-800 dark:text-gray-200'}`}>
+                  <span className={`text-xs ${stock.changePercent >= 0 ? 'text-muted-foreground' : 'text-foreground/80'}`}>
                     ({stock.changePercent >= 0 ? '+' : ''}{stock.changePercent.toFixed(2)}%)
                   </span>
                 </div>

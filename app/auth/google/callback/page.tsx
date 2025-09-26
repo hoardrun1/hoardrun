@@ -136,16 +136,16 @@ function GoogleCallbackContent() {
   }, [searchParams])
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="max-w-md w-full mx-auto p-6">
         <div className="text-center">
           {status === 'loading' && (
             <>
-              <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+              <h2 className="text-xl font-semibold text-foreground mb-2">
                 Completing Google Sign-In...
               </h2>
-              <p className="text-gray-600">
+              <p className="text-muted-foreground">
                 Please wait while we complete your authentication.
               </p>
             </>
@@ -153,32 +153,32 @@ function GoogleCallbackContent() {
 
           {status === 'success' && (
             <>
-              <div className="h-8 w-8 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="h-5 w-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="h-8 w-8 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="h-5 w-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              <h2 className="text-xl font-semibold text-foreground mb-2">
                 Authentication Successful!
               </h2>
-              <p className="text-gray-600">{message}</p>
+              <p className="text-muted-foreground">{message}</p>
             </>
           )}
 
           {status === 'error' && (
             <>
-              <div className="h-8 w-8 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="h-5 w-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="h-8 w-8 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="h-5 w-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              <h2 className="text-xl font-semibold text-foreground mb-2">
                 Authentication Failed
               </h2>
-              <p className="text-gray-600 mb-4">{message}</p>
+              <p className="text-muted-foreground mb-4">{message}</p>
               <button
                 onClick={() => window.close()}
-                className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+                className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 transition-colors border border-border"
               >
                 Close Window
               </button>
@@ -193,13 +193,13 @@ function GoogleCallbackContent() {
 export default function GoogleCallbackPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+          <h2 className="text-xl font-semibold text-foreground mb-2">
             Loading...
           </h2>
-          <p className="text-gray-600">
+          <p className="text-muted-foreground">
             Please wait while we process your request.
           </p>
         </div>

@@ -2,7 +2,7 @@
  * API Client for connecting to the Python FastAPI backend
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://hoardrun-backend-py-1.onrender.com/api/v1'
 
 export interface ApiResponse<T = any> {
   data?: T
@@ -258,6 +258,26 @@ class ApiClient {
 
       if (!response.ok) {
         console.error('API Request failed:', response.status, data)
+        
+        // Handle token expiration (401 Unauthorized)
+        if (response.status === 401) {
+          console.log('Token expired or invalid - clearing auth data')
+          this.handleTokenExpiration()
+          return {
+            error: 'Your session has expired. Please sign in again.',
+            status: response.status,
+          }
+        }
+        
+        // Handle forbidden access (403)
+        if (response.status === 403) {
+          console.log('Access forbidden - insufficient permissions')
+          return {
+            error: 'You do not have permission to access this resource.',
+            status: response.status,
+          }
+        }
+        
         return {
           error: data.detail || data.message || 'An error occurred',
           status: response.status,
@@ -276,6 +296,70 @@ class ApiClient {
         status: 0,
       }
     }
+  }
+
+  private handleTokenExpiration(): void {
+    // Clear token from API client
+    this._token = null
+    
+    // Clear all storage locations
+    if (typeof window !== 'undefined') {
+      // Clear cookies
+      document.cookie = 'auth-token=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;'
+      document.cookie = 'auth-user=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;'
+      
+      // Clear localStorage
+      localStorage.removeItem('auth_token')
+      localStorage.removeItem('auth_user')
+      localStorage.removeItem('auth-token')
+      
+      // Clear sessionStorage
+      sessionStorage.removeItem('token')
+      sessionStorage.removeItem('user')
+      sessionStorage.removeItem('auth_session_initialized')
+    }
+    
+    // Trigger a custom event to notify the auth context
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('auth:token-expired'))
+    }
+  }
+
+  // Add method to check if token is likely expired based on structure
+  private isTokenExpired(token: string): boolean {
+    try {
+      // Basic JWT structure check - split by dots
+      const parts = token.split('.')
+      if (parts.length !== 3) return true
+      
+      // Decode payload (second part)
+      const payload = JSON.parse(atob(parts[1]))
+      
+      // Check if token has expiration time and if it's expired
+      if (payload.exp) {
+        const currentTime = Math.floor(Date.now() / 1000)
+        return payload.exp < currentTime
+      }
+      
+      return false
+    } catch (error) {
+      console.error('Error checking token expiration:', error)
+      return true // Assume expired if we can't parse it
+    }
+  }
+
+  // Enhanced token validation
+  private validateToken(): boolean {
+    if (!this._token) return false
+    
+    // Check if token is expired
+    if (this.isTokenExpired(this._token)) {
+      console.log('Token is expired')
+      this.handleTokenExpiration()
+      return false
+    }
+    
+    return true
   }
 
   // Authentication endpoints

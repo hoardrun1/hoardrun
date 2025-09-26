@@ -8,7 +8,7 @@ import {
   Globe, Shield, AlertCircle, Info, Target,
   Clock, Filter, Brain, Loader2, RefreshCcw,
   Building2, Briefcase, ChartBar, Menu, X,
-  LucideIcon, Lock, CheckCircle, AlertTriangle,
+  LucideIcon,
   Home, Activity, Users, Settings
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
@@ -216,11 +216,6 @@ export function InvestmentPage() {
   const [showStartupModal, setShowStartupModal] = useState(false)
   const [startupView, setStartupView] = useState<'list' | 'detail'>('list')
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({})
-  const [securityChecks, setSecurityChecks] = useState({
-    isEmailVerified: false,
-    isIdentityVerified: false,
-    isInvestorVerified: false,
-  })
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false)
   const [activeSection, setActiveSection] = useState('overview')
   const [showQuickNav, setShowQuickNav] = useState(false)
@@ -329,32 +324,6 @@ export function InvestmentPage() {
       router.push('/signin')
     }
   }, [user, loading, router])
-
-  // Security check simulation
-  useEffect(() => {
-    // Check if we should bypass auth in development mode
-    const bypassAuth = process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true';
-    if (bypassAuth && process.env.NODE_ENV === 'development') {
-      // In development mode, automatically set security checks to true
-      setSecurityChecks({
-        isEmailVerified: true,
-        isIdentityVerified: true,
-        isInvestorVerified: true,
-      });
-      return;
-    }
-
-    if (user) {
-      // Simulate security checks
-      setTimeout(() => {
-        setSecurityChecks({
-          isEmailVerified: true,
-          isIdentityVerified: true,
-          isInvestorVerified: true,
-        })
-      }, 1000)
-    }
-  }, [user])
 
   const validateInvestment = (data: any) => {
     try {
@@ -525,66 +494,20 @@ export function InvestmentPage() {
     loadStartups()
   }, [addToast])
 
-  // Show security verification first
-  if (!securityChecks.isEmailVerified || !securityChecks.isIdentityVerified || !securityChecks.isInvestorVerified) {
-    return (
-      <div className="min-h-screen bg-background py-4 px-4">
-        <div className="container mx-auto max-w-md">
-          <Card className="bg-card border-border">
-            <CardHeader className="p-4">
-              <CardTitle className="flex items-center text-foreground text-sm">
-                <Lock className="w-4 h-4 mr-2" />
-                Security Verification Required
-              </CardTitle>
-              <CardDescription className="text-muted-foreground text-xs">
-                Please complete the verification process to continue
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3 p-4 pt-0">
-              <div className="flex items-center space-x-2">
-                {securityChecks.isEmailVerified ? (
-                  <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
-                ) : (
-                  <AlertTriangle className="w-4 h-4 text-muted-foreground" />
-                )}
-                <span className="text-foreground text-xs">Email Verification</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                {securityChecks.isIdentityVerified ? (
-                  <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
-                ) : (
-                  <AlertTriangle className="w-4 h-4 text-muted-foreground" />
-                )}
-                <span className="text-foreground text-xs">Identity Verification</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                {securityChecks.isInvestorVerified ? (
-                  <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
-                ) : (
-                  <AlertTriangle className="w-4 h-4 text-muted-foreground" />
-                )}
-                <span className="text-foreground text-xs">Investor Verification</span>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    )
-  }
 
   return (
     <LayoutWrapper className="min-h-screen-mobile bg-background" showBreadcrumbs={false}>
       {/* Sticky Quick Navigation - Mobile First */}
-      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
+      <div className="sticky top-0 z-40 bg-background border-b border-border">
             <div className="flex items-center justify-between p-3 sm:p-4">
           <h1 className="text-base sm:text-lg md:text-xl font-bold text-foreground">Investments</h1>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setShowQuickNav(!showQuickNav)}
-            className="p-2 h-auto btn-mobile"
+            className="p-2 h-auto btn-mobile text-foreground hover:bg-muted"
           >
-            {showQuickNav ? <X className="h-4 w-4 sm:h-5 sm:w-5" /> : <Menu className="h-4 w-4 sm:h-5 sm:w-5" />}
+            {showQuickNav ? <X className="h-4 w-4 sm:h-5 sm:w-5 text-foreground" /> : <Menu className="h-4 w-4 sm:h-5 sm:w-5 text-foreground" />}
           </Button>
         </div>
             
@@ -606,7 +529,7 @@ export function InvestmentPage() {
                         className={`flex flex-col items-center gap-1 h-auto py-2 px-1 text-xs ${
                           activeSection === section.id 
                             ? 'bg-primary text-primary-foreground' 
-                            : 'text-foreground hover:bg-primary hover:text-primary-foreground'
+                            : 'text-foreground hover:bg-muted hover:text-foreground'
                         }`}
                       >
                         <section.icon className="h-3 w-3" />
@@ -625,35 +548,34 @@ export function InvestmentPage() {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
                 <div>
                   <h2 className="text-sm sm:text-base md:text-lg font-bold">Portfolio Overview</h2>
-                  <p className="text-xs sm:text-sm text-primary-foreground/60">AI-Powered Management</p>
+                  <p className="text-xs sm:text-sm text-primary-foreground opacity-90">AI-Powered Management</p>
                 </div>
                 <div className="flex gap-2 sm:gap-3">
-
                   <Button
-                    size="sm"
-                    onClick={() => router.push('/startupregistration')}
                     variant="outline"
-                    className="border-primary-foreground/50 text-primary-foreground bg-transparent hover:bg-primary-foreground hover:text-primary text-xs sm:text-sm px-3 py-2 h-auto btn-mobile flex-1 sm:flex-none"
+                    size="sm"
+                    onClick={() => setIsDepositModalOpen(true)}
+                    className="text-xs"
                   >
-                    <Building2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-                    Register
+                    <Wallet className="h-3 w-3 mr-1" />
+                    Deposit
                   </Button>
                 </div>
               </div>
 
               {/* Key Metrics - Compact Grid */}
               <div className="grid grid-cols-3 gap-2">
-                <Card className="bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground">
+                <Card className="bg-card border-border">
                   <CardContent className="p-2">
-                    <div className="text-xs sm:text-sm text-primary-foreground/60">Portfolio</div>
+                    <div className="text-xs sm:text-sm text-muted-foreground">Portfolio</div>
                     {loadingInvestmentData ? (
-                      <div className="text-xs sm:text-base font-bold">Loading...</div>
+                      <div className="text-xs sm:text-base font-bold text-foreground">Loading...</div>
                     ) : (
-                      <div className="text-xs sm:text-base font-bold">
+                      <div className="text-xs sm:text-base font-bold text-foreground">
                         ${(investmentSummary?.total_portfolio_value || 0).toLocaleString()}
                       </div>
                     )}
-                    <div className="flex items-center text-xs sm:text-sm text-green-400">
+                    <div className="flex items-center text-xs sm:text-sm text-green-600 dark:text-green-400">
                       {loadingInvestmentData ? (
                         <span>--</span>
                       ) : (
@@ -671,17 +593,17 @@ export function InvestmentPage() {
                   </CardContent>
                 </Card>
 
-                <Card className="bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground">
+                <Card className="bg-card border-border">
                   <CardContent className="p-2">
-                    <div className="text-xs sm:text-sm text-primary-foreground/60">Returns</div>
+                    <div className="text-xs sm:text-sm text-muted-foreground">Returns</div>
                     {loadingInvestmentData ? (
-                      <div className="text-xs sm:text-base font-bold">Loading...</div>
+                      <div className="text-xs sm:text-base font-bold text-foreground">Loading...</div>
                     ) : (
-                      <div className="text-xs sm:text-base font-bold">
+                      <div className="text-xs sm:text-base font-bold text-foreground">
                         ${(performanceSummary?.total_return_amount || 0).toLocaleString()}
                       </div>
                     )}
-                    <div className="flex items-center text-xs sm:text-sm text-green-400">
+                    <div className="flex items-center text-xs sm:text-sm text-green-600 dark:text-green-400">
                       {loadingInvestmentData ? (
                         <span>--</span>
                       ) : (
@@ -699,17 +621,17 @@ export function InvestmentPage() {
                   </CardContent>
                 </Card>
 
-                <Card className="bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground">
+                <Card className="bg-card border-border">
                   <CardContent className="p-2">
-                    <div className="text-xs sm:text-sm text-primary-foreground/60">AI Score</div>
+                    <div className="text-xs sm:text-sm text-muted-foreground">AI Score</div>
                     {loadingInvestmentData ? (
-                      <div className="text-xs sm:text-base font-bold">Loading...</div>
+                      <div className="text-xs sm:text-base font-bold text-foreground">Loading...</div>
                     ) : (
-                      <div className="text-xs sm:text-base font-bold">
+                      <div className="text-xs sm:text-base font-bold text-foreground">
                         {investmentSummary?.ai_optimization_score || 85}/100
                       </div>
                     )}
-                    <div className="text-xs sm:text-sm text-primary-foreground/60">
+                    <div className="text-xs sm:text-sm text-muted-foreground">
                       {loadingInvestmentData ? '--' : (investmentSummary?.optimization_status || 'Optimized')}
                     </div>
                   </CardContent>
@@ -1024,7 +946,7 @@ export function InvestmentPage() {
                         variant="outline"
                         size="sm"
                         onClick={() => router.push('/startupregistration')}
-                        className="text-xs"
+                        className="text-xs dark:text-foreground dark:border-foreground dark:hover:bg-muted"
                       >
                         Register Your Startup
                       </Button>

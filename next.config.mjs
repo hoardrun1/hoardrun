@@ -28,10 +28,10 @@ const nextConfig = {
   // Optimize for Render deployment
   experimental: {
     outputFileTracingRoot: process.cwd(),
-    optimizeCss: true,
+    optimizeCss: false,
     scrollRestoration: true,
   },
-  // Enhanced webpack configuration for navigation performance
+  // Optimized webpack configuration for navigation performance
   webpack: (config, { isServer, dev }) => {
     if (!isServer) {
       // Exclude Node.js modules from client bundle
@@ -56,79 +56,44 @@ const nextConfig = {
       };
     }
 
-    // Development-specific optimizations for chunk loading issues
+    // Development-specific optimizations
     if (!isServer && dev) {
       config.output = {
         ...config.output,
         publicPath: '/_next/',
-        chunkLoadTimeout: 120000, // 2 minutes
+        chunkLoadTimeout: 30000, // Reduced from 2 minutes to 30 seconds
       };
     }
 
-    // Enhanced bundle splitting for better navigation performance
+    // Simplified bundle splitting for better performance
     if (!dev && !isServer) {
       config.optimization.splitChunks = {
         chunks: 'all',
-        minSize: 20000,
-        maxSize: 244000,
+        minSize: 30000, // Increased min size
+        maxSize: 200000, // Reduced max size for faster loading
         cacheGroups: {
           // Framework chunk (React, Next.js)
           framework: {
             chunks: 'all',
             name: 'framework',
-            test: /(?<!node_modules.*)[\\/]node_modules[\\/](react|react-dom|scheduler|prop-types|use-subscription)[\\/]/,
+            test: /[\\/]node_modules[\\/](react|react-dom|scheduler|prop-types|use-subscription)[\\/]/,
             priority: 40,
             enforce: true,
           },
-          // Large libraries
-          lib: {
-            test: /[\\/]node_modules[\\/]/,
-            name(module) {
-              const packageName = module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/)?.[1]
-              return `npm.${packageName?.replace('@', '')}`
-            },
-            priority: 30,
-            minChunks: 1,
-            reuseExistingChunk: true,
-          },
-          // Framer Motion - separate chunk for animations
+          // Heavy libraries that should be separate
           framerMotion: {
             test: /[\\/]node_modules[\\/]framer-motion[\\/]/,
             name: 'framer-motion',
             chunks: 'all',
-            priority: 25,
+            priority: 30,
             enforce: true,
           },
-          // Radix UI components
-          radixUI: {
-            test: /[\\/]node_modules[\\/]@radix-ui[\\/]/,
-            name: 'radix-ui',
-            chunks: 'all',
-            priority: 20,
-            enforce: true,
-          },
-          // AWS SDK
-          awsSdk: {
-            test: /[\\/]node_modules[\\/](@aws-sdk|aws-sdk)[\\/]/,
-            name: 'aws-sdk',
-            chunks: 'all',
-            priority: 15,
-            enforce: true,
-          },
-          // Common utilities
-          utils: {
-            test: /[\\/]node_modules[\\/](lodash|date-fns|clsx|class-variance-authority)[\\/]/,
-            name: 'utils',
-            chunks: 'all',
-            priority: 10,
-            enforce: true,
-          },
-          // Default vendor chunk
+          // Default vendor chunk for everything else
           vendor: {
             test: /[\\/]node_modules[\\/]/,
             name: 'vendors',
             chunks: 'all',
-            priority: 5,
+            priority: 10,
             reuseExistingChunk: true,
           },
         },
@@ -138,14 +103,6 @@ const nextConfig = {
       config.optimization.usedExports = true;
       config.optimization.sideEffects = false;
     }
-
-    // Module resolution optimizations for faster navigation
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      // Optimize React imports
-      'react/jsx-runtime': require.resolve('react/jsx-runtime'),
-      'react/jsx-dev-runtime': require.resolve('react/jsx-dev-runtime'),
-    };
 
     return config;
   },

@@ -397,7 +397,7 @@ export function FinancePageComponent() {
         sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
       >
         <SidebarToggle />
-        <div className="min-h-screen bg-white pt-16 pb-4 px-3 sm:pt-20 sm:pb-6 sm:px-4">
+        <div className="min-h-screen bg-background pt-16 pb-4 px-3 sm:pt-20 sm:pb-6 sm:px-4">
           <div className="max-w-7xl mx-auto space-y-3 sm:space-y-4">
             {/* Header */}
             <div className="flex items-center justify-between">
@@ -860,7 +860,7 @@ export function FinancePageComponent() {
         </div>
 
         {/* Navigation Footer - Only show on mobile */}
-        <footer className="fixed bottom-0 left-0 right-0 bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800 py-2 lg:hidden">
+        <footer className="fixed bottom-0 left-0 right-0 bg-background border-t border-border py-2 lg:hidden">
           <div className="container mx-auto px-4">
             <nav className="grid grid-cols-5 gap-1 sm:gap-2">
               {[

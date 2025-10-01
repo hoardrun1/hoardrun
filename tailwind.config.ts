@@ -112,11 +112,11 @@ const config: Config = {
   			'safe-screen': 'calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom))',
   		},
   		fontSize: {
-  			'mobile-xs': ['0.75rem', { lineHeight: '1rem' }],
-  			'mobile-sm': ['0.875rem', { lineHeight: '1.25rem' }],
-  			'mobile-base': ['1rem', { lineHeight: '1.5rem' }],
-  			'mobile-lg': ['1.125rem', { lineHeight: '1.75rem' }],
-  			'mobile-xl': ['1.25rem', { lineHeight: '1.75rem' }],
+  			'mobile-xs': ['0.625rem', { lineHeight: '0.875rem' }],
+  			'mobile-sm': ['0.75rem', { lineHeight: '1rem' }],
+  			'mobile-base': ['0.875rem', { lineHeight: '1.25rem' }],
+  			'mobile-lg': ['1rem', { lineHeight: '1.5rem' }],
+  			'mobile-xl': ['1.125rem', { lineHeight: '1.5rem' }],
   		}
   	}
   },

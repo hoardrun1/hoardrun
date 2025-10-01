@@ -1,35 +1,48 @@
 'use client'
 
-import { signIn } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
 import { Loader2 } from 'lucide-react'
 import { useState } from 'react'
 import Image from 'next/image'
+import { apiClient } from '@/lib/api-client'
+import { useToast } from '@/components/ui/use-toast'
 
 interface GoogleSignInButtonProps {
-  callbackUrl?: string
   className?: string
 }
 
-export function GoogleSignInButton({ callbackUrl = '/home', className }: GoogleSignInButtonProps) {
+export function GoogleSignInButton({ className }: GoogleSignInButtonProps) {
   const [isLoading, setIsLoading] = useState(false)
+  const { toast } = useToast()
 
   const handleGoogleSignIn = async () => {
-    // Check if Google credentials are properly configured
-    if (!process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID === 'your-google-client-id-here') {
-      alert('Google OAuth is not configured. Please set up your Google OAuth credentials in .env.local file.\n\nVisit http://localhost:3004/auth/debug for setup instructions.')
-      return
-    }
-
     try {
       setIsLoading(true)
-      await signIn('google', {
-        callbackUrl,
-        redirect: true
-      })
+      // Simulate "coming soon" - no actual API call needed for this task
+      await new Promise(resolve => setTimeout(resolve, 1000)) // Brief loading simulation
+
+      // Use alert as fallback to ensure message shows
+      alert("Google login will be available soon");
+      
+      // Also try toast if available
+      if (toast) {
+        toast({
+          title: "Google Sign In",
+          description: "Google login will be available soon",
+          variant: "default",
+        })
+      }
     } catch (error) {
       console.error('Google sign-in error:', error)
-      alert('Google sign-in failed. Please check your OAuth configuration.')
+      alert("Google login will be available soon");
+      
+      if (toast) {
+        toast({
+          title: "Google Sign In",
+          description: "Google login will be available soon",
+          variant: "default",
+        })
+      }
     } finally {
       setIsLoading(false)
     }

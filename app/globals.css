@@ -230,6 +230,13 @@
     overflow-x: hidden;
     @apply bg-background text-foreground;
     transition: background-color 0.3s ease, color 0.3s ease;
+    font-size: 14px; /* Smaller base font size on mobile */
+  }
+
+  @media (min-width: 640px) {
+    html {
+      font-size: 16px; /* Standard size on larger screens */
+    }
   }
 
   body {
@@ -318,11 +325,11 @@
 
   /* Mobile-friendly spacing */
   .mobile-container {
-    @apply px-4 sm:px-6 lg:px-8;
+    @apply px-2 sm:px-4 lg:px-6;
   }
 
   .mobile-section {
-    @apply py-6 sm:py-8 lg:py-12;
+    @apply py-4 sm:py-6 lg:py-8;
   }
 
   /* Mobile-friendly typography */

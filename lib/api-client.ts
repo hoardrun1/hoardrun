@@ -395,6 +395,12 @@ class ApiClient {
     return response
   }
 
+  async googleSignIn(): Promise<ApiResponse<any>> {
+    return this.request('/auth/google', {
+      method: 'POST',
+    })
+  }
+
   // Dashboard endpoints
   async getDashboard(): Promise<ApiResponse<DashboardData>> {
     return this.request('/dashboard')

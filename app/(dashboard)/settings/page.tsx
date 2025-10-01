@@ -100,7 +100,7 @@ export default function SettingsPage() {
                 Customize how the app looks and feels
               </p>
             </div>
-            <div className="p-6 space-y-6">
+            <div className="p-4 sm:p-6 space-y-6">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
                   <Label className="text-base font-medium">Theme</Label>
@@ -183,7 +183,7 @@ export default function SettingsPage() {
                 Choose how and when you want to be notified
               </p>
             </div>
-            <div className="p-6 space-y-6">
+            <div className="p-4 sm:p-6 space-y-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                   <div className="p-2 rounded-lg bg-surface">
@@ -259,7 +259,7 @@ export default function SettingsPage() {
                 Control your data and privacy preferences
               </p>
             </div>
-            <div className="p-6 space-y-6">
+            <div className="p-4 sm:p-6 space-y-6">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
                   <Label className="text-base font-medium">Profile Visibility</Label>
@@ -323,7 +323,7 @@ export default function SettingsPage() {
                 Manage your account data and preferences
               </p>
             </div>
-            <div className="p-6 space-y-6">
+            <div className="p-4 sm:p-6 space-y-6">
               <div className="flex items-center justify-between p-4  hover-lift">
                 <div className="flex items-center space-x-4">
                   <div className="p-2 rounded-lg bg-surface">

@@ -30,7 +30,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
 import { DatePicker } from "@/components/ui/date-picker"
 import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sidebar-layout';
-import { SidebarContent } from '@/components/ui/sidebar-content';
+import { SidebarContent } from '@/components/ui/sidebar-content-unified';
 import { SidebarToggle } from '@/components/ui/sidebar-toggle';
 import { DepositModal } from '@/components/deposit-modal';
 import { Alert, AlertDescription } from "@/components/ui/alert"

@@ -35,7 +35,7 @@ import { formatCurrency, calculateTransactionFee } from '@/lib/banking'
 import { cn } from '@/lib/utils'
 import { LayoutWrapper } from "@/components/ui/layout-wrapper"
 import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sidebar-layout'
-import { SidebarContent } from '@/components/ui/sidebar-content'
+import { SidebarContent } from '@/components/ui/sidebar-content-unified'
 import { SidebarToggle } from '@/components/ui/sidebar-toggle'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useAuth } from '@/contexts/AuthContext'
@@ -278,25 +278,8 @@ export function SendMoneyPage() {
         sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
       >
         <SidebarToggle />
-        <LayoutWrapper>
-          <div className="min-h-screen-mobile bg-background pb-20 sm:pb-6">
-            {/* Header - Mobile Optimized */}
-            <div className="sticky top-14 sm:top-16 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
-              <div className="w-full max-w-md mx-auto px-3 sm:px-4 py-3 sm:py-4">
-                <div className="flex items-center gap-3 sm:gap-4">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => router.back()}
-                    className="h-9 w-9 sm:h-8 sm:w-8 btn-mobile"
-                  >
-                    <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
-                  </Button>
-                  <h1 className="text-lg sm:text-xl font-semibold text-foreground">Send Money</h1>
-                </div>
-              </div>
-            </div>
-
+        <LayoutWrapper showBreadcrumbs={false}>
+          <div className="min-h-screen-mobile bg-background pb-20 sm:pb-6 pt-16">
             {/* Main Content - Mobile Optimized */}
             <div className="w-full max-w-md mx-auto px-3 sm:px-4 py-4 sm:py-6">
               <motion.form

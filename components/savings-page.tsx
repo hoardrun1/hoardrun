@@ -1,3 +1,4 @@
+
 'use client'
 
 import { useState, useCallback, useEffect } from 'react'
@@ -143,7 +144,6 @@ const savingsTips = [
   }
 ]
 
-// Add TypeScript interfaces for better type safety
 interface SavingsGoal {
   id: string
   name: string
@@ -168,7 +168,6 @@ interface SavingsTip {
   icon: LucideIcon
 }
 
-// Add new interfaces for AI features
 interface AIRecommendation {
   id: string
   type: 'savings' | 'investment'
@@ -282,7 +281,6 @@ export function SavingsPageComponent() {
   const [selectedPeriod, setSelectedPeriod] = useState('6months')
   const [isNewGoalDialogOpen, setIsNewGoalDialogOpen] = useState(false)
 
-  // Fixed Deposit State
   const [fixedDeposits, setFixedDeposits] = useState<FixedDeposit[]>([])
   const [isFixedDepositDialogOpen, setIsFixedDepositDialogOpen] = useState(false)
   const [selectedTab, setSelectedTab] = useState('goals')
@@ -295,7 +293,6 @@ export function SavingsPageComponent() {
     investmentThreshold: ''
   })
 
-  // Fixed Deposit Terms
   const fixedDepositTerms: FixedDepositTerm[] = [
     {
       id: '3m',
@@ -340,7 +337,6 @@ export function SavingsPageComponent() {
     }
   ]
 
-  // Save to Invest Options
   const saveToInvestOptions: SaveToInvestOption[] = [
     {
       id: 'conservative',
@@ -379,6 +375,7 @@ export function SavingsPageComponent() {
       icon: Zap
     }
   ]
+
   const [newGoalForm, setNewGoalForm] = useState<NewGoalFormData>({
     name: '',
     targetAmount: '',
@@ -402,7 +399,6 @@ export function SavingsPageComponent() {
       const analyticsResponse = await apiClient.getCashFlowAnalysis({ period: 'monthly' })
       
       if (analyticsResponse.data) {
-        // Set mock analytics data for now
         setAnalytics({
           monthlyGrowth: 850,
           projectedSavings: 28000,
@@ -414,7 +410,6 @@ export function SavingsPageComponent() {
           }
         })
 
-        // Set mock recommendations
         setRecommendations([
           {
             id: '1',
@@ -434,7 +429,6 @@ export function SavingsPageComponent() {
           }
         ])
 
-        // Set mock insights
         setInsights([
           {
             id: '1',
@@ -450,7 +444,6 @@ export function SavingsPageComponent() {
           }
         ])
 
-        // Set mock goal recommendations
         setGoalRecommendations([
           {
             id: '1',
@@ -495,23 +488,25 @@ export function SavingsPageComponent() {
       transition={{ duration: 0.3 }}
     >
       <Card className="mb-4">
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <CardTitle>{goal.name}</CardTitle>
-            <Button variant="ghost" size="sm" onClick={() => handleInvestNow(goal.id)}>
-              Invest Now
+        <CardHeader className="pb-3">
+          <div className="flex justify-between items-start gap-2">
+            <div className="flex-1 min-w-0">
+              <CardTitle className="text-base sm:text-lg truncate">{goal.name}</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">{goal.category}</CardDescription>
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => handleInvestNow(goal.id)} className="text-xs sm:text-sm h-8 px-2 sm:px-3">
+              Invest
             </Button>
           </div>
-          <CardDescription>{goal.category}</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex justify-between text-sm">
+        <CardContent className="pt-0">
+          <div className="space-y-3 sm:space-y-4">
+            <div className="flex justify-between text-xs sm:text-sm">
               <span>Progress</span>
-              <span>{formatCurrency(goal.currentAmount)} / {formatCurrency(goal.targetAmount)}</span>
+              <span className="font-medium">{formatCurrency(goal.currentAmount)} / {formatCurrency(goal.targetAmount)}</span>
             </div>
             <Progress value={goal.progress} className={getProgressColor(goal.progress)} />
-            <div className="flex justify-between text-sm text-gray-500">
+            <div className="flex justify-between text-xs sm:text-sm text-gray-500">
               <span>Monthly: {formatCurrency(goal.monthlyContribution)}</span>
               <span>{calculateTimeLeft(goal.deadline)}</span>
             </div>
@@ -523,7 +518,6 @@ export function SavingsPageComponent() {
 
   const handleInvestNow = async (goalId: string) => {
     try {
-      // Implementation for investing in a goal
       toast({
         title: 'Success',
         description: 'Investment initiated successfully',
@@ -536,8 +530,6 @@ export function SavingsPageComponent() {
       })
     }
   }
-
-
 
   const handleCreateGoal = async () => {
     try {
@@ -644,91 +636,8 @@ export function SavingsPageComponent() {
     return amount + interest
   }
 
-  const renderAnalytics = () => {
-    if (!analytics) return null
-
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Monthly Growth</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(analytics.monthlyGrowth)}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Projected Savings</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(analytics.projectedSavings)}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Next Milestone</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(analytics.nextMilestone)}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Allocation</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span>Emergency</span>
-                <span>{analytics.recommendedAllocation.emergency}%</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Investment</span>
-                <span>{analytics.recommendedAllocation.investment}%</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Goals</span>
-                <span>{analytics.recommendedAllocation.goals}%</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
-
-  const renderRecommendations = () => (
-    <div className="space-y-4 mb-8">
-      <h3 className="text-lg font-semibold">AI Recommendations</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {recommendations.map((rec, index) => (
-          <Card key={index}>
-            <CardHeader>
-              <CardTitle className="text-base">{rec.title}</CardTitle>
-              <CardDescription>{rec.description}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex justify-between text-sm">
-                <span>Confidence</span>
-                <span>{rec.confidence}%</span>
-              </div>
-              {rec.potentialReturn && (
-                <div className="flex justify-between text-sm mt-2">
-                  <span>Potential Return</span>
-                  <span>{rec.potentialReturn}%</span>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </div>
-  )
-
   const handleFeedback = async (insightId: string, isHelpful: boolean) => {
     try {
-      // Implementation for submitting insight feedback
       toast({
         title: 'Thank you',
         description: 'Your feedback helps improve our recommendations',
@@ -768,25 +677,24 @@ export function SavingsPageComponent() {
   }
 
   const renderInsights = () => (
-    <div className="space-y-4 mb-8">
-      <h3 className="text-lg font-semibold">Behavior Insights</h3>
+    <div className="space-y-3 sm:space-y-4">
       {insights.map((insight) => (
         <Card key={insight.id}>
-          <CardHeader>
-            <CardTitle className="text-base">{insight.title}</CardTitle>
-            <CardDescription>{insight.description}</CardDescription>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm sm:text-base">{insight.title}</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">{insight.description}</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex justify-between text-sm">
+          <CardContent className="pt-0">
+            <div className="space-y-3 sm:space-y-4">
+              <div className="flex justify-between text-xs sm:text-sm">
                 <span>Impact</span>
-                <span>{insight.impact}%</span>
+                <span className="font-medium">{insight.impact}%</span>
               </div>
               <div className="space-y-2">
                 {insight.suggestedActions.map((action, index) => (
-                  <div key={index} className="flex justify-between text-sm">
-                    <span>{action.action}</span>
-                    <span>+{action.potentialImpact}%</span>
+                  <div key={index} className="flex justify-between text-xs sm:text-sm gap-2">
+                    <span className="flex-1">{action.action}</span>
+                    <span className="font-medium whitespace-nowrap">+{action.potentialImpact}%</span>
                   </div>
                 ))}
               </div>
@@ -795,6 +703,7 @@ export function SavingsPageComponent() {
                   variant="ghost"
                   size="sm"
                   onClick={() => handleFeedback(insight.id, true)}
+                  className="h-8 w-8 p-0"
                 >
                   <ThumbsUp className="h-4 w-4" />
                 </Button>
@@ -802,6 +711,7 @@ export function SavingsPageComponent() {
                   variant="ghost"
                   size="sm"
                   onClick={() => handleFeedback(insight.id, false)}
+                  className="h-8 w-8 p-0"
                 >
                   <ThumbsDown className="h-4 w-4" />
                 </Button>
@@ -817,28 +727,28 @@ export function SavingsPageComponent() {
     <LayoutWrapper className="bg-background min-h-screen">
       {/* Header */}
       <header className="sticky top-0 z-50 w-full bg-background border-b border-border">
-        <div className="container mx-auto px-4">
-          <div className="flex h-16 items-center justify-between">
-            <div className="flex items-center gap-4">
-              <h1 className="text-xl font-semibold dark:text-white">Savings</h1>
-              <Badge variant="secondary" className="bg-gray-100 text-gray-600 dark:bg-gray-900 dark:text-gray-400">
+        <div className="container mx-auto px-3 sm:px-4">
+          <div className="flex h-14 sm:h-16 items-center justify-between">
+            <div className="flex items-center gap-2 sm:gap-4">
+              <h1 className="text-lg sm:text-xl font-semibold dark:text-white">Savings</h1>
+              <Badge variant="secondary" className="bg-gray-100 text-gray-600 dark:bg-gray-900 dark:text-gray-400 text-xs sm:text-sm">
                 {savingsGoals.length} Goals
               </Badge>
             </div>
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-5 w-5" />
+            <div className="flex items-center gap-2 sm:gap-3">
+              <Button variant="ghost" size="icon" className="relative h-8 w-8 sm:h-10 sm:w-10">
+                <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
                 <span className="absolute top-1 right-1 h-2 w-2 bg-gray-500 rounded-full" />
               </Button>
-              <Button variant="ghost" size="icon">
-                <Settings className="h-5 w-5" />
+              <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-10 sm:w-10">
+                <Settings className="h-4 w-4 sm:h-5 sm:w-5" />
               </Button>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 lg:py-6 space-y-6">
+      <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
         {/* AI Recommendations */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -846,18 +756,18 @@ export function SavingsPageComponent() {
           transition={{ duration: 0.3 }}
         >
           <Card className="border-2 border-blue-500/20">
-            <CardHeader>
+            <CardHeader className="pb-3">
               <div className="flex items-center gap-2">
-                <Brain className="h-5 w-5 text-gray-500" />
-                <CardTitle>AI Insights</CardTitle>
+                <Brain className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500" />
+                <CardTitle className="text-base sm:text-lg">AI Insights</CardTitle>
               </div>
-              <CardDescription>Personalized recommendations for your savings</CardDescription>
+              <CardDescription className="text-xs sm:text-sm">Personalized recommendations for your savings</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3 sm:space-y-4 pt-0">
               {isLoading ? (
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   {[1, 2, 3].map((i) => (
-                    <Skeleton key={i} className="h-24 w-full" />
+                    <Skeleton key={i} className="h-20 sm:h-24 w-full" />
                   ))}
                 </div>
               ) : (
@@ -871,24 +781,24 @@ export function SavingsPageComponent() {
                       transition={{ delay: index * 0.1 }}
                     >
                       <Card className="bg-gray-50 dark:bg-gray-800">
-                        <CardContent className="p-4">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h3 className="font-medium text-gray-600 dark:text-gray-400">
+                        <CardContent className="p-3 sm:p-4">
+                          <div className="flex justify-between items-start gap-3">
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-medium text-gray-600 dark:text-gray-400 text-sm sm:text-base">
                                 {rec.title}
                               </h3>
-                              <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 mt-1">
                                 {rec.description}
                               </p>
-                              <div className="flex items-center gap-4 mt-2">
+                              <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-2">
                                 {rec.impact !== undefined && (
-                                  <Badge variant="secondary">
+                                  <Badge variant="secondary" className="text-xs">
                                     {rec.impact > 0 ? '+' : ''}{rec.impact}% Impact
                                   </Badge>
                                 )}
                                 <div className="flex items-center gap-2">
-                                  <span className="text-xs text-gray-500">AI Confidence:</span>
-                                  <Progress value={rec.confidence} className="w-24" />
+                                  <span className="text-xs text-gray-500 whitespace-nowrap">AI Confidence:</span>
+                                  <Progress value={rec.confidence} className="w-16 sm:w-24" />
                                 </div>
                               </div>
                             </div>
@@ -896,9 +806,9 @@ export function SavingsPageComponent() {
                               <Button
                                 size="sm"
                                 onClick={() => handleInvestNow(rec.id)}
-                                className="bg-gray-500 hover:bg-gray-600"
+                                className="bg-gray-500 hover:bg-gray-600 text-xs h-8 px-2 sm:px-3 whitespace-nowrap"
                               >
-                                Invest Now
+                                Invest
                               </Button>
                             )}
                           </div>

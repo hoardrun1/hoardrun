@@ -81,7 +81,7 @@ export function SignInPage() {
 
     } catch (err) {
       console.error('Login error:', err)
-      
+
       let errorMessage = "Login failed"
       if (err instanceof z.ZodError) {
         errorMessage = err.errors[0].message

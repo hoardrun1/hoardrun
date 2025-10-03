@@ -44,7 +44,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
 
   // Auth methods
-  signUp: (email: string, password: string, firstName?: string, lastName?: string, phone?: string, dateOfBirth?: string, country?: string, bio?: string) => Promise<void>;
+  signUp: (email: string, password: string, firstName?: string, lastName?: string, phone?: string, dateOfBirth?: string, country?: string, idNumber?: string, bio?: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   login: (newToken: string, newUser: User) => void;
@@ -191,7 +191,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, [token]);
 
   // Auth methods
-  const login = (newToken: string, newUser: User) => {
+  const login = (newToken: string, newUser: User, refreshToken?: string) => {
     setToken(newToken);
     setUser(newUser);
     setError(null);
@@ -204,10 +204,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
     localStorage.setItem('auth_token', newToken);
     localStorage.setItem('auth_user', JSON.stringify(newUser));
 
+    // Store refresh token if provided
+    if (refreshToken) {
+      localStorage.setItem('refresh_token', refreshToken);
+      apiClient.setRefreshToken(refreshToken);
+    }
+
     // Set the token directly in API client to ensure immediate availability
     apiClient.setToken(newToken);
-    
-    console.log('Login successful - token stored in cookies and localStorage');
+
+    console.log('Login successful - tokens stored in cookies and localStorage');
   };
 
   const logout = async () => {
@@ -232,9 +238,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       deleteCookie('auth-user');
       localStorage.removeItem('auth_token');
       localStorage.removeItem('auth_user');
+      localStorage.removeItem('refresh_token');
       sessionStorage.removeItem('token');
       sessionStorage.removeItem('user');
-      
+
       // Also clear any other potential auth-related storage
       localStorage.clear();
       sessionStorage.clear();
@@ -247,20 +254,33 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setError(null);
   };
 
+  // Helper function to truncate password to 72 bytes UTF-8
+  const truncatePassword = (password: string, maxBytes: number = 72): string => {
+    const encoder = new TextEncoder();
+    const decoder = new TextDecoder();
+    let bytes = encoder.encode(password);
+    if (bytes.length <= maxBytes) return password;
+    bytes = bytes.slice(0, maxBytes);
+    return decoder.decode(bytes, { stream: false });
+  };
+
   // Signup using Python backend
-  const signup = async (email: string, password: string, firstName?: string, lastName?: string, phone?: string, dateOfBirth?: string, country?: string, bio?: string) => {
+  const signup = async (email: string, password: string, firstName?: string, lastName?: string, phone?: string, dateOfBirth?: string, country?: string, idNumber?: string, bio?: string) => {
     try {
       setLoading(true);
       setError(null);
 
+      const truncatedPassword = truncatePassword(password);
+
       const response = await apiClient.register({
         email,
-        password,
+        password: truncatedPassword,
         first_name: firstName || email.split('@')[0],
         last_name: lastName || '',
         phone_number: phone || undefined,
         date_of_birth: dateOfBirth || undefined,
         country: country || undefined,
+        id_number: idNumber || undefined,
         bio: bio || undefined,
         terms_accepted: true,
       });
@@ -281,7 +301,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         apiClient.clearToken();
         setToken(null);
         setUser(null);
-        
+
         console.log('Registration successful. User needs to sign in to get access token.');
       }
     } catch (error: any) {
@@ -299,7 +319,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setLoading(true);
       setError(null);
 
-      const response = await apiClient.login(email, password);
+      const truncatedPassword = truncatePassword(password);
+
+      const response = await apiClient.login(email, truncatedPassword);
 
       if (response.error) {
         throw new Error(response.error);
@@ -317,7 +339,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             profilePictureUrl: loginData.user.profile_picture_url
           };
 
-          login(loginData.access_token, unifiedUser);
+          login(loginData.access_token, unifiedUser, loginData.refresh_token);
         } else if (response.data.user) {
           // Handle direct structure if backend doesn't use success_response wrapper
           const unifiedUser: User = {
@@ -328,7 +350,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             profilePictureUrl: response.data.user.profile_picture_url
           };
 
-          login(response.data.access_token, unifiedUser);
+          login(response.data.access_token, unifiedUser, response.data.refresh_token);
         } else {
           console.error('Unexpected response structure:', response.data);
           throw new Error('Invalid response structure from server');

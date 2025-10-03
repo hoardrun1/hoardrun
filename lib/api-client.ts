@@ -159,6 +159,9 @@ export interface FinancialInsight {
 class ApiClient {
   private baseUrl: string
   private _token: string | null = null
+  private _refreshToken: string | null = null
+  private _isRefreshing: boolean = false
+  private _refreshPromise: Promise<string | null> | null = null
 
   constructor(baseUrl: string = API_BASE_URL) {
     this.baseUrl = baseUrl
@@ -218,10 +221,28 @@ class ApiClient {
 
   public clearToken(): void {
     this._token = null
+    this._refreshToken = null
     if (typeof window !== 'undefined') {
       localStorage.removeItem('auth_token')
+      localStorage.removeItem('refresh_token')
     }
     console.log('Token cleared from API client')
+  }
+
+  public setRefreshToken(token: string): void {
+    this._refreshToken = token
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('refresh_token', token)
+    }
+    console.log('Refresh token set in API client')
+  }
+
+  public getRefreshToken(): string | null {
+    if (this._refreshToken) return this._refreshToken
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('refresh_token')
+    }
+    return null
   }
 
   private async request<T>(
@@ -258,17 +279,67 @@ class ApiClient {
 
       if (!response.ok) {
         console.error('API Request failed:', response.status, data)
-        
+
         // Handle token expiration (401 Unauthorized)
         if (response.status === 401) {
-          console.log('Token expired or invalid - clearing auth data')
-          this.handleTokenExpiration()
-          return {
-            error: 'Your session has expired. Please sign in again.',
-            status: response.status,
+          // Skip token refresh for authentication endpoints (login, register, refresh)
+          if (endpoint.includes('/auth/login') || endpoint.includes('/auth/register') || endpoint.includes('/auth/refresh')) {
+            console.log('Authentication endpoint failed with 401 - not attempting refresh')
+            return {
+              error: data.detail || data.message || 'Authentication failed',
+              status: response.status,
+            }
+          }
+
+          console.log('Token expired or invalid - attempting refresh')
+
+          // Try to refresh token if we have a refresh token and aren't already refreshing
+          if (this.getRefreshToken() && !this._isRefreshing) {
+            console.log('Attempting token refresh')
+            this._isRefreshing = true
+
+            try {
+              const refreshResponse = await this.refreshToken()
+              this._isRefreshing = false
+
+              if (refreshResponse.data && refreshResponse.data.access_token) {
+                // Update tokens
+                this.setToken(refreshResponse.data.access_token)
+                if (refreshResponse.data.refresh_token) {
+                  this.setRefreshToken(refreshResponse.data.refresh_token)
+                }
+
+                // Retry the original request with new token
+                console.log('Retrying request with refreshed token')
+                return this.request(endpoint, options)
+              } else {
+                console.log('Token refresh failed - clearing auth data')
+                this.handleTokenExpiration()
+                return {
+                  error: 'Your session has expired. Please sign in again.',
+                  status: response.status,
+                }
+              }
+            } catch (refreshError) {
+              this._isRefreshing = false
+              console.error('Token refresh error:', refreshError)
+              this.handleTokenExpiration()
+              return {
+                error: 'Your session has expired. Please sign in again.',
+                status: response.status,
+              }
+            }
+          } else {
+            // No refresh token or already refreshing
+            console.log('No refresh token available or already refreshing - clearing auth data')
+            this.handleTokenExpiration()
+            return {
+              error: 'Your session has expired. Please sign in again.',
+              status: response.status,
+            }
           }
         }
-        
+
         // Handle forbidden access (403)
         if (response.status === 403) {
           console.log('Access forbidden - insufficient permissions')
@@ -277,7 +348,7 @@ class ApiClient {
             status: response.status,
           }
         }
-        
+
         return {
           error: data.detail || data.message || 'An error occurred',
           status: response.status,
@@ -378,6 +449,7 @@ class ApiClient {
     phone_number?: string
     date_of_birth?: string
     country?: string
+    id_number?: string
     bio?: string
     terms_accepted: boolean
   }): Promise<ApiResponse<User>> {
@@ -393,6 +465,44 @@ class ApiClient {
     })
     this.clearToken()
     return response
+  }
+
+  async refreshToken(): Promise<ApiResponse<any>> {
+    const refreshToken = this.getRefreshToken()
+    if (!refreshToken) {
+      return {
+        error: 'No refresh token available',
+        status: 401,
+      }
+    }
+
+    // Make direct request without using the main request method to avoid recursion
+    const url = `${this.baseUrl}/auth/refresh`
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      console.error('Token refresh failed:', response.status, data)
+      // Clear tokens if refresh fails
+      this.clearToken()
+      return {
+        error: data.detail || data.message || 'Token refresh failed',
+        status: response.status,
+      }
+    }
+
+    console.log('Token refresh successful')
+    return {
+      data,
+      status: response.status,
+    }
   }
 
   async googleSignIn(): Promise<ApiResponse<any>> {

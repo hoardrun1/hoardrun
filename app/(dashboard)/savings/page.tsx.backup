@@ -11,11 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Separator } from '@/components/ui/separator'
-import { Skeleton } from '@/components/ui/skeleton'
-import { PiggyBank, Target, Shield, Repeat, Plus, TrendingUp, DollarSign, Calendar, AlertCircle } from 'lucide-react'
-import { useSavings } from '@/hooks/useSavings'
-import { apiClient } from '@/lib/api-client'
-import { useToast } from '@/components/ui/use-toast'
+import { PiggyBank, Target, Shield, Repeat, Plus, TrendingUp, DollarSign, Calendar } from 'lucide-react'
 
 // Mock functions
 const formatCurrency = (amount: number) => {
@@ -30,32 +26,47 @@ const addToast = ({ title, description, variant }: any) => {
 }
 
 export default function EnhancedSavingsPage() {
-  const { toast } = useToast()
-  const {
-    savingsGoals: createdGoals,
-    isLoading: goalsLoading,
-    error: goalsError,
-    fetchSavingsGoals,
-    createSavingsGoal,
-    updateSavingsGoal,
-    deleteSavingsGoal
-  } = useSavings()
-
   const [analytics, setAnalytics] = useState({
-    totalSavings: 0,
-    monthlyGrowth: 0,
-    nextMilestone: 0,
-    projectedSavings: 0,
-    insights: [] as Array<{ title: string; description: string }>
+    totalSavings: 15420.50,
+    monthlyGrowth: 850.00,
+    nextMilestone: 2500.00,
+    projectedSavings: 25620.50,
+    insights: [
+      { title: 'Monthly Savings', description: "You're saving $850 per month across all accounts" },
+      { title: 'Fixed Deposit Returns', description: '2 active fixed deposits' },
+      { title: 'Automated Savings', description: '3 active automated savings plans' }
+    ]
   })
-
-  const [analyticsLoading, setAnalyticsLoading] = useState(true)
-  const [analyticsError, setAnalyticsError] = useState<string | null>(null)
 
   const [isNewGoalDialogOpen, setIsNewGoalDialogOpen] = useState(false)
   const [isFixedDepositDialogOpen, setIsFixedDepositDialogOpen] = useState(false)
   const [isAutomatedSavingDialogOpen, setIsAutomatedSavingDialogOpen] = useState(false)
   const [activeTab, setActiveTab] = useState('active')
+
+  const [createdGoals, setCreatedGoals] = useState([
+    {
+      id: 'goal_1',
+      name: 'Emergency Fund',
+      targetAmount: 10000,
+      currentAmount: 4500,
+      monthlyContribution: 500,
+      category: 'Emergency',
+      deadline: new Date('2025-12-31').toISOString(),
+      isAutoSave: true,
+      status: 'ACTIVE'
+    },
+    {
+      id: 'goal_2',
+      name: 'Vacation to Europe',
+      targetAmount: 5000,
+      currentAmount: 2300,
+      monthlyContribution: 350,
+      category: 'Travel',
+      deadline: new Date('2026-06-30').toISOString(),
+      isAutoSave: true,
+      status: 'ACTIVE'
+    }
+  ])
 
   const [fixedDeposits, setFixedDeposits] = useState([
     {
@@ -117,75 +128,6 @@ export default function EnhancedSavingsPage() {
     startDate: new Date(),
   })
 
-  // Fetch analytics data on component mount
-  useEffect(() => {
-    const fetchAnalyticsData = async () => {
-      try {
-        setAnalyticsLoading(true)
-        setAnalyticsError(null)
-
-        // Fetch savings stats and insights in parallel
-        const [statsResponse, insightsResponse] = await Promise.all([
-          apiClient.getSavingsStats(),
-          apiClient.getSavingsInsights()
-        ])
-
-        // Process insights data - transform from SavingsInsights object to array of insights
-        let insightsArray: Array<{ title: string; description: string }> = []
-        const insightsData = insightsResponse.data?.data || insightsResponse.data
-
-        if (insightsData && typeof insightsData === 'object') {
-          // If it's a SavingsInsights object, extract insights from recommendations
-          if (insightsData.recommendations && Array.isArray(insightsData.recommendations)) {
-            insightsArray = insightsData.recommendations.map((rec: string, index: number) => ({
-              title: `Recommendation ${index + 1}`,
-              description: rec
-            }))
-          }
-
-          // Add insights about savings rate
-          if (insightsData.current_savings_rate !== undefined && insightsData.recommended_savings_rate !== undefined) {
-            insightsArray.push({
-              title: 'Savings Rate Analysis',
-              description: `Your current savings rate is $${insightsData.current_savings_rate.toFixed(2)}/month. Consider increasing to $${insightsData.recommended_savings_rate.toFixed(2)}/month for better financial health.`
-            })
-          }
-
-          // Add insights about savings streak
-          if (insightsData.savings_streak !== undefined) {
-            insightsArray.push({
-              title: 'Savings Streak',
-              description: `You've maintained a ${insightsData.savings_streak}-day savings streak. Keep it up!`
-            })
-          }
-        }
-
-        // Update analytics state with API data
-        const newAnalytics = {
-          totalSavings: statsResponse.data?.total_savings || 0,
-          monthlyGrowth: statsResponse.data?.monthly_growth || 0,
-          nextMilestone: statsResponse.data?.next_milestone || 0,
-          projectedSavings: statsResponse.data?.projected_savings || 0,
-          insights: insightsArray
-        }
-
-        setAnalytics(newAnalytics)
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to fetch savings analytics'
-        setAnalyticsError(errorMessage)
-        toast({
-          title: "Error",
-          description: errorMessage,
-          variant: "destructive"
-        })
-      } finally {
-        setAnalyticsLoading(false)
-      }
-    }
-
-    fetchAnalyticsData()
-  }, [toast])
-
   const calculateFixedDepositInterest = (amount: number, term: number, rate: number = 4.5) => {
     const interest = (amount * rate * (term / 12)) / 100
     const maturityAmount = amount + interest
@@ -201,30 +143,30 @@ export default function EnhancedSavingsPage() {
     return 3.5
   }
 
-  const handleCreateGoal = async () => {
+  const handleCreateGoal = () => {
     if (!newGoalForm.name || !newGoalForm.targetAmount || !newGoalForm.monthlyContribution) {
-      toast({ title: 'Error', description: 'Please fill in all required fields', variant: 'destructive' })
+      addToast({ title: 'Error', description: 'Please fill in all required fields', variant: 'destructive' })
       return
     }
 
-    try {
-      await createSavingsGoal({
-        name: newGoalForm.name,
-        targetAmount: parseFloat(newGoalForm.targetAmount),
-        monthlyContribution: parseFloat(newGoalForm.monthlyContribution),
-        category: newGoalForm.category || 'General',
-        deadline: (newGoalForm.deadline instanceof Date)
-          ? newGoalForm.deadline.toISOString()
-          : new Date(Date.now() + 31536000000).toISOString(),
-        isAutoSave: newGoalForm.isAutoSave,
-      })
-
-      setIsNewGoalDialogOpen(false)
-      setNewGoalForm({ name: '', targetAmount: '', monthlyContribution: '', category: '', deadline: null, isAutoSave: true })
-      toast({ title: 'Success', description: `Savings goal "${newGoalForm.name}" created successfully` })
-    } catch (error) {
-      toast({ title: 'Error', description: 'Failed to create savings goal', variant: 'destructive' })
+    const goalData = {
+      id: `goal_${Date.now()}`,
+      name: newGoalForm.name,
+      targetAmount: parseFloat(newGoalForm.targetAmount),
+      currentAmount: 0,
+      monthlyContribution: parseFloat(newGoalForm.monthlyContribution),
+      category: newGoalForm.category || 'General',
+      deadline: (newGoalForm.deadline instanceof Date)
+        ? newGoalForm.deadline.toISOString()
+        : new Date(Date.now() + 31536000000).toISOString(),
+      isAutoSave: newGoalForm.isAutoSave,
+      status: 'ACTIVE',
     }
+
+    setCreatedGoals(prev => [...prev, goalData])
+    setIsNewGoalDialogOpen(false)
+    setNewGoalForm({ name: '', targetAmount: '', monthlyContribution: '', category: '', deadline: null, isAutoSave: true })
+    addToast({ title: 'Success', description: `Savings goal "${goalData.name}" created successfully` })
   }
 
   return (

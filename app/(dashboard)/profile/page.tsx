@@ -14,8 +14,10 @@ import { Textarea } from '@/components/ui/textarea'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useToast } from '@/components/ui/use-toast'
 import { apiClient } from '@/lib/api-client'
+import i18n from '../../../lib/i18n'
 import { 
   User, 
   Mail, 
@@ -57,6 +59,7 @@ export default function ProfilePage() {
   })
   const { addToast } = useToast()
   const { user } = useAuth()
+  const [language, setLanguage] = useState(i18n.language)
 
   // Fetch user profile data from API
   useEffect(() => {
@@ -431,6 +434,36 @@ export default function ProfilePage() {
               </TabsContent>
 
               <TabsContent value="preferences" className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Language Settings</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <Label htmlFor="language">Language</Label>
+                      <Select
+                        value={language}
+                        onValueChange={(value) => { setLanguage(value); i18n.changeLanguage(value); }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="en">English</SelectItem>
+                          <SelectItem value="es">Español</SelectItem>
+                          <SelectItem value="fr">Français</SelectItem>
+                          <SelectItem value="de">Deutsch</SelectItem>
+                          <SelectItem value="af">Afrikaans</SelectItem>
+                          <SelectItem value="zh">中文</SelectItem>
+                          <SelectItem value="ja">日本語</SelectItem>
+                          <SelectItem value="hi">हिन्दी</SelectItem>
+                          <SelectItem value="ar">العربية</SelectItem>
+                          <SelectItem value="sw">Kiswahili</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </CardContent>
+                </Card>
                 <Card>
                   <CardHeader>
                     <CardTitle>{t('dashboard.profile.notificationPreferences')}</CardTitle>

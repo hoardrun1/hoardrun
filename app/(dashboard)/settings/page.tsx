@@ -167,10 +167,16 @@ export default function SettingsPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="border-2 border-border">
-                      <SelectItem value="en">{t('settings.english')}</SelectItem>
-                      <SelectItem value="es">{t('settings.spanish')}</SelectItem>
-                      <SelectItem value="fr">{t('settings.french')}</SelectItem>
-                      <SelectItem value="de">{t('settings.german')}</SelectItem>
+                      <SelectItem value="en">English</SelectItem>
+                      <SelectItem value="es">Español</SelectItem>
+                      <SelectItem value="fr">Français</SelectItem>
+                      <SelectItem value="de">Deutsch</SelectItem>
+                      <SelectItem value="af">Afrikaans</SelectItem>
+                      <SelectItem value="zh">中文</SelectItem>
+                      <SelectItem value="ja">日本語</SelectItem>
+                      <SelectItem value="hi">हिन्दी</SelectItem>
+                      <SelectItem value="ar">العربية</SelectItem>
+                      <SelectItem value="sw">Kiswahili</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

@@ -4,6 +4,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import i18n from '../../lib/i18n';
 
 interface PreferenceData {
   language: string;
@@ -20,7 +21,7 @@ interface PreferenceData {
 
 export const PreferenceSettings: React.FC = () => {
   const [preferences, setPreferences] = useState<PreferenceData>({
-    language: 'en',
+    language: i18n.language,
     currency: 'USD',
     timezone: 'UTC',
     emailNotifications: true,
@@ -49,6 +50,9 @@ export const PreferenceSettings: React.FC = () => {
 
   const updatePreference = (key: keyof PreferenceData, value: any) => {
     setPreferences(prev => ({ ...prev, [key]: value }));
+    if (key === 'language') {
+      i18n.changeLanguage(value);
+    }
   };
 
   return (
@@ -71,9 +75,15 @@ export const PreferenceSettings: React.FC = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="en">English</SelectItem>
-                  <SelectItem value="es">Spanish</SelectItem>
-                  <SelectItem value="fr">French</SelectItem>
-                  <SelectItem value="de">German</SelectItem>
+                  <SelectItem value="es">Español</SelectItem>
+                  <SelectItem value="fr">Français</SelectItem>
+                  <SelectItem value="de">Deutsch</SelectItem>
+                  <SelectItem value="af">Afrikaans</SelectItem>
+                  <SelectItem value="zh">中文</SelectItem>
+                  <SelectItem value="ja">日本語</SelectItem>
+                  <SelectItem value="hi">हिन्दी</SelectItem>
+                  <SelectItem value="ar">العربية</SelectItem>
+                  <SelectItem value="sw">Kiswahili</SelectItem>
                 </SelectContent>
               </Select>
             </div>

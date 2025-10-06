@@ -6,6 +6,12 @@ import en from '../locales/en/common.json'
 import fr from '../locales/fr/common.json'
 import es from '../locales/es/common.json'
 import de from '../locales/de/common.json'
+import af from '../locales/af/common.json'
+import zh from '../locales/zh/common.json'
+import ja from '../locales/ja/common.json'
+import hi from '../locales/hi/common.json'
+import ar from '../locales/ar/common.json'
+import sw from '../locales/sw/common.json'
 
 const resources = {
   en: {
@@ -19,6 +25,24 @@ const resources = {
   },
   de: {
     translation: de
+  },
+  af: {
+    translation: af
+  },
+  zh: {
+    translation: zh
+  },
+  ja: {
+    translation: ja
+  },
+  hi: {
+    translation: hi
+  },
+  ar: {
+    translation: ar
+  },
+  sw: {
+    translation: sw
   }
 }
 

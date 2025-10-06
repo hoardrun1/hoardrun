@@ -121,7 +121,7 @@ export default function HomePage() {
       animate="visible"
       variants={containerVariants}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-8 lg:space-y-10">
+      <div className="max-w-full mx-auto px-4 sm:px-6 sm:space-y-8">
         
         {/* Hero Balance Card - Enhanced */}
         <motion.div 

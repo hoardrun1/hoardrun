@@ -3,6 +3,7 @@
 import { useSession, signIn, signOut } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { LanguageSwitcher } from '@/components/ui/language-switcher'
 
 export default function AuthDebugPage() {
   const { data: session, status } = useSession() || { data: null, status: 'loading' }
@@ -12,7 +13,12 @@ export default function AuthDebugPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-8">
+    <div className="min-h-screen bg-background p-8 relative">
+      {/* Language Switcher */}
+      <div className="absolute top-4 right-4 z-10">
+        <LanguageSwitcher variant="mobile" />
+      </div>
+
       <div className="max-w-2xl mx-auto space-y-6">
         <Card>
           <CardHeader>

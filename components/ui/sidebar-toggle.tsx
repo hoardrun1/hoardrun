@@ -26,7 +26,7 @@ export function SidebarToggle({ className = '' }: SidebarToggleProps) {
                 : 'left-4 top-4 bg-black border-white hover:bg-black text-white shadow-white/20'
             }`
           : // Mobile styling
-            `w-10 h-10 rounded-xl border-2 backdrop-blur-xl ${
+            `w-8 h-8 rounded-xl border-2 backdrop-blur-xl ${
               isOpen
                 ? 'right-4 top-4 bg-white/95 border-gray-200 hover:bg-white text-black shadow-black/20'
                 : 'left-4 top-4 bg-black/90 border-gray-800 hover:bg-black text-white shadow-black/40'

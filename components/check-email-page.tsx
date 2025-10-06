@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Loader2, Mail, CheckCircle } from 'lucide-react'
 import Link from 'next/link'
+import { LanguageSwitcher } from '@/components/ui/language-switcher'
 
 function CheckEmailContent() {
   const router = useRouter()
@@ -103,6 +104,11 @@ function CheckEmailContent() {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
+      {/* Language Switcher */}
+      <div className="absolute top-4 right-4 z-20">
+        <LanguageSwitcher variant="mobile" />
+      </div>
+
       {/* Background image with overlay */}
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-1000 ease-out"

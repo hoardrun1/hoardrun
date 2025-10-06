@@ -5,6 +5,9 @@ import './globals.css'
 import ClientAuthProvider from '../components/client-auth-provider'
 import { ConditionalProviders } from '@/components/providers/conditional-providers'
 import { ThemeProvider } from '@/contexts/ThemeContext'
+import { I18nProvider } from '@/components/i18n-provider'
+import { FloatingLanguageSwitcher } from '@/components/ui/floating-language-switcher'
+
 
 // const inter = Inter({ subsets: ['latin'] })
 
@@ -79,7 +82,9 @@ export default function RootLayout({
       </head>
       <body className="font-sans antialiased overflow-x-hidden safe-area-inset-top safe-area-inset-bottom bg-background text-foreground transition-colors duration-300" suppressHydrationWarning>
         {/* Using AWS Cognito authentication instead of NextAuth */}
-        <ThemeProvider>
+
+        <I18nProvider>
+          <ThemeProvider>
           <ClientAuthProvider>
             <ConditionalProviders>
               <div className="min-h-screen-mobile bg-background text-foreground transition-colors duration-300">
@@ -88,6 +93,8 @@ export default function RootLayout({
             </ConditionalProviders>
           </ClientAuthProvider>
         </ThemeProvider>
+        </I18nProvider>
+        <FloatingLanguageSwitcher />
       </body>
     </html>
   )

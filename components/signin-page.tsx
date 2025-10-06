@@ -14,6 +14,8 @@ import Image from "next/image"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useAuth } from "@/contexts/AuthContext"
 import { GoogleSignInButton } from "@/components/GoogleSignInButton"
+import { LanguageSwitcher } from "@/components/ui/language-switcher"
+import { useTranslation } from 'react-i18next'
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -23,6 +25,7 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>
 
 export function SignInPage() {
+  const { t } = useTranslation()
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -118,7 +121,12 @@ export function SignInPage() {
         priority
       />
       <div className="absolute inset-0 bg-black/60" />
-      
+
+      {/* Language Switcher */}
+      <div className="absolute top-4 right-4 z-20">
+        <LanguageSwitcher variant="mobile" />
+      </div>
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -127,8 +135,8 @@ export function SignInPage() {
       >
           <div className="auth-signin-card bg-card text-card-foreground rounded-2xl shadow-2xl p-6 sm:p-8">
             <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-foreground mb-2">Welcome Back</h1>
-              <p className="text-muted-foreground">Sign in to your HoardRun account</p>
+              <h1 className="text-3xl font-bold text-foreground mb-2">{t("signin.welcomeBack")}</h1>
+              <p className="text-muted-foreground">{t("signin.subtitle")}</p>
             </div>
 
           {error && (
@@ -157,7 +165,7 @@ export function SignInPage() {
                 <Input
                   type="email"
                   name="email"
-                  placeholder="Enter your email"
+                  placeholder={t("signin.emailPlaceholder")}
                   value={formData.email}
                   onChange={handleInputChange}
                   className="auth-input pl-10 h-12 text-foreground"
@@ -172,7 +180,7 @@ export function SignInPage() {
                 <Input
                   type={showPassword ? "text" : "password"}
                   name="password"
-                  placeholder="Enter your password"
+                  placeholder={t("signin.passwordPlaceholder")}
                   value={formData.password}
                   onChange={handleInputChange}
                   className="auth-input pl-10 pr-10 h-12 text-foreground"
@@ -200,16 +208,16 @@ export function SignInPage() {
                   id="rememberMe"
                   name="rememberMe"
                   checked={formData.rememberMe}
-                  onCheckedChange={(checked) => 
+                  onCheckedChange={(checked) =>
                     setFormData(prev => ({ ...prev, rememberMe: checked as boolean }))
                   }
                 />
                 <label htmlFor="rememberMe" className="text-sm text-muted-foreground">
-                  Remember me
+                  {t("signin.rememberMe")}
                 </label>
               </div>
               <Link href="/forgot-password" className="text-sm text-primary hover:text-primary/80 hover:underline">
-                Forgot password?
+                {t("signin.forgotPassword")}
               </Link>
             </div>
 
@@ -221,11 +229,11 @@ export function SignInPage() {
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Signing In...
+                  {t("signin.signingIn")}
                 </>
               ) : (
                 <>
-                  Sign In
+                  {t("signin.signIn")}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </>
               )}
@@ -233,9 +241,9 @@ export function SignInPage() {
           </form>
 
           <div className="mt-6 text-center text-sm text-muted-foreground">
-            Don't have an account?{" "}
+            {t("signin.noAccount")}{" "}
             <Link href="/signup" className="text-primary hover:text-primary/80 hover:underline font-medium">
-              Sign up here
+              {t("signin.signUpHere")}
             </Link>
           </div>
         </div>

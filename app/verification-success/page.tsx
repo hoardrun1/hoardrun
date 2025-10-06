@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { LanguageSwitcher } from '@/components/ui/language-switcher';
 
 function VerificationContent() {
   const router = useRouter();
@@ -30,7 +31,12 @@ function VerificationContent() {
   }, [router, email]);
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 relative">
+      {/* Language Switcher */}
+      <div className="absolute top-4 right-4 z-10">
+        <LanguageSwitcher variant="mobile" />
+      </div>
+
       <div className="max-w-md w-full bg-card rounded-xl shadow-xl p-8 text-center border border-border">
         <div className="mx-auto w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mb-4">
           <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />

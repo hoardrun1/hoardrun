@@ -23,15 +23,7 @@ const nextConfig = {
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
   },
-  // Conditional output based on deployment target
-  ...(process.env.DOCKER_BUILD && { output: 'standalone' }),
-  // Optimize for Render deployment
-  experimental: {
-    outputFileTracingRoot: process.cwd(),
-    optimizeCss: false,
-    scrollRestoration: true,
-  },
-  // Optimized webpack configuration for navigation performance
+  // Minimal webpack config to avoid factory errors
   webpack: (config, { isServer, dev }) => {
     if (!isServer) {
       // Exclude Node.js modules from client bundle
@@ -49,10 +41,6 @@ const nextConfig = {
         net: false,
         tls: false,
         dns: false,
-        winston: false,
-        'winston-daily-rotate-file': false,
-        'file-stream-rotator': false,
-        nodemailer: false,
       };
     }
 
@@ -61,47 +49,8 @@ const nextConfig = {
       config.output = {
         ...config.output,
         publicPath: '/_next/',
-        chunkLoadTimeout: 30000, // Reduced from 2 minutes to 30 seconds
+        chunkLoadTimeout: 120000, // 2 minutes
       };
-    }
-
-    // Simplified bundle splitting for better performance
-    if (!dev && !isServer) {
-      config.optimization.splitChunks = {
-        chunks: 'all',
-        minSize: 30000, // Increased min size
-        maxSize: 200000, // Reduced max size for faster loading
-        cacheGroups: {
-          // Framework chunk (React, Next.js)
-          framework: {
-            chunks: 'all',
-            name: 'framework',
-            test: /[\\/]node_modules[\\/](react|react-dom|scheduler|prop-types|use-subscription)[\\/]/,
-            priority: 40,
-            enforce: true,
-          },
-          // Heavy libraries that should be separate
-          framerMotion: {
-            test: /[\\/]node_modules[\\/]framer-motion[\\/]/,
-            name: 'framer-motion',
-            chunks: 'all',
-            priority: 30,
-            enforce: true,
-          },
-          // Default vendor chunk for everything else
-          vendor: {
-            test: /[\\/]node_modules[\\/]/,
-            name: 'vendors',
-            chunks: 'all',
-            priority: 10,
-            reuseExistingChunk: true,
-          },
-        },
-      };
-
-      // Tree shaking optimizations
-      config.optimization.usedExports = true;
-      config.optimization.sideEffects = false;
     }
 
     return config;

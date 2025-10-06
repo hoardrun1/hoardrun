@@ -25,9 +25,10 @@ import {
   Shield,
   Globe,
 } from "lucide-react"
+import { LanguageSwitcher } from "@/components/ui/language-switcher"
+import { useTranslation } from 'react-i18next'
 
-// Lazy load heavy animation components
-const LazyMotionDiv = lazy(() => import("framer-motion").then(mod => ({ default: mod.motion.div })))
+// Lazy load heavy animation components (removed unused LazyMotionDiv)
 
 // Lightweight animation alternative for critical elements
 const SimpleCard: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = "" }) => (
@@ -68,6 +69,7 @@ const ImageSkeleton = () => (
 
 export function LandingPageOptimized() {
   const router = useRouter()
+  const { t } = useTranslation()
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [imagesLoaded, setImagesLoaded] = useState(false)
@@ -132,31 +134,33 @@ export function LandingPageOptimized() {
                 onClick={() => scrollToSection(aboutRef)}
                 className="text-white hover:text-white transition-colors duration-300 relative group text-sm"
               >
-                About
+                {t("landing.nav.about")}
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-white group-hover:w-full transition-all duration-300"></span>
               </button>
               <button
                 onClick={() => scrollToSection(servicesRef)}
                 className="text-white hover:text-white transition-colors duration-300 relative group text-sm"
               >
-                Services
+                {t("landing.nav.services")}
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-white group-hover:w-full transition-all duration-300"></span>
               </button>
             </div>
             
             <div className="flex items-center space-x-3">
+              <LanguageSwitcher variant="mobile" className="mr-2" />
+              <span className="text-white text-xs hidden sm:block">{t('settings.language')}</span>
               <Button
                 variant="ghost"
                 onClick={() => router.push('/signin')}
                 className="text-white hover:text-white hover:bg-white/10 transition-all duration-300 text-sm px-3 py-1.5"
               >
-                Log In
+                {t("landing.nav.logIn")}
               </Button>
               <Button
                 onClick={() => router.push('/signup')}
                 className="bg-black text-white hover:bg-gray-800 border border-white/20 transition-all duration-300 transform hover:scale-105 text-sm px-4 py-1.5"
               >
-                Sign up
+                {t("landing.nav.signUp")}
               </Button>
               <Button
                 className="md:hidden"
@@ -177,13 +181,13 @@ export function LandingPageOptimized() {
                   onClick={() => scrollToSection(aboutRef)}
                   className="text-white hover:text-white transition-colors duration-300 text-left py-2"
                 >
-                  About
+                  {t("landing.nav.about")}
                 </button>
                 <button
                   onClick={() => scrollToSection(servicesRef)}
                   className="text-white hover:text-white transition-colors duration-300 text-left py-2"
                 >
-                  Services
+                  {t("landing.nav.services")}
                 </button>
               </div>
             </div>
@@ -217,30 +221,30 @@ export function LandingPageOptimized() {
                 <div className="mb-8 animate-in fade-in slide-in-from-bottom duration-1000">
                   <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold mb-3 sm:mb-4 md:mb-6 leading-tight">
                     <span className="block text-white mb-2 sm:mb-3">
-                      Banking
+                      {t("landing.hero.title1")}
                     </span>
                     <span className="block text-white">
-                      Reimagined
+                      {t("landing.hero.title2")}
                     </span>
                   </h1>
-                  
+
                   <p className="text-xs sm:text-sm md:text-base lg:text-lg text-white max-w-2xl mx-auto leading-relaxed mb-4 sm:mb-6 md:mb-8 px-2 sm:px-4">
-                    Experience seamless financial management with cutting-edge security and user-centric design for the digital age.
+                    {t("landing.hero.subtitle")}
                   </p>
-                  
+
                   <div className="flex flex-row gap-2 sm:gap-3 md:gap-4 justify-center items-center relative z-20">
                     <Button
                       onClick={() => router.push('/signup')}
                       className="bg-black text-white hover:bg-gray-800 border border-white/20 text-xs sm:text-sm md:text-base px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-full transition-all duration-300 transform hover:scale-110 shadow-xl cursor-pointer relative z-10"
                     >
-                      Get Started →
+                      {t("landing.hero.getStarted")} →
                     </Button>
                     <Button
                       variant="outline"
                       onClick={() => scrollToSection(aboutRef)}
                       className="border-white/50 text-white hover:bg-white hover:text-black text-xs sm:text-sm md:text-base px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-full transition-all duration-300 bg-black/20 cursor-pointer relative z-10"
                     >
-                      Learn More
+                      {t("landing.hero.learnMore")}
                     </Button>
                   </div>
                 </div>
@@ -259,7 +263,7 @@ export function LandingPageOptimized() {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
                     <div className="absolute bottom-4 left-4 sm:bottom-6 sm:left-6">
-                      <p className="text-white text-sm sm:text-base font-medium">Experience the future of banking</p>
+                      <p className="text-white text-sm sm:text-base font-medium">{t("landing.hero.experienceFuture")}</p>
                     </div>
                   </div>
                 </div>
@@ -270,9 +274,9 @@ export function LandingPageOptimized() {
                     <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3 md:mb-4">
                       <Zap className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-7 lg:h-7 text-white" />
                     </div>
-                    <h3 className="text-xs sm:text-sm md:text-base lg:text-lg font-bold text-white mb-1 sm:mb-2 md:mb-3">Lightning Fast</h3>
+                    <h3 className="text-xs sm:text-sm md:text-base lg:text-lg font-bold text-white mb-1 sm:mb-2 md:mb-3">{t("landing.features.lightningFast")}</h3>
                     <p className="text-white leading-tight sm:leading-relaxed text-xs sm:text-sm">
-                      Process transactions in milliseconds with our advanced infrastructure.
+                      {t("landing.features.lightningFastDesc")}
                     </p>
                   </SimpleCard>
 
@@ -280,9 +284,9 @@ export function LandingPageOptimized() {
                     <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3 md:mb-4">
                       <Shield className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-7 lg:h-7 text-white" />
                     </div>
-                    <h3 className="text-xs sm:text-sm md:text-base lg:text-lg font-bold text-white mb-1 sm:mb-2 md:mb-3">Bank-Level Security</h3>
+                    <h3 className="text-xs sm:text-sm md:text-base lg:text-lg font-bold text-white mb-1 sm:mb-2 md:mb-3">{t("landing.features.bankLevelSecurity")}</h3>
                     <p className="text-white leading-tight sm:leading-relaxed text-xs sm:text-sm">
-                      Military-grade encryption and multi-layered security protocols.
+                      {t("landing.features.bankLevelSecurityDesc")}
                     </p>
                   </SimpleCard>
 
@@ -290,9 +294,9 @@ export function LandingPageOptimized() {
                     <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3 md:mb-4">
                       <Globe className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-7 lg:h-7 text-white" />
                     </div>
-                    <h3 className="text-xs sm:text-sm md:text-base lg:text-lg font-bold text-white mb-1 sm:mb-2 md:mb-3">Global Access</h3>
+                    <h3 className="text-xs sm:text-sm md:text-base lg:text-lg font-bold text-white mb-1 sm:mb-2 md:mb-3">{t("landing.features.globalAccess")}</h3>
                     <p className="text-white leading-tight sm:leading-relaxed text-xs sm:text-sm">
-                      Access your accounts from anywhere in the world with full compliance.
+                      {t("landing.features.globalAccessDesc")}
                     </p>
                   </SimpleCard>
                 </div>
@@ -301,10 +305,10 @@ export function LandingPageOptimized() {
               {/* Stats Section */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mt-12 sm:mt-16">
                 {[
-                  { number: "1M+", label: "Active Users" },
-                  { number: "$50B+", label: "Assets Under Management" },
-                  { number: "99.9%", label: "Uptime Guarantee" },
-                  { number: "150+", label: "Countries Supported" },
+                  { number: "1M+", label: t("landing.stats.activeUsers") },
+                  { number: "$50B+", label: t("landing.stats.assetsUnderManagement") },
+                  { number: "99.9%", label: t("landing.stats.uptimeGuarantee") },
+                  { number: "150+", label: t("landing.stats.countriesSupported") },
                 ].map((stat, index) => (
                   <div key={index} className="text-center">
                     <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-white mb-1 sm:mb-2">
@@ -325,7 +329,7 @@ export function LandingPageOptimized() {
           </div>
         </section>
 
-        {/* Services Section */}
+        {/* {t("landing.nav.services")} Section */}
         <section
           ref={servicesRef}
           className="relative py-16 sm:py-20 bg-gradient-to-br from-gray-950 via-black to-gray-950 overflow-hidden"
@@ -336,10 +340,10 @@ export function LandingPageOptimized() {
           </div>
           <div className="container mx-auto px-4 sm:px-6 md:px-8 relative z-10">
             <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-center text-white mb-8 sm:mb-10 md:mb-12">
-              Our Services
+              {t("landing.services.title")}
             </h2>
 
-            {/* Services Hero Image */}
+            {/* {t("landing.nav.services")} Hero Image */}
             <div className="mb-12 sm:mb-16">
               <div className="relative rounded-xl overflow-hidden shadow-xl max-w-3xl mx-auto">
                 <Image
@@ -357,24 +361,24 @@ export function LandingPageOptimized() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               {[
                 {
-                  title: "Smart Savings",
+                  title: t("landing.services.smartSavings"),
                   icon: PiggyBank,
-                  description: "Flexible savings options with competitive interest rates.",
+                  description: t("landing.services.smartSavingsDesc"),
                 },
                 {
-                  title: "Intelligent Investing",
+                  title: t("landing.services.intelligentInvesting"),
                   icon: TrendingUp,
-                  description: "AI-powered investment strategies to grow your wealth.",
+                  description: t("landing.services.intelligentInvestingDesc"),
                 },
                 {
-                  title: "Secure Deposits",
+                  title: t("landing.services.secureDeposits"),
                   icon: Wallet,
-                  description: "Safe fund transfers from multiple payment methods.",
+                  description: t("landing.services.secureDepositsDesc"),
                 },
                 {
-                  title: "Instant Transfers",
+                  title: t("landing.services.instantTransfers"),
                   icon: ArrowRightLeft,
-                  description: "Lightning-fast money transfers globally.",
+                  description: t("landing.services.instantTransfersDesc"),
                 },
               ].map((feature, index) => (
                 <Card key={index} className="bg-white/5 border border-white/10 shadow-xl hover:shadow-white/10 transition-all duration-300 overflow-hidden group backdrop-blur-sm h-full">
@@ -394,14 +398,14 @@ export function LandingPageOptimized() {
           </div>
         </section>
 
-        {/* About Section */}
+        {/* {t("landing.nav.about")} Section */}
         <section
           ref={aboutRef}
           className="relative py-16 sm:py-20 bg-gradient-to-br from-gray-950 via-black to-gray-950 overflow-hidden"
         >
           <div className="container mx-auto px-4 sm:px-6 md:px-8 relative z-10">
             <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-center text-white mb-8 sm:mb-10 md:mb-12">
-              About Us
+              {t("landing.about.title")}
             </h2>
 
             <div className="mb-12 sm:mb-16">
@@ -421,22 +425,20 @@ export function LandingPageOptimized() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center">
               <div>
                 <p className="text-sm sm:text-base text-white mb-4 sm:mb-6 leading-relaxed">
-                  At Hoardrun, we offer comprehensive universal banking services tailored for corporations, investors,
-                  and individuals. Our mission is to empower you with low-cost investment opportunities.
+                  {t("landing.about.description1")}
                 </p>
                 <p className="text-sm sm:text-base text-white leading-relaxed">
-                  We specialize in identifying promising startups and providing innovative financial solutions
-                  with AI-powered insights to help you make informed decisions.
+                  {t("landing.about.description2")}
                 </p>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
                 {[
-                  { icon: Building2, title: "Corporate Services" },
-                  { icon: Users, title: "Individual Banking" },
-                  { icon: Briefcase, title: "Investment Opportunities" },
-                  { icon: CreditCard, title: "Smart Debit Cards" },
-                  { icon: Brain, title: "AI-Powered Insights" },
-                  { icon: ShieldCheck, title: "Advanced Security" },
+                  { icon: Building2, title: t("landing.about.corporateServices") },
+                  { icon: Users, title: t("landing.about.individualBanking") },
+                  { icon: Briefcase, title: t("landing.about.investmentOpportunities") },
+                  { icon: CreditCard, title: t("landing.about.smartDebitCards") },
+                  { icon: Brain, title: t("landing.about.aiPoweredInsights") },
+                  { icon: ShieldCheck, title: t("landing.about.advancedSecurity") },
                 ].map((item, index) => (
                   <Card key={index} className="bg-white/5 border border-white/10 shadow-lg hover:shadow-white/10 transition-all duration-300 group">
                     <CardContent className="p-3 sm:p-4 flex flex-col items-center text-center">
@@ -457,67 +459,67 @@ export function LandingPageOptimized() {
         <div className="container mx-auto px-4 sm:px-6 md:px-8">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-8">
             <div>
-              <h3 className="text-sm sm:text-base font-semibold mb-4 sm:mb-6">Company</h3>
+              <h3 className="text-sm sm:text-base font-semibold mb-4 sm:mb-6">{t("landing.footer.company")}</h3>
               <ul className="space-y-2 sm:space-y-3">
                 <li>
                   <button
                     onClick={() => scrollToSection(aboutRef)}
                     className="text-white hover:text-white transition-colors duration-300 text-xs sm:text-sm"
                   >
-                    About Us
+                    {t("landing.footer.aboutUs")}
                   </button>
                 </li>
                 <li>
                   <a href="#" className="text-white hover:text-white transition-colors duration-300 text-xs sm:text-sm">
-                    Careers
+                    {t("landing.footer.careers")}
                   </a>
                 </li>
               </ul>
             </div>
             <div>
-              <h3 className="text-sm sm:text-base font-semibold mb-4 sm:mb-6">Product</h3>
+              <h3 className="text-sm sm:text-base font-semibold mb-4 sm:mb-6">{t("landing.footer.product")}</h3>
               <ul className="space-y-2 sm:space-y-3">
                 <li>
                   <button
                     onClick={() => scrollToSection(servicesRef)}
                     className="text-white hover:text-white transition-colors duration-300 text-xs sm:text-sm"
                   >
-                    Features
+                    {t("landing.footer.features")}
                   </button>
                 </li>
                 <li>
                   <a href="#" className="text-white hover:text-white transition-colors duration-300 text-xs sm:text-sm">
-                    Pricing
+                    {t("landing.footer.pricing")}
                   </a>
                 </li>
               </ul>
             </div>
             <div>
-              <h3 className="text-sm sm:text-base font-semibold mb-4 sm:mb-6">Resources</h3>
+              <h3 className="text-sm sm:text-base font-semibold mb-4 sm:mb-6">{t("landing.footer.resources")}</h3>
               <ul className="space-y-2 sm:space-y-3">
                 <li>
                   <a href="#" className="text-white hover:text-white transition-colors duration-300 text-xs sm:text-sm">
-                    Blog
+                    {t("landing.footer.blog")}
                   </a>
                 </li>
                 <li>
                   <a href="#" className="text-white hover:text-white transition-colors duration-300 text-xs sm:text-sm">
-                    Help Center
+                    {t("landing.footer.helpCenter")}
                   </a>
                 </li>
               </ul>
             </div>
             <div>
-              <h3 className="text-sm sm:text-base font-semibold mb-4 sm:mb-6">Legal</h3>
+              <h3 className="text-sm sm:text-base font-semibold mb-4 sm:mb-6">{t("landing.footer.legal")}</h3>
               <ul className="space-y-2 sm:space-y-3">
                 <li>
                   <a href="#" className="text-white hover:text-white transition-colors duration-300 text-xs sm:text-sm">
-                    Privacy Policy
+                    {t("landing.footer.privacyPolicy")}
                   </a>
                 </li>
                 <li>
                   <a href="#" className="text-white hover:text-white transition-colors duration-300 text-xs sm:text-sm">
-                    Terms of Service
+                    {t("landing.footer.termsOfService")}
                   </a>
                 </li>
               </ul>
@@ -532,7 +534,7 @@ export function LandingPageOptimized() {
               <span className="text-gray-400">run</span>
             </button>
             <p className="text-white text-center sm:text-right text-xs sm:text-sm">
-              &copy; 2024 Hoardrun. All rights reserved.
+              {t("landing.footer.copyright")}
             </p>
           </div>
         </div>

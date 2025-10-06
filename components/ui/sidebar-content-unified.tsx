@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
+import { useTranslation } from 'react-i18next'
 import {
   Home,
   PiggyBank,
@@ -32,6 +33,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useSidebar } from './sidebar-layout'
 import { useNotificationCount } from '@/hooks/useNotificationCount'
 import { useAppNavigation } from '@/hooks/useAppNavigation'
+import { LanguageSwitcher } from './language-switcher'
 
 interface SidebarContentProps {
   onAddMoney?: () => void
@@ -48,33 +50,10 @@ interface MenuItem {
   premium?: boolean
 }
 
-const menuSections = {
-  main: [
-    { id: 'home', label: 'Home', icon: Layout, href: '/home', description: 'Main dashboard', color: 'from-white to-gray-100' },
-    { id: 'overview', label: 'Overview', icon: BarChart3, href: '/overview', description: 'Financial overview', color: 'from-white to-gray-100' },
-    { id: 'budget', label: 'Budget', icon: Calculator, href: '/budget', description: 'Track spending', color: 'from-white to-gray-100' },
-    { id: 'savings', label: 'Savings', icon: PiggyBank, href: '/savings', description: 'Goals & plans', color: 'from-white to-gray-100' },
-    { id: 'investment', label: 'Investment', icon: TrendingUp, href: '/investment', description: 'Grow wealth', color: 'from-white to-gray-100', premium: true },
-  ],
-  financial: [
-    { id: 'cards', label: 'Cards', icon: CreditCard, href: '/cards', description: 'Manage cards', color: 'from-white to-gray-100' },
-    { id: 'send', label: 'Send Money', icon: ArrowUpRight, href: '/send', description: 'Transfer funds', color: 'from-white to-gray-100' },
-    { id: 'transactions', label: 'Transactions', icon: Receipt, href: '/transactions', description: 'History', color: 'from-white to-gray-100' },
-    { id: 'analytics', label: 'Analytics', icon: BarChart3, href: '/analytics', description: 'Insights', color: 'from-white to-gray-100', premium: true },
-  ],
-  account: [
-    { id: 'profile', label: 'Profile', icon: User, href: '/profile', description: 'Personal info', color: 'from-white to-gray-100' },
-    { id: 'settings', label: 'Settings', icon: Settings, href: '/settings', description: 'Preferences', color: 'from-white to-gray-100' },
-    { id: 'security', label: 'Security', icon: Shield, href: '/security', description: 'Account safety', color: 'from-white to-gray-100' },
-    { id: 'notifications', label: 'Notifications', icon: Bell, href: '/notifications', badge: '3', color: 'from-white to-gray-100' },
-  ],
-  support: [
-    { id: 'help', label: 'Help Center', icon: HelpCircle, href: '/help', description: 'Get support', color: 'from-white to-gray-100' },
-    { id: 'contact', label: 'Contact', icon: Phone, href: '/contact', description: 'Reach us', color: 'from-white to-gray-100' },
-  ]
-}
+
 
 export function SidebarContent({ onAddMoney }: SidebarContentProps) {
+  const { t } = useTranslation()
   const router = useRouter()
   const pathname = usePathname()
   const { user, logout } = useAuth()
@@ -85,6 +64,32 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const [canScrollUp, setCanScrollUp] = useState(false)
   const [canScrollDown, setCanScrollDown] = useState(false)
+
+  const menuSections = {
+    main: [
+      { id: 'home', label: t('dashboard.sidebar.home'), icon: Layout, href: '/home', description: t('dashboard.sidebar.home'), color: 'from-white to-gray-100' },
+      { id: 'overview', label: t('dashboard.sidebar.overview'), icon: BarChart3, href: '/overview', description: t('dashboard.sidebar.overview'), color: 'from-white to-gray-100' },
+      { id: 'budget', label: t('dashboard.sidebar.budget'), icon: Calculator, href: '/budget', description: t('dashboard.sidebar.budget'), color: 'from-white to-gray-100' },
+      { id: 'savings', label: t('dashboard.sidebar.savings'), icon: PiggyBank, href: '/savings', description: t('dashboard.sidebar.savings'), color: 'from-white to-gray-100' },
+      { id: 'investment', label: t('dashboard.sidebar.investment'), icon: TrendingUp, href: '/investment', description: t('dashboard.sidebar.investment'), color: 'from-white to-gray-100', premium: true },
+    ],
+    financial: [
+      { id: 'cards', label: t('dashboard.sidebar.cards'), icon: CreditCard, href: '/cards', description: t('dashboard.sidebar.cards'), color: 'from-white to-gray-100' },
+      { id: 'send', label: t('dashboard.sidebar.send'), icon: ArrowUpRight, href: '/send', description: t('dashboard.sidebar.send'), color: 'from-white to-gray-100' },
+      { id: 'transactions', label: t('dashboard.sidebar.transactions'), icon: Receipt, href: '/transactions', description: t('dashboard.sidebar.transactions'), color: 'from-white to-gray-100' },
+      { id: 'analytics', label: t('dashboard.sidebar.analytics'), icon: BarChart3, href: '/analytics', description: t('dashboard.sidebar.analytics'), color: 'from-white to-gray-100', premium: true },
+    ],
+    account: [
+      { id: 'profile', label: t('dashboard.sidebar.profile'), icon: User, href: '/profile', description: t('dashboard.sidebar.profile'), color: 'from-white to-gray-100' },
+      { id: 'settings', label: t('dashboard.sidebar.settings'), icon: Settings, href: '/settings', description: t('dashboard.sidebar.settings'), color: 'from-white to-gray-100' },
+      { id: 'security', label: t('dashboard.sidebar.security'), icon: Shield, href: '/security', description: t('dashboard.sidebar.security'), color: 'from-white to-gray-100' },
+      { id: 'notifications', label: t('dashboard.sidebar.notifications'), icon: Bell, href: '/notifications', badge: '3', color: 'from-white to-gray-100' },
+    ],
+    support: [
+      { id: 'help', label: t('dashboard.sidebar.help'), icon: HelpCircle, href: '/help', description: t('dashboard.sidebar.help'), color: 'from-white to-gray-100' },
+      { id: 'contact', label: t('dashboard.sidebar.contact'), icon: Phone, href: '/contact', description: t('dashboard.sidebar.contact'), color: 'from-white to-gray-100' },
+    ]
+  }
 
   // Check scroll position - optimized for performance
   const checkScrollPosition = () => {
@@ -141,13 +146,13 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
     }
   }
 
-  const renderMenuSection = (title: string, items: MenuItem[]) => {
+  const renderMenuSection = (titleKey: string, items: MenuItem[]) => {
     return (
       <div className="mb-4 lg:mb-5">
         <div className="flex items-center gap-2 mb-3 lg:mb-3 px-1 lg:px-2">
           <div className="w-1 h-4 rounded-full" style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0.6), rgba(255,255,255,0.2))' }} />
           <h3 className="text-[10px] lg:text-xs font-bold uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.6)' }}>
-            {title}
+            {t(`dashboard.sidebar.${titleKey}`)}
           </h3>
           <div className="flex-1 h-px" style={{ background: 'linear-gradient(to right, rgba(255,255,255,0.2), transparent)' }} />
         </div>
@@ -321,7 +326,7 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
                 HoardRun
               </h1>
               <div className="flex items-center gap-2">
-                <p className="text-[10px] lg:text-xs font-medium" style={{ color: 'rgba(255,255,255,0.6)' }}>Premium Banking</p>
+                <p className="text-[10px] lg:text-xs font-medium" style={{ color: 'rgba(255,255,255,0.6)' }}>{t('dashboard.sidebar.premiumBanking')}</p>
               </div>
             </div>
           </div>
@@ -345,6 +350,11 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
               </p>
             </div>
           </div>
+
+          {/* Language Switcher */}
+          <div className="mt-3">
+            <LanguageSwitcher variant="desktop" />
+          </div>
         </div>
 
         {/* Enhanced Quick Action - hardcoded white button */}
@@ -355,16 +365,16 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
             style={{ backgroundColor: '#ffffff', color: '#000000' }}
           >
             <Plus className="h-4 w-4 lg:h-4 lg:w-4 mr-2 relative z-10" />
-            <span className="relative z-10">Add Money</span>
+            <span className="relative z-10">{t('dashboard.sidebar.addMoney')}</span>
           </Button>
         </div>
 
         {/* Enhanced Navigation Menu */}
         <div className="px-4 py-3 lg:px-5 lg:py-4">
-          {renderMenuSection('Main', menuSections.main)}
-          {renderMenuSection('Financial', menuSections.financial)}
-          {renderMenuSection('Account', menuSections.account)}
-          {renderMenuSection('Support', menuSections.support)}
+          {renderMenuSection('main', menuSections.main)}
+          {renderMenuSection('financial', menuSections.financial)}
+          {renderMenuSection('account', menuSections.account)}
+          {renderMenuSection('support', menuSections.support)}
         </div>
 
         {/* Enhanced Logout - hardcoded white text */}
@@ -373,7 +383,7 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
             onClick={handleLogout}
             variant="ghost"
             className="w-full justify-start rounded-xl lg:rounded-xl p-3 lg:p-3 text-xs lg:text-xs transition-all duration-200 group border border-transparent hover:border-white/20"
-            style={{ 
+            style={{
               color: 'rgba(255,255,255,0.6)',
               backgroundColor: 'transparent'
             }}
@@ -387,7 +397,7 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
             }}
           >
             <LogOut className="h-4 w-4 lg:h-4 lg:w-4 mr-3 transition-colors duration-200" style={{ color: 'inherit' }} />
-            Sign Out
+            {t('dashboard.sidebar.signOut')}
           </Button>
         </div>
       </div>

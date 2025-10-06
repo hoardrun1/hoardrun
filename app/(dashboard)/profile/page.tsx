@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useTheme } from '@/contexts/ThemeContext'
 
 import { DepositModal } from '@/components/deposit-modal'
@@ -32,6 +33,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext'
 
 export default function ProfilePage() {
+  const { t } = useTranslation()
   const { theme } = useTheme()
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
@@ -206,10 +208,10 @@ export default function ProfilePage() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
               <div>
                 <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-                  Profile
+                  {t('dashboard.profile.title')}
                 </h1>
                 <p className="text-muted-foreground mt-1 text-sm sm:text-base">
-                  Manage your personal information and preferences
+                  {t('dashboard.profile.description')}
                 </p>
               </div>
               <Button
@@ -220,17 +222,17 @@ export default function ProfilePage() {
                 {saving ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Saving...
+                    {t('dashboard.profile.saving')}
                   </>
                 ) : isEditing ? (
                   <>
                     <Save className="h-4 w-4 mr-2" />
-                    Save Changes
+                    {t('dashboard.profile.saveChanges')}
                   </>
                 ) : (
                   <>
                     <Edit className="h-4 w-4 mr-2" />
-                    Edit Profile
+                    {t('dashboard.profile.editProfile')}
                   </>
                 )}
               </Button>
@@ -238,9 +240,9 @@ export default function ProfilePage() {
 
             <Tabs defaultValue="personal" className="space-y-4 sm:space-y-6">
               <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="personal" className="text-xs sm:text-sm">Personal Info</TabsTrigger>
-                <TabsTrigger value="security" className="text-xs sm:text-sm">Security</TabsTrigger>
-                <TabsTrigger value="preferences" className="text-xs sm:text-sm">Preferences</TabsTrigger>
+                <TabsTrigger value="personal" className="text-xs sm:text-sm">{t('dashboard.profile.tabs.personalInfo')}</TabsTrigger>
+                <TabsTrigger value="security" className="text-xs sm:text-sm">{t('dashboard.profile.tabs.security')}</TabsTrigger>
+                <TabsTrigger value="preferences" className="text-xs sm:text-sm">{t('dashboard.profile.tabs.preferences')}</TabsTrigger>
               </TabsList>
 
               <TabsContent value="personal" className="space-y-4 sm:space-y-6">
@@ -271,13 +273,13 @@ export default function ProfilePage() {
                         <p className="text-muted-foreground text-sm sm:text-base">{profileData.email}</p>
                         <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-2 sm:space-y-0 sm:space-x-4 mt-2">
                           <Badge variant="secondary" className="bg-muted text-foreground text-xs">
-                            {profileData.emailVerified ? 'Verified Account' : 'Unverified Account'}
+                            {profileData.emailVerified ? t('dashboard.profile.verifiedAccount') : t('dashboard.profile.unverifiedAccount')}
                           </Badge>
                           <Badge variant="secondary" className="bg-muted text-foreground text-xs">
-                            {profileData.role === 'premium' ? 'Premium Member' : 'Standard Member'}
+                            {profileData.role === 'premium' ? t('dashboard.profile.premiumMember') : t('dashboard.profile.standardMember')}
                           </Badge>
                           <Badge variant="secondary" className="bg-muted text-foreground text-xs">
-                            Status: {profileData.status}
+                            {t('dashboard.profile.status')}: {profileData.status}
                           </Badge>
                         </div>
                       </div>
@@ -289,12 +291,12 @@ export default function ProfilePage() {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <Card>
                     <CardHeader>
-                      <CardTitle>Basic Information</CardTitle>
+                      <CardTitle>{t('dashboard.profile.basicInformation')}</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label htmlFor="firstName">First Name</Label>
+                          <Label htmlFor="firstName">{t('dashboard.profile.fields.firstName')}</Label>
                           <Input
                             id="firstName"
                             value={profileData.firstName}
@@ -303,7 +305,7 @@ export default function ProfilePage() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="lastName">Last Name</Label>
+                          <Label htmlFor="lastName">{t('dashboard.profile.fields.lastName')}</Label>
                           <Input
                             id="lastName"
                             value={profileData.lastName}
@@ -313,7 +315,7 @@ export default function ProfilePage() {
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
+                        <Label htmlFor="email">{t('dashboard.profile.fields.email')}</Label>
                         <Input
                           id="email"
                           type="email"
@@ -323,7 +325,7 @@ export default function ProfilePage() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="phone">Phone Number</Label>
+                        <Label htmlFor="phone">{t('dashboard.profile.fields.phone')}</Label>
                         <Input
                           id="phone"
                           value={profileData.phone}
@@ -332,7 +334,7 @@ export default function ProfilePage() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                        <Label htmlFor="dateOfBirth">{t('dashboard.profile.fields.dateOfBirth')}</Label>
                         <Input
                           id="dateOfBirth"
                           type="date"
@@ -346,11 +348,11 @@ export default function ProfilePage() {
 
                   <Card>
                     <CardHeader>
-                      <CardTitle>Additional Information</CardTitle>
+                      <CardTitle>{t('dashboard.profile.additionalInformation')}</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="space-y-2">
-                        <Label htmlFor="country">Country</Label>
+                        <Label htmlFor="country">{t('dashboard.profile.fields.country')}</Label>
                         <Input
                           id="country"
                           value={profileData.country}
@@ -359,7 +361,7 @@ export default function ProfilePage() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="profilePictureUrl">Profile Picture URL</Label>
+                        <Label htmlFor="profilePictureUrl">{t('dashboard.profile.fields.profilePictureUrl')}</Label>
                         <Input
                           id="profilePictureUrl"
                           value={profileData.profilePictureUrl}
@@ -369,15 +371,15 @@ export default function ProfilePage() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="accountInfo">Account Information</Label>
+                        <Label htmlFor="accountInfo">{t('dashboard.profile.accountInformation')}</Label>
                         <div className="p-3 bg-muted rounded-lg space-y-2">
-                          <p className="text-sm"><strong>Created:</strong> {profileData.createdAt ? new Date(profileData.createdAt).toLocaleDateString() : 'N/A'}</p>
-                          <p className="text-sm"><strong>Last Updated:</strong> {profileData.updatedAt ? new Date(profileData.updatedAt).toLocaleDateString() : 'N/A'}</p>
-                          <p className="text-sm"><strong>Last Login:</strong> {profileData.lastLoginAt ? new Date(profileData.lastLoginAt).toLocaleDateString() : 'N/A'}</p>
+                          <p className="text-sm"><strong>{t('dashboard.profile.created')}:</strong> {profileData.createdAt ? new Date(profileData.createdAt).toLocaleDateString() : 'N/A'}</p>
+                          <p className="text-sm"><strong>{t('dashboard.profile.lastUpdated')}:</strong> {profileData.updatedAt ? new Date(profileData.updatedAt).toLocaleDateString() : 'N/A'}</p>
+                          <p className="text-sm"><strong>{t('dashboard.profile.lastLogin')}:</strong> {profileData.lastLoginAt ? new Date(profileData.lastLoginAt).toLocaleDateString() : 'N/A'}</p>
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="bio">Bio</Label>
+                        <Label htmlFor="bio">{t('dashboard.profile.fields.bio')}</Label>
                         <Textarea
                           id="bio"
                           value={profileData.bio}
@@ -394,36 +396,36 @@ export default function ProfilePage() {
               <TabsContent value="security" className="space-y-6">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Security Settings</CardTitle>
+                    <CardTitle>{t('dashboard.profile.securitySettings')}</CardTitle>
                     <p className="text-sm text-muted-foreground">
-                      Manage your account security and authentication methods
+                      {t('dashboard.profile.securityDescription')}
                     </p>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    <div className="flex items-center justify-between p-4 border border-border rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        <Shield className="h-5 w-5 text-foreground" />
-                        <div>
-                          <p className="font-medium text-foreground">Two-Factor Authentication</p>
-                          <p className="text-sm text-muted-foreground">Add an extra layer of security</p>
+                      <div className="flex items-center justify-between p-4 border border-border rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <Shield className="h-5 w-5 text-foreground" />
+                          <div>
+                            <p className="font-medium text-foreground">{t('dashboard.profile.twoFactorAuth')}</p>
+                            <p className="text-sm text-muted-foreground">{t('dashboard.profile.twoFactorDescription')}</p>
+                          </div>
                         </div>
+                        <Button variant="outline">
+                          {t('dashboard.profile.enable')}
+                        </Button>
                       </div>
-                      <Button variant="outline">
-                        Enable
-                      </Button>
-                    </div>
-                    <div className="flex items-center justify-between p-4 border border-border rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        <CreditCard className="h-5 w-5 text-foreground" />
-                        <div>
-                          <p className="font-medium text-foreground">Password</p>
-                          <p className="text-sm text-muted-foreground">Last changed 30 days ago</p>
+                      <div className="flex items-center justify-between p-4 border border-border rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <CreditCard className="h-5 w-5 text-foreground" />
+                          <div>
+                            <p className="font-medium text-foreground">{t('dashboard.profile.password')}</p>
+                            <p className="text-sm text-muted-foreground">{t('dashboard.profile.passwordLastChanged')}</p>
+                          </div>
                         </div>
+                        <Button variant="outline">
+                          {t('dashboard.profile.change')}
+                        </Button>
                       </div>
-                      <Button variant="outline">
-                        Change
-                      </Button>
-                    </div>
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -431,9 +433,9 @@ export default function ProfilePage() {
               <TabsContent value="preferences" className="space-y-6">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Notification Preferences</CardTitle>
+                    <CardTitle>{t('dashboard.profile.notificationPreferences')}</CardTitle>
                     <p className="text-sm text-muted-foreground">
-                      Choose how you want to be notified about account activity
+                      {t('dashboard.profile.notificationDescription')}
                     </p>
                   </CardHeader>
                   <CardContent className="space-y-6">
@@ -441,12 +443,12 @@ export default function ProfilePage() {
                       <div className="flex items-center space-x-3">
                         <Bell className="h-5 w-5 text-foreground" />
                         <div>
-                          <p className="font-medium text-foreground">Email Notifications</p>
-                          <p className="text-sm text-muted-foreground">Receive updates via email</p>
+                          <p className="font-medium text-foreground">{t('dashboard.profile.emailNotifications')}</p>
+                          <p className="text-sm text-muted-foreground">{t('dashboard.profile.emailNotificationsDescription')}</p>
                         </div>
                       </div>
                       <Button variant="outline">
-                        Configure
+                        {t('dashboard.profile.configure')}
                       </Button>
                     </div>
                   </CardContent>

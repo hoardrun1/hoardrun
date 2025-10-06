@@ -57,7 +57,7 @@ const ContentWrapper = memo(({ children }: { children: React.ReactNode }) => (
         {children}
       </div>
     </div>
-
+    
     {/* Desktop Layout */}
     <div className="hidden lg:block min-h-screen bg-background">
       <div className="dashboard-container">
@@ -111,7 +111,7 @@ export default function DashboardLayout({
     <div className="min-h-screen bg-background overflow-x-hidden">
       {/* Navigation loader for page transitions */}
       <NavigationLoader />
-
+      
       <FinanceProvider>
         <NotificationProvider>
           {shouldBypassSidebar ? (
@@ -141,6 +141,18 @@ export default function DashboardLayout({
           )}
         </NotificationProvider>
       </FinanceProvider>
+      <Toaster />
+    </div>
+  );
+      <Toaster />
+      <FloatingLanguageSwitcher />
+    </div>
+  );
+}
+      <Toaster />
+      <FloatingLanguageSwitcher />
+    </div>
+  );
       <Toaster />
       <FloatingLanguageSwitcher />
     </div>

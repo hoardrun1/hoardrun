@@ -1,6 +1,13 @@
+import { LanguageSwitcher } from "@/components/ui/language-switcher"
+
 export default function PrivacyPolicy() {
   return (
-    <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8 relative">
+      {/* Language Switcher */}
+      <div className="absolute top-4 right-4 z-10">
+        <LanguageSwitcher variant="mobile" />
+      </div>
+
       <div className="max-w-4xl mx-auto">
         <div className="bg-card shadow rounded-lg p-8 border border-border">
           <h1 className="text-3xl font-bold text-foreground mb-8">Privacy Policy</h1>

@@ -6,6 +6,7 @@ import { useState } from 'react'
 import Image from 'next/image'
 import { apiClient } from '@/lib/api-client'
 import { useToast } from '@/components/ui/use-toast'
+import { useTranslation } from 'react-i18next'
 
 interface GoogleSignInButtonProps {
   className?: string
@@ -14,6 +15,7 @@ interface GoogleSignInButtonProps {
 export function GoogleSignInButton({ className }: GoogleSignInButtonProps) {
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
+  const { t } = useTranslation()
 
   const handleGoogleSignIn = async () => {
     try {
@@ -23,7 +25,7 @@ export function GoogleSignInButton({ className }: GoogleSignInButtonProps) {
 
       // Use alert as fallback to ensure message shows
       alert("Google login will be available soon");
-      
+
       // Also try toast if available
       if (toast) {
         toast({
@@ -35,7 +37,7 @@ export function GoogleSignInButton({ className }: GoogleSignInButtonProps) {
     } catch (error) {
       console.error('Google sign-in error:', error)
       alert("Google login will be available soon");
-      
+
       if (toast) {
         toast({
           title: "Google Sign In",
@@ -78,7 +80,7 @@ export function GoogleSignInButton({ className }: GoogleSignInButtonProps) {
           />
         </svg>
       )}
-      Continue with Google
+      {t("signin.continueWithGoogle")}
     </Button>
   )
 }

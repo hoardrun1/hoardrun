@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, LineChart, Line
@@ -74,6 +75,7 @@ interface MonthlyTrendData {
 }
 
 export default function BudgetPage() {
+  const { t } = useTranslation()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -250,26 +252,26 @@ export default function BudgetPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xs sm:text-base font-bold text-foreground">
-              Budget Tracker
+              {t('dashboard.budget.title')}
             </h1>
             <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
-              Track your spending and manage your budget
+              {t('dashboard.budget.description')}
             </p>
           </div>
           <Dialog open={isAddCategoryOpen} onOpenChange={setIsAddCategoryOpen}>
             <DialogTrigger asChild>
               <Button className="text-xs sm:text-sm">
                 <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                Add Category
+                {t('dashboard.budget.addCategory')}
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle className="text-xs sm:text-base">Add Budget Category</DialogTitle>
+                <DialogTitle className="text-xs sm:text-base">{t('dashboard.budget.dialog.addBudgetCategory')}</DialogTitle>
               </DialogHeader>
               <div className="space-y-3 sm:space-y-4 py-3 sm:py-4">
                 <div className="space-y-1 sm:space-y-2">
-                  <Label className="text-xs sm:text-sm">Category Name</Label>
+                  <Label className="text-xs sm:text-sm">{t('dashboard.budget.dialog.categoryName')}</Label>
                   <Input
                     className="text-xs sm:text-sm"
                     placeholder="e.g., Groceries"
@@ -278,7 +280,7 @@ export default function BudgetPage() {
                   />
                 </div>
                 <div className="space-y-1 sm:space-y-2">
-                  <Label className="text-xs sm:text-sm">Monthly Budget</Label>
+                  <Label className="text-xs sm:text-sm">{t('dashboard.budget.dialog.monthlyBudget')}</Label>
                   <Input
                     className="text-xs sm:text-sm"
                     type="number"
@@ -288,7 +290,7 @@ export default function BudgetPage() {
                   />
                 </div>
                 <Button onClick={handleAddCategory} className="w-full text-xs sm:text-sm">
-                  Add Category
+                  {t('dashboard.budget.dialog.addCategory')}
                 </Button>
               </div>
             </DialogContent>
@@ -304,31 +306,31 @@ export default function BudgetPage() {
             <>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-xs sm:text-sm font-medium">Total Budget</CardTitle>
+                  <CardTitle className="text-xs sm:text-sm font-medium">{t('dashboard.budget.totalBudget')}</CardTitle>
                   <Target className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent className="p-3 sm:p-4">
                   <div className="text-xs sm:text-base font-bold">${totalBudget.toLocaleString()}</div>
-                  <p className="text-xs sm:text-sm text-muted-foreground">Monthly allocation</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">{t('dashboard.budget.monthlyAllocation')}</p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-xs sm:text-sm font-medium">Total Spent</CardTitle>
+                  <CardTitle className="text-xs sm:text-sm font-medium">{t('dashboard.budget.totalSpent')}</CardTitle>
                   <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent className="p-3 sm:p-4">
                   <div className="text-xs sm:text-base font-bold">${totalSpent.toLocaleString()}</div>
                   <p className="text-xs sm:text-sm text-muted-foreground">
-                    {budgetProgress.toFixed(1)}% of budget
+                    {budgetProgress.toFixed(1)}% {t('dashboard.budget.ofBudget')}
                   </p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-xs sm:text-sm font-medium">Remaining</CardTitle>
+                  <CardTitle className="text-xs sm:text-sm font-medium">{t('dashboard.budget.remaining')}</CardTitle>
                   <PiggyBank className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent className="p-3 sm:p-4">
@@ -336,21 +338,21 @@ export default function BudgetPage() {
                     ${Math.abs(remainingBudget).toLocaleString()}
                   </div>
                   <p className="text-xs sm:text-sm text-muted-foreground">
-                    {remainingBudget >= 0 ? 'Under budget' : 'Over budget'}
+                    {remainingBudget >= 0 ? t('dashboard.budget.underBudget') : t('dashboard.budget.overBudget')}
                   </p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-xs sm:text-sm font-medium">Alerts</CardTitle>
+                  <CardTitle className="text-xs sm:text-sm font-medium">{t('dashboard.budget.alerts')}</CardTitle>
                   <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent className="p-3 sm:p-4">
                   <div className="text-xs sm:text-base font-bold text-foreground">
                     {overBudgetCategories.length}
                   </div>
-                  <p className="text-xs sm:text-sm text-muted-foreground">Categories over budget</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">{t('dashboard.budget.categoriesOverBudget')}</p>
                 </CardContent>
               </Card>
             </>
@@ -359,9 +361,9 @@ export default function BudgetPage() {
 
         <Card>
           <CardHeader className="p-3 sm:p-4">
-            <CardTitle className="text-xs sm:text-base">Overall Budget Progress</CardTitle>
+            <CardTitle className="text-xs sm:text-base">{t('dashboard.budget.overallBudgetProgress')}</CardTitle>
             <CardDescription className="text-xs sm:text-sm">
-              You've spent ${totalSpent.toLocaleString()} of your ${totalBudget.toLocaleString()} budget
+              {t('dashboard.budget.usedOfTotalBudget', { percentage: budgetProgress.toFixed(1) })}
             </CardDescription>
           </CardHeader>
           <CardContent className="p-3 sm:p-4">
@@ -378,16 +380,16 @@ export default function BudgetPage() {
 
         <Tabs defaultValue="categories" className="space-y-3 sm:space-y-4">
           <TabsList className="text-xs sm:text-sm">
-            <TabsTrigger value="categories" className="text-xs sm:text-sm">Categories</TabsTrigger>
-            <TabsTrigger value="trends" className="text-xs sm:text-sm">Trends</TabsTrigger>
-            <TabsTrigger value="insights" className="text-xs sm:text-sm">Insights</TabsTrigger>
+            <TabsTrigger value="categories" className="text-xs sm:text-sm">{t('dashboard.budget.tabs.categories')}</TabsTrigger>
+            <TabsTrigger value="trends" className="text-xs sm:text-sm">{t('dashboard.budget.tabs.trends')}</TabsTrigger>
+            <TabsTrigger value="insights" className="text-xs sm:text-sm">{t('dashboard.budget.tabs.insights')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="categories" className="space-y-3 sm:space-y-4">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
               <Card>
                 <CardHeader className="p-3 sm:p-4">
-                  <CardTitle className="text-xs sm:text-base">Spending by Category</CardTitle>
+                  <CardTitle className="text-xs sm:text-base">{t('dashboard.budget.spendingByCategory')}</CardTitle>
                 </CardHeader>
                 <CardContent className="p-3 sm:p-4">
                   {isLoading ? (
@@ -417,7 +419,7 @@ export default function BudgetPage() {
 
               <Card>
                 <CardHeader className="p-3 sm:p-4">
-                  <CardTitle className="text-xs sm:text-base">Budget vs Actual</CardTitle>
+                  <CardTitle className="text-xs sm:text-base">{t('dashboard.budget.budgetVsActual')}</CardTitle>
                 </CardHeader>
                 <CardContent className="p-3 sm:p-4">
                   {isLoading ? (
@@ -440,7 +442,7 @@ export default function BudgetPage() {
 
             <Card>
               <CardHeader className="p-3 sm:p-4">
-                <CardTitle className="text-xs sm:text-base">Category Details</CardTitle>
+                <CardTitle className="text-xs sm:text-base">{t('dashboard.budget.categoryDetails')}</CardTitle>
               </CardHeader>
               <CardContent className="p-3 sm:p-4">
                 <div className="space-y-3 sm:space-y-4">
@@ -502,9 +504,9 @@ export default function BudgetPage() {
           <TabsContent value="trends">
             <Card>
               <CardHeader className="p-3 sm:p-4">
-                <CardTitle className="text-xs sm:text-base">Monthly Spending Trends</CardTitle>
+                <CardTitle className="text-xs sm:text-base">{t('dashboard.budget.monthlySpendingTrends')}</CardTitle>
                 <CardDescription className="text-xs sm:text-sm">
-                  Compare your budgeted vs actual spending over time
+                  {t('dashboard.budget.compareBudgetedVsActual')}
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-3 sm:p-4">
@@ -530,7 +532,7 @@ export default function BudgetPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
               <Card>
                 <CardHeader className="p-3 sm:p-4">
-                  <CardTitle className="text-xs sm:text-base">Budget Insights</CardTitle>
+                  <CardTitle className="text-xs sm:text-base">{t('dashboard.budget.budgetInsights')}</CardTitle>
                 </CardHeader>
                 <CardContent className="p-3 sm:p-4 space-y-3 sm:space-y-4">
                   {isLoading ? (
@@ -569,9 +571,9 @@ export default function BudgetPage() {
                         <div className="flex items-start space-x-2 sm:space-x-3">
                           <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-green-600 dark:text-green-400 mt-0.5" />
                           <div>
-                            <p className="text-xs sm:text-sm font-medium text-foreground">Great budget management!</p>
+                            <p className="text-xs sm:text-sm font-medium text-foreground">{t('dashboard.budget.insights.greatBudgetManagement')}</p>
                             <p className="text-xs sm:text-sm text-muted-foreground">
-                              You&apos;re staying under budget in several categories
+                              {t('dashboard.budget.insights.stayingUnderBudget')}
                             </p>
                           </div>
                         </div>
@@ -580,9 +582,9 @@ export default function BudgetPage() {
                         <div className="flex items-start space-x-2 sm:space-x-3">
                           <TrendingDown className="h-3 w-3 sm:h-4 sm:w-4 text-red-600 dark:text-red-400 mt-0.5" />
                           <div>
-                            <p className="text-xs sm:text-sm font-medium text-foreground">Watch your spending</p>
+                            <p className="text-xs sm:text-sm font-medium text-foreground">{t('dashboard.budget.insights.watchYourSpending')}</p>
                             <p className="text-xs sm:text-sm text-muted-foreground">
-                              {overBudgetCategories.length} {overBudgetCategories.length === 1 ? 'category is' : 'categories are'} over budget
+                              {overBudgetCategories.length} {t('dashboard.budget.insights.categoriesOverBudget')}
                             </p>
                           </div>
                         </div>
@@ -590,9 +592,9 @@ export default function BudgetPage() {
                       <div className="flex items-start space-x-2 sm:space-x-3">
                         <Target className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600 dark:text-blue-400 mt-0.5" />
                         <div>
-                          <p className="text-xs sm:text-sm font-medium text-foreground">Overall progress</p>
+                          <p className="text-xs sm:text-sm font-medium text-foreground">{t('dashboard.budget.insights.overallProgress')}</p>
                           <p className="text-xs sm:text-sm text-muted-foreground">
-                            You&apos;ve used {budgetProgress.toFixed(1)}% of your total budget
+                            {t('dashboard.budget.insights.usedOfTotalBudget', { percentage: budgetProgress.toFixed(1) })}
                           </p>
                         </div>
                       </div>
@@ -603,7 +605,7 @@ export default function BudgetPage() {
 
               <Card>
                 <CardHeader className="p-3 sm:p-4">
-                  <CardTitle className="text-xs sm:text-base">Recommendations</CardTitle>
+                  <CardTitle className="text-xs sm:text-base">{t('dashboard.budget.recommendations')}</CardTitle>
                 </CardHeader>
                 <CardContent className="p-3 sm:p-4 space-y-3 sm:space-y-4">
                   {isLoading ? (

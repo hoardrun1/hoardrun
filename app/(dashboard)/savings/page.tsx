@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -30,6 +31,7 @@ const addToast = ({ title, description, variant }: any) => {
 }
 
 export default function EnhancedSavingsPage() {
+  const { t } = useTranslation()
   const { toast } = useToast()
   const {
     savingsGoals: createdGoals,
@@ -237,10 +239,10 @@ export default function EnhancedSavingsPage() {
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
               <div className="space-y-1 sm:space-y-2">
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-                  Savings & Deposits
+                  {t('dashboard.savings.title')}
                 </h1>
                 <p className="text-sm sm:text-base text-muted-foreground max-w-2xl">
-                  Manage your goals, fixed deposits, and automated savings all in one place
+                  {t('dashboard.savings.description')}
                 </p>
               </div>
               
@@ -252,8 +254,8 @@ export default function EnhancedSavingsPage() {
                   onClick={() => setIsFixedDepositDialogOpen(true)}
                 >
                   <Shield className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
-                  <span className="hidden xs:inline">Fixed Deposit</span>
-                  <span className="xs:hidden">FD</span>
+                  <span className="hidden xs:inline">{t('dashboard.savings.buttons.fixedDeposit')}</span>
+                  <span className="xs:hidden">{t('dashboard.savings.buttons.fixedDepositShort')}</span>
                 </Button>
                 <Button
                   variant="outline"
@@ -262,8 +264,8 @@ export default function EnhancedSavingsPage() {
                   onClick={() => setIsAutomatedSavingDialogOpen(true)}
                 >
                   <Repeat className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
-                  <span className="hidden xs:inline">Auto Save</span>
-                  <span className="xs:hidden">Auto</span>
+                  <span className="hidden xs:inline">{t('dashboard.savings.buttons.autoSave')}</span>
+                  <span className="xs:hidden">{t('dashboard.savings.buttons.autoSaveShort')}</span>
                 </Button>
                 <Button
                   size="sm"
@@ -271,7 +273,7 @@ export default function EnhancedSavingsPage() {
                   onClick={() => setIsNewGoalDialogOpen(true)}
                 >
                   <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
-                  New Goal
+                  {t('dashboard.savings.buttons.newGoal')}
                 </Button>
               </div>
             </div>
@@ -279,10 +281,10 @@ export default function EnhancedSavingsPage() {
             {/* Analytics Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               {[
-                { title: 'Total Savings', value: analytics.totalSavings, icon: PiggyBank, color: 'text-blue-500' },
-                { title: 'Monthly Growth', value: analytics.monthlyGrowth, icon: TrendingUp, color: 'text-green-500' },
-                { title: 'Next Milestone', value: analytics.nextMilestone, icon: Target, color: 'text-orange-500' },
-                { title: 'Projected Savings', value: analytics.projectedSavings, icon: DollarSign, color: 'text-purple-500' }
+                { title: t('dashboard.savings.analytics.totalSavings'), value: analytics.totalSavings, icon: PiggyBank, color: 'text-blue-500' },
+                { title: t('dashboard.savings.analytics.monthlyGrowth'), value: analytics.monthlyGrowth, icon: TrendingUp, color: 'text-green-500' },
+                { title: t('dashboard.savings.analytics.nextMilestone'), value: analytics.nextMilestone, icon: Target, color: 'text-orange-500' },
+                { title: t('dashboard.savings.analytics.projectedSavings'), value: analytics.projectedSavings, icon: DollarSign, color: 'text-purple-500' }
               ].map((item, idx) => (
                 <Card key={idx} className="hover:shadow-lg transition-all duration-300 border-muted/50">
                   <CardContent className="p-4 sm:p-5 md:p-6">
@@ -313,12 +315,12 @@ export default function EnhancedSavingsPage() {
                   className="text-xs sm:text-sm py-2 sm:py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
                 >
                   <span className="hidden sm:inline">
-                    {tab === 'active' ? 'Goals' : tab === 'fixed-deposits' ? 'Fixed Deposits' : 
-                     tab === 'automated' ? 'Auto Save' : tab.charAt(0).toUpperCase() + tab.slice(1)}
+                    {tab === 'active' ? t('dashboard.savings.tabs.goals') : tab === 'fixed-deposits' ? t('dashboard.savings.tabs.fixedDeposits') :
+                     tab === 'automated' ? t('dashboard.savings.tabs.automated') : tab === 'completed' ? t('dashboard.savings.tabs.completed') : t('dashboard.savings.tabs.insights')}
                   </span>
                   <span className="sm:hidden">
-                    {tab === 'active' ? 'Goals' : tab === 'fixed-deposits' ? 'FDs' : 
-                     tab === 'automated' ? 'Auto' : tab === 'completed' ? 'Done' : 'Info'}
+                    {tab === 'active' ? t('dashboard.savings.tabs.goalsShort') : tab === 'fixed-deposits' ? t('dashboard.savings.tabs.fixedDepositsShort') :
+                     tab === 'automated' ? t('dashboard.savings.tabs.automatedShort') : tab === 'completed' ? t('dashboard.savings.tabs.completedShort') : t('dashboard.savings.tabs.insightsShort')}
                   </span>
                 </TabsTrigger>
               ))}

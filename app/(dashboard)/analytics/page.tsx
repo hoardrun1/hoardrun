@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useTheme } from '@/contexts/ThemeContext'
 
 import { DepositModal } from '@/components/deposit-modal'
@@ -21,6 +22,7 @@ import {
 } from 'lucide-react'
 
 export default function AnalyticsPage() {
+  const { t } = useTranslation()
   const { theme } = useTheme()
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -135,7 +137,7 @@ export default function AnalyticsPage() {
         <div className="w-full space-y-4 sm:space-y-6">
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
-              <p className="text-red-500 mb-2">Error loading analytics</p>
+              <p className="text-red-500 mb-2">{t('dashboard.analytics.errorLoadingAnalytics')}</p>
               <p className="text-sm text-muted-foreground">{error}</p>
             </div>
           </div>
@@ -152,10 +154,10 @@ export default function AnalyticsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-foreground">
-                  Analytics
+                  {t('dashboard.analytics.title')}
                 </h1>
                 <p className="text-muted-foreground mt-1 text-sm sm:text-base">
-                  Insights into your financial patterns and trends
+                  {t('dashboard.analytics.description')}
                 </p>
               </div>
             </div>
@@ -164,62 +166,62 @@ export default function AnalyticsPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Avg Monthly Income</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t('dashboard.analytics.avgMonthlyIncome')}</CardTitle>
                   <TrendingUp className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-foreground">
                     ${avgMonthlyIncome.toLocaleString()}
                   </div>
-                  <p className="text-xs text-muted-foreground">Last 6 months</p>
+                  <p className="text-xs text-muted-foreground">{t('dashboard.analytics.last6Months')}</p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Avg Monthly Expenses</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t('dashboard.analytics.avgMonthlyExpenses')}</CardTitle>
                   <TrendingDown className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-foreground">
                     ${avgMonthlyExpenses.toLocaleString()}
                   </div>
-                  <p className="text-xs text-muted-foreground">Last 6 months</p>
+                  <p className="text-xs text-muted-foreground">{t('dashboard.analytics.last6Months')}</p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Savings Rate</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t('dashboard.analytics.savingsRate')}</CardTitle>
                   <Target className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-foreground">
                     {savingsRate}%
                   </div>
-                  <p className="text-xs text-muted-foreground">Of total income</p>
+                  <p className="text-xs text-muted-foreground">{t('dashboard.analytics.ofTotalIncome')}</p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Savings</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t('dashboard.analytics.totalSavings')}</CardTitle>
                   <DollarSign className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-foreground">
                     ${totalSavings.toLocaleString()}
                   </div>
-                  <p className="text-xs text-muted-foreground">Last 6 months</p>
+                  <p className="text-xs text-muted-foreground">{t('dashboard.analytics.last6Months')}</p>
                 </CardContent>
               </Card>
             </div>
 
             <Tabs defaultValue="overview" className="space-y-4 sm:space-y-6">
               <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="overview" className="text-xs sm:text-sm">Overview</TabsTrigger>
-                <TabsTrigger value="spending" className="text-xs sm:text-sm">Spending</TabsTrigger>
-                <TabsTrigger value="trends" className="text-xs sm:text-sm">Trends</TabsTrigger>
+                <TabsTrigger value="overview" className="text-xs sm:text-sm">{t('dashboard.analytics.tabs.overview')}</TabsTrigger>
+                <TabsTrigger value="spending" className="text-xs sm:text-sm">{t('dashboard.analytics.tabs.spending')}</TabsTrigger>
+                <TabsTrigger value="trends" className="text-xs sm:text-sm">{t('dashboard.analytics.tabs.trends')}</TabsTrigger>
               </TabsList>
 
               <TabsContent value="overview" className="space-y-4 sm:space-y-6">
@@ -227,7 +229,7 @@ export default function AnalyticsPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                   <Card>
                     <CardHeader>
-                      <CardTitle>Monthly Financial Overview</CardTitle>
+                      <CardTitle>{t('dashboard.analytics.monthlyFinancialOverview')}</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
@@ -252,7 +254,7 @@ export default function AnalyticsPage() {
 
                   <Card>
                     <CardHeader>
-                      <CardTitle>Spending by Category</CardTitle>
+                      <CardTitle>{t('dashboard.analytics.spendingByCategory')}</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <ResponsiveContainer width="100%" height={300}>
@@ -289,7 +291,7 @@ export default function AnalyticsPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <Card>
                     <CardHeader>
-                      <CardTitle>Weekly Spending Pattern</CardTitle>
+                      <CardTitle>{t('dashboard.analytics.weeklySpendingPattern')}</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <ResponsiveContainer width="100%" height={300}>
@@ -312,7 +314,7 @@ export default function AnalyticsPage() {
 
                   <Card>
                     <CardHeader>
-                      <CardTitle>Category Breakdown</CardTitle>
+                      <CardTitle>{t('dashboard.analytics.categoryBreakdown')}</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-4">
@@ -342,7 +344,7 @@ export default function AnalyticsPage() {
               <TabsContent value="trends" className="space-y-6">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Income vs Expenses Trend</CardTitle>
+                    <CardTitle>{t('dashboard.analytics.incomeVsExpensesTrend')}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <ResponsiveContainer width="100%" height={400}>

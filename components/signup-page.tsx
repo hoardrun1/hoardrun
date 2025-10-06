@@ -16,6 +16,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/components/ui/use-toast"
 import { useAuth } from "@/contexts/AuthContext"
 import { GoogleSignInButton } from "@/components/GoogleSignInButton"
+import { LanguageSwitcher } from "@/components/ui/language-switcher"
+import { useTranslation } from 'react-i18next'
 
 // Validation schema
 const signupSchema = z.object({
@@ -37,12 +39,13 @@ const signupSchema = z.object({
 type SignupFormData = z.infer<typeof signupSchema>
 
 const STEPS = [
-  { id: 1, name: "Account", description: "Basic information" },
-  { id: 2, name: "Profile", description: "Additional details" },
-  { id: 3, name: "Security", description: "Password setup" },
+  { id: 1, nameKey: "signup.steps.account", descKey: "signup.steps.accountDesc" },
+  { id: 2, nameKey: "signup.steps.profile", descKey: "signup.steps.profileDesc" },
+  { id: 3, nameKey: "signup.steps.security", descKey: "signup.steps.securityDesc" },
 ]
 
 export function SignupPage() {
+  const { t } = useTranslation()
   const router = useRouter()
   const { toast } = useToast()
   const [currentStep, setCurrentStep] = useState(1)
@@ -216,8 +219,13 @@ export function SignupPage() {
         priority
       />
       <div className="absolute inset-0 bg-black/60" />
-      
-      <motion.div 
+
+      {/* Language Switcher */}
+      <div className="absolute top-4 right-4 z-20">
+        <LanguageSwitcher variant="mobile" />
+      </div>
+
+      <motion.div
         initial={{ opacity: 0, y: 20 }} 
         animate={{ opacity: 1, y: 0 }} 
         transition={{ duration: 0.5 }} 
@@ -227,8 +235,8 @@ export function SignupPage() {
           
           {/* Header */}
           <div className="text-center mb-6 sm:mb-8">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-2">Create Account</h1>
-            <p className="text-sm sm:text-base text-muted-foreground">Join HoardRun and start your journey</p>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-2">{t("signup.createAccount")}</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">{t("signup.subtitle")}</p>
           </div>
 
           {/* Progress Steps */}
@@ -252,9 +260,9 @@ export function SignupPage() {
                     </div>
                     <div className="mt-2 text-center hidden sm:block">
                       <p className={`text-xs font-medium ${currentStep >= step.id ? 'text-foreground' : 'text-muted-foreground'}`}>
-                        {step.name}
+                        {t(step.nameKey)}
                       </p>
-                      <p className="text-xs text-muted-foreground">{step.description}</p>
+                      <p className="text-xs text-muted-foreground">{t(step.descKey)}</p>
                     </div>
                   </div>
                   {index < STEPS.length - 1 && (
@@ -307,7 +315,7 @@ export function SignupPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="firstName" className="text-sm font-medium text-foreground">
-                          First Name <span className="text-destructive">*</span>
+                          {t("signup.fields.firstName")} <span className="text-destructive">*</span>
                         </Label>
                         <div className="relative">
                           <UserIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 sm:w-5 sm:h-5" />
@@ -315,7 +323,7 @@ export function SignupPage() {
                             id="firstName"
                             name="firstName"
                             type="text"
-                            placeholder="First name"
+                            placeholder={t("signup.fields.firstName")}
                             value={formData.firstName}
                             onChange={handleInputChange}
                             className="pl-9 sm:pl-10 h-11 sm:h-12 transition-all focus:ring-2 focus:ring-primary/20"
@@ -325,13 +333,13 @@ export function SignupPage() {
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="lastName" className="text-sm font-medium text-foreground">
-                          Last Name <span className="text-destructive">*</span>
+                          {t("signup.fields.lastName")} <span className="text-destructive">*</span>
                         </Label>
                         <Input
                           id="lastName"
                           name="lastName"
                           type="text"
-                          placeholder="Last name"
+                          placeholder={t("signup.fields.lastName")}
                           value={formData.lastName}
                           onChange={handleInputChange}
                           className="h-11 sm:h-12 transition-all focus:ring-2 focus:ring-primary/20"
@@ -342,7 +350,7 @@ export function SignupPage() {
 
                     <div className="space-y-2">
                       <Label htmlFor="email" className="text-sm font-medium text-foreground">
-                        Email Address <span className="text-destructive">*</span>
+                        {t("signup.fields.email")} <span className="text-destructive">*</span>
                       </Label>
                       <div className="relative">
                         <MailIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 sm:w-5 sm:h-5" />
@@ -350,7 +358,7 @@ export function SignupPage() {
                           id="email"
                           name="email"
                           type="email"
-                          placeholder="your.email@example.com"
+                          placeholder={t("signup.fields.emailPlaceholder")}
                           value={formData.email}
                           onChange={handleInputChange}
                           className="pl-9 sm:pl-10 h-11 sm:h-12 transition-all focus:ring-2 focus:ring-primary/20"
@@ -365,14 +373,14 @@ export function SignupPage() {
                 {currentStep === 2 && (
                   <div className="space-y-4 sm:space-y-5">
                     <div className="space-y-2">
-                      <Label htmlFor="phone" className="text-sm font-medium text-foreground">Phone Number</Label>
+                      <Label htmlFor="phone" className="text-sm font-medium text-foreground">{t("signup.fields.phone")}</Label>
                       <div className="relative">
                         <PhoneIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 sm:w-5 sm:h-5" />
                         <Input
                           id="phone"
                           name="phone"
                           type="tel"
-                          placeholder="+1 (555) 000-0000"
+                          placeholder={t("signup.fields.phonePlaceholder")}
                           value={formData.phone}
                           onChange={handleInputChange}
                           className="pl-9 sm:pl-10 h-11 sm:h-12 transition-all focus:ring-2 focus:ring-primary/20"
@@ -382,7 +390,7 @@ export function SignupPage() {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="dateOfBirth" className="text-sm font-medium text-foreground">Date of Birth</Label>
+                        <Label htmlFor="dateOfBirth" className="text-sm font-medium text-foreground">{t("signup.fields.dateOfBirth")}</Label>
                         <div className="relative">
                           <CalendarIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 sm:w-5 sm:h-5" />
                           <Input
@@ -396,14 +404,14 @@ export function SignupPage() {
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="country" className="text-sm font-medium text-foreground">Country</Label>
+                        <Label htmlFor="country" className="text-sm font-medium text-foreground">{t("signup.fields.country")}</Label>
                         <div className="relative">
                           <MapPinIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 sm:w-5 sm:h-5" />
                           <Input
                             id="country"
                             name="country"
                             type="text"
-                            placeholder="United States"
+                            placeholder={t("signup.fields.countryPlaceholder")}
                             value={formData.country}
                             onChange={handleInputChange}
                             className="pl-9 sm:pl-10 h-11 sm:h-12 transition-all focus:ring-2 focus:ring-primary/20"
@@ -413,12 +421,12 @@ export function SignupPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="idNumber" className="text-sm font-medium text-foreground">ID Number</Label>
+                      <Label htmlFor="idNumber" className="text-sm font-medium text-foreground">{t("signup.fields.idNumber")}</Label>
                       <Input
                         id="idNumber"
                         name="idNumber"
                         type="text"
-                        placeholder="ID or passport number"
+                        placeholder={t("signup.fields.idPlaceholder")}
                         value={formData.idNumber}
                         onChange={handleInputChange}
                         className="h-11 sm:h-12 transition-all focus:ring-2 focus:ring-primary/20"
@@ -426,11 +434,11 @@ export function SignupPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="bio" className="text-sm font-medium text-foreground">Bio</Label>
+                      <Label htmlFor="bio" className="text-sm font-medium text-foreground">{t("signup.fields.bio")}</Label>
                       <Textarea
                         id="bio"
                         name="bio"
-                        placeholder="Tell us a bit about yourself..."
+                        placeholder={t("signup.fields.bioPlaceholder")}
                         value={formData.bio}
                         onChange={handleInputChange}
                         className="resize-none min-h-[100px] transition-all focus:ring-2 focus:ring-primary/20"
@@ -439,7 +447,7 @@ export function SignupPage() {
                     </div>
 
                     <p className="text-xs text-muted-foreground italic">
-                      All fields on this page are optional. Click Next to continue.
+                      {t("signup.optionalNote")}
                     </p>
                   </div>
                 )}
@@ -449,14 +457,14 @@ export function SignupPage() {
                   <div className="space-y-4 sm:space-y-5">
                     <div className="space-y-2">
                       <Label htmlFor="password" className="text-sm font-medium text-foreground">
-                        Password <span className="text-destructive">*</span>
+                        {t("signup.fields.password")} <span className="text-destructive">*</span>
                       </Label>
                       <div className="relative">
                         <Input
                           id="password"
                           name="password"
                           type={showPassword ? "text" : "password"}
-                          placeholder="Minimum 8 characters"
+                          placeholder={t("signup.fields.passwordPlaceholder")}
                           value={formData.password}
                           onChange={handleInputChange}
                           className="pr-10 h-11 sm:h-12 transition-all focus:ring-2 focus:ring-primary/20"
@@ -480,14 +488,14 @@ export function SignupPage() {
 
                     <div className="space-y-2">
                       <Label htmlFor="confirmPassword" className="text-sm font-medium text-foreground">
-                        Confirm Password <span className="text-destructive">*</span>
+                        {t("signup.fields.confirmPassword")} <span className="text-destructive">*</span>
                       </Label>
                       <div className="relative">
                         <Input
                           id="confirmPassword"
                           name="confirmPassword"
                           type={showConfirmPassword ? "text" : "password"}
-                          placeholder="Re-enter your password"
+                          placeholder={t("signup.fields.confirmPasswordPlaceholder")}
                           value={formData.confirmPassword}
                           onChange={handleInputChange}
                           className="pr-10 h-11 sm:h-12 transition-all focus:ring-2 focus:ring-primary/20"
@@ -520,13 +528,13 @@ export function SignupPage() {
                         required
                       />
                       <label htmlFor="termsAccepted" className="text-xs sm:text-sm text-muted-foreground leading-relaxed cursor-pointer">
-                        I agree to the{" "}
+                        {t("signup.terms")}{" "}
                         <Link href="/terms" className="text-primary hover:text-primary/80 hover:underline font-medium">
-                          Terms of Service
+                          {t("signup.termsOfService")}
                         </Link>{" "}
-                        and{" "}
+                        {t("signup.and")}{" "}
                         <Link href="/privacy" className="text-primary hover:text-primary/80 hover:underline font-medium">
-                          Privacy Policy
+                          {t("signup.privacyPolicy")}
                         </Link>
                       </label>
                     </div>
@@ -546,17 +554,17 @@ export function SignupPage() {
                   disabled={isLoading}
                 >
                   <ArrowLeft className="mr-2 h-4 w-4" />
-                  Back
+                  {t("signup.back")}
                 </Button>
               )}
-              
+
               {currentStep < STEPS.length ? (
                 <Button
                   type="button"
                   onClick={handleNext}
                   className="flex-1 h-11 sm:h-12 btn-interactive text-base font-semibold transition-all hover:scale-[1.02] active:scale-[0.98]"
                 >
-                  Next
+                  {t("signup.next")}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               ) : (
@@ -568,11 +576,11 @@ export function SignupPage() {
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Creating Account...
+                      {t("signup.creatingAccount")}
                     </>
                   ) : (
                     <>
-                      Create Account
+                      {t("signup.createAccount")}
                       <Check className="ml-2 h-4 w-4" />
                     </>
                   )}
@@ -584,9 +592,9 @@ export function SignupPage() {
           {/* Footer Links */}
           <div className="mt-6 sm:mt-8 space-y-3">
             <div className="text-center text-sm text-muted-foreground">
-              Already have an account?{" "}
+              {t("signup.haveAccount")}{" "}
               <Link href="/signin" className="text-primary hover:text-primary/80 hover:underline font-semibold transition-colors">
-                Sign in here
+                {t("signup.signInHere")}
               </Link>
             </div>
           </div>

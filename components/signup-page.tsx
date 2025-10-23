@@ -4,7 +4,7 @@ import React, { useState } from "react"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import Link from "next/link"
-import { EyeIcon, EyeOffIcon, MailIcon, UserIcon, PhoneIcon, MapPinIcon, CalendarIcon, Loader2, ArrowRight, ArrowLeft, Check } from "lucide-react"
+import { EyeIcon, EyeOffIcon, MailIcon, UserIcon, PhoneIcon, MapPinIcon, CalendarIcon, Loader2, ArrowRight, ArrowLeft, Check, ChevronDown } from "lucide-react"
 import Image from "next/image"
 import { z } from "zod"
 
@@ -18,6 +18,7 @@ import { useAuth } from "@/contexts/AuthContext"
 import { GoogleSignInButton } from "@/components/GoogleSignInButton"
 import { LanguageSwitcher } from "@/components/ui/language-switcher"
 import { useTranslation } from 'react-i18next'
+import { countries } from "@/lib/countries"
 
 // Validation schema
 const signupSchema = z.object({
@@ -68,6 +69,7 @@ export function SignupPage() {
     confirmPassword: "",
     termsAccepted: false,
   })
+  const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false)
   const { signUp } = useAuth()
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -78,6 +80,17 @@ export function SignupPage() {
     }))
     setError(null)
   }
+
+  // Close dropdown when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isCountryDropdownOpen && !(event.target as Element).closest('.country-dropdown')) {
+        setIsCountryDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [isCountryDropdownOpen])
 
   const validateStep = (step: number): boolean => {
     setError(null)
@@ -405,17 +418,35 @@ export function SignupPage() {
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="country" className="text-sm font-medium text-foreground">{t("signup.fields.country")}</Label>
-                        <div className="relative">
+                        <div className="relative country-dropdown">
                           <MapPinIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 sm:w-5 sm:h-5" />
-                          <Input
-                            id="country"
-                            name="country"
-                            type="text"
-                            placeholder={t("signup.fields.countryPlaceholder")}
-                            value={formData.country}
-                            onChange={handleInputChange}
-                            className="pl-9 sm:pl-10 h-11 sm:h-12 transition-all focus:ring-2 focus:ring-primary/20"
-                          />
+                          <button
+                            type="button"
+                            onClick={() => setIsCountryDropdownOpen(!isCountryDropdownOpen)}
+                            className="w-full pl-9 sm:pl-10 pr-10 h-11 sm:h-12 text-left bg-background border border-input rounded-md transition-all focus:ring-2 focus:ring-primary/20 focus:border-primary flex items-center justify-between"
+                          >
+                            <span className={formData.country ? "text-foreground" : "text-muted-foreground"}>
+                              {formData.country ? countries.find(c => c.code === formData.country)?.name || formData.country : t("signup.fields.countryPlaceholder")}
+                            </span>
+                            <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${isCountryDropdownOpen ? 'rotate-180' : ''}`} />
+                          </button>
+                          {isCountryDropdownOpen && (
+                            <div className="absolute z-50 w-full mt-1 bg-background border border-input rounded-md shadow-lg max-h-48 overflow-y-auto">
+                              {countries.map((country) => (
+                                <button
+                                  key={country.code}
+                                  type="button"
+                                  onClick={() => {
+                                    setFormData(prev => ({ ...prev, country: country.code }))
+                                    setIsCountryDropdownOpen(false)
+                                  }}
+                                  className="w-full px-3 py-2 text-left hover:bg-accent hover:text-accent-foreground transition-colors"
+                                >
+                                  {country.name}
+                                </button>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>

@@ -1,34 +1,16 @@
-'use client'
+"use client"
 
-import React, { useState, useEffect } from 'react'
-import { useTranslation } from 'react-i18next'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Progress } from '@/components/ui/progress'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Switch } from '@/components/ui/switch'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Separator } from '@/components/ui/separator'
-import { Skeleton } from '@/components/ui/skeleton'
-import { PiggyBank, Target, Shield, Repeat, Plus, TrendingUp, DollarSign, Calendar, AlertCircle } from 'lucide-react'
-import { useSavings } from '@/hooks/useSavings'
-import { apiClient } from '@/lib/api-client'
-import { useToast } from '@/components/ui/use-toast'
-
-// Mock functions
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-  }).format(amount)
-}
-
-const addToast = ({ title, description, variant }: any) => {
-  console.log(`${variant || 'default'}: ${title} - ${description}`)
-}
+import { useState, useEffect } from "react"
+import { useTranslation } from "react-i18next"
+import { useToast } from "@/components/ui/use-toast"
+import { useSavings } from "@/hooks/useSavings"
+import { apiClient } from "@/lib/api-client"
+import { PageHeader } from "@/components/savings/page-header"
+import { AnalyticsCards } from "@/components/savings/analytics-cards"
+import { SavingsTabs } from "@/components/savings/savings-tabs"
+import { NewGoalDialog } from "@/components/savings/dialogs/new-goal-dialog"
+import { FixedDepositDialog } from "@/components/savings/dialogs/fixed-deposit-dialog"
+import { AutomatedSavingDialog } from "@/components/savings/dialogs/automated-saving-dialog"
 
 export default function EnhancedSavingsPage() {
   const { t } = useTranslation()
@@ -40,7 +22,7 @@ export default function EnhancedSavingsPage() {
     fetchSavingsGoals,
     createSavingsGoal,
     updateSavingsGoal,
-    deleteSavingsGoal
+    deleteSavingsGoal,
   } = useSavings()
 
   const [analytics, setAnalytics] = useState({
@@ -48,7 +30,7 @@ export default function EnhancedSavingsPage() {
     monthlyGrowth: 0,
     nextMilestone: 0,
     projectedSavings: 0,
-    insights: [] as Array<{ title: string; description: string }>
+    insights: [] as Array<{ title: string; description: string }>,
   })
 
   const [analyticsLoading, setAnalyticsLoading] = useState(true)
@@ -57,128 +39,90 @@ export default function EnhancedSavingsPage() {
   const [isNewGoalDialogOpen, setIsNewGoalDialogOpen] = useState(false)
   const [isFixedDepositDialogOpen, setIsFixedDepositDialogOpen] = useState(false)
   const [isAutomatedSavingDialogOpen, setIsAutomatedSavingDialogOpen] = useState(false)
-  const [activeTab, setActiveTab] = useState('active')
+  const [activeTab, setActiveTab] = useState("active")
 
-  const [fixedDeposits, setFixedDeposits] = useState([
-    {
-      id: 'fd_1',
-      amount: 15000,
-      term: 24,
-      interestRate: 4.8,
-      startDate: new Date('2025-01-15'),
-      maturityDate: new Date('2027-01-15'),
-      status: 'ACTIVE',
-      autoRenew: true,
-      roundupEnabled: false
-    }
-  ])
+  const [fixedDeposits, setFixedDeposits] = useState<any[]>([])
 
-  const [automatedSavings, setAutomatedSavings] = useState([
-    {
-      id: 'as_1',
-      name: 'Daily Coffee Fund',
-      amount: 5,
-      frequency: 'DAILY',
-      nextDeduction: new Date('2025-10-06'),
-      isActive: true,
-      totalSaved: 450
-    },
-    {
-      id: 'as_2',
-      name: 'Weekly Grocery Savings',
-      amount: 50,
-      frequency: 'WEEKLY',
-      nextDeduction: new Date('2025-10-12'),
-      isActive: true,
-      totalSaved: 1200
-    }
-  ])
+  const [automatedSavings, setAutomatedSavings] = useState<any[]>([])
 
   const [newGoalForm, setNewGoalForm] = useState({
-    name: '',
-    targetAmount: '',
-    monthlyContribution: '',
-    category: '',
+    name: "",
+    targetAmount: "",
+    monthlyContribution: "",
+    category: "",
     deadline: null as Date | null,
     isAutoSave: true,
   })
 
   const [fixedDepositForm, setFixedDepositForm] = useState({
-    amount: '',
-    term: '12',
-    customTerm: '',
-    termType: 'months',
+    amount: "",
+    term: "12",
+    customTerm: "",
+    termType: "months",
     roundupEnabled: false,
     autoRenew: false,
   })
 
   const [automatedSavingForm, setAutomatedSavingForm] = useState({
-    name: '',
-    amount: '',
-    frequency: 'MONTHLY' as 'DAILY' | 'WEEKLY' | 'MONTHLY',
+    name: "",
+    amount: "",
+    frequency: "MONTHLY" as "DAILY" | "WEEKLY" | "MONTHLY",
     startDate: new Date(),
   })
 
-  // Fetch analytics data on component mount
   useEffect(() => {
     const fetchAnalyticsData = async () => {
       try {
         setAnalyticsLoading(true)
         setAnalyticsError(null)
 
-        // Fetch savings stats and insights in parallel
         const [statsResponse, insightsResponse] = await Promise.all([
           apiClient.getSavingsStats(),
-          apiClient.getSavingsInsights()
+          apiClient.getSavingsInsights(),
         ])
 
-        // Process insights data - transform from SavingsInsights object to array of insights
         let insightsArray: Array<{ title: string; description: string }> = []
         const insightsData = insightsResponse.data?.data || insightsResponse.data
 
-        if (insightsData && typeof insightsData === 'object') {
-          // If it's a SavingsInsights object, extract insights from recommendations
+        if (insightsData && typeof insightsData === "object") {
           if (insightsData.recommendations && Array.isArray(insightsData.recommendations)) {
             insightsArray = insightsData.recommendations.map((rec: string, index: number) => ({
               title: `Recommendation ${index + 1}`,
-              description: rec
+              description: rec,
             }))
           }
 
-          // Add insights about savings rate
           if (insightsData.current_savings_rate !== undefined && insightsData.recommended_savings_rate !== undefined) {
             insightsArray.push({
-              title: 'Savings Rate Analysis',
-              description: `Your current savings rate is $${insightsData.current_savings_rate.toFixed(2)}/month. Consider increasing to $${insightsData.recommended_savings_rate.toFixed(2)}/month for better financial health.`
+              title: "Savings Rate Analysis",
+              description: `Your current savings rate is $${insightsData.current_savings_rate.toFixed(2)}/month. Consider increasing to $${insightsData.recommended_savings_rate.toFixed(2)}/month for better financial health.`,
             })
           }
 
-          // Add insights about savings streak
           if (insightsData.savings_streak !== undefined) {
             insightsArray.push({
-              title: 'Savings Streak',
-              description: `You've maintained a ${insightsData.savings_streak}-day savings streak. Keep it up!`
+              title: "Savings Streak",
+              description: `You've maintained a ${insightsData.savings_streak}-day savings streak. Keep it up!`,
             })
           }
         }
 
-        // Update analytics state with API data
         const newAnalytics = {
           totalSavings: statsResponse.data?.total_savings || 0,
           monthlyGrowth: statsResponse.data?.monthly_growth || 0,
           nextMilestone: statsResponse.data?.next_milestone || 0,
           projectedSavings: statsResponse.data?.projected_savings || 0,
-          insights: insightsArray
+          insights: insightsArray,
         }
 
         setAnalytics(newAnalytics)
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to fetch savings analytics'
+        const errorMessage = err instanceof Error ? err.message : "Failed to fetch savings analytics"
         setAnalyticsError(errorMessage)
         toast({
           title: "Error",
           description: errorMessage,
-          variant: "destructive"
+          variant: "destructive",
         })
       } finally {
         setAnalyticsLoading(false)
@@ -188,839 +132,88 @@ export default function EnhancedSavingsPage() {
     fetchAnalyticsData()
   }, [toast])
 
-  const calculateFixedDepositInterest = (amount: number, term: number, rate: number = 4.5) => {
-    const interest = (amount * rate * (term / 12)) / 100
-    const maturityAmount = amount + interest
-    return { interest, maturityAmount, rate }
-  }
-
-  const getInterestRate = (termInMonths: number) => {
-    if (termInMonths >= 60) return 5.5
-    if (termInMonths >= 36) return 5.0
-    if (termInMonths >= 24) return 4.8
-    if (termInMonths >= 12) return 4.5
-    if (termInMonths >= 6) return 4.0
-    return 3.5
-  }
-
   const handleCreateGoal = async () => {
     if (!newGoalForm.name || !newGoalForm.targetAmount || !newGoalForm.monthlyContribution) {
-      toast({ title: 'Error', description: 'Please fill in all required fields', variant: 'destructive' })
+      toast({ title: "Error", description: "Please fill in all required fields", variant: "destructive" })
       return
     }
 
     try {
       await createSavingsGoal({
         name: newGoalForm.name,
-        targetAmount: parseFloat(newGoalForm.targetAmount),
-        monthlyContribution: parseFloat(newGoalForm.monthlyContribution),
-        category: newGoalForm.category || 'General',
-        deadline: (newGoalForm.deadline instanceof Date)
-          ? newGoalForm.deadline.toISOString()
-          : new Date(Date.now() + 31536000000).toISOString(),
+        targetAmount: Number.parseFloat(newGoalForm.targetAmount),
+        monthlyContribution: Number.parseFloat(newGoalForm.monthlyContribution),
+        category: newGoalForm.category || "General",
+        deadline:
+          newGoalForm.deadline instanceof Date
+            ? newGoalForm.deadline.toISOString()
+            : new Date(Date.now() + 31536000000).toISOString(),
         isAutoSave: newGoalForm.isAutoSave,
       })
 
       setIsNewGoalDialogOpen(false)
-      setNewGoalForm({ name: '', targetAmount: '', monthlyContribution: '', category: '', deadline: null, isAutoSave: true })
-      toast({ title: 'Success', description: `Savings goal "${newGoalForm.name}" created successfully` })
+      setNewGoalForm({
+        name: "",
+        targetAmount: "",
+        monthlyContribution: "",
+        category: "",
+        deadline: null,
+        isAutoSave: true,
+      })
+      toast({ title: "Success", description: `Savings goal "${newGoalForm.name}" created successfully` })
     } catch (error) {
-      toast({ title: 'Error', description: 'Failed to create savings goal', variant: 'destructive' })
+      toast({ title: "Error", description: "Failed to create savings goal", variant: "destructive" })
     }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-      <div className="container mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8 max-w-7xl">
-        <div className="space-y-4 sm:space-y-6 md:space-y-8">
-          
-          {/* Header Section */}
-          <div className="flex flex-col gap-4 sm:gap-6">
-            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
-              <div className="space-y-1 sm:space-y-2">
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-                  {t('dashboard.savings.title')}
-                </h1>
-                <p className="text-sm sm:text-base text-muted-foreground max-w-2xl">
-                  {t('dashboard.savings.description')}
-                </p>
-              </div>
-              
-              <div className="flex flex-wrap gap-2 sm:gap-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex-1 sm:flex-none text-xs sm:text-sm h-9 sm:h-10"
-                  onClick={() => setIsFixedDepositDialogOpen(true)}
-                >
-                  <Shield className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
-                  <span className="hidden xs:inline">{t('dashboard.savings.buttons.fixedDeposit')}</span>
-                  <span className="xs:hidden">{t('dashboard.savings.buttons.fixedDepositShort')}</span>
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex-1 sm:flex-none text-xs sm:text-sm h-9 sm:h-10"
-                  onClick={() => setIsAutomatedSavingDialogOpen(true)}
-                >
-                  <Repeat className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
-                  <span className="hidden xs:inline">{t('dashboard.savings.buttons.autoSave')}</span>
-                  <span className="xs:hidden">{t('dashboard.savings.buttons.autoSaveShort')}</span>
-                </Button>
-                <Button
-                  size="sm"
-                  className="flex-1 sm:flex-none text-xs sm:text-sm h-9 sm:h-10 bg-primary hover:bg-primary/90"
-                  onClick={() => setIsNewGoalDialogOpen(true)}
-                >
-                  <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
-                  {t('dashboard.savings.buttons.newGoal')}
-                </Button>
-              </div>
-            </div>
+    <div className="min-h-screen bg-background">
+      <div className="mx-auto w-full max-w-7xl px-3 py-3 sm:px-4 sm:py-4 md:px-6 md:py-6">
+        <div className="space-y-3 sm:space-y-4 md:space-y-6">
+          <PageHeader
+            onNewGoal={() => setIsNewGoalDialogOpen(true)}
+            onFixedDeposit={() => setIsFixedDepositDialogOpen(true)}
+            onAutoSave={() => setIsAutomatedSavingDialogOpen(true)}
+          />
 
-            {/* Analytics Cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-              {[
-                { title: t('dashboard.savings.analytics.totalSavings'), value: analytics.totalSavings, icon: PiggyBank, color: 'text-blue-500' },
-                { title: t('dashboard.savings.analytics.monthlyGrowth'), value: analytics.monthlyGrowth, icon: TrendingUp, color: 'text-green-500' },
-                { title: t('dashboard.savings.analytics.nextMilestone'), value: analytics.nextMilestone, icon: Target, color: 'text-orange-500' },
-                { title: t('dashboard.savings.analytics.projectedSavings'), value: analytics.projectedSavings, icon: DollarSign, color: 'text-purple-500' }
-              ].map((item, idx) => (
-                <Card key={idx} className="hover:shadow-lg transition-all duration-300 border-muted/50">
-                  <CardContent className="p-4 sm:p-5 md:p-6">
-                    <div className="flex items-start justify-between mb-3 sm:mb-4">
-                      <div className={`p-2 sm:p-2.5 rounded-xl bg-muted/50 ${item.color}`}>
-                        <item.icon className="h-4 w-4 sm:h-5 sm:w-5" />
-                      </div>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-xs sm:text-sm text-muted-foreground font-medium">{item.title}</p>
-                      <p className="text-lg sm:text-xl md:text-2xl font-bold tracking-tight">
-                        {formatCurrency(item.value)}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
+          <AnalyticsCards analytics={analytics} isLoading={analyticsLoading} />
 
-          {/* Tabs Section */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
-            <TabsList className="w-full h-auto p-1 bg-muted/50 backdrop-blur-sm grid grid-cols-5 gap-1">
-              {['active', 'fixed-deposits', 'automated', 'completed', 'insights'].map((tab) => (
-                <TabsTrigger
-                  key={tab}
-                  value={tab}
-                  className="text-xs sm:text-sm py-2 sm:py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all"
-                >
-                  <span className="hidden sm:inline">
-                    {tab === 'active' ? t('dashboard.savings.tabs.goals') : tab === 'fixed-deposits' ? t('dashboard.savings.tabs.fixedDeposits') :
-                     tab === 'automated' ? t('dashboard.savings.tabs.automated') : tab === 'completed' ? t('dashboard.savings.tabs.completed') : t('dashboard.savings.tabs.insights')}
-                  </span>
-                  <span className="sm:hidden">
-                    {tab === 'active' ? t('dashboard.savings.tabs.goalsShort') : tab === 'fixed-deposits' ? t('dashboard.savings.tabs.fixedDepositsShort') :
-                     tab === 'automated' ? t('dashboard.savings.tabs.automatedShort') : tab === 'completed' ? t('dashboard.savings.tabs.completedShort') : t('dashboard.savings.tabs.insightsShort')}
-                  </span>
-                </TabsTrigger>
-              ))}
-            </TabsList>
-
-            {/* Goals Tab */}
-            <TabsContent value="active" className="space-y-3 sm:space-y-4 mt-4 sm:mt-6">
-              {createdGoals.length === 0 ? (
-                <Card className="border-dashed">
-                  <CardContent className="flex flex-col items-center justify-center py-12 sm:py-16 md:py-20">
-                    <div className="rounded-full bg-muted p-4 sm:p-6 mb-4 sm:mb-6">
-                      <PiggyBank className="h-8 w-8 sm:h-12 sm:w-12 text-muted-foreground" />
-                    </div>
-                    <h3 className="text-base sm:text-lg font-semibold mb-2">No Savings Goals Yet</h3>
-                    <p className="text-sm sm:text-base text-muted-foreground text-center mb-6 max-w-md">
-                      Create your first savings goal to start tracking your progress
-                    </p>
-                    <Button onClick={() => setIsNewGoalDialogOpen(true)} size="lg">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Create Your First Goal
-                    </Button>
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="grid gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {createdGoals.map((goal) => {
-                    const progress = (goal.currentAmount / goal.targetAmount) * 100
-                    const remaining = goal.targetAmount - goal.currentAmount
-                    const monthsLeft = Math.ceil(remaining / goal.monthlyContribution)
-                    
-                    return (
-                      <Card key={goal.id} className="hover:shadow-xl transition-all duration-300 border-muted/50 overflow-hidden group">
-                        <div className="h-1.5 bg-gradient-to-r from-primary/20 via-primary to-primary/20 group-hover:from-primary/40 group-hover:via-primary group-hover:to-primary/40 transition-all" />
-                        <CardHeader className="p-4 sm:p-5 pb-3 sm:pb-4">
-                          <div className="space-y-2 sm:space-y-3">
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="space-y-1 flex-1 min-w-0">
-                                <CardTitle className="text-base sm:text-lg line-clamp-1">{goal.name}</CardTitle>
-                                <CardDescription className="text-xs sm:text-sm flex items-center gap-2 flex-wrap">
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-muted text-xs font-medium">
-                                    {goal.category}
-                                  </span>
-                                  <span>{formatCurrency(goal.monthlyContribution)}/mo</span>
-                                </CardDescription>
-                              </div>
-                              <div className="text-right flex-shrink-0">
-                                <div className="text-sm sm:text-base font-bold">{formatCurrency(goal.currentAmount)}</div>
-                                <div className="text-xs text-muted-foreground whitespace-nowrap">of {formatCurrency(goal.targetAmount)}</div>
-                              </div>
-                            </div>
-                          </div>
-                        </CardHeader>
-                        <CardContent className="p-4 sm:p-5 pt-0 space-y-4 sm:space-y-5">
-                          <div className="space-y-2 sm:space-y-3">
-                            <div className="flex justify-between text-xs sm:text-sm">
-                              <span className="text-muted-foreground">Progress</span>
-                              <span className="font-semibold">{progress.toFixed(1)}%</span>
-                            </div>
-                            <div className="relative">
-                              <Progress value={progress} className="h-2 sm:h-2.5" />
-                            </div>
-                          </div>
-                          
-                          <div className="grid grid-cols-2 gap-2 sm:gap-3 pt-2 sm:pt-3 border-t">
-                            <div className="space-y-1">
-                              <p className="text-xs text-muted-foreground flex items-center gap-1">
-                                <Calendar className="h-3 w-3" />
-                                Target Date
-                              </p>
-                              <p className="text-xs sm:text-sm font-medium">
-                                {new Date(goal.deadline).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
-                              </p>
-                            </div>
-                            <div className="space-y-1 text-right">
-                              <p className="text-xs text-muted-foreground">Time Left</p>
-                              <p className="text-xs sm:text-sm font-medium text-orange-600">{monthsLeft} months</p>
-                            </div>
-                          </div>
-
-                          {goal.isAutoSave && (
-                            <div className="flex items-center gap-2 p-2 sm:p-2.5 rounded-lg bg-green-500/10 border border-green-500/20">
-                              <Repeat className="h-3.5 w-3.5 text-green-600 flex-shrink-0" />
-                              <span className="text-xs text-green-700 dark:text-green-400 font-medium">Auto-save enabled</span>
-                            </div>
-                          )}
-
-                          <div className="flex gap-2 pt-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="flex-1 text-xs sm:text-sm h-9"
-                              onClick={() => {
-                                setCreatedGoals(prev =>
-                                  prev.map(g => g.id === goal.id ? {
-                                    ...g,
-                                    currentAmount: Math.min(g.currentAmount + g.monthlyContribution, g.targetAmount)
-                                  } : g)
-                                )
-                                addToast({
-                                  title: 'Contribution Added',
-                                  description: `Added ${formatCurrency(goal.monthlyContribution)} to ${goal.name}`,
-                                })
-                              }}
-                            >
-                              Add Money
-                            </Button>
-                            <Button variant="ghost" size="sm" className="text-xs sm:text-sm h-9">
-                              Edit
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    )
-                  })}
-                </div>
-              )}
-            </TabsContent>
-
-            {/* Fixed Deposits Tab */}
-            <TabsContent value="fixed-deposits" className="space-y-3 sm:space-y-4 mt-4 sm:mt-6">
-              {fixedDeposits.length === 0 ? (
-                <Card className="border-dashed">
-                  <CardContent className="flex flex-col items-center justify-center py-12 sm:py-16 md:py-20">
-                    <div className="rounded-full bg-muted p-4 sm:p-6 mb-4 sm:mb-6">
-                      <Shield className="h-8 w-8 sm:h-12 sm:w-12 text-muted-foreground" />
-                    </div>
-                    <h3 className="text-base sm:text-lg font-semibold mb-2">No Fixed Deposits Yet</h3>
-                    <p className="text-sm sm:text-base text-muted-foreground text-center mb-6 max-w-md">
-                      Start earning guaranteed returns with fixed deposits
-                    </p>
-                    <Button onClick={() => setIsFixedDepositDialogOpen(true)} size="lg">
-                      <Shield className="h-4 w-4 mr-2" />
-                      Create Your First FD
-                    </Button>
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
-                  {fixedDeposits.map((fd) => {
-                    const { interest, maturityAmount } = calculateFixedDepositInterest(fd.amount, fd.term, fd.interestRate)
-                    
-                    return (
-                      <Card key={fd.id} className="hover:shadow-xl transition-all duration-300 border-muted/50 overflow-hidden group">
-                        <div className="h-1.5 bg-gradient-to-r from-blue-500/20 via-blue-500 to-blue-500/20 group-hover:from-blue-500/40 group-hover:via-blue-500 group-hover:to-blue-500/40 transition-all" />
-                        <CardHeader className="p-4 sm:p-5 pb-3 sm:pb-4">
-                          <div className="flex justify-between items-start gap-2">
-                            <div className="space-y-1">
-                              <CardTitle className="text-base sm:text-lg flex items-center gap-2">
-                                <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" />
-                                FD #{fd.id.slice(-4)}
-                              </CardTitle>
-                              <CardDescription className="text-xs sm:text-sm">
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-400 text-xs font-medium mr-2">
-                                  {fd.term} months
-                                </span>
-                                <span className="font-semibold text-green-600">{fd.interestRate}% APY</span>
-                              </CardDescription>
-                            </div>
-                            <div className="text-right flex-shrink-0">
-                              <div className="text-sm sm:text-base font-bold">{formatCurrency(fd.amount)}</div>
-                              <div className="text-xs text-green-600 font-medium">{fd.status}</div>
-                            </div>
-                          </div>
-                        </CardHeader>
-                        <CardContent className="p-4 sm:p-5 pt-0 space-y-3 sm:space-y-4">
-                          <div className="grid grid-cols-2 gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl bg-muted/30 border border-muted">
-                            <div className="space-y-1">
-                              <p className="text-xs text-muted-foreground">Maturity Date</p>
-                              <p className="text-xs sm:text-sm font-semibold">
-                                {fd.maturityDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                              </p>
-                            </div>
-                            <div className="space-y-1 text-right">
-                              <p className="text-xs text-muted-foreground">Returns</p>
-                              <p className="text-xs sm:text-sm font-bold text-green-600">{formatCurrency(maturityAmount)}</p>
-                            </div>
-                          </div>
-
-                          <div className="space-y-2">
-                            {fd.roundupEnabled && (
-                              <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 text-xs">
-                                <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
-                                <span className="text-muted-foreground">Roundup savings enabled</span>
-                              </div>
-                            )}
-                            {fd.autoRenew && (
-                              <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 text-xs">
-                                <Repeat className="h-3.5 w-3.5 text-muted-foreground" />
-                                <span className="text-muted-foreground">Auto-renewal enabled</span>
-                              </div>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    )
-                  })}
-                </div>
-              )}
-            </TabsContent>
-
-            {/* Automated Savings Tab */}
-            <TabsContent value="automated" className="space-y-3 sm:space-y-4 mt-4 sm:mt-6">
-              {automatedSavings.length === 0 ? (
-                <Card className="border-dashed">
-                  <CardContent className="flex flex-col items-center justify-center py-12 sm:py-16 md:py-20">
-                    <div className="rounded-full bg-muted p-4 sm:p-6 mb-4 sm:mb-6">
-                      <Repeat className="h-8 w-8 sm:h-12 sm:w-12 text-muted-foreground" />
-                    </div>
-                    <h3 className="text-base sm:text-lg font-semibold mb-2">No Automated Savings Yet</h3>
-                    <p className="text-sm sm:text-base text-muted-foreground text-center mb-6 max-w-md">
-                      Set up automatic transfers to build your savings consistently
-                    </p>
-                    <Button onClick={() => setIsAutomatedSavingDialogOpen(true)} size="lg">
-                      <Repeat className="h-4 w-4 mr-2" />
-                      Create Auto Save
-                    </Button>
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="grid gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {automatedSavings.map((saving) => {
-                    let monthlyAmount = 0
-                    if (saving.frequency === 'DAILY') monthlyAmount = saving.amount * 30
-                    else if (saving.frequency === 'WEEKLY') monthlyAmount = saving.amount * 4.33
-                    else monthlyAmount = saving.amount
-                    
-                    return (
-                      <Card key={saving.id} className="hover:shadow-xl transition-all duration-300 border-muted/50 overflow-hidden group">
-                        <div className={`h-1.5 transition-all ${saving.isActive ? 'bg-gradient-to-r from-green-500/20 via-green-500 to-green-500/20 group-hover:from-green-500/40 group-hover:via-green-500 group-hover:to-green-500/40' : 'bg-gray-300'}`} />
-                        <CardHeader className="p-4 sm:p-5 pb-3 sm:pb-4">
-                          <div className="flex justify-between items-start gap-2">
-                            <div className="space-y-1 flex-1 min-w-0">
-                              <CardTitle className="text-base sm:text-lg line-clamp-1 flex items-center gap-2">
-                                <Repeat className={`h-4 w-4 flex-shrink-0 ${saving.isActive ? 'text-green-500' : 'text-gray-400'}`} />
-                                {saving.name}
-                              </CardTitle>
-                              <CardDescription className="text-xs sm:text-sm">
-                                {formatCurrency(saving.amount)} • {saving.frequency.toLowerCase()}
-                              </CardDescription>
-                            </div>
-                            <div className="text-right flex-shrink-0">
-                              <div className="text-sm sm:text-base font-bold">{formatCurrency(saving.totalSaved)}</div>
-                              <div className="text-xs text-muted-foreground">Total</div>
-                            </div>
-                          </div>
-                        </CardHeader>
-                        <CardContent className="p-4 sm:p-5 pt-0 space-y-3 sm:space-y-4">
-                          <div className="grid grid-cols-2 gap-2 sm:gap-3 text-xs sm:text-sm">
-                            <div>
-                              <p className="text-muted-foreground mb-1">Next Transfer</p>
-                              <p className="font-medium">{saving.nextDeduction.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
-                            </div>
-                            <div className="text-right">
-                              <p className="text-muted-foreground mb-1">Status</p>
-                              <p className={`font-semibold ${saving.isActive ? 'text-green-600' : 'text-red-600'}`}>
-                                {saving.isActive ? 'Active' : 'Paused'}
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20">
-                            <p className="text-xs text-muted-foreground mb-1">Monthly Projection</p>
-                            <p className="text-sm sm:text-base font-bold text-green-600">{formatCurrency(monthlyAmount)}</p>
-                          </div>
-
-                          <div className="flex gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="flex-1 text-xs sm:text-sm h-9"
-                              onClick={() => {
-                                setAutomatedSavings(prev =>
-                                  prev.map(s => s.id === saving.id ? { ...s, isActive: !s.isActive } : s)
-                                )
-                              }}
-                            >
-                              {saving.isActive ? 'Pause' : 'Resume'}
-                            </Button>
-                            <Button variant="ghost" size="sm" className="text-xs sm:text-sm h-9">
-                              Edit
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    )
-                  })}
-                </div>
-              )}
-            </TabsContent>
-
-            {/* Completed Tab */}
-            <TabsContent value="completed" className="mt-4 sm:mt-6">
-              <Card className="border-dashed">
-                <CardContent className="flex flex-col items-center justify-center py-12 sm:py-16 md:py-20">
-                  <div className="rounded-full bg-muted p-4 sm:p-6 mb-4 sm:mb-6">
-                    <Target className="h-8 w-8 sm:h-12 sm:w-12 text-muted-foreground" />
-                  </div>
-                  <h3 className="text-base sm:text-lg font-semibold mb-2">No Completed Goals</h3>
-                  <p className="text-sm sm:text-base text-muted-foreground text-center max-w-md">
-                    Completed savings goals will appear here
-                  </p>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Insights Tab */}
-            <TabsContent value="insights" className="mt-4 sm:mt-6">
-              <Card className="border-muted/50 shadow-lg">
-                <CardHeader className="p-5 sm:p-6">
-                  <CardTitle className="text-lg sm:text-xl">Savings Insights</CardTitle>
-                  <CardDescription className="text-sm">
-                    Track your savings progress and get personalized recommendations
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="p-5 sm:p-6 pt-0">
-                  <div className="space-y-4 sm:space-y-5">
-                    {analytics.insights.map((insight, index) => (
-                      <div key={index} className="flex items-start gap-3 sm:gap-4 p-4 sm:p-5 rounded-xl bg-gradient-to-br from-muted/30 to-muted/10 hover:from-muted/50 hover:to-muted/20 transition-all border border-muted/50">
-                        <div className="bg-primary/10 p-2.5 sm:p-3 rounded-xl flex-shrink-0">
-                          <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-                        </div>
-                        <div className="space-y-1 flex-1 min-w-0">
-                          <h4 className="text-sm sm:text-base font-semibold">{insight.title}</h4>
-                          <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">{insight.description}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+          <SavingsTabs
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            createdGoals={createdGoals}
+            fixedDeposits={fixedDeposits}
+            automatedSavings={automatedSavings}
+            setAutomatedSavings={setAutomatedSavings}
+            onNewGoal={() => setIsNewGoalDialogOpen(true)}
+            onFixedDeposit={() => setIsFixedDepositDialogOpen(true)}
+            onAutoSave={() => setIsAutomatedSavingDialogOpen(true)}
+            analytics={analytics}
+          />
         </div>
       </div>
 
-      {/* New Goal Dialog */}
-      <Dialog open={isNewGoalDialogOpen} onOpenChange={setIsNewGoalDialogOpen}>
-        <DialogContent className="max-w-[95vw] sm:max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader className="space-y-2 sm:space-y-3">
-            <DialogTitle className="text-lg sm:text-xl">Create New Savings Goal</DialogTitle>
-            <DialogDescription className="text-sm">
-              Set up a new savings goal with regular contributions
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 sm:space-y-5 py-2">
-            <div className="space-y-2">
-              <Label htmlFor="goal-name" className="text-sm font-medium">Goal Name</Label>
-              <Input
-                id="goal-name"
-                placeholder="e.g., Emergency Fund, New Car"
-                className="h-10 sm:h-11"
-                value={newGoalForm.name}
-                onChange={(e) => setNewGoalForm(prev => ({ ...prev, name: e.target.value }))}
-              />
-            </div>
+      <NewGoalDialog
+        open={isNewGoalDialogOpen}
+        onOpenChange={setIsNewGoalDialogOpen}
+        form={newGoalForm}
+        setForm={setNewGoalForm}
+        onSubmit={handleCreateGoal}
+      />
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="goal-target" className="text-sm font-medium">Target Amount</Label>
-                <Input
-                  id="goal-target"
-                  type="number"
-                  placeholder="10000"
-                  className="h-10 sm:h-11"
-                  value={newGoalForm.targetAmount}
-                  onChange={(e) => setNewGoalForm(prev => ({ ...prev, targetAmount: e.target.value }))}
-                />
-              </div>
+      <FixedDepositDialog
+        open={isFixedDepositDialogOpen}
+        onOpenChange={setIsFixedDepositDialogOpen}
+        form={fixedDepositForm}
+        setForm={setFixedDepositForm}
+      />
 
-              <div className="space-y-2">
-                <Label htmlFor="goal-monthly" className="text-sm font-medium">Monthly Contribution</Label>
-                <Input
-                  id="goal-monthly"
-                  type="number"
-                  placeholder="500"
-                  className="h-10 sm:h-11"
-                  value={newGoalForm.monthlyContribution}
-                  onChange={(e) => setNewGoalForm(prev => ({ ...prev, monthlyContribution: e.target.value }))}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Category</Label>
-                <Select value={newGoalForm.category} onValueChange={(value) => setNewGoalForm(prev => ({ ...prev, category: value }))}>
-                  <SelectTrigger className="h-10 sm:h-11">
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Emergency">Emergency Fund</SelectItem>
-                    <SelectItem value="Retirement">Retirement</SelectItem>
-                    <SelectItem value="Education">Education</SelectItem>
-                    <SelectItem value="Travel">Travel</SelectItem>
-                    <SelectItem value="Home">Home</SelectItem>
-                    <SelectItem value="Vehicle">Vehicle</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="goal-deadline" className="text-sm font-medium">Target Date</Label>
-                <Input
-                  id="goal-deadline"
-                  type="date"
-                  className="h-10 sm:h-11"
-                  value={newGoalForm.deadline ? newGoalForm.deadline.toISOString().split('T')[0] : ''}
-                  onChange={(e) => setNewGoalForm(prev => ({
-                    ...prev,
-                    deadline: e.target.value ? new Date(e.target.value) : null
-                  }))}
-                />
-              </div>
-            </div>
-
-            {newGoalForm.targetAmount && newGoalForm.monthlyContribution && (
-              <div className="p-4 sm:p-5 rounded-xl bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 space-y-3">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <TrendingUp className="h-4 w-4 text-primary" />
-                  </div>
-                  <p className="text-sm font-semibold">Goal Timeline</p>
-                </div>
-                {(() => {
-                  const target = parseFloat(newGoalForm.targetAmount) || 0
-                  const monthly = parseFloat(newGoalForm.monthlyContribution) || 0
-
-                  if (target > 0 && monthly > 0) {
-                    const monthsToGoal = Math.ceil(target / monthly)
-                    const yearsToGoal = (monthsToGoal / 12).toFixed(1)
-
-                    return (
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Target Amount:</span>
-                          <span className="font-semibold">{formatCurrency(target)}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Monthly Savings:</span>
-                          <span className="font-semibold">{formatCurrency(monthly)}</span>
-                        </div>
-                        <Separator className="my-2" />
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Time to Goal:</span>
-                          <span className="font-bold text-primary">
-                            {monthsToGoal} months ({yearsToGoal} years)
-                          </span>
-                        </div>
-                      </div>
-                    )
-                  }
-                  return null
-                })()}
-              </div>
-            )}
-
-            <div className="flex items-center gap-3 p-4 rounded-xl bg-muted/50 border border-muted">
-              <Switch
-                id="goal-autosave"
-                checked={newGoalForm.isAutoSave}
-                onCheckedChange={(checked) => setNewGoalForm(prev => ({ ...prev, isAutoSave: checked }))}
-              />
-              <div className="flex-1">
-                <Label htmlFor="goal-autosave" className="text-sm font-medium cursor-pointer">Enable Auto-Save</Label>
-                <p className="text-xs text-muted-foreground mt-0.5">Automatically transfer funds monthly</p>
-              </div>
-            </div>
-
-            <Button onClick={handleCreateGoal} className="w-full h-11 text-base font-semibold">
-              <Plus className="h-4 w-4 mr-2" />
-              Create Savings Goal
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Fixed Deposit Dialog */}
-      <Dialog open={isFixedDepositDialogOpen} onOpenChange={setIsFixedDepositDialogOpen}>
-        <DialogContent className="max-w-[95vw] sm:max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader className="space-y-2 sm:space-y-3">
-            <DialogTitle className="text-lg sm:text-xl">Create Fixed Deposit</DialogTitle>
-            <DialogDescription className="text-sm">
-              Lock in your savings for guaranteed returns
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 sm:space-y-5 py-2">
-            <div className="space-y-2">
-              <Label htmlFor="fd-amount" className="text-sm font-medium">Deposit Amount</Label>
-              <Input
-                id="fd-amount"
-                type="number"
-                placeholder="Minimum $1,000"
-                className="h-10 sm:h-11"
-                value={fixedDepositForm.amount}
-                onChange={(e) => setFixedDepositForm(prev => ({ ...prev, amount: e.target.value }))}
-              />
-              <p className="text-xs text-muted-foreground">Minimum deposit: $1,000</p>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Deposit Term</Label>
-              <Select
-                value={fixedDepositForm.term}
-                onValueChange={(value) => setFixedDepositForm(prev => ({ ...prev, term: value }))}
-              >
-                <SelectTrigger className="h-10 sm:h-11">
-                  <SelectValue placeholder="Select term" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="6">6 Months (4.0% APY)</SelectItem>
-                  <SelectItem value="12">1 Year (4.5% APY)</SelectItem>
-                  <SelectItem value="24">2 Years (4.8% APY)</SelectItem>
-                  <SelectItem value="36">3 Years (5.0% APY)</SelectItem>
-                  <SelectItem value="60">5 Years (5.5% APY)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {fixedDepositForm.amount && (
-              <div className="p-4 sm:p-5 rounded-xl bg-gradient-to-br from-green-500/5 to-green-500/10 border border-green-500/20 space-y-3">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="p-2 rounded-lg bg-green-500/10">
-                    <DollarSign className="h-4 w-4 text-green-600" />
-                  </div>
-                  <p className="text-sm font-semibold">Interest Calculation</p>
-                </div>
-                {(() => {
-                  const amount = parseFloat(fixedDepositForm.amount) || 0
-                  const termInMonths = parseInt(fixedDepositForm.term) || 12
-                  const rate = getInterestRate(termInMonths)
-                  const { interest, maturityAmount } = calculateFixedDepositInterest(amount, termInMonths, rate)
-
-                  return (
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Principal:</span>
-                        <span className="font-semibold">{formatCurrency(amount)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Interest Rate:</span>
-                        <span className="font-semibold text-green-600">{rate}% APY</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Interest Earned:</span>
-                        <span className="font-semibold text-green-600">{formatCurrency(interest)}</span>
-                      </div>
-                      <Separator className="my-2" />
-                      <div className="flex justify-between">
-                        <span className="font-medium">Maturity Amount:</span>
-                        <span className="font-bold text-green-600 text-base">{formatCurrency(maturityAmount)}</span>
-                      </div>
-                    </div>
-                  )
-                })()}
-              </div>
-            )}
-
-            <div className="space-y-3 p-4 rounded-xl bg-muted/50 border border-muted">
-              <p className="text-sm font-medium">Options</p>
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label htmlFor="roundup" className="text-sm font-medium cursor-pointer">Roundup Savings</Label>
-                  <p className="text-xs text-muted-foreground mt-0.5">Round up transactions</p>
-                </div>
-                <Switch
-                  id="roundup"
-                  checked={fixedDepositForm.roundupEnabled}
-                  onCheckedChange={(checked) => setFixedDepositForm(prev => ({ ...prev, roundupEnabled: checked }))}
-                />
-              </div>
-              <Separator />
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label htmlFor="autoRenew" className="text-sm font-medium cursor-pointer">Auto-renew</Label>
-                  <p className="text-xs text-muted-foreground mt-0.5">Renew at maturity</p>
-                </div>
-                <Switch
-                  id="autoRenew"
-                  checked={fixedDepositForm.autoRenew}
-                  onCheckedChange={(checked) => setFixedDepositForm(prev => ({ ...prev, autoRenew: checked }))}
-                />
-              </div>
-            </div>
-
-            <Button onClick={() => {
-              addToast({ title: 'Success', description: 'Fixed deposit created successfully' })
-              setIsFixedDepositDialogOpen(false)
-            }} className="w-full h-11 text-base font-semibold">
-              <Shield className="h-4 w-4 mr-2" />
-              Create Fixed Deposit
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Automated Saving Dialog */}
-      <Dialog open={isAutomatedSavingDialogOpen} onOpenChange={setIsAutomatedSavingDialogOpen}>
-        <DialogContent className="max-w-[95vw] sm:max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader className="space-y-2 sm:space-y-3">
-            <DialogTitle className="text-lg sm:text-xl">Create Automated Saving</DialogTitle>
-            <DialogDescription className="text-sm">
-              Set up regular automatic transfers to your savings
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 sm:space-y-5 py-2">
-            <div className="space-y-2">
-              <Label htmlFor="as-name" className="text-sm font-medium">Saving Name</Label>
-              <Input
-                id="as-name"
-                placeholder="e.g., Emergency Fund, Vacation"
-                className="h-10 sm:h-11"
-                value={automatedSavingForm.name}
-                onChange={(e) => setAutomatedSavingForm(prev => ({ ...prev, name: e.target.value }))}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="as-amount" className="text-sm font-medium">Amount per Transfer</Label>
-                <Input
-                  id="as-amount"
-                  type="number"
-                  placeholder="50"
-                  className="h-10 sm:h-11"
-                  value={automatedSavingForm.amount}
-                  onChange={(e) => setAutomatedSavingForm(prev => ({ ...prev, amount: e.target.value }))}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Frequency</Label>
-                <Select
-                  value={automatedSavingForm.frequency}
-                  onValueChange={(value: 'DAILY' | 'WEEKLY' | 'MONTHLY') =>
-                    setAutomatedSavingForm(prev => ({ ...prev, frequency: value }))
-                  }
-                >
-                  <SelectTrigger className="h-10 sm:h-11">
-                    <SelectValue placeholder="Select frequency" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="DAILY">Daily</SelectItem>
-                    <SelectItem value="WEEKLY">Weekly</SelectItem>
-                    <SelectItem value="MONTHLY">Monthly</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {automatedSavingForm.amount && (
-              <div className="p-4 sm:p-5 rounded-xl bg-gradient-to-br from-blue-500/5 to-blue-500/10 border border-blue-500/20 space-y-3">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="p-2 rounded-lg bg-blue-500/10">
-                    <TrendingUp className="h-4 w-4 text-blue-600" />
-                  </div>
-                  <p className="text-sm font-semibold">Savings Projection</p>
-                </div>
-                {(() => {
-                  const amount = parseFloat(automatedSavingForm.amount) || 0
-                  const frequency = automatedSavingForm.frequency
-                  let monthlyAmount = 0
-
-                  if (frequency === 'DAILY') monthlyAmount = amount * 30
-                  else if (frequency === 'WEEKLY') monthlyAmount = amount * 4.33
-                  else monthlyAmount = amount
-
-                  const yearlyAmount = monthlyAmount * 12
-
-                  return (
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Per Month:</span>
-                        <span className="font-semibold">{formatCurrency(monthlyAmount)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Per Year:</span>
-                        <span className="font-semibold text-green-600">{formatCurrency(yearlyAmount)}</span>
-                      </div>
-                      <Separator className="my-2" />
-                      <div className="flex justify-between">
-                        <span className="font-medium">In 5 Years:</span>
-                        <span className="font-bold text-green-600 text-base">{formatCurrency(yearlyAmount * 5)}</span>
-                      </div>
-                    </div>
-                  )
-                })()}
-              </div>
-            )}
-
-            <Button onClick={() => {
-              addToast({ title: 'Success', description: 'Automated saving created successfully' })
-              setIsAutomatedSavingDialogOpen(false)
-            }} className="w-full h-11 text-base font-semibold">
-              <Repeat className="h-4 w-4 mr-2" />
-              Create Automated Saving
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <AutomatedSavingDialog
+        open={isAutomatedSavingDialogOpen}
+        onOpenChange={setIsAutomatedSavingDialogOpen}
+        form={automatedSavingForm}
+        setForm={setAutomatedSavingForm}
+      />
     </div>
   )
 }

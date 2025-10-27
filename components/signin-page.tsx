@@ -44,6 +44,7 @@ export function SignInPage() {
     const verified = urlParams.get("verified")
     const email = urlParams.get("email")
     const errorParam = urlParams.get("error")
+    const callbackUrl = urlParams.get("callbackUrl")
 
     if (verified === "true" && email) {
       toast({
@@ -59,6 +60,11 @@ export function SignInPage() {
       setError(decodeURIComponent(errorParam))
       // Clean up URL
       window.history.replaceState({}, document.title, window.location.pathname)
+    }
+
+    // Store callbackUrl for later use
+    if (callbackUrl) {
+      sessionStorage.setItem('callbackUrl', callbackUrl)
     }
   }, [toast])
 
@@ -80,7 +86,14 @@ export function SignInPage() {
         description: "You have been signed in successfully.",
       })
 
-      router.push('/home')
+      // Check for callbackUrl in sessionStorage
+      const callbackUrl = sessionStorage.getItem('callbackUrl')
+      if (callbackUrl) {
+        sessionStorage.removeItem('callbackUrl')
+        router.push(callbackUrl)
+      } else {
+        router.push('/home')
+      }
 
     } catch (err) {
       console.error('Login error:', err)

@@ -15,7 +15,7 @@ export function middleware(request: NextRequest) {
   }
 
   // Get the token from cookies - optimized single operation
-  const token = request.cookies.get('auth-token')?.value;
+  const token = request.cookies.get('access_token')?.value;
 
   // Allow access to signin page even if token exists
   // Users should be able to sign in again manually

@@ -178,13 +178,13 @@ export function SignupPage() {
         validatedData.bio
       )
 
-      // Success - redirect to signin page
+      // Success - redirect to check email page
       toast({
         title: "Account Created!",
-        description: "Your account has been created successfully. Please sign in.",
+        description: "Please check your email and click the verification link to activate your account.",
       })
 
-      router.push('/signin')
+      router.push(`/check-email?email=${encodeURIComponent(validatedData.email)}`)
 
     } catch (err) {
       console.error('Signup error:', err)

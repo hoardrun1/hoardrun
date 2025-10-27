@@ -26,7 +26,6 @@ const deleteCookie = (name: string) => {
   document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`;
 };
 
-// Define user type for Python backend
 interface User {
   id: string;
   email: string;
@@ -36,14 +35,11 @@ interface User {
 }
 
 interface AuthContextType {
-  // User and state
   user: User | null;
   token: string | null;
   loading: boolean;
   error: string | null;
   isAuthenticated: boolean;
-
-  // Auth methods
   signUp: (email: string, password: string, firstName?: string, lastName?: string, phone?: string, dateOfBirth?: string, country?: string, idNumber?: string, bio?: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -60,13 +56,11 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  // Local state for Python backend auth
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Function to fetch current user profile from backend
   const fetchCurrentUser = async (authToken: string) => {
     try {
       apiClient.setToken(authToken);
@@ -87,8 +81,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         };
         
         setUser(unifiedUser);
-        
-        // Update stored user data in cookies and localStorage
         setCookie('auth-user', JSON.stringify(unifiedUser));
         localStorage.setItem('auth_user', JSON.stringify(unifiedUser));
         
@@ -96,66 +88,58 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
     } catch (error) {
       console.error('Error fetching current user:', error);
-      // If fetching user fails, clear auth data
-      deleteCookie('auth-token');
-      deleteCookie('auth-user');
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('auth_user');
-      sessionStorage.removeItem('token');
-      sessionStorage.removeItem('user');
-      apiClient.clearToken();
+      clearAllAuthData();
       setToken(null);
       setUser(null);
     }
     return null;
   };
 
+  const clearAllAuthData = () => {
+    // Clear cookies
+    deleteCookie('auth-token');
+    deleteCookie('access_token');
+    deleteCookie('refresh_token');
+    deleteCookie('auth-user');
+    
+    // Clear localStorage
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('auth_user');
+    localStorage.removeItem('auth-token');
+    
+    // Clear sessionStorage
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('user');
+    sessionStorage.removeItem('auth_session_initialized');
+    
+    // Clear API client
+    apiClient.clearToken();
+  };
+
   useEffect(() => {
     const initializeAuth = async () => {
       console.log('Initializing auth state...');
       
-      // Try to restore token and user from cookies first (primary storage)
-      const storedToken = getCookie('auth-token');
-      const storedUserStr = getCookie('auth-user');
+      // CRITICAL: Look for access_token specifically (not auth-token)
+      const storedToken = getCookie('access_token') || localStorage.getItem('access_token');
+      const storedUserStr = getCookie('auth-user') || localStorage.getItem('auth_user');
       
       if (storedToken && storedUserStr) {
         try {
           const storedUser = JSON.parse(storedUserStr);
-          console.log('Restoring auth state from cookies');
+          console.log('Restoring auth state with access token');
           setToken(storedToken);
           setUser(storedUser);
           apiClient.setToken(storedToken);
         } catch (error) {
           console.error('Error parsing stored user data:', error);
-          // Clear corrupted data
-          deleteCookie('auth-token');
-          deleteCookie('auth-user');
-          apiClient.clearToken();
+          clearAllAuthData();
         }
       } else {
-        // Fallback to localStorage if cookies are not available
-        const localToken = localStorage.getItem('auth_token');
-        const localUserStr = localStorage.getItem('auth_user');
-        
-        if (localToken && localUserStr) {
-          try {
-            const localUser = JSON.parse(localUserStr);
-            console.log('Restoring auth state from localStorage');
-            setToken(localToken);
-            setUser(localUser);
-            apiClient.setToken(localToken);
-          } catch (error) {
-            console.error('Error parsing local user data:', error);
-            // Clear corrupted data
-            localStorage.removeItem('auth_token');
-            localStorage.removeItem('auth_user');
-            apiClient.clearToken();
-          }
-        } else {
-          // No stored auth data found
-          console.log('No stored auth data found');
-          apiClient.clearToken();
-        }
+        console.log('No stored auth data found');
+        apiClient.clearToken();
       }
       
       setLoading(false);
@@ -163,7 +147,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     initializeAuth();
 
-    // Listen for token expiration events from API client
     const handleTokenExpiration = () => {
       console.log('Token expiration event received - logging out user');
       setToken(null);
@@ -173,8 +156,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     if (typeof window !== 'undefined') {
       window.addEventListener('auth:token-expired', handleTokenExpiration);
-      
-      // Cleanup event listener
       return () => {
         window.removeEventListener('auth:token-expired', handleTokenExpiration);
       };
@@ -182,7 +163,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   useEffect(() => {
-    // Ensure apiClient always uses the latest token for Authorization header
     if (token) {
       apiClient.setToken(token);
     } else {
@@ -190,62 +170,40 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, [token]);
 
-  // Auth methods
-  const login = (newToken: string, newUser: User, refreshToken?: string) => {
-    setToken(newToken);
+  const login = (accessToken: string, newUser: User, refreshToken?: string) => {
+    setToken(accessToken);
     setUser(newUser);
     setError(null);
 
-    // Store auth data in cookies (primary storage for middleware)
-    setCookie('auth-token', newToken);
+    // CRITICAL: Store as access_token and refresh_token
+    setCookie('access_token', accessToken);
     setCookie('auth-user', JSON.stringify(newUser));
-
-    // Also store in localStorage for backward compatibility
-    localStorage.setItem('auth_token', newToken);
+    
+    localStorage.setItem('access_token', accessToken);
     localStorage.setItem('auth_user', JSON.stringify(newUser));
 
-    // Store refresh token if provided
     if (refreshToken) {
+      setCookie('refresh_token', refreshToken);
       localStorage.setItem('refresh_token', refreshToken);
       apiClient.setRefreshToken(refreshToken);
     }
 
-    // Set the token directly in API client to ensure immediate availability
-    apiClient.setToken(newToken);
-
-    console.log('Login successful - tokens stored in cookies and localStorage');
+    apiClient.setToken(accessToken);
+    console.log('Login successful - access and refresh tokens stored');
   };
 
   const logout = async () => {
     try {
-      // Call logout API
       if (token) {
         await apiClient.logout();
       }
     } catch (error) {
       console.error('Logout API error:', error);
     } finally {
-      // Clear auth data regardless of API call success
       setToken(null);
       setUser(null);
       setError(null);
-
-      // Clear API client token
-      apiClient.clearToken();
-
-      // Clear all possible storage locations to ensure complete logout
-      deleteCookie('auth-token');
-      deleteCookie('auth-user');
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('auth_user');
-      localStorage.removeItem('refresh_token');
-      sessionStorage.removeItem('token');
-      sessionStorage.removeItem('user');
-
-      // Also clear any other potential auth-related storage
-      localStorage.clear();
-      sessionStorage.clear();
-      
+      clearAllAuthData();
       console.log('User logged out - all auth data cleared');
     }
   };
@@ -254,7 +212,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setError(null);
   };
 
-  // Helper function to truncate password to 72 bytes UTF-8
   const truncatePassword = (password: string, maxBytes: number = 72): string => {
     const encoder = new TextEncoder();
     const decoder = new TextDecoder();
@@ -264,8 +221,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return decoder.decode(bytes, { stream: false });
   };
 
-  // Signup using Python backend
-  const signup = async (email: string, password: string, firstName?: string, lastName?: string, phone?: string, dateOfBirth?: string, country?: string, idNumber?: string, bio?: string) => {
+  const signup = async (email: string, password: string, firstName?: string, lastName?: string, phone?: string, dateOfBirth?: string, country?: string, bio?: string) => {
     try {
       setLoading(true);
       setError(null);
@@ -280,7 +236,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         phone_number: phone || undefined,
         date_of_birth: dateOfBirth || undefined,
         country: country || undefined,
-        id_number: idNumber || undefined,
         bio: bio || undefined,
         terms_accepted: true,
       });
@@ -290,19 +245,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
 
       if (response.data) {
-        // Registration successful, but user needs to sign in to get a token
-        // Clear any existing auth data and don't set user state
-        deleteCookie('auth-token');
-        deleteCookie('auth-user');
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('auth_user');
-        sessionStorage.removeItem('token');
-        sessionStorage.removeItem('user');
-        apiClient.clearToken();
+        clearAllAuthData();
         setToken(null);
         setUser(null);
-
-        console.log('Registration successful. User needs to sign in to get access token.');
+        console.log('Registration successful. User needs to sign in.');
       }
     } catch (error: any) {
       console.error('Signup error:', error);
@@ -313,14 +259,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  // Signin using Python backend
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
       setError(null);
 
       const truncatedPassword = truncatePassword(password);
-
       const response = await apiClient.login(email, truncatedPassword);
 
       if (response.error) {
@@ -328,33 +272,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
 
       if (response.data) {
-        // Check if response.data has the nested structure from success_response
+        let loginData;
+        
+        // Handle nested structure from success_response
         if (response.data.data) {
-          const loginData = response.data.data;
-          const unifiedUser: User = {
-            id: loginData.user.id,
-            email: loginData.user.email,
-            name: `${loginData.user.first_name} ${loginData.user.last_name}`.trim(),
-            emailVerified: loginData.user.email_verified,
-            profilePictureUrl: loginData.user.profile_picture_url
-          };
-
-          login(loginData.access_token, unifiedUser, loginData.refresh_token);
+          loginData = response.data.data;
         } else if (response.data.user) {
-          // Handle direct structure if backend doesn't use success_response wrapper
-          const unifiedUser: User = {
-            id: response.data.user.id,
-            email: response.data.user.email,
-            name: `${response.data.user.first_name} ${response.data.user.last_name}`.trim(),
-            emailVerified: response.data.user.email_verified,
-            profilePictureUrl: response.data.user.profile_picture_url
-          };
-
-          login(response.data.access_token, unifiedUser, response.data.refresh_token);
+          loginData = response.data;
         } else {
           console.error('Unexpected response structure:', response.data);
           throw new Error('Invalid response structure from server');
         }
+
+        const unifiedUser: User = {
+          id: loginData.user.id,
+          email: loginData.user.email,
+          name: `${loginData.user.first_name} ${loginData.user.last_name}`.trim(),
+          emailVerified: loginData.user.email_verified,
+          profilePictureUrl: loginData.user.profile_picture_url
+        };
+
+        // CRITICAL: Pass access_token and refresh_token
+        login(loginData.access_token, unifiedUser, loginData.refresh_token);
       } else {
         throw new Error('No data received from server');
       }
@@ -367,16 +306,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  // Create the context value
   const value: AuthContextType = {
-    // User and state
     user,
     token,
     loading,
     error,
     isAuthenticated: !!user && !!token,
-
-    // Auth methods
     signUp: signup,
     signIn,
     signOut: logout,

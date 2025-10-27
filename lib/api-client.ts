@@ -1,161 +1,3 @@
-/**
- * API Client for connecting to the Python FastAPI backend
- */
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://hoardrun-backend-py-1.onrender.com/api/v1'
-
-export interface ApiResponse<T = any> {
-  data?: T
-  error?: string
-  message?: string
-  status: number
-}
-
-export interface User {
-  id: string
-  email: string
-  first_name: string
-  last_name: string
-  phone_number?: string
-  date_of_birth?: string
-  country?: string
-  bio?: string
-  profile_picture_url?: string
-  status?: string
-  role?: string
-  email_verified?: boolean
-  is_active: boolean
-  created_at: string
-  updated_at: string
-  last_login_at?: string
-}
-
-export interface Transaction {
-  id: string
-  type: 'DEPOSIT' | 'WITHDRAWAL' | 'TRANSFER' | 'INVESTMENT'
-  amount: number
-  description: string
-  date: string
-  status: 'COMPLETED' | 'PENDING' | 'FAILED'
-  category?: string
-  beneficiary?: string
-  account_id?: string
-}
-
-export interface Beneficiary {
-  id: string
-  name: string
-  account_number: string
-  bank_name: string
-  bank_code?: string
-  email?: string
-  phone_number?: string
-  is_active: boolean
-  created_at: string
-  updated_at: string
-}
-
-export interface Investment {
-  id: string
-  name: string
-  type: string
-  amount: number
-  return: number
-  risk: 'LOW' | 'MEDIUM' | 'HIGH'
-  performance: Array<{ value: number; date: string }>
-  holdings: string[]
-}
-
-export interface PaymentMethod {
-  id: string
-  type: 'CARD' | 'BANK_ACCOUNT' | 'MOBILE_MONEY'
-  name: string
-  last_four?: string
-  status: 'active' | 'locked' | 'frozen' | 'lost'
-  spending_limit?: number
-  created_at: string
-  updated_at: string
-}
-
-export interface BankAccount {
-  id: string
-  account_type: 'CHECKING' | 'SAVINGS' | 'INVESTMENT'
-  account_number: string
-  balance: number
-  currency: string
-  status: 'active' | 'inactive' | 'closed'
-  is_primary: boolean
-  name?: string
-  created_at: string
-  updated_at: string
-}
-
-export interface DashboardData {
-  balance: number
-  total_income: number
-  total_expenses: number
-  recent_transactions: Transaction[]
-  savings_goals: any[]
-  investments: Investment[]
-}
-
-export interface BudgetCategory {
-  id: string
-  name: string
-  category: string
-  budgeted_amount: number
-  spent_amount: number
-  remaining_amount: number
-  percentage_used: number
-  status: 'under_budget' | 'on_track' | 'over_budget' | 'exceeded'
-  period: string
-  start_date: string
-  end_date?: string
-  currency: string
-  is_active: boolean
-  days_remaining?: number
-  daily_budget_remaining?: number
-  created_at: string
-  updated_at: string
-}
-
-export interface BudgetSummary {
-  total_budgets: number
-  active_budgets: number
-  total_budgeted: number
-  total_spent: number
-  total_remaining: number
-  overall_percentage_used: number
-  budgets_over_limit: number
-  budgets_on_track: number
-  budgets_under_budget: number
-}
-
-export interface SpendingByCategory {
-  category: string
-  amount: number
-  percentage: number
-  transaction_count: number
-  average_transaction: number
-  trend: 'increasing' | 'decreasing' | 'stable'
-  previous_period_amount?: number
-  change_amount?: number
-  change_percentage?: number
-}
-
-export interface FinancialInsight {
-  id: string
-  title: string
-  description: string
-  insight_type: string
-  category?: string
-  amount?: number
-  percentage?: number
-  action_recommended: string
-  priority: 'low' | 'medium' | 'high' | 'urgent'
-  created_at: string
-}
-
 class ApiClient {
   private baseUrl: string
   private _token: string | null = null
@@ -163,7 +5,7 @@ class ApiClient {
   private _isRefreshing: boolean = false
   private _refreshPromise: Promise<string | null> | null = null
 
-  constructor(baseUrl: string = API_BASE_URL) {
+  constructor(baseUrl: string) {
     this.baseUrl = baseUrl
   }
 
@@ -181,68 +23,126 @@ class ApiClient {
 
   private getCurrentToken(): void {
     if (typeof window !== 'undefined') {
-      // First try to get token from cookies (primary storage)
-      const cookieToken = this.getCookie('auth-token')
+      const cookieToken = this.getCookie('access_token')
       if (cookieToken) {
         this._token = cookieToken
-        console.log('Token retrieved from cookies')
         return
       }
 
-      // Fallback to localStorage
-      const localToken = localStorage.getItem('auth_token')
+      const localToken = localStorage.getItem('access_token')
       if (localToken) {
         this._token = localToken
-        console.log('Token retrieved from localStorage (auth_token)')
         return
       }
 
-      // Final fallback to alternative localStorage key
-      const altLocalToken = localStorage.getItem('auth-token')
-      if (altLocalToken) {
-        this._token = altLocalToken
-        console.log('Token retrieved from localStorage (auth-token)')
-        return
-      }
-
-      // No token found
       this._token = null
-      console.log('No token found in any storage location')
     }
   }
 
   public setToken(token: string): void {
     this._token = token
     if (typeof window !== 'undefined') {
-      localStorage.setItem('auth_token', token)
+      localStorage.setItem('access_token', token)
+      const expires = new Date()
+      expires.setTime(expires.getTime() + (7 * 24 * 60 * 60 * 1000))
+      document.cookie = `access_token=${token};expires=${expires.toUTCString()};path=/;SameSite=Lax`
     }
-    console.log('Token set in API client')
-  }
-
-  public clearToken(): void {
-    this._token = null
-    this._refreshToken = null
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('auth_token')
-      localStorage.removeItem('refresh_token')
-    }
-    console.log('Token cleared from API client')
   }
 
   public setRefreshToken(token: string): void {
     this._refreshToken = token
     if (typeof window !== 'undefined') {
       localStorage.setItem('refresh_token', token)
+      const expires = new Date()
+      expires.setTime(expires.getTime() + (7 * 24 * 60 * 60 * 1000))
+      document.cookie = `refresh_token=${token};expires=${expires.toUTCString()};path=/;SameSite=Lax`
     }
-    console.log('Refresh token set in API client')
   }
 
   public getRefreshToken(): string | null {
     if (this._refreshToken) return this._refreshToken
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('refresh_token')
+      return this.getCookie('refresh_token') || localStorage.getItem('refresh_token')
     }
     return null
+  }
+
+  public clearToken(): void {
+    this._token = null
+    this._refreshToken = null
+    this._isRefreshing = false
+    this._refreshPromise = null
+    
+    if (typeof window !== 'undefined') {
+      const keysToRemove = ['access_token', 'refresh_token', 'auth_token', 'auth-token', 'auth-user']
+      keysToRemove.forEach(key => {
+        localStorage.removeItem(key)
+        sessionStorage.removeItem(key)
+      })
+
+      const cookiesToClear = ['access_token', 'refresh_token', 'auth-token', 'auth-user']
+      cookiesToClear.forEach(cookieName => {
+        document.cookie = `${cookieName}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`
+      })
+    }
+  }
+
+  private async performTokenRefresh(): Promise<string | null> {
+    const refreshToken = this.getRefreshToken()
+    if (!refreshToken) {
+      console.log('No refresh token available')
+      return null
+    }
+
+    console.log('Performing token refresh...')
+
+    try {
+      const url = `${this.baseUrl}/auth/refresh`
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+        signal: AbortSignal.timeout(30000), // 30 second timeout
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        console.error('Token refresh failed:', response.status, data)
+        return null
+      }
+
+      console.log('Token refresh successful')
+
+      const newAccessToken = data.access_token || data.data?.access_token
+      const newRefreshToken = data.refresh_token || data.data?.refresh_token
+
+      if (!newAccessToken) {
+        console.error('No access token in refresh response')
+        return null
+      }
+
+      this.setToken(newAccessToken)
+      if (newRefreshToken) {
+        this.setRefreshToken(newRefreshToken)
+      }
+
+      return newAccessToken
+    } catch (error) {
+      console.error('Token refresh error:', error)
+      return null
+    }
+  }
+
+  private handleTokenExpiration(): void {
+    console.log('Handling token expiration - clearing all auth data')
+    this.clearToken()
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('auth:token-expired'))
+    }
   }
 
   private async request<T>(
@@ -251,7 +151,6 @@ class ApiClient {
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseUrl}${endpoint}`
     
-    // Ensure we have the latest token from cookies before making the request
     this.getCurrentToken()
     
     const headers: Record<string, string> = {
@@ -261,77 +160,91 @@ class ApiClient {
 
     if (this._token) {
       headers.Authorization = `Bearer ${this._token}`
-      console.log('API Request with Authorization header:', `Bearer ${this._token.substring(0, 20)}...`)
-    } else {
-      console.log('API Request without Authorization header - no token available')
     }
 
-    console.log('API Request URL:', url)
-    console.log('API Request Headers:', headers)
-
     try {
+      console.log(`Making request to: ${url}`)
+      
       const response = await fetch(url, {
         ...options,
         headers,
+        signal: AbortSignal.timeout(30000), // 30 second timeout
       })
 
-      const data = await response.json()
+      console.log(`Response status: ${response.status}`)
+
+      // Try to parse response as JSON
+      let data: any
+      const contentType = response.headers.get('content-type')
+      
+      if (contentType && contentType.includes('application/json')) {
+        try {
+          data = await response.json()
+        } catch (e) {
+          console.error('Failed to parse JSON response:', e)
+          data = { message: 'Invalid JSON response from server' }
+        }
+      } else {
+        const text = await response.text()
+        console.log('Non-JSON response:', text)
+        data = { message: text || 'No response from server' }
+      }
 
       if (!response.ok) {
-        console.error('API Request failed:', response.status, data)
-
-        // Handle token expiration (401 Unauthorized)
+        // Handle 401 Unauthorized
         if (response.status === 401) {
-          // Skip token refresh for authentication endpoints (login, register, refresh)
-          if (endpoint.includes('/auth/login') || endpoint.includes('/auth/register') || endpoint.includes('/auth/refresh')) {
-            console.log('Authentication endpoint failed with 401 - not attempting refresh')
+          if (endpoint.includes('/auth/login') || 
+              endpoint.includes('/auth/register') || 
+              endpoint.includes('/auth/refresh')) {
             return {
               error: data.detail || data.message || 'Authentication failed',
               status: response.status,
             }
           }
 
-          console.log('Token expired or invalid - attempting refresh')
+          console.log('Token expired - attempting refresh')
 
-          // Try to refresh token if we have a refresh token and aren't already refreshing
-          if (this.getRefreshToken() && !this._isRefreshing) {
-            console.log('Attempting token refresh')
-            this._isRefreshing = true
-
-            try {
-              const refreshResponse = await this.refreshToken()
-              this._isRefreshing = false
-
-              if (refreshResponse.data && refreshResponse.data.access_token) {
-                // Update tokens
-                this.setToken(refreshResponse.data.access_token)
-                if (refreshResponse.data.refresh_token) {
-                  this.setRefreshToken(refreshResponse.data.refresh_token)
-                }
-
-                // Retry the original request with new token
-                console.log('Retrying request with refreshed token')
-                return this.request(endpoint, options)
-              } else {
-                console.log('Token refresh failed - clearing auth data')
-                this.handleTokenExpiration()
-                return {
-                  error: 'Your session has expired. Please sign in again.',
-                  status: response.status,
-                }
-              }
-            } catch (refreshError) {
-              this._isRefreshing = false
-              console.error('Token refresh error:', refreshError)
+          if (this._isRefreshing && this._refreshPromise) {
+            console.log('Waiting for existing refresh to complete...')
+            const newToken = await this._refreshPromise
+            
+            if (newToken) {
+              console.log('Retrying request with refreshed token')
+              return this.request(endpoint, options)
+            } else {
+              console.log('Refresh failed - clearing auth')
               this.handleTokenExpiration()
               return {
                 error: 'Your session has expired. Please sign in again.',
                 status: response.status,
               }
             }
+          }
+
+          if (this.getRefreshToken()) {
+            this._isRefreshing = true
+            this._refreshPromise = this.performTokenRefresh()
+
+            try {
+              const newToken = await this._refreshPromise
+              
+              if (newToken) {
+                console.log('Token refreshed successfully, retrying original request')
+                return this.request(endpoint, options)
+              } else {
+                console.log('Token refresh failed - clearing auth')
+                this.handleTokenExpiration()
+                return {
+                  error: 'Your session has expired. Please sign in again.',
+                  status: response.status,
+                }
+              }
+            } finally {
+              this._isRefreshing = false
+              this._refreshPromise = null
+            }
           } else {
-            // No refresh token or already refreshing
-            console.log('No refresh token available or already refreshing - clearing auth data')
+            console.log('No refresh token available')
             this.handleTokenExpiration()
             return {
               error: 'Your session has expired. Please sign in again.',
@@ -340,9 +253,8 @@ class ApiClient {
           }
         }
 
-        // Handle forbidden access (403)
+        // Handle 403 Forbidden
         if (response.status === 403) {
-          console.log('Access forbidden - insufficient permissions')
           return {
             error: 'You do not have permission to access this resource.',
             status: response.status,
@@ -355,13 +267,28 @@ class ApiClient {
         }
       }
 
-      console.log('API Request successful:', response.status)
       return {
         data,
         status: response.status,
       }
     } catch (error) {
       console.error('API Request network error:', error)
+      
+      // Provide more specific error messages
+      if (error instanceof TypeError && error.message === 'Failed to fetch') {
+        return {
+          error: 'Cannot connect to server. Please check your internet connection and try again.',
+          status: 0,
+        }
+      }
+      
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        return {
+          error: 'Request timeout. Please try again.',
+          status: 0,
+        }
+      }
+      
       return {
         error: error instanceof Error ? error.message : 'Network error',
         status: 0,
@@ -369,94 +296,31 @@ class ApiClient {
     }
   }
 
-  private handleTokenExpiration(): void {
-    // Clear token from API client
-    this._token = null
-    
-    // Clear all storage locations
-    if (typeof window !== 'undefined') {
-      // Clear cookies
-      document.cookie = 'auth-token=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;'
-      document.cookie = 'auth-user=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;'
-      
-      // Clear localStorage
-      localStorage.removeItem('auth_token')
-      localStorage.removeItem('auth_user')
-      localStorage.removeItem('auth-token')
-      
-      // Clear sessionStorage
-      sessionStorage.removeItem('token')
-      sessionStorage.removeItem('user')
-      sessionStorage.removeItem('auth_session_initialized')
-    }
-    
-    // Trigger a custom event to notify the auth context
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('auth:token-expired'))
-    }
-  }
-
-  // Add method to check if token is likely expired based on structure
-  private isTokenExpired(token: string): boolean {
-    try {
-      // Basic JWT structure check - split by dots
-      const parts = token.split('.')
-      if (parts.length !== 3) return true
-      
-      // Decode payload (second part)
-      const payload = JSON.parse(atob(parts[1]))
-      
-      // Check if token has expiration time and if it's expired
-      if (payload.exp) {
-        const currentTime = Math.floor(Date.now() / 1000)
-        return payload.exp < currentTime
-      }
-      
-      return false
-    } catch (error) {
-      console.error('Error checking token expiration:', error)
-      return true // Assume expired if we can't parse it
-    }
-  }
-
-  // Enhanced token validation
-  private validateToken(): boolean {
-    if (!this._token) return false
-    
-    // Check if token is expired
-    if (this.isTokenExpired(this._token)) {
-      console.log('Token is expired')
-      this.handleTokenExpiration()
-      return false
-    }
-    
-    return true
-  }
-
-  // Authentication endpoints
   async login(email: string, password: string): Promise<ApiResponse<any>> {
-    return this.request('/auth/login', {
+    const response = await this.request('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     })
-  }
+    
+    if (response.data && !response.error) {
+      const data = response.data as any
+      const accessToken = data.access_token || data.data?.access_token
+      const user = data.user || data.data?.user
+      if (user && typeof window !== 'undefined') {
+        localStorage.setItem('auth-user', JSON.stringify(user))
+        window.dispatchEvent(new CustomEvent('auth:login-success', { detail: { user } }));
+      }
+      const refreshToken = data.refresh_token || data.data?.refresh_token
 
-  async register(userData: {
-    email: string
-    password: string
-    first_name: string
-    last_name: string
-    phone_number?: string
-    date_of_birth?: string
-    country?: string
-    id_number?: string
-    bio?: string
-    terms_accepted: boolean
-  }): Promise<ApiResponse<User>> {
-    return this.request('/auth/register', {
-      method: 'POST',
-      body: JSON.stringify(userData),
-    })
+      if (accessToken) {
+        this.setToken(accessToken)
+      }
+      if (refreshToken) {
+        this.setRefreshToken(refreshToken)
+      }
+    }
+    
+    return response
   }
 
   async logout(): Promise<ApiResponse> {
@@ -467,735 +331,397 @@ class ApiClient {
     return response
   }
 
-  async refreshToken(): Promise<ApiResponse<any>> {
-    const refreshToken = this.getRefreshToken()
-    if (!refreshToken) {
-      return {
-        error: 'No refresh token available',
-        status: 401,
-      }
-    }
-
-    // Make direct request without using the main request method to avoid recursion
-    const url = `${this.baseUrl}/auth/refresh`
-    const response = await fetch(url, {
+  async register(data: {
+    email: string;
+    password: string;
+    first_name: string;
+    last_name: string;
+    phone_number?: string;
+    date_of_birth?: string;
+    country?: string;
+    id_number?: string;
+    bio?: string;
+  }): Promise<ApiResponse<any>> {
+    console.log('Registering user with data:', { ...data, password: '[REDACTED]' })
+    return this.request('/auth/register', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ refresh_token: refreshToken }),
-    })
-
-    const data = await response.json()
-
-    if (!response.ok) {
-      console.error('Token refresh failed:', response.status, data)
-      // Clear tokens if refresh fails
-      this.clearToken()
-      return {
-        error: data.detail || data.message || 'Token refresh failed',
-        status: response.status,
-      }
-    }
-
-    console.log('Token refresh successful')
-    return {
-      data,
-      status: response.status,
-    }
-  }
-
-  async googleSignIn(): Promise<ApiResponse<any>> {
-    return this.request('/auth/google', {
-      method: 'POST',
+      body: JSON.stringify(data),
     })
   }
 
-  // Dashboard endpoints
-  async getDashboard(): Promise<ApiResponse<DashboardData>> {
-    return this.request('/dashboard')
-  }
-
-  // User endpoints
-  async getProfile(): Promise<ApiResponse<User>> {
-    const response = await this.request<{success: boolean, data: {user: User}, message: string}>('/auth/me')
-    
-    // Handle the success_response structure from backend
-    if (response.data && response.data.success && response.data.data && response.data.data.user) {
-      return {
-        data: response.data.data.user,
-        status: response.status,
-        message: response.data.message
-      }
+  async manualRefresh(): Promise<boolean> {
+    if (this._isRefreshing && this._refreshPromise) {
+      const token = await this._refreshPromise
+      return token !== null
     }
-    
-    // If no nested structure, return the response with proper typing
-    return {
-      data: undefined,
-      error: response.error,
-      status: response.status
+
+    this._isRefreshing = true
+    this._refreshPromise = this.performTokenRefresh()
+
+    try {
+      const token = await this._refreshPromise
+      return token !== null
+    } finally {
+      this._isRefreshing = false
+      this._refreshPromise = null
     }
   }
 
-  async updateProfile(userData: Partial<User>): Promise<ApiResponse<User>> {
-    const response = await this.request<{success: boolean, data: {user: User}, message: string}>('/auth/me', {
-      method: 'PUT',
-      body: JSON.stringify(userData),
-    })
-    
-    // Handle the success_response structure from backend
-    if (response.data && response.data.success && response.data.data && response.data.data.user) {
-      return {
-        data: response.data.data.user,
-        status: response.status,
-        message: response.data.message
-      }
-    }
-    
-    // If no nested structure, return the response with proper typing
-    return {
-      data: undefined,
-      error: response.error,
-      status: response.status
-    }
-  }
-
-  // Transaction endpoints
-  async getTransactions(params?: {
-    user_id?: string
-    limit?: number
-    offset?: number
-    type?: string
-    status?: string
-  }): Promise<ApiResponse<Transaction[]>> {
-    const queryParams = new URLSearchParams()
-    if (params) {
-      Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined) {
-          queryParams.append(key, value.toString())
-        }
-      })
-    }
-    const query = queryParams.toString()
-    return this.request(`/transactions${query ? `?${query}` : ''}`)
-  }
-
-  async createTransaction(transactionData: {
-    type: string
-    amount: number
-    description: string
-    category?: string
-  }): Promise<ApiResponse<Transaction>> {
-    return this.request('/transactions', {
-      method: 'POST',
-      body: JSON.stringify(transactionData),
-    })
-  }
-
-  // Beneficiary endpoints
-  async getBeneficiaries(): Promise<ApiResponse<Beneficiary[]>> {
+  // Beneficiary methods
+  async getBeneficiaries(): Promise<ApiResponse<any[]>> {
     return this.request('/beneficiaries')
   }
 
-  async createBeneficiary(beneficiaryData: {
+  async createBeneficiary(data: {
     name: string
     account_number: string
     bank_name: string
     bank_code?: string
     email?: string
     phone_number?: string
-  }): Promise<ApiResponse<Beneficiary>> {
+  }): Promise<ApiResponse<any>> {
     return this.request('/beneficiaries', {
       method: 'POST',
-      body: JSON.stringify(beneficiaryData),
+      body: JSON.stringify(data),
     })
   }
 
-  async updateBeneficiary(id: string, beneficiaryData: Partial<Beneficiary>): Promise<ApiResponse<Beneficiary>> {
+  async updateBeneficiary(id: string, data: {
+    name?: string
+    account_number?: string
+    bank_name?: string
+    bank_code?: string
+    email?: string
+    phone_number?: string
+    is_active?: boolean
+  }): Promise<ApiResponse<any>> {
     return this.request(`/beneficiaries/${id}`, {
       method: 'PUT',
-      body: JSON.stringify(beneficiaryData),
+      body: JSON.stringify(data),
     })
   }
 
-  async deleteBeneficiary(id: string): Promise<ApiResponse> {
+  async deleteBeneficiary(id: string): Promise<ApiResponse<any>> {
     return this.request(`/beneficiaries/${id}`, {
       method: 'DELETE',
     })
   }
 
-  // Transfer endpoints
-  async sendMoney(transferData: {
+  // Transfer methods
+  async createTransfer(data: {
     beneficiary_id: string
     amount: number
+    currency: string
     description?: string
-    category?: string
-  }): Promise<ApiResponse<Transaction>> {
-    return this.request('/transfers/send', {
-      method: 'POST',
-      body: JSON.stringify(transferData),
-    })
-  }
-
-  async calculateTransferFee(amount: number): Promise<ApiResponse<{
-    fee: number
-    total: number
-    breakdown: { base: number; tax?: number; extra?: number }
-  }>> {
-    return this.request(`/transfers/calculate-fee?amount=${amount}`)
-  }
-
-  // Investment endpoints
-  async getInvestments(): Promise<ApiResponse<Investment[]>> {
-    return this.request('/investments')
-  }
-
-  async createInvestment(investmentData: {
-    name: string
-    type: string
-    amount: number
-  }): Promise<ApiResponse<Investment>> {
-    return this.request('/investments', {
-      method: 'POST',
-      body: JSON.stringify(investmentData),
-    })
-  }
-
-  // Portfolio endpoints
-  async getPortfolios(page: number = 1, limit: number = 20): Promise<ApiResponse<any>> {
-    return this.request(`/investments/portfolios?page=${page}&limit=${limit}`)
-  }
-
-  async createPortfolio(portfolioData: {
-    name: string
-    description?: string
-    risk_tolerance?: string
-    investment_strategy?: string
+    pin: string
   }): Promise<ApiResponse<any>> {
-    return this.request('/investments/portfolios', {
+    return this.request('/transfers', {
       method: 'POST',
-      body: JSON.stringify(portfolioData),
+      body: JSON.stringify(data),
     })
   }
 
-  async getPortfolio(portfolioId: string): Promise<ApiResponse<any>> {
-    return this.request(`/investments/portfolios/${portfolioId}`)
-  }
-
-  async getPortfolioHoldings(portfolioId: string): Promise<ApiResponse<any>> {
-    return this.request(`/investments/portfolios/${portfolioId}/holdings`)
-  }
-
-  // Investment summary and dashboard
-  async getInvestmentSummary(): Promise<ApiResponse<any>> {
-    return this.request('/investments/summary')
-  }
-
-  async getPerformanceSummary(period: string = '1M'): Promise<ApiResponse<any>> {
-    return this.request(`/investments/performance-summary?period=${period}`)
-  }
-
-  async getAllocationOverview(): Promise<ApiResponse<any>> {
-    return this.request('/investments/allocation-overview')
-  }
-
-  // Market data endpoints
-  async getMarketData(symbols: string[]): Promise<ApiResponse<any>> {
-    const symbolsParam = symbols.join(',')
-    return this.request(`/investments/market-data?symbols=${symbolsParam}`)
-  }
-
-  async searchAssets(query: string, limit: number = 20): Promise<ApiResponse<any>> {
-    return this.request(`/investments/search?query=${query}&limit=${limit}`)
-  }
-
-  async getTrendingAssets(limit: number = 10): Promise<ApiResponse<any>> {
-    return this.request(`/investments/trending?limit=${limit}`)
-  }
-
-  async getMarketMovers(direction: string = 'gainers', limit: number = 10): Promise<ApiResponse<any>> {
-    return this.request(`/investments/movers?direction=${direction}&limit=${limit}`)
-  }
-
-  // Order endpoints
-  async getOrders(page: number = 1, limit: number = 20, portfolioId?: string): Promise<ApiResponse<any>> {
-    let url = `/investments/orders?page=${page}&limit=${limit}`
-    if (portfolioId) {
-      url += `&portfolio_id=${portfolioId}`
-    }
-    return this.request(url)
-  }
-
-  async createOrder(orderData: {
-    portfolio_id: string
-    symbol: string
-    order_type: string
-    side: string
-    quantity: number
-    price?: number
-  }): Promise<ApiResponse<any>> {
-    return this.request('/investments/orders', {
-      method: 'POST',
-      body: JSON.stringify(orderData),
-    })
-  }
-
-  async getPendingOrders(): Promise<ApiResponse<any>> {
-    return this.request('/investments/pending-orders')
-  }
-
-  // Watchlist endpoints
-  async getWatchlists(): Promise<ApiResponse<any>> {
-    return this.request('/investments/watchlists')
-  }
-
-  async createWatchlist(watchlistData: {
-    name: string
-    description?: string
-    symbols?: string[]
-  }): Promise<ApiResponse<any>> {
-    return this.request('/investments/watchlists', {
-      method: 'POST',
-      body: JSON.stringify(watchlistData),
-    })
-  }
-
-  async getWatchlist(watchlistId: string): Promise<ApiResponse<any>> {
-    return this.request(`/investments/watchlists/${watchlistId}`)
-  }
-
-  async addToWatchlist(watchlistId: string, symbol: string): Promise<ApiResponse<any>> {
-    return this.request(`/investments/watchlists/${watchlistId}/symbols/${symbol}`, {
-      method: 'POST',
-    })
-  }
-
-  async removeFromWatchlist(watchlistId: string, symbol: string): Promise<ApiResponse<any>> {
-    return this.request(`/investments/watchlists/${watchlistId}/symbols/${symbol}`, {
-      method: 'DELETE',
-    })
-  }
-
-  // Analysis endpoints
-  async getPortfolioAnalysis(portfolioId: string, analysisType: string = 'comprehensive', benchmark: string = 'SPY', period: string = '1Y'): Promise<ApiResponse<any>> {
-    return this.request(`/investments/portfolios/${portfolioId}/analysis?analysis_type=${analysisType}&benchmark=${benchmark}&period=${period}`, {
-      method: 'POST',
-    })
-  }
-
-  async getQuickBuySuggestions(riskLevel: string = 'moderate', amount: number = 1000): Promise<ApiResponse<any>> {
-    return this.request(`/investments/quick-buy-suggestions?risk_level=${riskLevel}&amount=${amount}`)
-  }
-
-  // Analytics endpoints
-  async getSpendingAnalysis(params: {
-    period: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly' | 'custom'
+  async getTransfers(params?: {
+    limit?: number
+    offset?: number
     start_date?: string
     end_date?: string
-    group_by?: 'category' | 'merchant' | 'day' | 'week' | 'month'
-    currency?: string
   }): Promise<ApiResponse<any[]>> {
-    return this.request('/analytics/spending-analysis', {
+    const queryParams = new URLSearchParams()
+    if (params?.limit) queryParams.append('limit', params.limit.toString())
+    if (params?.offset) queryParams.append('offset', params.offset.toString())
+    if (params?.start_date) queryParams.append('start_date', params.start_date)
+    if (params?.end_date) queryParams.append('end_date', params.end_date)
+
+    const endpoint = `/transfers${queryParams.toString() ? '?' + queryParams.toString() : ''}`
+    return this.request(endpoint)
+  }
+
+  // Plaid methods
+  async createPlaidLinkToken(requestData?: PlaidLinkTokenRequest): Promise<ApiResponse<PlaidLinkTokenResponse>> {
+    return this.request('/plaid/link-token', {
       method: 'POST',
-      body: JSON.stringify(params),
-    })
+      body: JSON.stringify(requestData || {}),
+    });
   }
 
-  async getCashFlowAnalysis(params: {
-    period: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly' | 'custom'
-    start_date?: string
-    end_date?: string
-    categories?: string[]
-    currency?: string
-  }): Promise<ApiResponse<any>> {
-    return this.request('/analytics/cash-flow', {
+  async exchangePlaidToken(requestData: PlaidExchangeTokenRequest): Promise<ApiResponse<PlaidExchangeTokenResponse>> {
+    return this.request('/plaid/exchange-token', {
       method: 'POST',
-      body: JSON.stringify(params),
-    })
+      body: JSON.stringify(requestData),
+    });
   }
 
-  async getFinancialHealthScore(): Promise<ApiResponse<any>> {
-    return this.request('/analytics/financial-health')
+  async getPlaidConnections(): Promise<ApiResponse<PlaidConnection[]>> {
+    return this.request('/plaid/connections');
   }
 
-  async getFinancialInsights(): Promise<ApiResponse<any[]>> {
-    return this.request('/analytics/insights')
+  async getPlaidConnection(connectionId: string): Promise<ApiResponse<PlaidConnection>> {
+    return this.request(`/plaid/connections/${connectionId}`);
   }
 
-  async getBudgets(): Promise<ApiResponse<any[]>> {
-    return this.request('/analytics/budgets')
+  async getPlaidAccounts(connectionId?: string): Promise<ApiResponse<PlaidAccount[]>> {
+    const endpoint = connectionId 
+      ? `/plaid/connections/${connectionId}/accounts` 
+      : '/plaid/accounts';
+    return this.request(endpoint);
   }
 
-  async getBudgetSummary(): Promise<ApiResponse<any>> {
-    return this.request('/analytics/budgets/summary')
+  async getPlaidTransactions(params?: {
+    connection_id?: string;
+    account_id?: string;
+    start_date?: string;
+    end_date?: string;
+    account_ids?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<ApiResponse<PlaidTransaction[]>> {
+    const queryParams = new URLSearchParams();
+    
+    if (params?.connection_id) queryParams.append('connection_id', params.connection_id);
+    if (params?.start_date) queryParams.append('start_date', params.start_date);
+    if (params?.end_date) queryParams.append('end_date', params.end_date);
+    if (params?.account_ids) queryParams.append('account_ids', params.account_ids);
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.offset) queryParams.append('offset', params.offset.toString());
+
+    const queryString = queryParams.toString();
+    const endpoint = params?.connection_id
+      ? `/plaid/connections/${params.connection_id}/transactions${queryString ? '?' + queryString : ''}`
+      : `/plaid/transactions${queryString ? '?' + queryString : ''}`;
+      
+    return this.request(endpoint);
   }
 
-  async getFinancialGoals(): Promise<ApiResponse<any[]>> {
-    return this.request('/analytics/financial-goals')
-  }
-
-  async getFinancialAlerts(): Promise<ApiResponse<any[]>> {
-    return this.request('/analytics/alerts')
-  }
-
-  // Savings endpoints
-  async getSavings(): Promise<ApiResponse<any[]>> {
-    return this.request('/savings/goals')
-  }
-
-  async getSavingsStats(): Promise<ApiResponse<any>> {
-    return this.request('/savings/stats')
-  }
-
-  async getSavingsInsights(): Promise<ApiResponse<any>> {
-    return this.request('/savings/insights')
-  }
-
-  async createSavingsGoal(savingsData: {
-    name: string
-    target_amount: number
-    description?: string
-  }): Promise<ApiResponse<any>> {
-    return this.request('/savings/goals', {
+  async syncPlaidConnection(connectionId: string, requestData?: PlaidSyncRequest): Promise<ApiResponse<PlaidSyncResponse>> {
+    return this.request(`/plaid/connections/${connectionId}/sync`, {
       method: 'POST',
-      body: JSON.stringify(savingsData),
-    })
+      body: JSON.stringify(requestData || {}),
+    });
   }
 
-  async updateSavingsGoal(goalId: string, savingsData: {
-    name?: string
-    target_amount?: number
-    description?: string
+  async disconnectPlaidConnection(connectionId: string): Promise<ApiResponse<any>> {
+    return this.request(`/plaid/connections/${connectionId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async testPlaidConnection(): Promise<ApiResponse<any>> {
+    return this.request('/plaid/test-connection');
+  }
+
+  async getPlaidWebhookStatus(): Promise<ApiResponse<any>> {
+    return this.request('/plaid/webhook');
+  }
+
+  // Plaid Transfer methods
+  async createPlaidTransferQuote(data: {
+    source_account_id: string;
+    beneficiary_id: string;
+    amount: number;
+    currency?: string;
   }): Promise<ApiResponse<any>> {
-    return this.request(`/savings/goals/${goalId}`, {
+    return this.request('/plaid/transfers/quote', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async initiatePlaidTransfer(data: {
+    quote_id: string;
+    purpose: string;
+    reference?: string;
+    recipient_message?: string;
+  }): Promise<ApiResponse<any>> {
+    return this.request('/plaid/transfers/initiate', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getPlaidTransferStatus(transferId: string): Promise<ApiResponse<any>> {
+    return this.request(`/plaid/transfers/${transferId}/status`);
+  }
+
+  async getPlaidTransferHistory(params?: {
+    limit?: number;
+    offset?: number;
+  }): Promise<ApiResponse<any>> {
+    const queryParams = new URLSearchParams();
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.offset) queryParams.append('offset', params.offset.toString());
+
+    const endpoint = `/plaid/transfers/history${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+    return this.request(endpoint);
+  }
+
+  // Additional methods
+  async getCards(): Promise<ApiResponse<any[]>> {
+    return this.request('/cards');
+  }
+
+  async getPaymentMethods(params?: {
+    payment_type?: string;
+    status?: string;
+    is_default?: boolean;
+    page?: number;
+    limit?: number;
+  }): Promise<ApiResponse<any[]>> {
+    const queryParams = new URLSearchParams();
+    if (params?.payment_type) queryParams.append('payment_type', params.payment_type);
+    if (params?.status) queryParams.append('status', params.status);
+    if (params?.is_default !== undefined) queryParams.append('is_default', params.is_default.toString());
+    if (params?.page) queryParams.append('page', params.page.toString());
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+
+    const endpoint = `/payment-methods${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+    return this.request(endpoint);
+  }
+
+  async updatePaymentMethod(id: string, data: any): Promise<ApiResponse<any>> {
+    return this.request(`/payment-methods/${id}`, {
       method: 'PUT',
-      body: JSON.stringify(savingsData),
-    })
+      body: JSON.stringify(data),
+    });
   }
 
-  async deleteSavingsGoal(goalId: string): Promise<ApiResponse<any>> {
-    return this.request(`/savings/goals/${goalId}`, {
-      method: 'DELETE',
-    })
-  }
-
-  async contributeToSavingsGoal(goalId: string, contributionData: {
-    amount: number
-    description?: string
-  }): Promise<ApiResponse<any>> {
-    return this.request(`/savings/goals/${goalId}/contribute`, {
-      method: 'POST',
-      body: JSON.stringify(contributionData),
-    })
-  }
-
-  async getSavingsGoalHistory(goalId: string, params?: {
-    page?: number
-    limit?: number
-  }): Promise<ApiResponse<any[]>> {
-    const queryParams = new URLSearchParams()
-    if (params) {
-      Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined) {
-          queryParams.append(key, value.toString())
-        }
-      })
-    }
-    const query = queryParams.toString()
-    return this.request(`/savings/goals/${goalId}/history${query ? `?${query}` : ''}`)
-  }
-
-  // Notifications endpoints
-  async getNotifications(params?: {
-    type?: string
-    status?: string
-    priority?: string
-    channel?: string
-    date_from?: string
-    date_to?: string
-    unread_only?: boolean
-    skip?: number
-    limit?: number
-  }): Promise<ApiResponse<any[]>> {
-    const queryParams = new URLSearchParams()
-    if (params) {
-      Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined) {
-          queryParams.append(key, value.toString())
-        }
-      })
-    }
-    const query = queryParams.toString()
-    return this.request(`/notifications${query ? `?${query}` : ''}`)
+  async getDashboard(): Promise<ApiResponse<any>> {
+    return this.request('/dashboard');
   }
 
   async getNotificationSummary(): Promise<ApiResponse<any>> {
-    return this.request('/notifications/summary')
+    return this.request('/notifications/summary');
   }
 
-  async createNotification(notificationData: {
-    title: string
-    message: string
-    type: string
-    priority?: string
-    channels?: string[]
-    metadata?: any
-    scheduled_at?: string
-    expires_at?: string
+  async getProfile(): Promise<ApiResponse<any>> {
+    return this.request('/users/profile');
+  }
+
+  async createPaymentMethod(data: {
+    type: string;
+    plaid_account_id?: string;
+    card_holder_name?: string;
+    card_number_masked?: string;
+    expiry_month?: number;
+    expiry_year?: number;
+    card_type?: string;
+    status?: string;
   }): Promise<ApiResponse<any>> {
-    return this.request('/notifications', {
-      method: 'POST',
-      body: JSON.stringify(notificationData),
-    })
-  }
-
-  async updateNotification(id: string, updateData: {
-    status?: string
-    read_at?: string
-  }): Promise<ApiResponse<any>> {
-    return this.request(`/notifications/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(updateData),
-    })
-  }
-
-  async markNotificationAsRead(id: string): Promise<ApiResponse> {
-    return this.updateNotification(id, { 
-      status: 'read',
-      read_at: new Date().toISOString()
-    })
-  }
-
-  async bulkUpdateNotifications(updateData: {
-    notification_ids: string[]
-    status: string
-  }): Promise<ApiResponse<any>> {
-    return this.request('/notifications/bulk-update', {
-      method: 'PUT',
-      body: JSON.stringify(updateData),
-    })
-  }
-
-  async deleteNotification(id: string): Promise<ApiResponse> {
-    return this.request(`/notifications/${id}`, {
-      method: 'DELETE',
-    })
-  }
-
-  async getNotificationPreferences(): Promise<ApiResponse<any>> {
-    return this.request('/notifications/preferences')
-  }
-
-  async updateNotificationPreferences(preferencesData: {
-    transaction_notifications?: boolean
-    security_notifications?: boolean
-    account_notifications?: boolean
-    payment_notifications?: boolean
-    savings_notifications?: boolean
-    kyc_notifications?: boolean
-    system_notifications?: boolean
-    marketing_notifications?: boolean
-    reminder_notifications?: boolean
-    email_enabled?: boolean
-    sms_enabled?: boolean
-    push_enabled?: boolean
-    quiet_hours_start?: string
-    quiet_hours_end?: string
-    timezone?: string
-  }): Promise<ApiResponse<any>> {
-    return this.request('/notifications/preferences', {
-      method: 'PUT',
-      body: JSON.stringify(preferencesData),
-    })
-  }
-
-  async getNotificationStats(): Promise<ApiResponse<any>> {
-    return this.request('/notifications/stats')
-  }
-
-  // Payment Methods endpoints
-  async getPaymentMethods(): Promise<ApiResponse<PaymentMethod[]>> {
-    return this.request('/payment-methods')
-  }
-
-  async createPaymentMethod(paymentMethodData: {
-    type: string
-    name: string
-    details: any
-  }): Promise<ApiResponse<PaymentMethod>> {
     return this.request('/payment-methods', {
       method: 'POST',
-      body: JSON.stringify(paymentMethodData),
-    })
+      body: JSON.stringify(data),
+    });
   }
 
-  async updatePaymentMethod(id: string, paymentMethodData: Partial<PaymentMethod>): Promise<ApiResponse<PaymentMethod>> {
-    return this.request(`/payment-methods/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(paymentMethodData),
-    })
-  }
-
-  async deletePaymentMethod(id: string): Promise<ApiResponse> {
-    return this.request(`/payment-methods/${id}`, {
-      method: 'DELETE',
-    })
-  }
-
-  // Account endpoints
-  async getAccounts(userId: string, params?: {
-    account_type?: string
-    status?: string
-  }): Promise<ApiResponse<{ accounts: BankAccount[]; total_count: number }>> {
-    const queryParams = new URLSearchParams()
-    queryParams.append('user_id', userId)
-    if (params) {
-      Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined) {
-          queryParams.append(key, value.toString())
-        }
-      })
-    }
-    const query = queryParams.toString()
-    return this.request(`/accounts${query ? `?${query}` : ''}`)
-  }
-
-  async getAccount(accountId: string, userId: string): Promise<ApiResponse<{ account: BankAccount }>> {
-    return this.request(`/accounts/${accountId}?user_id=${userId}`)
-  }
-
-  async createAccount(userId: string, accountData: {
-    account_type: 'CHECKING' | 'SAVINGS' | 'INVESTMENT'
-    name?: string
-    currency?: string
-    initial_deposit?: number
-  }): Promise<ApiResponse<{ account: BankAccount; account_id: string; account_number: string }>> {
-    return this.request(`/accounts?user_id=${userId}`, {
+  async createPlaidDebitCardLinkToken(): Promise<ApiResponse<PlaidLinkTokenResponse>> {
+    return this.request('/plaid/debit-card/link-token', {
       method: 'POST',
-      body: JSON.stringify(accountData),
-    })
+    });
   }
 
-  async updateAccount(accountId: string, userId: string, accountData: {
-    name?: string
-    is_primary?: boolean
-    overdraft_protection?: boolean
-    minimum_balance?: number
-  }): Promise<ApiResponse<{ account: BankAccount }>> {
-    return this.request(`/accounts/${accountId}?user_id=${userId}`, {
-      method: 'PATCH',
-      body: JSON.stringify(accountData),
-    })
-  }
-
-  async getAccountBalance(accountId: string, userId: string): Promise<ApiResponse<{
-    account_id: string
-    balance: number
-    available_balance: number
-    pending_balance: number
-    currency: string
-  }>> {
-    return this.request(`/accounts/${accountId}/balance?user_id=${userId}`)
-  }
-
-  async closeAccount(accountId: string, userId: string, reason?: string): Promise<ApiResponse<{ account: BankAccount }>> {
-    const queryParams = new URLSearchParams()
-    queryParams.append('user_id', userId)
-    if (reason) {
-      queryParams.append('reason', reason)
-    }
-    return this.request(`/accounts/${accountId}?${queryParams.toString()}`, {
-      method: 'DELETE',
-    })
-  }
-
-  async getAccountOverview(userId: string): Promise<ApiResponse<{
-    total_balance: number
-    accounts: BankAccount[]
-    net_worth: number
-    cash_flow: any
-  }>> {
-    return this.request(`/accounts/overview?user_id=${userId}`)
-  }
-
-  // User Settings endpoints
-  async getUserSettings(): Promise<ApiResponse<any>> {
-    return this.request('/users/settings')
-  }
-
-  async updateUserSettings(settingsData: {
-    email_notifications?: boolean
-    sms_notifications?: boolean
-    push_notifications?: boolean
-    marketing_emails?: boolean
-    two_factor_enabled?: boolean
-    currency_preference?: string
-    language_preference?: string
-    timezone?: string
+  async verifyPlaidDebitCard(requestData: {
+    public_token: string;
+    account_id?: string;
   }): Promise<ApiResponse<any>> {
-    return this.request('/users/settings', {
-      method: 'PUT',
-      body: JSON.stringify(settingsData),
-    })
-  }
-
-  // Password change endpoint
-  async changePassword(passwordData: {
-    current_password: string
-    new_password: string
-  }): Promise<ApiResponse<any>> {
-    return this.request('/auth/change-password', {
+    return this.request('/plaid/debit-card/verify', {
       method: 'POST',
-      body: JSON.stringify(passwordData),
-    })
-  }
-
-  // Audit endpoints for security activity
-  async getAuditLogs(params?: {
-    user_id?: string
-    event_type?: string
-    start_date?: string
-    end_date?: string
-    page?: number
-    limit?: number
-  }): Promise<ApiResponse<any>> {
-    const queryParams = new URLSearchParams()
-    if (params) {
-      Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined) {
-          queryParams.append(key, value.toString())
-        }
-      })
-    }
-    const query = queryParams.toString()
-    return this.request(`/audit/logs${query ? `?${query}` : ''}`)
-  }
-
-  async createAuditLog(auditData: {
-    event_type: string
-    description: string
-    metadata?: any
-    ip_address?: string
-    user_agent?: string
-    resource_id?: string
-    resource_type?: string
-  }): Promise<ApiResponse<any>> {
-    return this.request('/audit/logs', {
-      method: 'POST',
-      body: JSON.stringify(auditData),
-    })
-  }
-
-  // Health check
-  async healthCheck(): Promise<ApiResponse<{ status: string; service: string; version: string }>> {
-    return this.request('/health')
+      body: JSON.stringify(requestData),
+    });
   }
 }
 
-//
+interface ApiResponse<T = any> {
+  data?: T
+  error?: string
+  message?: string
+  status: number
+}
 
-// Create and export a singleton instance
-export const apiClient = new ApiClient()
+// Plaid-specific types
+export interface PlaidAccount {
+  account_id: string;
+  connection_id: string;
+  name: string;
+  official_name?: string;
+  type: string;
+  subtype?: string;
+  mask?: string;
+  balances: {
+    available?: number;
+    current: number;
+    limit?: number;
+    iso_currency_code?: string;
+  };
+  created_at?: string;
+  updated_at?: string;
+}
 
-// Export the class for custom instances if needed
-export default ApiClient
+export interface PlaidConnection {
+  connection_id: string;
+  user_id: string;
+  item_id: string;
+  institution_id?: string;
+  institution_name?: string;
+  status: string;
+  created_at: string;
+  last_synced_at?: string;
+  error_message?: string;
+}
+
+export interface PlaidTransaction {
+  transaction_id: string;
+  account_id: string;
+  connection_id: string;
+  amount: number;
+  iso_currency_code?: string;
+  date: string;
+  name: string;
+  merchant_name?: string;
+  pending: boolean;
+  category?: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PlaidLinkTokenRequest {
+  client_name?: string;
+  products?: string[];
+  country_codes?: string[];
+  language?: string;
+  webhook_url?: string;
+}
+
+export interface PlaidLinkTokenResponse {
+  link_token: string;
+  expiration: string;
+  link_token_id?: string;
+  request_id?: string;
+}
+
+export interface PlaidExchangeTokenRequest {
+  public_token: string;
+  link_token_id?: string;
+  account_id?: string;
+}
+
+export interface PlaidExchangeTokenResponse {
+  connection_id: string;
+  access_token: string;
+  item_id: string;
+}
+
+export interface PlaidSyncRequest {
+  connection_id?: string;
+}
+
+export interface PlaidSyncResponse {
+  connection_id: string;
+  accounts_synced: number;
+  transactions_synced: number;
+  last_synced_at: string;
+}
+
+const apiClient = new ApiClient(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1')
+
+export { apiClient, ApiClient }
+export type { ApiResponse }

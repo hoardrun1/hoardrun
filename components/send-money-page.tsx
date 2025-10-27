@@ -19,9 +19,9 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { motion, AnimatePresence } from 'framer-motion'
-import { 
-  Loader2, 
-  AlertCircle, 
+import {
+  Loader2,
+  AlertCircle,
   Clock,
   ArrowLeft,
   Send,
@@ -29,7 +29,8 @@ import {
   DollarSign,
   User,
   CreditCard,
-  Smartphone
+  Smartphone,
+  Plus
 } from 'lucide-react'
 import { formatCurrency, calculateTransactionFee } from '@/lib/banking'
 import { cn } from '@/lib/utils'
@@ -47,6 +48,10 @@ import { MastercardClient } from '@/lib/mastercard-client'
 import { VisaClient } from '@/lib/visa-client'
 import { SectionFooter } from '@/components/ui/section-footer'
 import { useTheme } from '@/contexts/ThemeContext'
+import { apiClient } from '@/lib/api-client'
+import { PlaidLink } from '@/components/plaid/PlaidLink'
+import { ConnectBankAccountModal } from '@/components/send-money/ConnectBankAccountModal'
+import { AddBeneficiaryModal } from '@/components/send-money/AddBeneficiaryModal'
 
 // Types
 type AccountType = 'CHECKING' | 'SAVINGS' | 'CREDIT'
@@ -133,6 +138,8 @@ export function SendMoneyPage() {
   const [preview, setPreview] = useState<TransactionPreview | null>(null)
   const [showSuccess, setShowSuccess] = useState(false)
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false)
+  const [isConnectBankModalOpen, setIsConnectBankModalOpen] = useState(false)
+  const [isAddBeneficiaryModalOpen, setIsAddBeneficiaryModalOpen] = useState(false)
 
   // Hooks
   const {
@@ -166,6 +173,39 @@ export function SendMoneyPage() {
   // Ensure accounts and beneficiaries are arrays
   const safeAccounts = Array.isArray(accounts) ? accounts : []
   const safeBeneficiaries = Array.isArray(beneficiaries) ? beneficiaries : []
+
+  // Handle Plaid success - refresh accounts and auto-select first one
+  const handlePlaidSuccess = useCallback(async (publicToken: string, metadata: any) => {
+    try {
+      await fetchAccounts()
+      toast({
+        title: 'Success',
+        description: 'Bank account connected successfully',
+      })
+    } catch (err) {
+      toast({
+        title: 'Error',
+        description: 'Failed to load connected account',
+        variant: 'destructive',
+      })
+    }
+  }, [fetchAccounts, toast])
+
+  // Handle beneficiary added success
+  const handleBeneficiaryAdded = useCallback(async () => {
+    await fetchBeneficiaries()
+    toast({
+      title: 'Success',
+      description: 'Beneficiary added successfully',
+    })
+  }, [fetchBeneficiaries, toast])
+
+  // Auto-select first account when accounts are loaded and none selected
+  useEffect(() => {
+    if (safeAccounts.length > 0 && !selectedAccountId) {
+      setSelectedAccountId(safeAccounts[0].id)
+    }
+  }, [safeAccounts, selectedAccountId])
 
   // Calculate preview when amount changes
   useEffect(() => {
@@ -224,18 +264,55 @@ export function SendMoneyPage() {
   // Handle form submission
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!validateForm()) return
 
     setIsProcessing(true)
+    setError(null)
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
+      const numAmount = parseFloat(amount)
+
+      if (transferType === 'bank') {
+        // Use sendMoney API for bank transfers to beneficiaries
+        const response = await apiClient.sendMoney({
+          beneficiary_id: selectedBeneficiaryId,
+          amount: numAmount,
+          description: description || 'Bank transfer',
+        })
+
+        if (response.error) {
+          throw new Error(response.error)
+        }
+      } else if (transferType === 'momo') {
+        // Use createTransaction for mobile money transfers
+        const result = await createTransaction({
+          type: 'TRANSFER',
+          amount: numAmount,
+          description: description || `Mobile money transfer to ${momoPhone}`,
+          category: 'Mobile Money',
+        })
+
+        if (!result) {
+          throw new Error('Mobile money transfer failed')
+        }
+      } else if (transferType === 'card') {
+        // Use createTransaction for card transfers
+        const result = await createTransaction({
+          type: 'TRANSFER',
+          amount: numAmount,
+          description: description || `Card transfer to ${cardNumber.slice(-4)}`,
+          category: 'Card Transfer',
+        })
+
+        if (!result) {
+          throw new Error('Card transfer failed')
+        }
+      }
+
       // Show success animation
       setShowSuccess(true)
-      
+
       toast({
         title: 'Success',
         description: 'Money sent successfully',
@@ -254,11 +331,17 @@ export function SendMoneyPage() {
       }, 2000)
 
     } catch (err) {
-      setError('Transaction failed. Please try again.')
+      const errorMessage = err instanceof Error ? err.message : 'Transaction failed. Please try again.'
+      setError(errorMessage)
+      toast({
+        title: 'Error',
+        description: errorMessage,
+        variant: 'destructive',
+      })
     } finally {
       setIsProcessing(false)
     }
-  }, [validateForm, toast, router])
+  }, [validateForm, toast, router, amount, transferType, selectedBeneficiaryId, description, momoPhone, cardNumber, createTransaction])
 
   // Get selected account
   const selectedAccount = selectedAccountId ? getAccountById(selectedAccountId) : null
@@ -322,40 +405,63 @@ export function SendMoneyPage() {
                 </motion.div>
 
                 {/* From Account */}
-                <motion.div 
+                <motion.div
                   className="space-y-3"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
                 >
                   <Label className="text-sm font-medium text-foreground">From Account</Label>
-                  <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
-                    <SelectTrigger className="h-14 border-2">
-                      <div className="flex items-center gap-3">
-                        <CreditCard className="h-5 w-5 text-muted-foreground" />
-                        <SelectValue placeholder="Select account" />
-                      </div>
-                    </SelectTrigger>
-                    <SelectContent>
-                      {safeAccounts.map((account) => (
-                        <SelectItem key={account.id} value={account.id}>
-                          <div className="flex justify-between items-center w-full">
-                            <div>
-                              <div className="font-medium">{account.account_type}</div>
-                              <div className="text-sm text-muted-foreground">•••• {account.account_number?.slice(-4) || '****'}</div>
-                            </div>
-                            <div className="text-sm font-medium">
-                              {formatCurrency(account.balance)}
-                            </div>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {selectedAccount && (
-                    <div className="text-sm text-muted-foreground">
-                      Available: {formatCurrency(selectedAccount.balance)}
+                  {safeAccounts.length === 0 ? (
+                    <div className="space-y-3">
+                      <Alert className="border-2 border-dashed">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription>
+                          No accounts connected. Connect a bank account to send money.
+                        </AlertDescription>
+                      </Alert>
+                      <Button
+                        onClick={() => setIsConnectBankModalOpen(true)}
+                        className="w-full h-14"
+                        variant="default"
+                      >
+                        <div className="flex items-center justify-center gap-2">
+                          <Plus className="h-5 w-5" />
+                          Connect Bank Account
+                        </div>
+                      </Button>
                     </div>
+                  ) : (
+                    <>
+                      <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
+                        <SelectTrigger className="h-14 border-2">
+                          <div className="flex items-center gap-3">
+                            <CreditCard className="h-5 w-5 text-muted-foreground" />
+                            <SelectValue placeholder="Select account" />
+                          </div>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {safeAccounts.map((account) => (
+                            <SelectItem key={account.id} value={account.id}>
+                              <div className="flex justify-between items-center w-full">
+                                <div>
+                                  <div className="font-medium">{account.account_type}</div>
+                                  <div className="text-sm text-muted-foreground">•••• {account.account_number?.slice(-4) || '****'}</div>
+                                </div>
+                                <div className="text-sm font-medium">
+                                  {formatCurrency(account.balance)}
+                                </div>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {selectedAccount && (
+                        <div className="text-sm text-muted-foreground">
+                          Available: {formatCurrency(selectedAccount.balance)}
+                        </div>
+                      )}
+                    </>
                   )}
                 </motion.div>
 
@@ -415,6 +521,17 @@ export function SendMoneyPage() {
                               </div>
                             </SelectItem>
                           ))}
+                          <div className="p-2 border-t">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setIsAddBeneficiaryModalOpen(true)}
+                              className="w-full justify-start"
+                            >
+                              <Plus className="h-4 w-4 mr-2" />
+                              Add New Beneficiary
+                            </Button>
+                          </div>
                         </SelectContent>
                       </Select>
                     </>
@@ -570,6 +687,20 @@ export function SendMoneyPage() {
             <DepositModal
               open={isDepositModalOpen}
               onOpenChange={setIsDepositModalOpen}
+            />
+
+            {/* Connect Bank Account Modal */}
+            <ConnectBankAccountModal
+              open={isConnectBankModalOpen}
+              onOpenChange={setIsConnectBankModalOpen}
+              onSuccess={handlePlaidSuccess}
+            />
+
+            {/* Add Beneficiary Modal */}
+            <AddBeneficiaryModal
+              open={isAddBeneficiaryModalOpen}
+              onOpenChange={setIsAddBeneficiaryModalOpen}
+              onSuccess={handleBeneficiaryAdded}
             />
           </div>
 

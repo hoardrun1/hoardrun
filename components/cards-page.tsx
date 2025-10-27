@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Plus, Home, BarChart2, CreditCard, PieChart, Settings, ChevronRight, Lock, Eye, EyeOff, Shield, AlertCircle, Loader2, Wifi, DollarSign, TrendingUp, MoreVertical, Download, Copy, Trash2 } from 'lucide-react'
+import { Plus, Home, BarChart2, CreditCard, PieChart, Settings, ChevronRight, Lock, Eye, EyeOff, Shield, AlertCircle, Loader2, Wifi, DollarSign, TrendingUp, MoreVertical, Download, Copy, Trash2, Building2 } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
@@ -15,7 +15,9 @@ import { useToast } from "@/components/ui/use-toast"
 import { MastercardClient } from '@/lib/mastercard-client'
 import { COUNTRY_CODES, type CountryCode } from '@/lib/constants/country-codes'
 import { SectionFooter } from '@/components/ui/section-footer'
-import { apiClient, type PaymentMethod } from '@/lib/api-client'
+import { apiClient } from '@/lib/api-client'
+import { PlaidLink } from '@/components/plaid/PlaidLink'
+import { DebitCardSelectionModal } from '@/components/DebitCardSelectionModal'
 
 interface CardData {
   id: string
@@ -71,44 +73,45 @@ export function CardsPageComponent() {
   const [showCardDetails, setShowCardDetails] = useState<Record<string, boolean>>({})
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false)
   const [selectedCard, setSelectedCard] = useState<string | null>(null)
+  const [isDebitCardModalOpen, setIsDebitCardModalOpen] = useState(false)
   const { addToast } = useToast()
 
-  useEffect(() => {
-    const fetchPaymentMethods = async () => {
-      try {
-        setLoading(true)
-        setError(null)
-        
-        const response = await apiClient.getPaymentMethods()
-        
-        if (response.error) {
-          throw new Error(response.error)
-        }
+  const fetchPaymentMethods = async () => {
+    try {
+      setLoading(true)
+      setError(null)
 
-        if (response.data) {
-          const paymentMethods = Array.isArray(response.data) 
-            ? response.data 
-            : (response.data as any)?.data || []
-          
-          const cardData = (paymentMethods as any[])
-            .map((paymentMethod: any) => mapPaymentMethodToCard(paymentMethod))
-            .filter((card): card is CardData => card !== null)
-          
-          setCards(cardData)
-        }
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to load payment methods'
-        setError(errorMessage)
-        addToast({
-          title: "Error",
-          description: errorMessage,
-          variant: "destructive",
-        })
-      } finally {
-        setLoading(false)
+      const response = await apiClient.getPaymentMethods()
+
+      if (response.error) {
+        throw new Error(response.error)
       }
-    }
 
+      if (response.data) {
+        const paymentMethods = Array.isArray(response.data)
+          ? response.data
+          : (response.data as any)?.data || []
+
+        const cardData = (paymentMethods as any[])
+          .map((paymentMethod: any) => mapPaymentMethodToCard(paymentMethod))
+          .filter((card): card is CardData => card !== null)
+
+        setCards(cardData)
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load payment methods'
+      setError(errorMessage)
+      addToast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
     fetchPaymentMethods()
   }, [addToast])
 
@@ -267,25 +270,17 @@ export function CardsPageComponent() {
                     <DialogTitle className="font-bold text-xl">Request New Card</DialogTitle>
                   </DialogHeader>
                   <div className="grid gap-3 py-4">
-                    <Card className="cursor-pointer hover:border-primary hover:shadow-lg transition-all group">
+                    <Card
+                      className="cursor-pointer hover:border-primary hover:shadow-lg transition-all group"
+                      onClick={() => setIsDebitCardModalOpen(true)}
+                    >
                       <CardContent className="flex items-center p-4 sm:p-6">
                         <div className="mr-4 p-3 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 group-hover:from-primary/20 group-hover:to-primary/10 transition-all">
                           <CreditCard className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-foreground">Physical Card</h3>
-                          <p className="text-sm text-muted-foreground">Get a card for in-person use</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                    <Card className="cursor-pointer hover:border-primary hover:shadow-lg transition-all group">
-                      <CardContent className="flex items-center p-4 sm:p-6">
-                        <div className="mr-4 p-3 rounded-xl bg-gradient-to-br from-purple-500/10 to-purple-500/5 group-hover:from-purple-500/20 group-hover:to-purple-500/10 transition-all">
-                          <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600 dark:text-purple-400" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-foreground">Virtual Card</h3>
-                          <p className="text-sm text-muted-foreground">Create for online purchases</p>
+                          <h3 className="font-semibold text-foreground">Add Debit Card</h3>
+                          <p className="text-sm text-muted-foreground">Enter your debit card details to add it</p>
                         </div>
                       </CardContent>
                     </Card>
@@ -345,28 +340,20 @@ export function CardsPageComponent() {
               </DialogTrigger>
               <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                  <DialogTitle className="font-bold text-xl">Request New Card</DialogTitle>
+                  <DialogTitle className="font-bold text-xl">Add New Card</DialogTitle>
                 </DialogHeader>
                 <div className="grid gap-3 py-4">
-                  <Card className="cursor-pointer hover:border-primary hover:shadow-lg transition-all group">
+                  <Card
+                    className="cursor-pointer hover:border-primary hover:shadow-lg transition-all group"
+                    onClick={() => setIsDebitCardModalOpen(true)}
+                  >
                     <CardContent className="flex items-center p-4 sm:p-6">
                       <div className="mr-4 p-3 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 group-hover:from-primary/20 group-hover:to-primary/10 transition-all">
                         <CreditCard className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-foreground">Physical Card</h3>
-                        <p className="text-sm text-muted-foreground">Get a card for in-person use</p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card className="cursor-pointer hover:border-primary hover:shadow-lg transition-all group">
-                    <CardContent className="flex items-center p-4 sm:p-6">
-                      <div className="mr-4 p-3 rounded-xl bg-gradient-to-br from-purple-500/10 to-purple-500/5 group-hover:from-purple-500/20 group-hover:to-purple-500/10 transition-all">
-                        <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600 dark:text-purple-400" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-foreground">Virtual Card</h3>
-                        <p className="text-sm text-muted-foreground">Create for online purchases</p>
+                        <h3 className="font-semibold text-foreground">Link Debit Card</h3>
+                        <p className="text-sm text-muted-foreground">Connect your bank account to add debit cards</p>
                       </div>
                     </CardContent>
                   </Card>
@@ -607,6 +594,15 @@ export function CardsPageComponent() {
       <DepositModal
         open={isDepositModalOpen}
         onOpenChange={setIsDepositModalOpen}
+      />
+
+      <DebitCardSelectionModal
+        open={isDebitCardModalOpen}
+        onOpenChange={setIsDebitCardModalOpen}
+        onSuccess={() => {
+          // Refresh the cards list after adding new debit cards
+          fetchPaymentMethods()
+        }}
       />
       </LayoutWrapper>
     </React.Fragment>

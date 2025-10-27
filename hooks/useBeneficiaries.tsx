@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react'
 import { useToast } from '../components/ui/use-toast'
-import { apiClient, Beneficiary } from '../lib/api-client'
+import { apiClient } from '../lib/api-client'
+import { Beneficiary } from '../types/send-money'
 
 interface CreateBeneficiaryData {
   name: string
@@ -19,7 +20,25 @@ interface BeneficiaryList {
   hasMore: boolean
 }
 
-export function useBeneficiaries() {
+interface UseBeneficiariesReturn {
+  beneficiaries: Beneficiary[]
+  isLoading: boolean
+  error: string | null
+  pagination: {
+    total: number
+    page: number
+    totalPages: number
+    hasMore: boolean
+  }
+  fetchBeneficiaries: (page?: number, limit?: number, search?: string) => Promise<BeneficiaryList | null>
+  addBeneficiary: (data: CreateBeneficiaryData) => Promise<Beneficiary | null>
+  updateBeneficiary: (id: string, data: Partial<CreateBeneficiaryData>) => Promise<Beneficiary | null>
+  deleteBeneficiary: (id: string) => Promise<boolean>
+  getBeneficiaryById: (beneficiaryId: string) => Beneficiary | undefined
+  searchBeneficiaries: (query: string) => Beneficiary[]
+}
+
+export function useBeneficiaries(): UseBeneficiariesReturn {
   const [beneficiaries, setBeneficiaries] = useState<Beneficiary[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -227,8 +246,8 @@ export function useBeneficiaries() {
     const searchLower = query.toLowerCase()
     return beneficiaries.filter(b =>
       b.name.toLowerCase().includes(searchLower) ||
-      b.account_number.includes(query) ||
-      b.bank_name.toLowerCase().includes(searchLower) ||
+      b.accountNumber.includes(query) ||
+      b.bankName.toLowerCase().includes(searchLower) ||
       b.email?.toLowerCase().includes(searchLower)
     )
   }, [beneficiaries])

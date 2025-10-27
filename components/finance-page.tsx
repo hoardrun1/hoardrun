@@ -20,28 +20,29 @@ import {
   Upload,
   Brain,
   Loader2,
-  RefreshCcw
+  RefreshCcw,
+  Building2
 } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
-import { DatePicker } from "@/components/ui/date-picker"
-import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sidebar-layout';
-import { SidebarContent } from '@/components/ui/sidebar-content-unified';
-import { SidebarToggle } from '@/components/ui/sidebar-toggle';
-import { DepositModal } from '@/components/deposit-modal';
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useToast } from "@/components/ui/use-toast"
-import { apiClient } from '@/lib/api-client'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts'
 import { cn } from "@/lib/utils"
+import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sidebar-layout'
+import { SidebarContent } from '@/components/ui/sidebar-content-unified'
+import { SidebarToggle } from '@/components/ui/sidebar-toggle'
+import { DepositModal } from '@/components/deposit-modal'
+import { PlaidLink } from '@/components/plaid/PlaidLink'
+import { usePlaid } from '@/hooks/usePlaid'
+import { apiClient } from '@/lib/api-client'
+import { formatCurrency } from '@/lib/banking'
 import Link from 'next/link'
 import { Home, BarChart2, CreditCard, PieChart } from 'lucide-react'
 
@@ -71,10 +72,6 @@ interface AIInsight {
   description: string
   impact: number
   confidence: number
-  actions?: {
-    label: string
-    onClick: () => void
-  }[]
 }
 
 interface FinancialMetrics {
@@ -93,6 +90,14 @@ interface FinancialMetrics {
 export function FinancePageComponent() {
   const router = useRouter()
   const { toast } = useToast()
+  const { 
+    getAccounts, 
+    getTransactions, 
+    getConnections,
+    syncTransactions,
+    isLoading: plaidLoading 
+  } = usePlaid()
+
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedPeriod, setSelectedPeriod] = useState('month')
@@ -102,18 +107,20 @@ export function FinancePageComponent() {
   const [categories, setCategories] = useState<Category[]>([])
   const [metrics, setMetrics] = useState<FinancialMetrics | null>(null)
   const [aiInsights, setAIInsights] = useState<AIInsight[]>([])
-  const [showNewTransactionDialog, setShowNewTransactionDialog] = useState(false)
   const [showInsights, setShowInsights] = useState(true)
+  const [isDepositModalOpen, setIsDepositModalOpen] = useState(false)
+  const [hasPlaidAccounts, setHasPlaidAccounts] = useState(false)
+  const [syncing, setSyncing] = useState(false)
 
   // Chart data for financial overview
-  const chartData = [
+  const [chartData, setChartData] = useState([
     { name: 'Jan', income: 4000, expenses: 2400 },
     { name: 'Feb', income: 3000, expenses: 1398 },
     { name: 'Mar', income: 2000, expenses: 9800 },
     { name: 'Apr', income: 2780, expenses: 3908 },
     { name: 'May', income: 1890, expenses: 4800 },
     { name: 'Jun', income: 2390, expenses: 3800 },
-  ]
+  ])
 
   // Fetch initial data
   const fetchData = useCallback(async () => {
@@ -121,53 +128,130 @@ export function FinancePageComponent() {
       setIsLoading(true)
       setError(null)
 
-      // Use API client for parallel requests
-      const [transactionsResponse, dashboardResponse, analyticsResponse] = await Promise.all([
-        apiClient.getTransactions({ limit: 50 }),
-        apiClient.getDashboard(),
-        apiClient.getCashFlowAnalysis({ period: 'monthly' })
-      ])
+      // Check for Plaid connections
+      const connections = await getConnections()
+      const hasConnections = connections && connections.length > 0
+      setHasPlaidAccounts(hasConnections)
 
-      // Set transactions data
-      if (transactionsResponse.data) {
-        setTransactions(transactionsResponse.data.map(t => ({
-          id: t.id,
-          type: t.type === 'DEPOSIT' || t.type === 'TRANSFER' ? 'income' : 'expense',
-          amount: t.amount,
-          description: t.description,
-          category: t.category || 'General',
-          date: t.date,
-          merchant: t.beneficiary || 'System',
-          status: t.status.toLowerCase() as 'completed' | 'pending' | 'failed'
-        })))
+      if (hasConnections) {
+        // Use Plaid data
+        const [plaidAccounts, plaidTransactions] = await Promise.all([
+          getAccounts(),
+          getTransactions({ limit: 50 })
+        ])
+
+        // Transform Plaid transactions to our format
+        if (plaidTransactions && plaidTransactions.length > 0) {
+          const transformedTransactions: Transaction[] = plaidTransactions.map(t => ({
+            id: t.transaction_id,
+            type: t.amount < 0 ? 'expense' : 'income',
+            amount: Math.abs(t.amount),
+            description: t.name,
+            category: t.category?.[0] || 'General',
+            date: t.date,
+            merchant: t.merchant_name || t.name,
+            status: t.pending ? 'pending' : 'completed'
+          }))
+          setTransactions(transformedTransactions)
+
+          // Calculate categories from Plaid transactions
+          const categoryMap = new Map<string, number>()
+          transformedTransactions
+            .filter(t => t.type === 'expense')
+            .forEach(t => {
+              const current = categoryMap.get(t.category) || 0
+              categoryMap.set(t.category, current + t.amount)
+            })
+
+          const totalExpenses = Array.from(categoryMap.values()).reduce((sum, val) => sum + val, 0)
+          const categoryData: Category[] = Array.from(categoryMap.entries())
+            .map(([name, amount]) => ({
+              name,
+              amount,
+              percentage: totalExpenses > 0 ? (amount / totalExpenses) * 100 : 0,
+              color: '#374151',
+              trend: 0
+            }))
+            .sort((a, b) => b.amount - a.amount)
+            .slice(0, 5)
+
+          setCategories(categoryData)
+        }
+
+        // Calculate metrics from Plaid accounts
+        if (plaidAccounts && plaidAccounts.length > 0) {
+          const totalBalance = plaidAccounts.reduce((sum, acc) => 
+            sum + (acc.balances?.current || 0), 0
+          )
+
+          // Calculate income and expenses from transactions
+          const income = plaidTransactions
+            ?.filter(t => t.amount > 0)
+            .reduce((sum, t) => sum + t.amount, 0) || 0
+          
+          const expenses = plaidTransactions
+            ?.filter(t => t.amount < 0)
+            .reduce((sum, t) => sum + Math.abs(t.amount), 0) || 0
+
+          setMetrics({
+            totalBalance,
+            monthlyIncome: income,
+            monthlyExpenses: expenses,
+            savingsRate: income > 0 ? ((income - expenses) / income) * 100 : 0,
+            trends: {
+              balance: 2.5,
+              income: 8.2,
+              expenses: -3.1,
+              savings: 5.0
+            }
+          })
+        }
+      } else {
+        // Fallback to regular API data
+        const [transactionsResponse, dashboardResponse] = await Promise.all([
+          apiClient.getTransactions({ limit: 50 }),
+          apiClient.getDashboard()
+        ])
+
+        if (transactionsResponse.data) {
+          setTransactions(transactionsResponse.data.map(t => ({
+            id: t.id,
+            type: t.type === 'DEPOSIT' || t.type === 'TRANSFER' ? 'income' : 'expense',
+            amount: t.amount,
+            description: t.description,
+            category: t.category || 'General',
+            date: t.date,
+            merchant: t.beneficiary || 'System',
+            status: t.status.toLowerCase() as 'completed' | 'pending' | 'failed'
+          })))
+        }
+
+        // Set mock categories
+        setCategories([
+          { name: 'Food & Dining', amount: 1200, percentage: 35, color: '#374151', trend: 5 },
+          { name: 'Transportation', amount: 800, percentage: 23, color: '#6b7280', trend: -2 },
+          { name: 'Shopping', amount: 600, percentage: 18, color: '#9ca3af', trend: 8 },
+          { name: 'Entertainment', amount: 400, percentage: 12, color: '#d1d5db', trend: -5 },
+          { name: 'Utilities', amount: 300, percentage: 12, color: '#e5e7eb', trend: 1 }
+        ])
+
+        if (dashboardResponse.data) {
+          setMetrics({
+            totalBalance: dashboardResponse.data.balance,
+            monthlyIncome: dashboardResponse.data.total_income || 3200,
+            monthlyExpenses: dashboardResponse.data.total_expenses || 1850,
+            savingsRate: 42.2,
+            trends: {
+              balance: 2.5,
+              income: 8.2,
+              expenses: -3.1,
+              savings: 5.0
+            }
+          })
+        }
       }
 
-      // Set categories (mock data for now)
-      setCategories([
-        { name: 'Food & Dining', amount: 1200, percentage: 35, color: '#374151', trend: 5 },
-        { name: 'Transportation', amount: 800, percentage: 23, color: '#6b7280', trend: -2 },
-        { name: 'Shopping', amount: 600, percentage: 18, color: '#9ca3af', trend: 8 },
-        { name: 'Entertainment', amount: 400, percentage: 12, color: '#d1d5db', trend: -5 },
-        { name: 'Utilities', amount: 300, percentage: 12, color: '#e5e7eb', trend: 1 }
-      ])
-
-      // Set metrics from dashboard data
-      if (dashboardResponse.data) {
-        setMetrics({
-          totalBalance: dashboardResponse.data.balance,
-          monthlyIncome: dashboardResponse.data.total_income || 3200,
-          monthlyExpenses: dashboardResponse.data.total_expenses || 1850,
-          savingsRate: 42.2,
-          trends: {
-            balance: 2.5,
-            income: 8.2,
-            expenses: -3.1,
-            savings: 5.0
-          }
-        })
-      }
-
-      // Set AI insights (mock data for now)
+      // Set AI insights
       setAIInsights([
         {
           id: '1',
@@ -197,110 +281,51 @@ export function FinancePageComponent() {
     } finally {
       setIsLoading(false)
     }
-  }, [toast, selectedPeriod])
+  }, [toast, getAccounts, getTransactions, getConnections])
 
   useEffect(() => {
-    let isMounted = true
-    
-    const loadData = async () => {
-      if (!isMounted) return
-      
-      try {
-        setIsLoading(true)
-        setError(null)
+    fetchData()
+  }, [fetchData])
 
-        // Use API client for parallel requests
-        const [transactionsResponse, dashboardResponse, analyticsResponse] = await Promise.all([
-          apiClient.getTransactions({ limit: 50 }),
-          apiClient.getDashboard(),
-          apiClient.getCashFlowAnalysis({ period: 'monthly' })
-        ])
-
-        if (isMounted) {
-          // Set transactions data
-          if (transactionsResponse.data) {
-            setTransactions(transactionsResponse.data.map(t => ({
-              id: t.id,
-              type: t.type === 'DEPOSIT' || t.type === 'TRANSFER' ? 'income' : 'expense',
-              amount: t.amount,
-              description: t.description,
-              category: t.category || 'General',
-              date: t.date,
-              merchant: t.beneficiary || 'System',
-              status: t.status.toLowerCase() as 'completed' | 'pending' | 'failed'
-            })))
-          }
-
-          // Set categories (mock data for now)
-          setCategories([
-            { name: 'Food & Dining', amount: 1200, percentage: 35, color: '#374151', trend: 5 },
-            { name: 'Transportation', amount: 800, percentage: 23, color: '#6b7280', trend: -2 },
-            { name: 'Shopping', amount: 600, percentage: 18, color: '#9ca3af', trend: 8 },
-            { name: 'Entertainment', amount: 400, percentage: 12, color: '#d1d5db', trend: -5 },
-            { name: 'Utilities', amount: 300, percentage: 12, color: '#e5e7eb', trend: 1 }
-          ])
-
-          // Set metrics from dashboard data
-          if (dashboardResponse.data) {
-            setMetrics({
-              totalBalance: dashboardResponse.data.balance,
-              monthlyIncome: dashboardResponse.data.total_income || 3200,
-              monthlyExpenses: dashboardResponse.data.total_expenses || 1850,
-              savingsRate: 42.2,
-              trends: {
-                balance: 2.5,
-                income: 8.2,
-                expenses: -3.1,
-                savings: 5.0
-              }
-            })
-          }
-
-          // Set AI insights (mock data for now)
-          setAIInsights([
-            {
-              id: '1',
-              type: 'spending',
-              title: 'High Dining Expenses',
-              description: 'Your dining expenses are 25% higher than similar users',
-              impact: -15,
-              confidence: 85
-            },
-            {
-              id: '2',
-              type: 'saving',
-              title: 'Savings Goal Achievement',
-              description: 'You\'re on track to reach your savings goal 2 months early',
-              impact: 12,
-              confidence: 92
-            }
-          ])
-        }
-      } catch (err) {
-        if (isMounted) {
-          const errorMessage = 'Failed to load financial data. Please try again.'
-          setError(errorMessage)
-          toast({
-            title: "Error",
-            description: errorMessage,
-            variant: "destructive"
-          })
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false)
-        }
-      }
+  // Handle Plaid sync
+  const handleSyncPlaid = async () => {
+    try {
+      setSyncing(true)
+      await syncTransactions()
+      await fetchData()
+      toast({
+        title: "Success",
+        description: "Plaid data synchronized successfully",
+      })
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to sync Plaid data",
+        variant: "destructive",
+      })
+    } finally {
+      setSyncing(false)
     }
-    
-    loadData()
-    
-    return () => {
-      isMounted = false
-    }
-  }, [toast])
+  }
 
-  // Filter transactions based on search and category
+  // Handle Plaid connection success
+  const handlePlaidSuccess = async (publicToken: string, metadata: any) => {
+    try {
+      await fetchData()
+      toast({
+        title: "Success",
+        description: "Bank account connected successfully",
+      })
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to load updated data",
+        variant: "destructive",
+      })
+    }
+  }
+
+  // Filter transactions
   const filteredTransactions = useCallback(() => {
     let filtered = transactions
 
@@ -321,55 +346,6 @@ export function FinancePageComponent() {
     return filtered
   }, [transactions, searchQuery, selectedCategory])
 
-  const handleNewTransaction = async (formData: any) => {
-    try {
-      setIsLoading(true)
-      // Add API call here
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      toast({
-        title: "Success",
-        description: "Transaction added successfully",
-        duration: 3000
-      })
-      
-      setShowNewTransactionDialog(false)
-      fetchData() // Refresh data
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to add transaction. Please try again.",
-        variant: "destructive"
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleInsightAction = async (insightId: string, actionIndex: number) => {
-    try {
-      setIsLoading(true)
-      // Implement insight action logic
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      toast({
-        title: "Action Completed",
-        description: "Successfully applied the recommended action.",
-        duration: 3000
-      })
-      
-      fetchData() // Refresh data
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to apply action. Please try again.",
-        variant: "destructive"
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -388,9 +364,6 @@ export function FinancePageComponent() {
     )
   }
 
-  // Deposit modal state
-  const [isDepositModalOpen, setIsDepositModalOpen] = useState(false)
-
   return (
     <SidebarProvider>
       <ResponsiveSidebarLayout
@@ -406,19 +379,30 @@ export function FinancePageComponent() {
                   Finance Overview
                 </h1>
                 <p className="text-black/60 mt-1 text-xs sm:text-sm">
-                  Track your income, expenses, and financial insights
+                  {hasPlaidAccounts ? 'Connected via Plaid' : 'Track your financial activities'}
                 </p>
               </div>
               <div className="flex items-center gap-3">
-                <div className="relative hidden md:block">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
-                  <Input 
-                    placeholder="Search transactions..." 
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-64 pl-9"
-                  />
-                </div>
+                {hasPlaidAccounts ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSyncPlaid}
+                    disabled={syncing}
+                  >
+                    {syncing ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : (
+                      <RefreshCcw className="h-4 w-4 mr-2" />
+                    )}
+                    Sync
+                  </Button>
+                ) : (
+                  <PlaidLink onSuccess={handlePlaidSuccess}>
+                    <Building2 className="h-4 w-4 mr-2" />
+                    Connect Bank
+                  </PlaidLink>
+                )}
                 <Button variant="ghost" size="icon" className="relative">
                   <Bell className="h-5 w-5" />
                   <span className="absolute top-1 right-1 h-2 w-2 bg-gray-500 rounded-full" />
@@ -428,6 +412,26 @@ export function FinancePageComponent() {
                 </Button>
               </div>
             </div>
+
+            {/* Plaid Connection Banner */}
+            {!hasPlaidAccounts && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-950">
+                  <Building2 className="h-4 w-4" />
+                  <AlertDescription className="flex items-center justify-between">
+                    <span>Connect your bank accounts with Plaid for real-time data</span>
+                    <PlaidLink onSuccess={handlePlaidSuccess} className="ml-4">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Connect Now
+                    </PlaidLink>
+                  </AlertDescription>
+                </Alert>
+              </motion.div>
+            )}
+
         {/* AI Insights */}
         {showInsights && (
           <motion.div
@@ -487,20 +491,6 @@ export function FinancePageComponent() {
                                   </div>
                                 </div>
                               </div>
-                              {insight.actions && (
-                                <div className="flex gap-2">
-                                  {insight.actions.map((action, actionIndex) => (
-                                    <Button
-                                      key={actionIndex}
-                                      size="sm"
-                                      onClick={() => handleInsightAction(insight.id, actionIndex)}
-                                      disabled={isLoading}
-                                    >
-                                      {action.label}
-                                    </Button>
-                                  ))}
-                                </div>
-                              )}
                             </div>
                           </CardContent>
                         </Card>
@@ -534,7 +524,7 @@ export function FinancePageComponent() {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">
-                      ${metrics?.totalBalance?.toLocaleString() || '0'}
+                      {formatCurrency(metrics?.totalBalance || 0)}
                     </div>
                     <div className="flex items-center mt-1 text-gray-300">
                       <ArrowUpRight className="h-4 w-4 mr-1" />
@@ -557,7 +547,7 @@ export function FinancePageComponent() {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">
-                      ${metrics?.monthlyIncome?.toLocaleString() || '0'}
+                      {formatCurrency(metrics?.monthlyIncome || 0)}
                     </div>
                     <div className="flex items-center mt-1 text-gray-300">
                       <ArrowUpRight className="h-4 w-4 mr-1" />
@@ -580,12 +570,12 @@ export function FinancePageComponent() {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">
-                      ${metrics?.monthlyExpenses?.toLocaleString() || '0'}
+                      {formatCurrency(metrics?.monthlyExpenses || 0)}
                     </div>
                     <div className="flex items-center mt-1 text-gray-300">
-                      <ArrowUpRight className="h-4 w-4 mr-1" />
+                      <ArrowDownRight className="h-4 w-4 mr-1" />
                       <span className="text-sm">
-                        +{metrics?.trends?.expenses || 0}% from last month
+                        {metrics?.trends?.expenses || 0}% from last month
                       </span>
                     </div>
                   </CardContent>
@@ -646,7 +636,7 @@ export function FinancePageComponent() {
             </CardHeader>
             <CardContent className="pl-2">
               <ResponsiveContainer width="100%" height={350}>
-                <AreaChart data={chartData || []}>
+                <AreaChart data={chartData}>
                   <defs>
                     <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#6b7280" stopOpacity={0.8}/>
@@ -657,7 +647,7 @@ export function FinancePageComponent() {
                       <stop offset="95%" stopColor="#374151" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
-                  <XAxis dataKey="date" />
+                  <XAxis dataKey="name" />
                   <YAxis />
                   <CartesianGrid strokeDasharray="3 3" />
                   <Tooltip />
@@ -694,7 +684,9 @@ export function FinancePageComponent() {
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle>Spending Categories</CardTitle>
-                  <CardDescription>Your spending breakdown by category</CardDescription>
+                  <CardDescription>
+                    {hasPlaidAccounts ? 'From your connected accounts' : 'Your spending breakdown'}
+                  </CardDescription>
                 </div>
                 <Button variant="outline" size="sm">
                   <Download className="h-4 w-4 mr-2" />
@@ -711,7 +703,7 @@ export function FinancePageComponent() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {(categories || []).map((category, index) => (
+                  {categories.map((category, index) => (
                     <motion.div
                       key={index}
                       initial={{ opacity: 0, y: 20 }}
@@ -726,7 +718,7 @@ export function FinancePageComponent() {
                             {category.name}
                           </span>
                           <span className="text-sm text-gray-500 dark:text-gray-400">
-                            ${category.amount.toLocaleString()}
+                            {formatCurrency(category.amount)}
                           </span>
                         </div>
                         <div className="w-full h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
@@ -739,13 +731,7 @@ export function FinancePageComponent() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">{category.percentage}%</span>
-                        <span className={cn(
-                          "text-xs",
-                          category.trend > 0 ? "text-gray-500" : "text-gray-500"
-                        )}>
-                          {category.trend > 0 ? '+' : ''}{category.trend}%
-                        </span>
+                        <span className="text-sm font-medium">{category.percentage.toFixed(0)}%</span>
                       </div>
                     </motion.div>
                   ))}
@@ -766,27 +752,24 @@ export function FinancePageComponent() {
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle>Recent Transactions</CardTitle>
-                  <CardDescription>Your latest financial activities</CardDescription>
+                  <CardDescription>
+                    {hasPlaidAccounts ? 'Real-time data from Plaid' : 'Your latest activities'}
+                  </CardDescription>
                 </div>
                 <div className="flex gap-2">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+                    <Input 
+                      placeholder="Search..." 
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-9 w-48"
+                    />
+                  </div>
                   <Button variant="outline" size="sm">
                     <Filter className="h-4 w-4 mr-2" />
                     Filter
                   </Button>
-                  <Dialog open={showNewTransactionDialog} onOpenChange={setShowNewTransactionDialog}>
-                    <DialogTrigger asChild>
-                      <Button size="sm">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add Transaction
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Add New Transaction</DialogTitle>
-                      </DialogHeader>
-                      {/* Add transaction form */}
-                    </DialogContent>
-                  </Dialog>
                 </div>
               </div>
             </CardHeader>
@@ -807,20 +790,20 @@ export function FinancePageComponent() {
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: -20 }}
-                          transition={{ duration: 0.2, delay: index * 0.1 }}
+                          transition={{ duration: 0.2, delay: index * 0.05 }}
                         >
                           <div className="flex items-center justify-between p-4 rounded-lg bg-gray-50 dark:bg-gray-800">
                             <div className="flex items-center gap-4">
                               <div className={cn(
                                 "w-10 h-10 rounded-full flex items-center justify-center",
                                 transaction.type === 'income' 
-                                  ? 'bg-gray-100 text-gray-600 dark:bg-gray-900 dark:text-gray-400'
-                                  : 'bg-gray-100 text-gray-600 dark:bg-gray-900 dark:text-gray-400'
+                                  ? 'bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-400'
+                                  : 'bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-400'
                               )}>
                                 {transaction.type === 'income' ? (
-                                  <ArrowUpRight className="h-5 w-5" />
-                                ) : (
                                   <ArrowDownRight className="h-5 w-5" />
+                                ) : (
+                                  <ArrowUpRight className="h-5 w-5" />
                                 )}
                               </div>
                               <div>
@@ -836,15 +819,18 @@ export function FinancePageComponent() {
                               <div className={cn(
                                 "font-medium",
                                 transaction.type === 'income' 
-                                  ? 'text-gray-600 dark:text-gray-400'
-                                  : 'text-gray-600 dark:text-gray-400'
+                                  ? 'text-green-600 dark:text-green-400'
+                                  : 'text-red-600 dark:text-red-400'
                               )}>
                                 {transaction.type === 'income' ? '+' : '-'}
-                                ${transaction.amount.toLocaleString()}
+                                {formatCurrency(transaction.amount)}
                               </div>
                               <div className="text-sm text-gray-500 dark:text-gray-400">
                                 {new Date(transaction.date).toLocaleDateString()}
                               </div>
+                              {transaction.status === 'pending' && (
+                                <Badge variant="secondary" className="mt-1">Pending</Badge>
+                              )}
                             </div>
                           </div>
                         </motion.div>

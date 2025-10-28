@@ -33,6 +33,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       message: 'Email verified successfully',
+      verified: true,
+      user_id: data.user_id,
       data: data
     })
 
@@ -52,9 +54,9 @@ export async function GET(request: NextRequest) {
     const token = searchParams.get('token')
 
     if (!token) {
-      return NextResponse.json(
-        { message: 'Token is required' },
-        { status: 400 }
+      // Redirect to verification page with error
+      return NextResponse.redirect(
+        new URL('/verify-email?error=missing_token', request.url)
       )
     }
 
@@ -70,21 +72,22 @@ export async function GET(request: NextRequest) {
     const data = await response.json()
 
     if (!response.ok) {
-      // Redirect to error page or signin with error message
+      // Redirect to verification page to show error
       return NextResponse.redirect(
-        new URL(`/signin?error=${encodeURIComponent(data.message || 'Verification failed')}`, request.url)
+        new URL(`/verify-email?token=${token}&error=failed`, request.url)
       )
     }
 
-    // Redirect to signin page with success message
+    // Redirect to verification page to show success
+    // The frontend will handle showing success message and redirecting to signin
     return NextResponse.redirect(
-      new URL('/signin?verified=true', request.url)
+      new URL(`/verify-email?token=${token}&success=true`, request.url)
     )
 
   } catch (error) {
     console.error('Email verification API proxy error:', error)
     return NextResponse.redirect(
-      new URL('/signin?error=Verification%20failed', request.url)
+      new URL('/verify-email?error=network_error', request.url)
     )
   }
 }

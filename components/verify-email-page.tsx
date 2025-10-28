@@ -16,8 +16,52 @@ function VerifyEmailContent() {
 
   useEffect(() => {
     const verifyEmail = async () => {
+      // Check if we came from the backend redirect with success/error params
+      const successParam = searchParams?.get('success')
+      const errorParam = searchParams?.get('error')
       const token = searchParams?.get('token')
 
+      // Handle backend redirect results
+      if (successParam === 'true') {
+        setStatus('success')
+        setMessage('Your email has been verified successfully!')
+        toast({
+          title: "Success",
+          description: "Your email has been verified. You can now sign in.",
+        })
+        
+        // Clear any old user data from localStorage
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('auth-user')
+        }
+        
+        // Redirect to signin after 3 seconds
+        setTimeout(() => {
+          router.push('/signin?verified=true')
+        }, 3000)
+        return
+      }
+
+      if (errorParam) {
+        let errorMessage = 'Verification failed. The link may be invalid or expired.'
+        
+        if (errorParam === 'missing_token') {
+          errorMessage = 'Invalid verification link - no token provided.'
+        } else if (errorParam === 'network_error') {
+          errorMessage = 'Network error occurred. Please try again.'
+        }
+        
+        setStatus('error')
+        setMessage(errorMessage)
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive"
+        })
+        return
+      }
+
+      // If no success/error params, try to verify with token
       if (!token) {
         setStatus('error')
         setMessage('Invalid verification link')
@@ -33,13 +77,18 @@ function VerifyEmailContent() {
 
         const data = await response.json()
 
-        if (response.ok) {
+        if (response.ok && data.verified) {
           setStatus('success')
           setMessage('Your email has been verified successfully!')
           toast({
             title: "Success",
             description: "Your email has been verified. You can now sign in.",
           })
+          
+          // Clear any old user data from localStorage
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('auth-user')
+          }
           
           // Redirect to signin after 3 seconds
           setTimeout(() => {
@@ -99,7 +148,7 @@ function VerifyEmailContent() {
               <p className="text-white/80 text-sm mb-6">{message}</p>
               <p className="text-white/60 text-xs mb-4">Redirecting to sign in...</p>
               <Button
-                onClick={() => router.push('/signin')}
+                onClick={() => router.push('/signin?verified=true')}
                 className="w-full bg-white hover:bg-gray-100 text-black font-semibold"
               >
                 Go to Sign In

@@ -154,10 +154,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setError('Your session has expired. Please sign in again.');
     };
 
+    const handleLoginSuccess = async (event: CustomEvent) => {
+      console.log('Login success event received - refreshing user data');
+      if (token) {
+        const refreshedUser = await fetchCurrentUser(token);
+        if (refreshedUser) {
+          setUser(refreshedUser);
+        }
+      }
+    };
+
     if (typeof window !== 'undefined') {
       window.addEventListener('auth:token-expired', handleTokenExpiration);
+      window.addEventListener('auth:login-success', handleLoginSuccess as unknown as EventListener);
       return () => {
         window.removeEventListener('auth:token-expired', handleTokenExpiration);
+        window.removeEventListener('auth:login-success', handleLoginSuccess as unknown as EventListener);
       };
     }
   }, []);
@@ -237,7 +249,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         date_of_birth: dateOfBirth || undefined,
         country: country || undefined,
         bio: bio || undefined,
-        terms_accepted: true,
       });
 
       if (response.error) {

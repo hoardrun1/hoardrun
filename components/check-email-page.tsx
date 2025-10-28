@@ -22,12 +22,15 @@ function CheckEmailContent() {
     // Get email from URL params
     const emailFromParams = searchParams?.get('email')
     if (emailFromParams) {
-      setEmail(emailFromParams)
+      setEmail(decodeURIComponent(emailFromParams))
       return
     }
 
     // Fallback - redirect to signup if no email
-    router.push('/signup')
+    // Use setTimeout to avoid calling router.push during render
+    setTimeout(() => {
+      router.push('/signup')
+    }, 100)
   }, [router, searchParams])
 
   const handleResendEmail = async () => {

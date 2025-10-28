@@ -57,7 +57,17 @@ export function SignInPage() {
     }
 
     if (errorParam) {
-      setError(decodeURIComponent(errorParam))
+      let errorMessage = 'Verification failed. The link may be invalid or expired.'
+
+      if (errorParam === 'invalid_token') {
+        errorMessage = 'Invalid verification link - the token may be expired or invalid.'
+      } else if (errorParam === 'server_error') {
+        errorMessage = 'A server error occurred during verification. Please try again.'
+      } else if (errorParam === 'verification_failed') {
+        errorMessage = 'Email verification failed. The link may be invalid or expired.'
+      }
+
+      setError(errorMessage)
       // Clean up URL
       window.history.replaceState({}, document.title, window.location.pathname)
     }

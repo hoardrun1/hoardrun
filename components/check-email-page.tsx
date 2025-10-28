@@ -35,7 +35,7 @@ function CheckEmailContent() {
 
     setIsLoading(true)
     try {
-      const response = await fetch('/api/auth/send-verification-email', {
+      const response = await fetch('https://hoardrun-backend-py-1.onrender.com/api/v1/auth/resend-verification', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email })

@@ -249,6 +249,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         date_of_birth: dateOfBirth || undefined,
         country: country || undefined,
         bio: bio || undefined,
+        terms_accepted: true,
       });
 
       if (response.error) {

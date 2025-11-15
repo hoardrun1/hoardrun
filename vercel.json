@@ -4,11 +4,13 @@
   "framework": "nextjs",
   "env": {
     "NODE_ENV": "production",
-    "NEXT_PHASE": "phase-production-build"
+    "NEXT_PHASE": "phase-production-build",
+    "NEXT_PUBLIC_API_URL": "https://hoardrun-backend-py-1.onrender.com/api/v1"
   },
   "build": {
     "env": {
-      "NEXT_PHASE": "phase-production-build"
+      "NEXT_PHASE": "phase-production-build",
+      "NEXT_PUBLIC_API_URL": "https://hoardrun-backend-py-1.onrender.com/api/v1"
     }
   }
 }

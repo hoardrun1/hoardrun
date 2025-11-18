@@ -181,7 +181,7 @@ export function SignupPage() {
       // Success - redirect to check email page
       toast({
         title: "Account Created!",
-        description: "Please check your email and click the verification link to activate your account.",
+        description: "Please check your email and enter the verification code to activate your account.",
       })
 
       router.push(`/check-email?email=${encodeURIComponent(validatedData.email)}`)
@@ -190,18 +190,39 @@ export function SignupPage() {
       console.error('Signup error:', err)
       
       let errorMessage = "Signup failed"
+      let shouldRedirectToCheckEmail = false
+      
       if (err instanceof z.ZodError) {
         errorMessage = err.errors[0].message
       } else if (err instanceof Error) {
         errorMessage = err.message
+        
+        // Check if the error indicates email already exists but not verified
+        if (
+          errorMessage.includes("already exists") || 
+          errorMessage.includes("already registered") ||
+          errorMessage.includes("not verified") ||
+          err.message.toLowerCase().includes("verification")
+        ) {
+          // Redirect to check-email page
+          shouldRedirectToCheckEmail = true
+          toast({
+            title: "Email Already Registered",
+            description: "This email is already registered but not verified. Please check your email for the verification code.",
+          })
+        }
       }
 
-      setError(errorMessage)
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      })
+      if (shouldRedirectToCheckEmail) {
+        router.push(`/check-email?email=${encodeURIComponent(formData.email)}`)
+      } else {
+        setError(errorMessage)
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive",
+        })
+      }
     } finally {
       setIsLoading(false)
     }
@@ -419,7 +440,7 @@ export function SignupPage() {
                       <div className="space-y-2">
                         <Label htmlFor="country" className="text-sm font-medium text-foreground">{t("signup.fields.country")}</Label>
                         <div className="relative country-dropdown">
-                          <MapPinIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 sm:w-5 sm:h-5" />
+                          <MapPinIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 sm:w-5 sm:h-5 z-10" />
                           <button
                             type="button"
                             onClick={() => setIsCountryDropdownOpen(!isCountryDropdownOpen)}

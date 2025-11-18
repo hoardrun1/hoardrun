@@ -372,7 +372,7 @@ function CheckEmailContent() {
   )
 }
 
-export default function CheckEmailPage() {
+export function CheckEmailPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center bg-black">

@@ -253,14 +253,35 @@ export function AuthProvider({ children }: AuthProviderProps) {
       });
 
       if (response.error) {
+        // Check if error indicates unverified existing account
+        const errorMessage = response.error.toLowerCase();
+        if (
+          errorMessage.includes('already exists') || 
+          errorMessage.includes('already registered') ||
+          errorMessage.includes('not verified') ||
+          errorMessage.includes('verification')
+        ) {
+          // Create a special error that indicates redirect is needed
+          const redirectError = new Error(response.error);
+          (redirectError as any).shouldRedirectToCheckEmail = true;
+          (redirectError as any).email = email;
+          throw redirectError;
+        }
         throw new Error(response.error);
       }
 
       if (response.data) {
+        // Check if user exists but is not verified (backend resent verification email)
+        const userData = response.data;
+        if (userData.email_verified === false || userData.status === 'pending') {
+          console.log('User registered but not verified, verification email sent');
+          // This is a successful registration, no error to set
+        }
+        
         clearAllAuthData();
         setToken(null);
         setUser(null);
-        console.log('Registration successful. User needs to sign in.');
+        console.log('Registration successful. User needs to verify email.');
       }
     } catch (error: any) {
       console.error('Signup error:', error);

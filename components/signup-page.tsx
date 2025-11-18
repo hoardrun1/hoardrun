@@ -186,43 +186,49 @@ export function SignupPage() {
 
       router.push(`/check-email?email=${encodeURIComponent(validatedData.email)}`)
 
-    } catch (err) {
+    } catch (err: any) {
       console.error('Signup error:', err)
       
+      // Check if this is a redirect error (user exists but not verified)
+      if (err.shouldRedirectToCheckEmail) {
+        toast({
+          title: "Email Already Registered",
+          description: "This email is already registered but not verified. We've resent the verification code to your email.",
+        })
+        router.push(`/check-email?email=${encodeURIComponent(err.email || formData.email)}`)
+        return
+      }
+      
       let errorMessage = "Signup failed"
-      let shouldRedirectToCheckEmail = false
       
       if (err instanceof z.ZodError) {
         errorMessage = err.errors[0].message
       } else if (err instanceof Error) {
         errorMessage = err.message
         
-        // Check if the error indicates email already exists but not verified
+        // Additional check for error message patterns
+        const lowerMessage = errorMessage.toLowerCase()
         if (
-          errorMessage.includes("already exists") || 
-          errorMessage.includes("already registered") ||
-          errorMessage.includes("not verified") ||
-          err.message.toLowerCase().includes("verification")
+          lowerMessage.includes("already exists") || 
+          lowerMessage.includes("already registered") ||
+          lowerMessage.includes("not verified") ||
+          lowerMessage.includes("verification")
         ) {
-          // Redirect to check-email page
-          shouldRedirectToCheckEmail = true
           toast({
             title: "Email Already Registered",
-            description: "This email is already registered but not verified. Please check your email for the verification code.",
+            description: "This email is already registered but not verified. We've resent the verification code to your email.",
           })
+          router.push(`/check-email?email=${encodeURIComponent(formData.email)}`)
+          return
         }
       }
 
-      if (shouldRedirectToCheckEmail) {
-        router.push(`/check-email?email=${encodeURIComponent(formData.email)}`)
-      } else {
-        setError(errorMessage)
-        toast({
-          title: "Error",
-          description: errorMessage,
-          variant: "destructive",
-        })
-      }
+      setError(errorMessage)
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      })
     } finally {
       setIsLoading(false)
     }

@@ -628,6 +628,77 @@ class ApiClient {
       body: JSON.stringify(requestData),
     });
   }
+
+  // Budget-related methods
+  async getBudgets(): Promise<ApiResponse<BudgetCategory[]>> {
+    return this.request('/budgets');
+  }
+
+  async getBudgetSummary(): Promise<ApiResponse<BudgetSummary>> {
+    return this.request('/budgets/summary');
+  }
+
+  async getSpendingAnalysis(params?: {
+    period?: string;
+    group_by?: string;
+    start_date?: string;
+    end_date?: string;
+  }): Promise<ApiResponse<SpendingByCategory[]>> {
+    const queryParams = new URLSearchParams();
+    if (params?.period) queryParams.append('period', params.period);
+    if (params?.group_by) queryParams.append('group_by', params.group_by);
+    if (params?.start_date) queryParams.append('start_date', params.start_date);
+    if (params?.end_date) queryParams.append('end_date', params.end_date);
+
+    const endpoint = `/spending-analysis${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+    return this.request(endpoint);
+  }
+
+  async getFinancialInsights(): Promise<ApiResponse<FinancialInsight[]>> {
+    return this.request('/financial-insights');
+  }
+
+  async getCashFlowAnalysis(params?: {
+    period?: string;
+    start_date?: string;
+    end_date?: string;
+  }): Promise<ApiResponse<any>> {
+    const queryParams = new URLSearchParams();
+    if (params?.period) queryParams.append('period', params.period);
+    if (params?.start_date) queryParams.append('start_date', params.start_date);
+    if (params?.end_date) queryParams.append('end_date', params.end_date);
+
+    const endpoint = `/cash-flow-analysis${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+    return this.request(endpoint);
+  }
+
+  async getFinancialHealthScore(): Promise<ApiResponse<any>> {
+    return this.request('/financial-health-score');
+  }
+
+  // Savings-related methods
+  async getSavings(): Promise<ApiResponse<any>> {
+    return this.request('/savings/goals');
+  }
+
+  async getSavingsStats(): Promise<ApiResponse<any>> {
+    return this.request('/savings/stats');
+  }
+
+  async getSavingsInsights(): Promise<ApiResponse<any>> {
+    return this.request('/savings/insights');
+  }
+
+  async createSavingsGoal(data: {
+    name: string;
+    target_amount: number;
+    description?: string;
+  }): Promise<ApiResponse<any>> {
+    return this.request('/savings/goals', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
 }
 
 interface ApiResponse<T = any> {
@@ -635,6 +706,36 @@ interface ApiResponse<T = any> {
   error?: string
   message?: string
   status: number
+}
+
+// Budget-related types
+export interface BudgetCategory {
+  id: string;
+  name: string;
+  category: string;
+  budgeted_amount: number;
+  spent_amount: number;
+  percentage_used: number;
+}
+
+export interface BudgetSummary {
+  total_budgeted: number;
+  total_spent: number;
+  total_remaining: number;
+  overall_percentage_used: number;
+}
+
+export interface SpendingByCategory {
+  category?: string;
+  month?: string;
+  period?: string;
+  amount: number;
+}
+
+export interface FinancialInsight {
+  id: string;
+  title: string;
+  action_recommended: string;
 }
 
 // Plaid-specific types

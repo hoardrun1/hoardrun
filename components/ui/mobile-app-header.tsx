@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Bell, User, Search, Settings, LogOut, CreditCard, TrendingUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -66,13 +67,20 @@ export function MobileAppHeader({ onProfileClick, onNotificationClick }: MobileA
           {/* Left Side - Logo */}
           <div className="flex items-center gap-8 sm:gap-3">
             {/* Logo */}
-            <motion.div 
+            <motion.div
               className="flex items-center gap-4"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
               <div className="p-1.5 sm:p-2 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 shadow-sm">
-                <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                <Image
+                  src="/hoardrun-logo.png"
+                  alt="HoardRun Logo"
+                  width={20}
+                  height={20}
+                  className="object-contain"
+                  priority
+                />
               </div>
               <div className="flex flex-col">
                 <span className="text-base sm:text-lg font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 dark:from-white dark:via-gray-100 dark:to-white bg-clip-text text-transparent">

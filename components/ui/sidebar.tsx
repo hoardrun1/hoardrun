@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, usePathname } from 'next/navigation';
 import {
@@ -23,7 +24,8 @@ import {
   Shield,
   Phone,
   ChevronRight,
-  Plus
+  Plus,
+  Activity
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -57,6 +59,7 @@ const menuItems: MenuItem[] = [
   // Main Navigation
   { id: 'home', label: 'Dashboard', icon: Home, href: '/home', category: 'main' },
   { id: 'overview', label: 'Overview', icon: BarChart3, href: '/overview', category: 'main' },
+  { id: 'health-score', label: 'Health Score', icon: Activity, href: '/health-score', description: 'Financial health analysis', category: 'main' },
 
   // Financial Features
   { id: 'savings', label: 'Savings Goals', icon: PiggyBank, href: '/savings', description: 'Manage your savings', category: 'financial' },
@@ -339,7 +342,14 @@ export function Sidebar({ className, onAddMoney }: SidebarProps) {
                 <div className="flex items-center gap-4 mb-6">
                   <div className="relative">
                     <div className="bg-white p-3 rounded-2xl shadow-2xl shadow-white/10">
-                      <Wallet className="h-7 w-7 text-black" />
+                      <Image
+                        src="/hoardrun-logo.png"
+                        alt="HoardRun Logo"
+                        width={28}
+                        height={28}
+                        className="object-contain"
+                        priority
+                      />
                     </div>
                     <div className="absolute -inset-1 bg-gradient-to-r from-white/20 to-white/10 rounded-2xl -z-10 blur-lg"></div>
                   </div>

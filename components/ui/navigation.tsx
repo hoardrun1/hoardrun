@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Bell, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -21,8 +22,18 @@ export function Navigation() {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between p-4 bg-[#1a1b1f] border-b border-gray-800">
       <div className="flex items-center space-x-8">
-        <Link href="/" className="text-xl font-bold bg-gradient-to-r from-gray-200 to-white bg-clip-text text-transparent">
-          HoardRun
+        <Link href="/" className="flex items-center space-x-2">
+          <Image
+            src="/hoardrun-logo.png"
+            alt="HoardRun Logo"
+            width={40}
+            height={40}
+            className="object-contain"
+            priority
+          />
+          <span className="text-xl font-bold bg-gradient-to-r from-gray-200 to-white bg-clip-text text-transparent hidden sm:inline">
+            HoardRun
+          </span>
         </Link>
         
         <div className="hidden md:flex space-x-4">

@@ -123,10 +123,20 @@ export function LandingPageOptimized() {
           <nav className="flex justify-between items-center">
             <button
               onClick={scrollToTop}
-              className="text-base sm:text-lg md:text-xl font-bold cursor-pointer hover:opacity-80 transition-opacity"
+              className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity"
             >
-              <span className="text-white">Hoard</span>
-              <span className="text-gray-400">run</span>
+              <Image
+                src="/hoardrun-logo.png"
+                alt="HoardRun Logo"
+                width={40}
+                height={40}
+                className="object-contain"
+                priority
+              />
+              <div className="text-base sm:text-lg md:text-xl font-bold">
+                <span className="text-white">Hoard</span>
+                <span className="text-gray-400">run</span>
+              </div>
             </button>
             
             <div className="hidden md:flex space-x-6">

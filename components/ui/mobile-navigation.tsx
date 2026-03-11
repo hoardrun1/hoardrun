@@ -13,7 +13,8 @@ import {
   Wallet,
   TrendingUp,
   Settings,
-  MoreHorizontal
+  MoreHorizontal,
+  Activity
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -39,6 +40,12 @@ const navigationItems: MobileNavItem[] = [
     label: 'Overview',
     icon: BarChart3,
     href: '/overview',
+  },
+  {
+    id: 'health-score',
+    label: 'Health',
+    icon: Activity,
+    href: '/health-score',
   },
   {
     id: 'savings',

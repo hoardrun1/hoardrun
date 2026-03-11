@@ -186,12 +186,22 @@ export function LandingPageComponent() {
           <nav className="flex justify-between items-center">
             <motion.button
               onClick={scrollToTop}
-              className="text-base sm:text-lg md:text-xl font-bold cursor-pointer"
+              className="flex items-center space-x-2 cursor-pointer"
               whileHover={{ scale: 1.05 }}
               transition={{ type: "spring", stiffness: 300 }}
             >
-              <span className="text-white">Hoard</span>
-              <span className="text-gray-400">run</span>
+              <Image
+                src="/hoardrun-logo.png"
+                alt="HoardRun Logo"
+                width={40}
+                height={40}
+                className="object-contain"
+                priority
+              />
+              <div className="text-base sm:text-lg md:text-xl font-bold">
+                <span className="text-white">Hoard</span>
+                <span className="text-gray-400">run</span>
+              </div>
             </motion.button>
             <div className="hidden md:flex space-x-6">
               <motion.button
@@ -851,10 +861,19 @@ export function LandingPageComponent() {
             <div className="flex items-center space-x-4 mb-4 sm:mb-0">
               <button
                 onClick={scrollToTop}
-                className="text-base sm:text-lg md:text-xl font-bold cursor-pointer hover:opacity-80 transition-opacity duration-300"
+                className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity duration-300"
               >
-                <span className="text-white">Hoard</span>
-                <span className="text-gray-400">run</span>
+                <Image
+                  src="/hoardrun-logo.png"
+                  alt="HoardRun Logo"
+                  width={32}
+                  height={32}
+                  className="object-contain"
+                />
+                <div className="text-base sm:text-lg md:text-xl font-bold">
+                  <span className="text-white">Hoard</span>
+                  <span className="text-gray-400">run</span>
+                </div>
               </button>
             </div>
             <p className="text-gray-400 text-center sm:text-right text-xs sm:text-sm">

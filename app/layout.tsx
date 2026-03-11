@@ -12,8 +12,8 @@ import { FloatingLanguageSwitcher } from '@/components/ui/floating-language-swit
 // const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Hoardrun',
-  description: 'Your digital banking solution - Mobile-first digital banking',
+  title: 'HoardRun - Smart Financial Management',
+  description: 'Your digital banking solution - Mobile-first digital banking with AI-powered insights',
   viewport: {
     width: 'device-width',
     initialScale: 1,
@@ -26,10 +26,19 @@ export const metadata: Metadata = {
     { media: '(prefers-color-scheme: dark)', color: '#000000' }
   ],
   manifest: '/manifest.json',
+  icons: {
+    icon: [
+      { url: '/hoardrun-logo.png', sizes: 'any' },
+      { url: '/favicon.ico', sizes: 'any' }
+    ],
+    apple: [
+      { url: '/hoardrun-logo.png', sizes: '180x180', type: 'image/png' }
+    ]
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Hoardrun'
+    title: 'HoardRun'
   },
   formatDetection: {
     telephone: false

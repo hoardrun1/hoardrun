@@ -343,7 +343,7 @@ export function Sidebar({ className, onAddMoney }: SidebarProps) {
                   <div className="relative">
                     <div className="bg-white p-3 rounded-2xl shadow-2xl shadow-white/10">
                       <Image
-                        src="/hoardrun-logo.png"
+                        src="/hoardrun-logo.svg"
                         alt="HoardRun Logo"
                         width={28}
                         height={28}

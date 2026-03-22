@@ -74,7 +74,7 @@ export function MobileAppHeader({ onProfileClick, onNotificationClick }: MobileA
             >
               <div className="p-1.5 sm:p-2 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 shadow-sm">
                 <Image
-                  src="/hoardrun-logo.png"
+                  src="/hoardrun-logo.svg"
                   alt="HoardRun Logo"
                   width={20}
                   height={20}

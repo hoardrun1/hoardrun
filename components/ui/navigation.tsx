@@ -24,7 +24,7 @@ export function Navigation() {
       <div className="flex items-center space-x-8">
         <Link href="/" className="flex items-center space-x-2">
           <Image
-            src="/hoardrun-logo.svg"
+            src="/hoardrun-logo.png"
             alt="HoardRun Logo"
             width={40}
             height={40}

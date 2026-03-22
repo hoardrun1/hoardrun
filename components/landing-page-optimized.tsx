@@ -126,7 +126,7 @@ export function LandingPageOptimized() {
               className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity"
             >
               <Image
-                src="/hoardrun-logo.svg"
+                src="/hoardrun-logo.png"
                 alt="HoardRun Logo"
                 width={40}
                 height={40}

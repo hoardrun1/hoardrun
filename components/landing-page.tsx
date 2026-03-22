@@ -191,7 +191,7 @@ export function LandingPageComponent() {
               transition={{ type: "spring", stiffness: 300 }}
             >
               <Image
-                src="/hoardrun-logo.svg"
+                src="/hoardrun-logo.png"
                 alt="HoardRun Logo"
                 width={40}
                 height={40}
@@ -864,7 +864,7 @@ export function LandingPageComponent() {
                 className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity duration-300"
               >
                 <Image
-                  src="/hoardrun-logo.svg"
+                  src="/hoardrun-logo.png"
                   alt="HoardRun Logo"
                   width={32}
                   height={32}

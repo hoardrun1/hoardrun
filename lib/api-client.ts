@@ -593,6 +593,40 @@ class ApiClient {
     return this.request('/notifications/summary');
   }
 
+  async getNotifications(params?: {
+    limit?: number;
+    skip?: number;
+    status?: string;
+    type?: string;
+  }): Promise<ApiResponse<any>> {
+    return this.request('/notifications', {
+      method: 'GET',
+      params
+    });
+  }
+
+  async markNotificationAsRead(notificationId: string): Promise<ApiResponse<any>> {
+    return this.request(`/notifications/${notificationId}/read`, {
+      method: 'POST'
+    });
+  }
+
+  async bulkUpdateNotifications(data: {
+    notification_ids: string[];
+    status: string;
+  }): Promise<ApiResponse<any>> {
+    return this.request('/notifications/bulk-update', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  }
+
+  async deleteNotification(notificationId: string): Promise<ApiResponse<any>> {
+    return this.request(`/notifications/${notificationId}`, {
+      method: 'DELETE'
+    });
+  }
+
   async getProfile(): Promise<ApiResponse<any>> {
     return this.request('/users/profile');
   }

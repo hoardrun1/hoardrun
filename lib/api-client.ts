@@ -599,9 +599,15 @@ class ApiClient {
     status?: string;
     type?: string;
   }): Promise<ApiResponse<any>> {
-    return this.request('/notifications', {
+    const queryParams = new URLSearchParams();
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    if (params?.skip) queryParams.append('skip', params.skip.toString());
+    if (params?.status) queryParams.append('status', params.status);
+    if (params?.type) queryParams.append('type', params.type);
+
+    const endpoint = `/notifications${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    return this.request(endpoint, {
       method: 'GET',
-      params
     });
   }
 
@@ -678,18 +684,19 @@ class ApiClient {
     start_date?: string;
     end_date?: string;
   }): Promise<ApiResponse<SpendingByCategory[]>> {
-    const queryParams = new URLSearchParams();
-    if (params?.period) queryParams.append('period', params.period);
-    if (params?.group_by) queryParams.append('group_by', params.group_by);
-    if (params?.start_date) queryParams.append('start_date', params.start_date);
-    if (params?.end_date) queryParams.append('end_date', params.end_date);
-
-    const endpoint = `/spending-analysis${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
-    return this.request(endpoint);
+    return this.request('/analytics/spending-analysis', {
+      method: 'POST',
+      body: JSON.stringify({
+        period: params?.period || 'monthly',
+        group_by: params?.group_by || 'category',
+        start_date: params?.start_date,
+        end_date: params?.end_date,
+      }),
+    });
   }
 
   async getFinancialInsights(): Promise<ApiResponse<FinancialInsight[]>> {
-    return this.request('/financial-insights');
+    return this.request('/analytics/insights');
   }
 
   async getCashFlowAnalysis(params?: {
@@ -697,17 +704,18 @@ class ApiClient {
     start_date?: string;
     end_date?: string;
   }): Promise<ApiResponse<any>> {
-    const queryParams = new URLSearchParams();
-    if (params?.period) queryParams.append('period', params.period);
-    if (params?.start_date) queryParams.append('start_date', params.start_date);
-    if (params?.end_date) queryParams.append('end_date', params.end_date);
-
-    const endpoint = `/cash-flow-analysis${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
-    return this.request(endpoint);
+    return this.request('/analytics/cash-flow', {
+      method: 'POST',
+      body: JSON.stringify({
+        period: params?.period || 'monthly',
+        start_date: params?.start_date,
+        end_date: params?.end_date,
+      }),
+    });
   }
 
   async getFinancialHealthScore(): Promise<ApiResponse<any>> {
-    return this.request('/financial-health-score');
+    return this.request('/analytics/financial-health');
   }
 
   // Savings-related methods

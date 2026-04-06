@@ -40,30 +40,37 @@ export default function AnalyticsPage() {
         setError(null)
 
         // Fetch cash flow analysis for the last 6 months
-        const cashFlowResponse = await apiClient.getCashFlowAnalysis({
-          period: 'monthly',
-          start_date: new Date(Date.now() - 6 * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          end_date: new Date().toISOString().split('T')[0]
-        })
+        const startDate = new Date(Date.now() - 6 * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        const endDate = new Date().toISOString().split('T')[0]
 
-        if (cashFlowResponse.error) {
-          throw new Error(cashFlowResponse.error)
+        const [cashFlowResponse, spendingResponse, weeklySpendingResponse] = await Promise.all([
+          apiClient.getCashFlowAnalysis({
+            period: 'monthly',
+            start_date: startDate,
+            end_date: endDate
+          }),
+          apiClient.getSpendingAnalysis({
+            period: 'monthly',
+            group_by: 'category',
+            start_date: startDate,
+            end_date: endDate
+          }),
+          apiClient.getSpendingAnalysis({
+            period: 'weekly',
+            group_by: 'day',
+            start_date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            end_date: endDate
+          })
+        ])
+
+        const cashFlowError = cashFlowResponse.error
+        const spendingError = spendingResponse.error
+
+        if (cashFlowError && spendingError) {
+          throw new Error(cashFlowError)
         }
 
-        setCashFlowData(cashFlowResponse.data)
-
-        // Fetch spending analysis by category
-        const spendingResponse = await apiClient.getSpendingAnalysis({
-          period: 'monthly',
-          group_by: 'category',
-          start_date: new Date(Date.now() - 6 * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          end_date: new Date().toISOString().split('T')[0]
-        })
-
-        if (spendingResponse.error) {
-          throw new Error(spendingResponse.error)
-        }
-
+        setCashFlowData(cashFlowResponse.data || null)
         setSpendingData(spendingResponse.data || [])
 
         // Transform cash flow data for charts
@@ -81,19 +88,13 @@ export default function AnalyticsPage() {
         if (spendingResponse.data) {
           const categoryChartData = spendingResponse.data.map((category: any, index: number) => ({
             name: category.category || 'Other',
-            value: category.total_amount || 0,
+            value: category.total_amount || category.amount || 0,
             color: `hsl(${(index * 45) % 360}, 70%, 50%)`
           }))
           setCategoryData(categoryChartData)
+        } else {
+          setCategoryData([])
         }
-
-        // Fetch weekly spending data from API
-        const weeklySpendingResponse = await apiClient.getSpendingAnalysis({
-          period: 'weekly',
-          group_by: 'day',
-          start_date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          end_date: new Date().toISOString().split('T')[0]
-        })
 
         if (weeklySpendingResponse.data && !weeklySpendingResponse.error) {
           // Transform API data for weekly chart

@@ -74,7 +74,7 @@ const menuSections = {
 export function SidebarContent({ onAddMoney }: SidebarContentProps) {
   const router = useRouter()
   const pathname = usePathname()
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
   const { setIsOpen } = useSidebar()
   const { unreadCount } = useNotificationCount()
   const { navigate } = useAppNavigation()
@@ -94,16 +94,11 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
     }
   }
 
-  const handleLogout = async () => {
-    try {
-      await logout()
-      setIsOpen(false)
-      router.push('/')
-    } catch (error) {
-      console.error('Logout error:', error)
-      setIsOpen(false)
-      router.push('/')
-    }
+  const handleLogout = () => {
+    // The sign-out page ends the session. Doing it here would trigger the
+    // dashboard's redirect to sign-in before this navigation happens.
+    setIsOpen(false)
+    router.push('/signout')
   }
 
   const renderMenuSection = (title: string, items: MenuItem[]) => {
@@ -211,7 +206,7 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
               <Wallet className="h-5 w-5 text-black" />
             </div>
             <div>
-              <h1 className="text-xl font-black" style={{ color: '#ffffff' }}>HoardRun</h1>
+              <h1 className="text-xl font-black" style={{ color: '#ffffff' }}>Hoardrun</h1>
               <p className="text-xs" style={{ color: 'rgba(255,255,255,0.6)' }}>Premium Banking</p>
             </div>
           </div>

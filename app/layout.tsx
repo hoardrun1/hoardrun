@@ -7,13 +7,14 @@ import { ConditionalProviders } from '@/components/providers/conditional-provide
 import { ThemeProvider } from '@/contexts/ThemeContext'
 import { I18nProvider } from '@/components/i18n-provider'
 import { FloatingLanguageSwitcher } from '@/components/ui/floating-language-switcher'
+import { NativeShell } from '@/components/native/native-shell'
 
 
 // const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'HoardRun - Smart Financial Management',
-  description: 'Your digital banking solution - Mobile-first digital banking with AI-powered insights',
+  title: 'Hoardrun - Smart Financial Management',
+  description: 'Save, spend, send and invest in one app with AI-powered insights',
   viewport: {
     width: 'device-width',
     initialScale: 1,
@@ -38,7 +39,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'HoardRun'
+    title: 'Hoardrun'
   },
   formatDetection: {
     telephone: false
@@ -104,6 +105,8 @@ export default function RootLayout({
         </ThemeProvider>
         </I18nProvider>
         <FloatingLanguageSwitcher />
+        {/* iPhone and Android apps only: app lock, back button, return from Google */}
+        <NativeShell />
       </body>
     </html>
   )

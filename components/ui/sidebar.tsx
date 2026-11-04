@@ -166,13 +166,10 @@ export function Sidebar({ className, onAddMoney }: SidebarProps) {
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await signOut();
-      router.push('/signin');
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
+  const handleLogout = () => {
+    // The sign-out page ends the session. Doing it here would trigger the
+    // dashboard's redirect to sign-in before this navigation happens.
+    router.push('/signout');
   };
 
   const isActiveRoute = (href: string) => {
@@ -344,7 +341,7 @@ export function Sidebar({ className, onAddMoney }: SidebarProps) {
                     <div className="bg-white p-3 rounded-2xl shadow-2xl shadow-white/10">
                       <Image
                         src="/hoardrun-logo.png"
-                        alt="HoardRun Logo"
+                        alt="Hoardrun Logo"
                         width={28}
                         height={28}
                         className="object-contain"
@@ -354,7 +351,7 @@ export function Sidebar({ className, onAddMoney }: SidebarProps) {
                     <div className="absolute -inset-1 bg-gradient-to-r from-white/20 to-white/10 rounded-2xl -z-10 blur-lg"></div>
                   </div>
                   <div>
-                    <h1 className="text-2xl font-black text-white tracking-tight">HoardRun</h1>
+                    <h1 className="text-2xl font-black text-white tracking-tight">Hoardrun</h1>
                     <p className="text-sm text-gray-400 font-medium">Premium Banking</p>
                   </div>
                 </div>

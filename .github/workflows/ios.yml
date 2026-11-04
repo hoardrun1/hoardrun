@@ -1,0 +1,121 @@
+# Builds the Hoardrun iPhone app on a Mac, runs it in the iOS simulator, and saves screenshots.
+# No Apple account or signing needed. See hoardrun-backend-py/docs/mobile-apps.md.
+#
+# Run it from GitHub: Actions → "iPhone app" → Run workflow. Set the repository variable
+# HOARDRUN_APP_URL (Settings → Secrets and variables → Actions → Variables) to a deployed web app,
+# such as a Vercel preview, for the screenshots to show real pages instead of the offline screen.
+name: iPhone app
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'ios/**'
+      - 'capacitor.config.ts'
+      - 'mobile/**'
+      - 'components/native/**'
+      - 'lib/native.ts'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/ios.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  simulator:
+    runs-on: macos-15
+    timeout-minutes: 45
+    env:
+      HOARDRUN_APP_URL: ${{ vars.HOARDRUN_APP_URL || 'https://hoardrun.com' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Use the newest Xcode 26 (Capacitor 8 needs it)
+        run: |
+          XCODE=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)
+          if [ -z "$XCODE" ]; then echo "No Xcode 26 on this runner"; ls -d /Applications/Xcode*.app; exit 1; fi
+          sudo xcode-select -s "$XCODE"
+          xcodebuild -version
+
+      - name: Install packages
+        run: npm ci --no-audit --no-fund
+
+      - name: Copy the config and plugins into the iOS project
+        run: node scripts/mobile-sync.mjs ios
+
+      - name: Build for the simulator
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project ios/App/App.xcodeproj \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            build | tail -40
+
+      - name: Start a simulated iPhone
+        id: sim
+        run: |
+          UDID=$(xcrun simctl list devices available -j | python3 -c '
+          import json, sys
+          devices = [d for runtime, ds in json.load(sys.stdin)["devices"].items() if "iOS" in runtime for d in ds]
+          phones = [d for d in devices if d["name"].startswith("iPhone")]
+          print(phones[-1]["udid"])')
+          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+          xcrun simctl boot "$UDID"
+          xcrun simctl bootstatus "$UDID" -b
+          xcrun simctl list devices | grep "$UDID"
+
+      - name: Install and open Hoardrun
+        run: |
+          UDID=${{ steps.sim.outputs.udid }}
+          APP=build/Build/Products/Debug-iphonesimulator/App.app
+          mkdir -p screenshots
+          xcrun simctl install "$UDID" "$APP"
+          xcrun simctl launch "$UDID" com.hoardrun.app
+          sleep 25
+          xcrun simctl io "$UDID" screenshot screenshots/1-opened.png
+
+      - name: Check the hoardrun:// return link (Google and Apple sign-in)
+        run: |
+          UDID=${{ steps.sim.outputs.udid }}
+          xcrun simctl openurl "$UDID" "hoardrun://auth/google/callback?code=test-code-123&state=a_teststate1234567890"
+          sleep 12
+          xcrun simctl io "$UDID" screenshot screenshots/2-google-return.png
+          xcrun simctl openurl "$UDID" "hoardrun://auth/apple/callback?error=cancelled&app=1"
+          sleep 12
+          xcrun simctl io "$UDID" screenshot screenshots/3-apple-return.png
+
+      - name: App log
+        if: always()
+        run: |
+          xcrun simctl spawn ${{ steps.sim.outputs.udid }} log show --last 3m \
+            --predicate 'process == "App"' --style compact 2>/dev/null | tail -150 > screenshots/app-log.txt || true
+
+      - name: Save screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: iphone-simulator-screenshots
+          path: screenshots/
+          if-no-files-found: warn
+
+      - name: Save the simulator app
+        uses: actions/upload-artifact@v4
+        with:
+          name: hoardrun-ios-simulator-app
+          path: build/Build/Products/Debug-iphonesimulator/App.app
+          retention-days: 7

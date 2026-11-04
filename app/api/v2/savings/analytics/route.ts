@@ -1,13 +1,13 @@
 import { NextRequest } from 'next/server'
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+import { API_BASE_URL } from '@/lib/api-url'
 
 export async function GET(request: NextRequest) {
   try {
     const url = new URL(request.url)
     const searchParams = url.searchParams.toString()
     // Map v2 savings analytics to v1 savings/stats endpoint
-    const backendUrl = `${BACKEND_URL}/api/v1/savings/stats${searchParams ? `?${searchParams}` : ''}`
+    const backendUrl = `${API_BASE_URL}/savings/stats${searchParams ? `?${searchParams}` : ''}`
     
     const response = await fetch(backendUrl, {
       method: 'GET',
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     
-    const response = await fetch(`${BACKEND_URL}/api/v1/savings/insights`, {
+    const response = await fetch(`${API_BASE_URL}/savings/insights`, {
       method: 'POST',
       headers: {
         'Authorization': request.headers.get('Authorization') || '',

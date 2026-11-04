@@ -1,6 +1,8 @@
 import { useState, useCallback } from 'react'
 import { useToast } from '../components/ui/use-toast'
-import { apiClient, Transaction } from '../lib/api-client'
+import { apiClient } from '../lib/api-client'
+
+type Transaction = any
 import { useAuth } from '../contexts/AuthContext'
 
 interface TransactionData {
@@ -30,50 +32,6 @@ export function useTransactions() {
   })
   const { toast } = useToast()
   const { user } = useAuth()
-
-  const createTransaction = useCallback(async (data: TransactionData) => {
-    try {
-      setIsLoading(true)
-      setError(null)
-
-      const response = await apiClient.createTransaction({
-        type: data.type,
-        amount: data.amount,
-        description: data.description || '',
-        category: data.category
-      })
-
-      if (response.error) {
-        throw new Error(response.error || 'Transaction failed')
-      }
-
-      if (response.data) {
-        setTransactions(prev => [response.data!, ...prev])
-        toast({
-          title: "Success",
-          description: "Transaction completed successfully",
-        })
-
-        return {
-          transaction: response.data,
-          newBalance: response.data.amount,
-        }
-      }
-
-      return null
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Transaction failed'
-      setError(message)
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: message,
-      })
-      return null
-    } finally {
-      setIsLoading(false)
-    }
-  }, [toast])
 
   const fetchTransactionHistory = useCallback(async (
     accountId?: string,
@@ -106,7 +64,16 @@ export function useTransactions() {
       }
 
       if (response.data) {
-        const transactions = Array.isArray(response.data) ? response.data : []
+        // Bank transactions: a positive amount is money out
+        const transactions = (response.data?.data?.transactions ?? []).map((t: any) => ({
+          id: t.transaction_id,
+          type: Number(t.amount) < 0 ? 'DEPOSIT' : 'WITHDRAWAL',
+          amount: Math.abs(Number(t.amount)),
+          description: t.name,
+          category: t.merchant_name || 'General',
+          date: t.date,
+          status: t.pending ? 'PENDING' : 'COMPLETED',
+        }))
         setTransactions(transactions)
         
         const total = transactions.length
@@ -183,7 +150,6 @@ export function useTransactions() {
     isLoading,
     error,
     pagination,
-    createTransaction,
     fetchTransactionHistory,
     getTransactionsByType,
     getTransactionById,

@@ -83,7 +83,7 @@ const getTypeColor = (type: SmartNotification['type']) => {
     case 'goal_progress_nudge':
       return 'text-blue-600 bg-blue-50 border-blue-200';
     case 'savings_opportunity':
-      return 'text-purple-600 bg-purple-50 border-purple-200';
+      return 'text-blue-600 bg-blue-50 border-blue-200';
     case 'emergency_fund_reminder':
       return 'text-yellow-600 bg-yellow-50 border-yellow-200';
     default:

@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { API_BASE_URL } from '@/lib/api-url'
 
 const formSchema = z.object({
   amount: z.number().positive(),
@@ -60,7 +61,7 @@ export function MomoPaymentForm({ onPaymentSuccess, onPaymentError }: MomoPaymen
     
     try {
       // Use the new backend API endpoint
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/momo/send`, {
+      const response = await fetch(`${API_BASE_URL}/momo/send`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -121,7 +122,7 @@ export function MomoPaymentForm({ onPaymentSuccess, onPaymentError }: MomoPaymen
       
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/momo/transactions/${transactionId}`,
+          `${API_BASE_URL}/momo/transactions/${transactionId}`,
           {
             headers: {
               'Authorization': `Bearer ${token}`

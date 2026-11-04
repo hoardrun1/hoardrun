@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 interface Toast {
   id: string
@@ -15,34 +15,35 @@ interface ToastState {
   removeToast: (id: string) => void
 }
 
+// Shared by every useToast() call, so a toast raised anywhere reaches the one Toaster.
+let currentToasts: Toast[] = []
+const listeners = new Set<(toasts: Toast[]) => void>()
+
+const publish = (toasts: Toast[]) => {
+  currentToasts = toasts
+  listeners.forEach((listener) => listener(toasts))
+}
+
+const removeToast = (id: string) => {
+  publish(currentToasts.filter((toast) => toast.id !== id))
+}
+
+const addToast = (toast: Omit<Toast, 'id'>) => {
+  const id = Math.random().toString(36).substr(2, 9)
+  const duration = toast.duration || 4000
+  publish([...currentToasts, { ...toast, id, duration }])
+  setTimeout(() => removeToast(id), duration)
+}
+
 const useToast = (): ToastState => {
-  const [toasts, setToasts] = useState<Toast[]>([])
-
-  const addToast = useCallback((toast: Omit<Toast, 'id'>) => {
-    const id = Math.random().toString(36).substr(2, 9)
-    const newToast = {
-      ...toast,
-      id,
-      duration: toast.duration || 3000,
-    }
-    setToasts((prev) => [...prev, newToast])
-  }, [])
-
-  const removeToast = useCallback((id: string) => {
-    setToasts((prev) => prev.filter((toast) => toast.id !== id))
-  }, [])
+  const [toasts, setToasts] = useState<Toast[]>(currentToasts)
 
   useEffect(() => {
-    const timeouts = toasts.map((toast) => {
-      return setTimeout(() => {
-        removeToast(toast.id)
-      }, toast.duration)
-    })
-
+    listeners.add(setToasts)
     return () => {
-      timeouts.forEach((timeout) => clearTimeout(timeout))
+      listeners.delete(setToasts)
     }
-  }, [toasts, removeToast])
+  }, [])
 
   return {
     toasts,
@@ -53,4 +54,4 @@ const useToast = (): ToastState => {
 }
 
 export { useToast }
-export type { Toast } 
+export type { Toast }

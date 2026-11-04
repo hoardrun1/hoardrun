@@ -1,28 +1,22 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { motion } from "framer-motion"
 import { useRouter } from "next/navigation"
 import { z } from "zod"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Loader2, Eye, EyeOff, ArrowRight, Mail, Lock } from "lucide-react"
+import { Loader2, ArrowRight } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import Link from "next/link"
-import Image from "next/image"
-import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useAuth } from "@/contexts/AuthContext"
 import { GoogleSignInButton } from "@/components/GoogleSignInButton"
-import { LanguageSwitcher } from "@/components/ui/language-switcher"
+import { AppleSignInButton } from "@/components/AppleSignInButton"
+import { AuthError, AuthField, AuthShell, PasswordInput } from "@/components/auth/auth-shell"
+import { ProductStage } from "@/components/landing/product-stage"
 import { useTranslation } from 'react-i18next'
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters"),
 })
-
-type LoginFormData = z.infer<typeof loginSchema>
 
 export function SignInPage() {
   const { t } = useTranslation()
@@ -32,7 +26,6 @@ export function SignInPage() {
     rememberMe: false,
   })
   const [isLoading, setIsLoading] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
   const { signIn } = useAuth()
@@ -46,13 +39,18 @@ export function SignInPage() {
     const errorParam = urlParams.get("error")
     const callbackUrl = urlParams.get("callbackUrl")
 
-    if (verified === "true" && email) {
+    if (verified === "true") {
       toast({
         title: "Email Verified!",
-        description: `Your email ${email} has been successfully verified. You can now sign in.`,
+        description: email ? `Your email ${email} has been successfully verified. You can now sign in.` : "Your email is confirmed. You can now sign in.",
         variant: "default",
       })
       // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname)
+    }
+
+    if (urlParams.get("reset") === "true") {
+      toast({ title: "Password changed", description: "Sign in with your new password." })
       window.history.replaceState({}, document.title, window.location.pathname)
     }
 
@@ -135,142 +133,68 @@ export function SignInPage() {
   }
 
   return (
-    <div className="min-h-screen relative flex items-center justify-center p-2 sm:p-4 md:p-6 lg:p-8">
-      <Image
-        alt="Dark crumpled paper background"
-        src="https://images.unsplash.com/photo-1618123069754-cd64c230a169?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-        fill
-        className="object-cover"
-        priority
-      />
-      <div className="absolute inset-0 bg-black/60" />
-
-      {/* Language Switcher */}
-      <div className="absolute top-4 right-4 z-20">
-        <LanguageSwitcher variant="mobile" />
-      </div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="relative z-10 w-full max-w-md"
-      >
-          <div className="auth-signin-card bg-card text-card-foreground rounded-2xl shadow-2xl p-6 sm:p-8">
-            <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-foreground mb-2">{t("signin.welcomeBack")}</h1>
-              <p className="text-muted-foreground">{t("signin.subtitle")}</p>
-            </div>
-
-          {error && (
-            <Alert className="mb-6" variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-
-          <div className="space-y-4">
-            <GoogleSignInButton />
-
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">Or</span>
-              </div>
-            </div>
-          </div>
-
-          <form onSubmit={handleSignIn} className="space-y-4">
-            <div className="space-y-2">
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
-                <Input
-                  type="email"
-                  name="email"
-                  placeholder={t("signin.emailPlaceholder")}
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  className="auth-input pl-10 h-12 text-foreground"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
-                <Input
-                  type={showPassword ? "text" : "password"}
-                  name="password"
-                  placeholder={t("signin.passwordPlaceholder")}
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  className="auth-input pl-10 pr-10 h-12 text-foreground"
-                  required
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-12 px-3 hover:bg-transparent"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4 text-muted-foreground" />
-                  ) : (
-                    <Eye className="h-4 w-4 text-muted-foreground" />
-                  )}
-                </Button>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="rememberMe"
-                  name="rememberMe"
-                  checked={formData.rememberMe}
-                  onCheckedChange={(checked) =>
-                    setFormData(prev => ({ ...prev, rememberMe: checked as boolean }))
-                  }
-                />
-                <label htmlFor="rememberMe" className="text-sm text-muted-foreground">
-                  {t("signin.rememberMe")}
-                </label>
-              </div>
-              <Link href="/forgot-password" className="text-sm text-primary hover:text-primary/80 hover:underline">
-                {t("signin.forgotPassword")}
-              </Link>
-            </div>
-
-            <Button
-              type="submit"
-              className="w-full h-12 btn-interactive"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {t("signin.signingIn")}
-                </>
-              ) : (
-                <>
-                  {t("signin.signIn")}
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </>
-              )}
-            </Button>
-          </form>
-
-          <div className="mt-6 text-center text-sm text-muted-foreground">
-            {t("signin.noAccount")}{" "}
-            <Link href="/signup" className="text-primary hover:text-primary/80 hover:underline font-medium">
-              {t("signin.signUpHere")}
-            </Link>
+    <AuthShell
+      visual={
+        <div className="flex h-full items-center justify-center">
+          <div className="lp-auth-art">
+            <ProductStage showBrand={false} />
           </div>
         </div>
-      </motion.div>
-    </div>
+      }
+      footerLink={
+        <>
+          <span>{t("signin.noAccount")} </span>
+          <Link href="/signup" className="lp-auth-link">
+            {t("signin.signUpHere")}
+          </Link>
+        </>
+      }
+    >
+      <div className="lp-auth-stack">
+        <div>
+          <h1 className="lp-auth-title">{t("signin.welcomeBack")}</h1>
+          <p className="lp-auth-sub">{t("signin.subtitle")}</p>
+        </div>
+
+        {error && <AuthError>{error}</AuthError>}
+
+        <GoogleSignInButton className="!h-[var(--auth-field)] !rounded-full !border-0 !py-0" />
+        <AppleSignInButton className="!h-[var(--auth-field)] !rounded-full !border-0 !py-0" />
+        <div className="lp-auth-divider">Or</div>
+
+        <form onSubmit={handleSignIn} className="lp-auth-stack" noValidate>
+          <AuthField id="email" label={t("signin.emailPlaceholder")}>
+            <input id="email" type="email" name="email" autoComplete="email" value={formData.email} onChange={handleInputChange} className="lp-input" required />
+          </AuthField>
+          <AuthField id="password" label={t("signin.passwordPlaceholder")}>
+            <PasswordInput id="password" name="password" autoComplete="current-password" value={formData.password} onChange={handleInputChange} required />
+          </AuthField>
+
+          <div className="flex items-center justify-between gap-3 text-[13px] font-light text-[var(--lp-muted)]">
+            <label htmlFor="rememberMe" className="flex cursor-pointer items-center gap-2">
+              <input id="rememberMe" name="rememberMe" type="checkbox" checked={formData.rememberMe} onChange={handleInputChange} className="lp-auth-check" />
+              {t("signin.rememberMe")}
+            </label>
+            <Link href="/forgot-password" className="lp-auth-link">
+              {t("signin.forgotPassword")}
+            </Link>
+          </div>
+
+          <button type="submit" disabled={isLoading} className="lp-btn lp-btn-primary lp-auth-btn font-medium">
+            {isLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                {t("signin.signingIn")}
+              </>
+            ) : (
+              <>
+                {t("signin.signIn")}
+                <ArrowRight className="h-4 w-4" />
+              </>
+            )}
+          </button>
+        </form>
+      </div>
+    </AuthShell>
   )
 }

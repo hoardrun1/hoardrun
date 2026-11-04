@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Hoardrun</string>
+    <string name="title_activity_main">Hoardrun</string>
+    <string name="package_name">com.hoardrun.app</string>
+    <string name="custom_url_scheme">com.hoardrun.app</string>
+</resources>

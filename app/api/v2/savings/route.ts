@@ -1,13 +1,13 @@
 import { NextRequest } from 'next/server'
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+import { API_BASE_URL } from '@/lib/api-url'
 
 export async function GET(request: NextRequest) {
   try {
     const url = new URL(request.url)
     const searchParams = url.searchParams.toString()
     // Map v2 savings to v1 savings/goals endpoint
-    const backendUrl = `${BACKEND_URL}/api/v1/savings/goals${searchParams ? `?${searchParams}` : ''}`
+    const backendUrl = `${API_BASE_URL}/savings/goals${searchParams ? `?${searchParams}` : ''}`
     
     const response = await fetch(backendUrl, {
       method: 'GET',
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     
-    const response = await fetch(`${BACKEND_URL}/api/v1/savings/goals`, {
+    const response = await fetch(`${API_BASE_URL}/savings/goals`, {
       method: 'POST',
       headers: {
         'Authorization': request.headers.get('Authorization') || '',
@@ -57,7 +57,7 @@ export async function PUT(request: NextRequest) {
     const body = await request.json()
     const url = new URL(request.url)
     const searchParams = url.searchParams.toString()
-    const backendUrl = `${BACKEND_URL}/api/v1/savings/goals${searchParams ? `?${searchParams}` : ''}`
+    const backendUrl = `${API_BASE_URL}/savings/goals${searchParams ? `?${searchParams}` : ''}`
     
     const response = await fetch(backendUrl, {
       method: 'PUT',
@@ -83,7 +83,7 @@ export async function DELETE(request: NextRequest) {
   try {
     const url = new URL(request.url)
     const searchParams = url.searchParams.toString()
-    const backendUrl = `${BACKEND_URL}/api/v1/savings/goals${searchParams ? `?${searchParams}` : ''}`
+    const backendUrl = `${API_BASE_URL}/savings/goals${searchParams ? `?${searchParams}` : ''}`
     
     const response = await fetch(backendUrl, {
       method: 'DELETE',

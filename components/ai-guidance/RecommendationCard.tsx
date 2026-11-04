@@ -97,7 +97,7 @@ export const RecommendationCard: React.FC<RecommendationCardProps> = ({
             <CardDescription className="mt-1">{recommendation.description}</CardDescription>
           </div>
           <div className="text-right ml-4">
-            <div className="text-sm font-semibold text-purple-600">
+            <div className="text-sm font-semibold text-blue-600">
               Impact: {recommendation.impact_score}/100
             </div>
             {recommendation.estimated_savings && (

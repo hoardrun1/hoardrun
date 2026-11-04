@@ -1,13 +1,14 @@
 "use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
-import { PiggyBank, Calendar, Repeat, Plus } from "lucide-react"
+import { Calendar, Plus, Repeat } from "lucide-react"
+import { TargetGraphic } from "@/components/app/home-graphics"
+import { SavingsEmpty, SavingsEmptyButton } from "@/components/savings/savings-empty"
 
 interface GoalsTabProps {
   goals: any[]
   onNewGoal: () => void
+  onAddMoney?: (goal: any) => void
+  onEdit?: (goal: any) => void
 }
 
 const formatCurrency = (amount: number) => {
@@ -17,98 +18,67 @@ const formatCurrency = (amount: number) => {
   }).format(amount)
 }
 
-export function GoalsTab({ goals, onNewGoal }: GoalsTabProps) {
+const TONES = ["52 211 153", "77 148 255", "56 189 248", "251 191 36", "251 113 133", "147 197 253"]
+
+/** Progress as a ring, like a pot filling up. */
+function GoalRing({ progress, tone }: { progress: number; tone: string }) {
+  const radius = 26
+  const circumference = 2 * Math.PI * radius
+  const share = Math.min(Math.max(progress, 0), 100) / 100
+  return (
+    <svg viewBox="0 0 64 64" className="h-16 w-16 shrink-0" aria-hidden="true">
+      <circle cx="32" cy="32" r={radius} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="7" />
+      <circle cx="32" cy="32" r={radius} fill="none" stroke={`rgb(${tone})`} strokeWidth="7" strokeLinecap="round" strokeDasharray={`${circumference * share} ${circumference}`} transform="rotate(-90 32 32)" style={{ filter: `drop-shadow(0 0 6px rgb(${tone} / 0.6))` }} />
+      <text x="32" y="36" textAnchor="middle" fill="#fff" style={{ font: "600 12px var(--font-display), sans-serif" }}>{Math.round(share * 100)}%</text>
+    </svg>
+  )
+}
+
+export function GoalsTab({ goals, onNewGoal, onAddMoney, onEdit }: GoalsTabProps) {
   if (goals.length === 0) {
     return (
-      <Card className="border-dashed">
-        <CardContent className="flex flex-col items-center justify-center py-8 sm:py-12">
-          <div className="rounded-full bg-muted p-3 sm:p-4 mb-3 sm:mb-4">
-            <PiggyBank className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground" />
-          </div>
-          <h3 className="text-sm sm:text-base font-semibold mb-1">No Savings Goals Yet</h3>
-          <p className="text-xs sm:text-sm text-muted-foreground text-center mb-4 max-w-xs">
-            Create your first savings goal to start tracking progress
-          </p>
-          <Button onClick={onNewGoal} size="sm" className="text-xs sm:text-sm h-8 sm:h-9">
-            <Plus className="h-3.5 w-3.5 mr-1" />
-            Create Goal
-          </Button>
-        </CardContent>
-      </Card>
+      <SavingsEmpty
+        graphic={<TargetGraphic tone="mint" className="h-full w-full" />}
+        title="No savings goals yet"
+        text="Set a target, pick a monthly amount and watch it fill up."
+        action={<SavingsEmptyButton onClick={onNewGoal}><Plus className="h-4 w-4" strokeWidth={2.4} />Create goal</SavingsEmptyButton>}
+      />
     )
   }
 
   return (
-    <div className="grid gap-2 sm:gap-3 md:grid-cols-2 lg:grid-cols-3">
-      {goals.map((goal) => {
+    <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+      {goals.map((goal, index) => {
         const progress = (goal.currentAmount / goal.targetAmount) * 100
         const remaining = goal.targetAmount - goal.currentAmount
-        const monthsLeft = Math.ceil(remaining / goal.monthlyContribution)
+        const monthsLeft = goal.monthlyContribution > 0 ? Math.ceil(Math.max(remaining, 0) / goal.monthlyContribution) : null
+        const tone = TONES[index % TONES.length]
 
         return (
-          <Card key={goal.id} className="border-border/50 hover:shadow-sm transition-shadow overflow-hidden">
-            <div className="h-1 bg-foreground/20" />
-            <CardHeader className="p-3 sm:p-4 pb-2 sm:pb-3">
-              <div className="space-y-1">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    <CardTitle className="text-sm sm:text-base line-clamp-1">{goal.name}</CardTitle>
-                    <CardDescription className="text-xs flex items-center gap-1 mt-0.5 flex-wrap">
-                      <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-muted text-xs font-medium">
-                        {goal.category}
-                      </span>
-                      <span>{formatCurrency(goal.monthlyContribution)}/mo</span>
-                    </CardDescription>
-                  </div>
-                  <div className="text-right flex-shrink-0">
-                    <div className="text-xs sm:text-sm font-bold">{formatCurrency(goal.currentAmount)}</div>
-                    <div className="text-xs text-muted-foreground">of {formatCurrency(goal.targetAmount)}</div>
-                  </div>
+          <article key={goal.id} className="hr-goal" style={{ ["--tone" as string]: tone }}>
+            <div className="flex items-start gap-3">
+              <GoalRing progress={progress} tone={tone} />
+              <div className="min-w-0 flex-1">
+                <h3 className="hr-card-title truncate text-[18px]">{goal.name}</h3>
+                <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[12px]">
+                  <span className="rounded-full px-2 py-0.5" style={{ background: `rgb(${tone} / 0.16)`, color: `rgb(${tone})` }}>{goal.category}</span>
+                  <span className="text-[#8e8e93]">{formatCurrency(goal.monthlyContribution)}/mo</span>
                 </div>
               </div>
-            </CardHeader>
-            <CardContent className="p-3 sm:p-4 pt-2 sm:pt-3 space-y-2 sm:space-y-3">
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">Progress</span>
-                  <span className="font-semibold">{progress.toFixed(1)}%</span>
-                </div>
-                <Progress value={progress} className="h-1.5 sm:h-2" />
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 p-2 sm:p-3 rounded-lg bg-muted/50 border border-border/50 text-xs">
-                <div>
-                  <p className="text-muted-foreground flex items-center gap-0.5 mb-0.5">
-                    <Calendar className="h-3 w-3" />
-                    Target
-                  </p>
-                  <p className="font-medium">
-                    {new Date(goal.deadline).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-muted-foreground">Time Left</p>
-                  <p className="font-medium">{monthsLeft}mo</p>
-                </div>
-              </div>
-
-              {goal.isAutoSave && (
-                <div className="flex items-center gap-1.5 p-1.5 sm:p-2 rounded-lg bg-muted/50 border border-border/50 text-xs">
-                  <Repeat className="h-3 w-3 flex-shrink-0" />
-                  <span className="font-medium">Auto-save enabled</span>
-                </div>
-              )}
-
-              <div className="flex gap-1.5 pt-1">
-                <Button variant="outline" size="sm" className="flex-1 text-xs h-7 sm:h-8 bg-transparent">
-                  Add
-                </Button>
-                <Button variant="ghost" size="sm" className="text-xs h-7 sm:h-8">
-                  Edit
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+            <p className="mt-4 text-[13px] text-[#a1a1a6]">
+              <span className="hr-figure text-[22px] text-white">{formatCurrency(goal.currentAmount)}</span> of {formatCurrency(goal.targetAmount)}
+            </p>
+            <div className="mt-3 flex items-center justify-between text-[12.5px] text-[#a1a1a6]">
+              <span className="inline-flex items-center gap-1"><Calendar className="h-3.5 w-3.5" />{new Date(goal.deadline).toLocaleDateString("en-US", { month: "short", year: "numeric" })}</span>
+              <span>{goal.isCompleted ? "Reached" : monthsLeft === null ? "No monthly plan" : `${monthsLeft}mo left`}</span>
+              {goal.isAutoSave && <span className="inline-flex items-center gap-1" style={{ color: `rgb(${tone})` }}><Repeat className="h-3.5 w-3.5" />Auto</span>}
+            </div>
+            <div className="mt-4 flex gap-2">
+              <button onClick={() => onAddMoney?.(goal)} className="hr-focus h-9 flex-1 rounded-full bg-white text-[13px] font-medium text-black">{goal.isCompleted ? "Manage money" : "Add"}</button>
+              <button onClick={() => onEdit?.(goal)} className="hr-focus h-9 rounded-full border border-white/15 px-4 text-[13px]">Edit</button>
+            </div>
+          </article>
         )
       })}
     </div>

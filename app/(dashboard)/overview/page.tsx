@@ -38,6 +38,8 @@ import { useToast } from '@/components/ui/use-toast';
 import { DepositModal } from '@/components/deposit-modal';
 
 import { SectionFooter } from '@/components/ui/section-footer';
+import { PageHero, StatPills, HeroAction, CountUp } from '@/components/app/page-hero';
+import { VaultGraphic } from '@/components/app/home-graphics';
 
 interface FinancialSummary {
   totalBalance: number;
@@ -298,147 +300,40 @@ export default function OverviewPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="min-h-screen bg-background pt-14 sm:pt-16 pb-20 sm:pb-6 px-2">
-          <div className="w-full space-y-4 sm:space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-          <div className="min-w-0">
-            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">
-              Financial Overview
-            </h1>
-            <p className="text-muted-foreground mt-1 text-sm sm:text-base">
-              Welcome back, {user?.name || 'User'}! Here's your financial snapshot.
+    <div>
+      <div className="pb-28 lg:pb-8">
+          <div className="w-full space-y-4 sm:space-y-5">
+        <PageHero
+          title="Financial Overview"
+          subtitle={`Welcome back, ${user?.name || 'User'}. Here's your snapshot.`}
+          tone="sky"
+          graphic={VaultGraphic}
+          figureLabel="Total balance"
+          figure={financialSummary ? <CountUp value={financialSummary.totalBalance} format={formatCurrency} /> : '…'}
+          actions={
+            <HeroAction onClick={() => router.push('/home')}>
+              <BarChart3 className="h-4 w-4" strokeWidth={2.2} />
+              View Dashboard
+            </HeroAction>
+          }
+        >
+          {financialSummary && (
+            <p className={`mt-3 inline-flex items-center gap-1 rounded-full bg-white/[0.07] px-3 py-1 text-[12.5px] ${getChangeColor(financialSummary.changePercentages.balance)}`}>
+              {getChangeIcon(financialSummary.changePercentages.balance)}
+              {Math.abs(financialSummary.changePercentages.balance)}% from last month
             </p>
-          </div>
-          <Button
-            onClick={() => router.push('/home')}
-            className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-xs sm:text-sm px-2 py-1 h-auto"
-          >
-            <BarChart3 className="h-3 w-3 mr-1" />
-            View Dashboard
-          </Button>
-        </div>
+          )}
+        </PageHero>
 
-        {/* Key Metrics */}
         {financialSummary && (
-          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-            >
-              <Card className="border-0 shadow-xl bg-gradient-to-br from-black to-gray-900 text-white overflow-hidden relative">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-16 translate-x-16"></div>
-                <CardContent className="p-3 sm:p-4 relative">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-gray-300 text-xs sm:text-sm font-medium">Total Balance</p>
-                      <h3 className="text-xs sm:text-base font-bold mt-1">
-                        {formatCurrency(financialSummary.totalBalance)}
-                      </h3>
-                      <div className={`flex items-center mt-2 ${getChangeColor(financialSummary.changePercentages.balance)}`}>
-                        {getChangeIcon(financialSummary.changePercentages.balance)}
-                        <span className="text-xs sm:text-sm ml-1 font-medium">
-                          {Math.abs(financialSummary.changePercentages.balance)}% from last month
-                        </span>
-                      </div>
-                    </div>
-                    <div className="p-2 sm:p-3 rounded-full bg-white/10 backdrop-blur-sm">
-                      <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              <Card className="border-0 shadow-xl bg-gradient-to-br from-white to-gray-50 overflow-hidden relative">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-black/5 rounded-full -translate-y-16 translate-x-16"></div>
-                <CardContent className="p-3 sm:p-4 relative">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-gray-600 text-xs sm:text-sm font-medium">Monthly Income</p>
-                      <h3 className="text-xs sm:text-base font-bold mt-1 text-black">
-                        {formatCurrency(financialSummary.monthlyIncome)}
-                      </h3>
-                      <div className={`flex items-center mt-2 ${getChangeColor(financialSummary.changePercentages.income)}`}>
-                        {getChangeIcon(financialSummary.changePercentages.income)}
-                        <span className="text-xs sm:text-sm ml-1 font-medium">
-                          {Math.abs(financialSummary.changePercentages.income)}% from last month
-                        </span>
-                      </div>
-                    </div>
-                    <div className="p-2 sm:p-3 rounded-full bg-black/10 backdrop-blur-sm">
-                      <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-black" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              <Card className="border-0 shadow-xl bg-gradient-to-br from-gray-900 to-black text-white overflow-hidden relative">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-16 translate-x-16"></div>
-                <CardContent className="p-3 sm:p-4 relative">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-gray-300 text-xs sm:text-sm font-medium">Monthly Expenses</p>
-                      <h3 className="text-xs sm:text-base font-bold mt-1">
-                        {formatCurrency(financialSummary.monthlyExpenses)}
-                      </h3>
-                      <div className={`flex items-center mt-2 ${getChangeColor(-financialSummary.changePercentages.expenses)}`}>
-                        {getChangeIcon(-financialSummary.changePercentages.expenses)}
-                        <span className="text-xs sm:text-sm ml-1 font-medium">
-                          {Math.abs(financialSummary.changePercentages.expenses)}% from last month
-                        </span>
-                      </div>
-                    </div>
-                    <div className="p-2 sm:p-3 rounded-full bg-white/10 backdrop-blur-sm">
-                      <TrendingDown className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-            >
-              <Card className="border-0 shadow-xl bg-gradient-to-br from-gray-100 to-white overflow-hidden relative">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-black/5 rounded-full -translate-y-16 translate-x-16"></div>
-                <CardContent className="p-3 sm:p-4 relative">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-gray-600 text-xs sm:text-sm font-medium">Savings Rate</p>
-                      <h3 className="text-xs sm:text-base font-bold mt-1 text-black">
-                        {financialSummary.savingsRate}%
-                      </h3>
-                      <div className={`flex items-center mt-2 ${getChangeColor(financialSummary.changePercentages.savings)}`}>
-                        {getChangeIcon(financialSummary.changePercentages.savings)}
-                        <span className="text-xs sm:text-sm ml-1 font-medium">
-                          {Math.abs(financialSummary.changePercentages.savings)}% from last month
-                        </span>
-                      </div>
-                    </div>
-                    <div className="p-2 sm:p-3 rounded-full bg-black/10 backdrop-blur-sm">
-                      <PiggyBank className="h-4 w-4 sm:h-5 sm:w-5 text-black" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          </div>
+          <StatPills
+            items={[
+              { label: 'Monthly income', value: <CountUp value={financialSummary.monthlyIncome} format={formatCurrency} />, note: `${Math.abs(financialSummary.changePercentages.income)}% from last month`, tone: 'mint', icon: TrendingUp },
+              { label: 'Monthly expenses', value: <CountUp value={financialSummary.monthlyExpenses} format={formatCurrency} />, note: `${Math.abs(financialSummary.changePercentages.expenses)}% from last month`, tone: 'coral', icon: TrendingDown },
+              { label: 'Savings rate', value: `${financialSummary.savingsRate}%`, note: `${Math.abs(financialSummary.changePercentages.savings)}% from last month`, tone: 'violet', icon: PiggyBank },
+              { label: 'Total balance', value: <CountUp value={financialSummary.totalBalance} format={formatCurrency} />, note: 'All accounts', tone: 'sky', icon: DollarSign },
+            ]}
+          />
         )}
 
         {/* Additional Stats and Recent Activity */}

@@ -52,7 +52,7 @@
   },
   "signin": {
     "welcomeBack": "Karibu tena",
-    "subtitle": "Ingia kwenye akaunti yako ya HoardRun",
+    "subtitle": "Ingia kwenye akaunti yako ya Hoardrun",
     "emailPlaceholder": "Ingiza barua pepe yako",
     "passwordPlaceholder": "Ingiza nenosiri lako",
     "rememberMe": "Nikumbuke",
@@ -61,11 +61,12 @@
     "signingIn": "Inaingia...",
     "noAccount": "Huna akaunti?",
     "signUpHere": "Jisajili hapa",
-    "continueWithGoogle": "Endelea na Google"
+    "continueWithGoogle": "Endelea na Google",
+    "continueWithApple": "Endelea na Apple"
   },
   "signup": {
     "createAccount": "Tengeneza akaunti",
-    "subtitle": "Jiunge na HoardRun na anza safari yako",
+    "subtitle": "Jiunge na Hoardrun na anza safari yako",
     "steps": {
       "account": "Akaunti",
       "accountDesc": "Maelezo ya msingi",
@@ -209,7 +210,7 @@
         "watchYourSpending": "Angalia matumizi yako",
         "categoriesOverBudget": "Kategoria zimezidi bajeti",
         "overallProgress": "Maendeleo ya jumla",
-        "usedOfTotalBudget": "Umetumia {percentage}% ya bajeti yako ya jumla"
+        "usedOfTotalBudget": "Umetumia {{percentage}}% ya bajeti yako ya jumla"
       }
     },
     "analytics": {

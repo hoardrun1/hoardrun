@@ -7,7 +7,7 @@
 import { FinancialHealthPage } from '@/components/financial-health';
 
 export const metadata = {
-  title: 'Financial Health Score | HoardRun',
+  title: 'Financial Health Score | Hoardrun',
   description: 'Comprehensive analysis of your financial well-being with personalized recommendations',
 };
 

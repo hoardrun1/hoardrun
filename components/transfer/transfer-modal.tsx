@@ -12,7 +12,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2, AlertCircle, Calendar, Send } from 'lucide-react'
 import { useToast } from "@/components/ui/use-toast"
 import { useFinance } from '@/contexts/FinanceContext'
-import { apiClient, Beneficiary } from '@/lib/api-client'
+import { apiClient } from '@/lib/api-client'
+import { calculateTransactionFee } from '@/lib/banking'
+import type { Beneficiary } from '@/types/send-money'
 
 interface TransferModalProps {
   open: boolean
@@ -54,12 +56,8 @@ export function TransferModal({
       try {
         const numericAmount = parseFloat(amount)
         if (!isNaN(numericAmount) && numericAmount > 0) {
-          const response = await apiClient.calculateTransferFee(numericAmount)
-          if (response.data) {
-            setFee(response.data)
-          } else {
-            setFee(null)
-          }
+          const transferFee = calculateTransactionFee(numericAmount, 'TRANSFER')
+          setFee({ fee: transferFee, total: numericAmount + transferFee, breakdown: { base: transferFee } })
         } else {
           setFee(null)
         }

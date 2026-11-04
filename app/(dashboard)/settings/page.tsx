@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
@@ -9,6 +10,12 @@ import { Label } from '@/components/ui/label'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useTheme } from '@/contexts/ThemeContext'
 import { useTranslation } from 'react-i18next'
+import { PageHero } from '@/components/app/page-hero'
+import { OrbsGraphic } from '@/components/app/home-graphics'
+import { CloseAccountDialog } from '@/components/settings/close-account-dialog'
+import { AppLockSetting } from '@/components/native/native-shell'
+import { apiClient } from '@/lib/api-client'
+import { useToast } from '@/components/ui/use-toast'
 import {
   Bell,
   Moon,
@@ -19,12 +26,36 @@ import {
   Shield,
   Database,
   Download,
-  Trash2
+  Trash2,
+  IdCard
 } from 'lucide-react'
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme()
   const { t, i18n } = useTranslation()
+  const { toast } = useToast()
+  const [closeOpen, setCloseOpen] = useState(false)
+  const [exporting, setExporting] = useState(false)
+
+  // Saves everything Hoardrun holds about you as a JSON file
+  const exportData = async () => {
+    setExporting(true)
+    const response = await apiClient.exportAccountData()
+    setExporting(false)
+    if (response.error || !response.data) {
+      toast({ title: "Couldn't export your data", description: response.error || 'Try again in a moment.', variant: 'destructive' })
+      return
+    }
+    const url = URL.createObjectURL(new Blob([JSON.stringify(response.data, null, 2)], { type: 'application/json' }))
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `hoardrun-my-data-${new Date().toISOString().slice(0, 10)}.json`
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    URL.revokeObjectURL(url)
+    toast({ title: 'Your data is downloading', description: `${response.data.transactions?.length ?? 0} transactions and everything else on your account.` })
+  }
   const [settings, setSettings] = useState({
     notifications: {
       email: true,
@@ -54,7 +85,22 @@ export default function SettingsPage() {
     }))
   }, [i18n.language])
 
+  const [identity, setIdentity] = useState<string | null>(null)
+  useEffect(() => {
+    apiClient.getIdentityStatus().then((response) => setIdentity(response.data?.state ?? null))
+  }, [])
+
+  // Email choices are saved on the server; the other toggles stay on this device for now
+  useEffect(() => {
+    apiClient.getNotificationPrefs().then((response) => {
+      if (!response.data) return
+      const { email, marketing } = response.data
+      setSettings(prev => ({ ...prev, notifications: { ...prev.notifications, email, marketing } }))
+    })
+  }, [])
+
   const handleSettingChange = (category: string, setting: string, value: any) => {
+    const previous = (settings as any)[category]?.[setting]
     setSettings(prev => ({
       ...prev,
       [category]: {
@@ -62,6 +108,20 @@ export default function SettingsPage() {
         [setting]: value
       }
     }))
+
+    if (category === 'notifications' && (setting === 'email' || setting === 'marketing')) {
+      apiClient.updateNotificationPrefs({ [setting]: value }).then((response) => {
+        if (response.error) {
+          setSettings(prev => ({ ...prev, notifications: { ...prev.notifications, [setting]: previous } }))
+          toast({ title: "Couldn't save that", description: response.error, variant: 'destructive' })
+          return
+        }
+        toast({
+          title: setting === 'email' ? (value ? 'Email updates on' : 'Email updates off') : (value ? 'Product news on' : 'Product news off'),
+          description: setting === 'email' && !value ? "Security emails, like a password change, still come through." : "Saved.",
+        })
+      })
+    }
 
     // Handle language change
     if (category === 'preferences' && setting === 'language') {
@@ -72,21 +132,18 @@ export default function SettingsPage() {
 
 
   return (
-    <div className="min-h-screen bg-background text-foreground px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
-      {/* Header */}
-      <div className="max-w-6xl mx-auto mb-8 sm:mb-12">
-        <div className="text-center lg:text-left">
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-3">{t('settings.title')}</h1>
-          <p className="text-muted-foreground text-sm sm:text-base lg:text-lg">
-            {t('settings.description')}
-          </p>
-        </div>
-      </div>
+    <div className="space-y-4 pb-28 text-foreground sm:space-y-5 lg:pb-8">
+      <PageHero
+        title={t('settings.title')}
+        subtitle={t('settings.description')}
+        tone="sky"
+        graphic={OrbsGraphic}
+      />
 
       {/* Main Content */}
-      <div className="max-w-6xl mx-auto">
+      <div>
         <Tabs defaultValue="general" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 gap-2 bg-muted p-2 rounded-xl mb-8">
+          <TabsList className="mb-4 w-full">
             <TabsTrigger
               value="general"
               className="text-xs sm:text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg transition-all"
@@ -115,16 +172,16 @@ export default function SettingsPage() {
 
           {/* General Tab */}
           <TabsContent value="general" className="mt-0">
-            <div className="bg-card border-2 border-border rounded-2xl overflow-hidden shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] transition-all">
-              <div className="bg-primary text-primary-foreground p-4 sm:p-6">
-                <h3 className="text-xl sm:text-2xl font-bold">{t('settings.appearance')}</h3>
-                <p className="text-sm sm:text-base text-primary-foreground/80 mt-2">
+            <div className="hr-settings-card hr-rise">
+              <div className="hr-settings-head p-4 sm:p-5">
+                <h3 className="hr-card-title text-[20px]">{t('settings.appearance')}</h3>
+                <p className="text-sm text-[#a1a1a6] mt-1">
                   {t('settings.description')}
                 </p>
               </div>
-              <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
+              <div className="p-4 sm:p-6 space-y-5">
                 {/* Theme Setting */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b-2 border-border">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-5 border-b border-white/[0.07]">
                   <div className="space-y-1 flex-1">
                     <Label className="text-base sm:text-lg font-semibold">{t('settings.theme')}</Label>
                     <p className="text-sm text-muted-foreground">{t('settings.themeDescription')}</p>
@@ -133,10 +190,10 @@ export default function SettingsPage() {
                     value={theme}
                     onValueChange={(value: 'light' | 'dark') => setTheme(value)}
                   >
-                    <SelectTrigger className="w-full sm:w-[200px] border-2 border-border rounded-lg font-medium">
+                    <SelectTrigger className="w-full sm:w-[200px] border border-white/10 rounded-xl font-medium">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="border-2 border-border">
+                    <SelectContent >
                       <SelectItem value="light">
                         <div className="flex items-center">
                           <Sun className="h-4 w-4 mr-2" />
@@ -154,7 +211,7 @@ export default function SettingsPage() {
                 </div>
 
                 {/* Language Setting */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b-2 border-border">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-5 border-b border-white/[0.07]">
                   <div className="space-y-1 flex-1">
                     <Label className="text-base sm:text-lg font-semibold">{t('settings.language')}</Label>
                     <p className="text-sm text-muted-foreground">{t('settings.languageDescription')}</p>
@@ -163,10 +220,10 @@ export default function SettingsPage() {
                     value={settings.preferences.language}
                     onValueChange={(value) => handleSettingChange('preferences', 'language', value)}
                   >
-                    <SelectTrigger className="w-full sm:w-[200px] border-2 border-border rounded-lg font-medium">
+                    <SelectTrigger className="w-full sm:w-[200px] border border-white/10 rounded-xl font-medium">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="border-2 border-border">
+                    <SelectContent >
                       <SelectItem value="en">English</SelectItem>
                       <SelectItem value="es">Español</SelectItem>
                       <SelectItem value="fr">Français</SelectItem>
@@ -191,10 +248,10 @@ export default function SettingsPage() {
                     value={settings.preferences.currency}
                     onValueChange={(value) => handleSettingChange('preferences', 'currency', value)}
                   >
-                    <SelectTrigger className="w-full sm:w-[200px] border-2 border-border rounded-lg font-medium">
+                    <SelectTrigger className="w-full sm:w-[200px] border border-white/10 rounded-xl font-medium">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="border-2 border-border">
+                    <SelectContent >
                       <SelectItem value="USD">{t('settings.usd')}</SelectItem>
                       <SelectItem value="EUR">{t('settings.eur')}</SelectItem>
                       <SelectItem value="GBP">{t('settings.gbp')}</SelectItem>
@@ -208,23 +265,23 @@ export default function SettingsPage() {
 
           {/* Notifications Tab */}
           <TabsContent value="notifications" className="mt-0">
-            <div className="bg-card border-2 border-border rounded-2xl overflow-hidden shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] transition-all">
-              <div className="bg-primary text-primary-foreground p-4 sm:p-6">
-                <h3 className="text-xl sm:text-2xl font-bold">{t('dashboard.settings.notificationPreferences')}</h3>
-                <p className="text-sm sm:text-base text-primary-foreground/80 mt-2">
+            <div className="hr-settings-card hr-rise">
+              <div className="hr-settings-head p-4 sm:p-5" data-tone="amber">
+                <h3 className="hr-card-title text-[20px]">{t('dashboard.settings.notificationPreferences')}</h3>
+                <p className="text-sm text-[#a1a1a6] mt-1">
                   {t('dashboard.settings.chooseHowNotified')}
                 </p>
               </div>
-              <div className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
+              <div className="p-3 sm:p-4 space-y-2 sm:space-y-6">
                 {/* Email Notifications */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
+                <div className="flex items-center justify-between gap-4 hr-settings-row">
                   <div className="flex items-start sm:items-center gap-3 sm:gap-4 flex-1">
-                    <div className="p-3 rounded-xl bg-white border-2 border-black shrink-0">
+                    <div className="hr-settings-row-icon">
                       <Mail className="h-5 w-5 sm:h-6 sm:w-6" />
                     </div>
                     <div className="space-y-1">
                       <Label className="text-base sm:text-lg font-semibold">Email Notifications</Label>
-                      <p className="text-sm text-gray-600">Receive updates via email</p>
+                      <p className="text-sm text-[#a1a1a6]">Receive updates via email</p>
                     </div>
                   </div>
                   <Switch
@@ -235,14 +292,14 @@ export default function SettingsPage() {
                 </div>
 
                 {/* Push Notifications */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
+                <div className="flex items-center justify-between gap-4 hr-settings-row">
                   <div className="flex items-start sm:items-center gap-3 sm:gap-4 flex-1">
-                    <div className="p-3 rounded-xl bg-white border-2 border-black shrink-0">
+                    <div className="hr-settings-row-icon">
                       <Smartphone className="h-5 w-5 sm:h-6 sm:w-6" />
                     </div>
                     <div className="space-y-1">
                       <Label className="text-base sm:text-lg font-semibold">Push Notifications</Label>
-                      <p className="text-sm text-gray-600">Get notified on your device</p>
+                      <p className="text-sm text-[#a1a1a6]">Get notified on your device</p>
                     </div>
                   </div>
                   <Switch
@@ -253,14 +310,14 @@ export default function SettingsPage() {
                 </div>
 
                 {/* SMS Notifications */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
+                <div className="flex items-center justify-between gap-4 hr-settings-row">
                   <div className="flex items-start sm:items-center gap-3 sm:gap-4 flex-1">
-                    <div className="p-3 rounded-xl bg-white border-2 border-black shrink-0">
+                    <div className="hr-settings-row-icon">
                       <Bell className="h-5 w-5 sm:h-6 sm:w-6" />
                     </div>
                     <div className="space-y-1">
                       <Label className="text-base sm:text-lg font-semibold">SMS Notifications</Label>
-                      <p className="text-sm text-gray-600">Receive text messages for important updates</p>
+                      <p className="text-sm text-[#a1a1a6]">Receive text messages for important updates</p>
                     </div>
                   </div>
                   <Switch
@@ -271,14 +328,14 @@ export default function SettingsPage() {
                 </div>
 
                 {/* Marketing Communications */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
+                <div className="flex items-center justify-between gap-4 hr-settings-row">
                   <div className="flex items-start sm:items-center gap-3 sm:gap-4 flex-1">
-                    <div className="p-3 rounded-xl bg-white border-2 border-black shrink-0">
+                    <div className="hr-settings-row-icon">
                       <DollarSign className="h-5 w-5 sm:h-6 sm:w-6" />
                     </div>
                     <div className="space-y-1">
                       <Label className="text-base sm:text-lg font-semibold">Marketing Communications</Label>
-                      <p className="text-sm text-gray-600">Receive promotional offers and updates</p>
+                      <p className="text-sm text-[#a1a1a6]">Receive promotional offers and updates</p>
                     </div>
                   </div>
                   <Switch
@@ -293,28 +350,28 @@ export default function SettingsPage() {
 
           {/* Privacy Tab */}
           <TabsContent value="privacy" className="mt-0">
-            <div className="bg-white border-2 border-black rounded-2xl overflow-hidden shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] transition-all">
-              <div className="bg-black text-white p-4 sm:p-6">
-                <h3 className="text-xl sm:text-2xl font-bold">{t('dashboard.settings.privacySettings')}</h3>
-                <p className="text-sm sm:text-base text-gray-300 mt-2">
+            <div className="hr-settings-card hr-rise">
+              <div className="hr-settings-head p-4 sm:p-5" data-tone="mint">
+                <h3 className="hr-card-title text-[20px]">{t('dashboard.settings.privacySettings')}</h3>
+                <p className="text-sm text-[#a1a1a6] mt-1">
                   {t('dashboard.settings.controlDataPrivacy')}
                 </p>
               </div>
-              <div className="p-4 sm:p-6 lg:p-8 space-y-6 sm:space-y-8">
+              <div className="p-4 sm:p-6 space-y-5">
                 {/* Profile Visibility */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b-2 border-gray-100">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-white/[0.07]">
                   <div className="space-y-1 flex-1">
                     <Label className="text-base sm:text-lg font-semibold">Profile Visibility</Label>
-                    <p className="text-sm text-gray-600">Who can see your profile information</p>
+                    <p className="text-sm text-[#a1a1a6]">Who can see your profile information</p>
                   </div>
                   <Select 
                     value={settings.privacy.profileVisibility} 
                     onValueChange={(value) => handleSettingChange('privacy', 'profileVisibility', value)}
                   >
-                    <SelectTrigger className="w-full sm:w-[200px] border-2 border-black rounded-lg font-medium">
+                    <SelectTrigger className="w-full sm:w-[200px] border border-white/10 rounded-xl font-medium">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="border-2 border-black">
+                    <SelectContent >
                       <SelectItem value="public">Public</SelectItem>
                       <SelectItem value="private">Private</SelectItem>
                       <SelectItem value="friends">Friends Only</SelectItem>
@@ -323,14 +380,14 @@ export default function SettingsPage() {
                 </div>
 
                 {/* Data Sharing */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b-2 border-gray-100">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-white/[0.07]">
                   <div className="flex items-start sm:items-center gap-3 sm:gap-4 flex-1">
-                    <div className="p-3 rounded-xl bg-gray-50 border-2 border-black shrink-0">
+                    <div className="hr-settings-row-icon">
                       <Database className="h-5 w-5 sm:h-6 sm:w-6" />
                     </div>
                     <div className="space-y-1">
                       <Label className="text-base sm:text-lg font-semibold">Data Sharing</Label>
-                      <p className="text-sm text-gray-600">Allow sharing anonymized data for improvements</p>
+                      <p className="text-sm text-[#a1a1a6]">Allow sharing anonymized data for improvements</p>
                     </div>
                   </div>
                   <Switch
@@ -343,12 +400,12 @@ export default function SettingsPage() {
                 {/* Analytics */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <div className="flex items-start sm:items-center gap-3 sm:gap-4 flex-1">
-                    <div className="p-3 rounded-xl bg-gray-50 border-2 border-black shrink-0">
+                    <div className="hr-settings-row-icon">
                       <Shield className="h-5 w-5 sm:h-6 sm:w-6" />
                     </div>
                     <div className="space-y-1">
                       <Label className="text-base sm:text-lg font-semibold">Analytics</Label>
-                      <p className="text-sm text-gray-600">Help improve the app with usage analytics</p>
+                      <p className="text-sm text-[#a1a1a6]">Help improve the app with usage analytics</p>
                     </div>
                   </div>
                   <Switch
@@ -363,47 +420,73 @@ export default function SettingsPage() {
 
           {/* Account Tab */}
           <TabsContent value="account" className="mt-0">
-            <div className="bg-white border-2 border-black rounded-2xl overflow-hidden shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] transition-all">
-              <div className="bg-black text-white p-4 sm:p-6">
-                <h3 className="text-xl sm:text-2xl font-bold">{t('dashboard.settings.accountManagement')}</h3>
-                <p className="text-sm sm:text-base text-gray-300 mt-2">
+            <div className="hr-settings-card hr-rise">
+              <div className="hr-settings-head p-4 sm:p-5" data-tone="coral">
+                <h3 className="hr-card-title text-[20px]">{t('dashboard.settings.accountManagement')}</h3>
+                <p className="text-sm text-[#a1a1a6] mt-1">
                   {t('dashboard.settings.manageAccountData')}
                 </p>
               </div>
-              <div className="p-4 sm:p-6 lg:p-8 space-y-4">
-                {/* {t('dashboard.settings.exportData')} */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 sm:p-6 rounded-xl bg-gray-50 border-2 border-gray-200 hover:border-black hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all">
+              <div className="p-3 sm:p-4 space-y-2">
+                {/* Face ID / fingerprint lock; only shown in the phone apps */}
+                <AppLockSetting />
+
+                {/* Identity check (Persona); needed before money can be sent or withdrawn */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 sm:p-6 hr-settings-row">
                   <div className="flex items-start sm:items-center gap-3 sm:gap-4 flex-1">
-                    <div className="p-3 rounded-xl bg-white border-2 border-black shrink-0">
+                    <div className="hr-settings-row-icon">
+                      <IdCard className="h-5 w-5 sm:h-6 sm:w-6" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-base sm:text-lg">Identity verification</p>
+                      <p className="text-sm text-[#a1a1a6] mt-1">
+                        {identity === 'verified' ? 'Verified' : identity === 'in_review' ? 'Being reviewed' : identity === 'in_progress' ? 'Started, not finished' : identity === 'declined' ? "Didn't go through. You can try again." : 'Needed to send money and withdraw'}
+                      </p>
+                    </div>
+                  </div>
+                  {identity !== 'verified' && (
+                    <Button asChild variant="outline" className="w-full sm:w-auto rounded-full border border-white/15 font-medium shrink-0">
+                      <Link href="/face-verification">{identity === 'in_review' ? 'View' : identity === 'in_progress' ? 'Continue' : 'Verify'}</Link>
+                    </Button>
+                  )}
+                </div>
+
+                {/* {t('dashboard.settings.exportData')} */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 sm:p-6 hr-settings-row">
+                  <div className="flex items-start sm:items-center gap-3 sm:gap-4 flex-1">
+                    <div className="hr-settings-row-icon">
                       <Download className="h-5 w-5 sm:h-6 sm:w-6" />
                     </div>
                     <div>
                       <p className="font-semibold text-base sm:text-lg">{t('dashboard.settings.exportData')}</p>
-                      <p className="text-sm text-gray-600 mt-1">{t('dashboard.settings.downloadAccountData')}</p>
+                      <p className="text-sm text-[#a1a1a6] mt-1">{t('dashboard.settings.downloadAccountData')}</p>
                     </div>
                   </div>
                   <Button 
                     variant="outline" 
-                    className="w-full sm:w-auto border-2 border-black hover:bg-black hover:text-white font-semibold transition-all shrink-0"
+                    onClick={exportData}
+                    disabled={exporting}
+                    className="w-full sm:w-auto rounded-full border border-white/15 font-medium shrink-0"
                   >
-                    Export
+                    {exporting ? 'Preparing…' : 'Export'}
                   </Button>
                 </div>
 
                 {/* {t('dashboard.settings.deleteAccount')} */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 sm:p-6 rounded-xl bg-gray-50 border-2 border-gray-200 hover:border-black hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 sm:p-6 hr-settings-row">
                   <div className="flex items-start sm:items-center gap-3 sm:gap-4 flex-1">
-                    <div className="p-3 rounded-xl bg-white border-2 border-black shrink-0">
+                    <div className="hr-settings-row-icon">
                       <Trash2 className="h-5 w-5 sm:h-6 sm:w-6" />
                     </div>
                     <div>
                       <p className="font-semibold text-base sm:text-lg">{t('dashboard.settings.deleteAccount')}</p>
-                      <p className="text-sm text-gray-600 mt-1">{t('dashboard.settings.permanentlyDeleteAccount')}</p>
+                      <p className="text-sm text-[#a1a1a6] mt-1">{t('dashboard.settings.permanentlyDeleteAccount')}</p>
                     </div>
                   </div>
                   <Button 
                     variant="outline" 
-                    className="w-full sm:w-auto border-2 border-black hover:bg-black hover:text-white font-semibold transition-all shrink-0"
+                    onClick={() => setCloseOpen(true)}
+                    className="w-full sm:w-auto rounded-full border border-[#fb7185]/40 font-medium text-[#fb7185] shrink-0"
                   >
                     Delete
                   </Button>
@@ -413,6 +496,7 @@ export default function SettingsPage() {
           </TabsContent>
         </Tabs>
       </div>
+      <CloseAccountDialog open={closeOpen} onOpenChange={setCloseOpen} onExport={exportData} />
     </div>
   )
 }

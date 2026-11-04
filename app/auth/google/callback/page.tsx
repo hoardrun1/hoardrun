@@ -1,210 +1,122 @@
 'use client'
 
-import { useEffect, useState, Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
-import { Loader2 } from 'lucide-react'
+import { Suspense, useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Loader2, X } from 'lucide-react'
+import { AuthShell } from '@/components/auth/auth-shell'
+import { useAuth } from '@/contexts/AuthContext'
+import { API_BASE_URL } from '@/lib/api-url'
+import { APP_SCHEME, isAppGoogleState, isNativeApp, takeGoogleAppProof } from '@/lib/native'
 
+const GOOGLE_ERRORS: Record<string, string> = {
+  access_denied: 'You cancelled signing in with Google.',
+}
+
+/** Google sends people back here; the backend checks the sign-in and returns a Hoardrun session. */
 function GoogleCallbackContent() {
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
-  const [message, setMessage] = useState('')
   const searchParams = useSearchParams()
+  const router = useRouter()
+  const { login } = useAuth()
+  const [error, setError] = useState('')
+  // Set in the phone's browser when the sign-in belongs to the Hoardrun app
+  const [appLink, setAppLink] = useState('')
+  // The state works once, and React runs effects twice in development
+  const started = useRef(false)
 
   useEffect(() => {
-    const handleGoogleCallback = async () => {
-      try {
-        const code = searchParams?.get('code')
-        const state = searchParams?.get('state')
-        const error = searchParams?.get('error')
+    if (started.current) return
+    started.current = true
 
-        if (error) {
-          throw new Error(`Google OAuth error: ${error}`)
-        }
+    const code = searchParams?.get('code')
+    const state = searchParams?.get('state')
+    const googleError = searchParams?.get('error')
 
-        if (!code) {
-          throw new Error('No authorization code received from Google')
-        }
-
-        // Parse state to get action and origin
-        let parsedState = { action: 'signin', origin: window.location.origin }
-        if (state) {
-          try {
-            parsedState = JSON.parse(decodeURIComponent(state))
-          } catch (e) {
-            console.warn('Failed to parse state parameter:', e)
-          }
-        }
-
-        // Exchange code for tokens using Google's token endpoint directly
-        const backendUrl = process.env.NEXT_PUBLIC_AUTH_BACKEND_URL || 'https://auth-backend-yqik.onrender.com'
-
-        // First, get the client configuration
-        const configResponse = await fetch(`${backendUrl}/api/v1/auth/config`)
-        const configData = await configResponse.json()
-
-        if (!configResponse.ok) {
-          throw new Error('Failed to get OAuth configuration')
-        }
-
-        const clientId = configData.data.clientId || configData.data.googleClientId
-        const redirectUri = `${window.location.origin}/auth/google/callback`
-
-        // Exchange authorization code for tokens with Google directly
-        const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: new URLSearchParams({
-            code,
-            client_id: clientId,
-            client_secret: '', // We'll handle this on the backend
-            redirect_uri: redirectUri,
-            grant_type: 'authorization_code',
-          }),
-        })
-
-        // If direct token exchange fails, use backend callback
-        let response
-        if (!tokenResponse.ok) {
-          // Fallback to backend callback
-          response = await fetch(`${backendUrl}/api/v1/auth/google/callback`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              code,
-              action: parsedState.action || 'signin'
-            }),
-          })
-        } else {
-          const tokenData = await tokenResponse.json()
-
-          // Use the ID token with your backend's Google auth endpoint
-          response = await fetch(`${backendUrl}/api/v1/auth/google`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              idToken: tokenData.id_token
-            }),
-          })
-        }
-
-        const data = await response.json()
-
-        if (!response.ok) {
-          throw new Error(data.message || 'Authentication failed')
-        }
-
-        // Send success message to parent window
-        if (window.opener) {
-          window.opener.postMessage({
-            type: 'GOOGLE_AUTH_SUCCESS',
-            data: data.data
-          }, parsedState.origin)
-          window.close()
-        } else {
-          // If not in popup, redirect to dashboard
-          setStatus('success')
-          setMessage('Authentication successful! Redirecting...')
-          setTimeout(() => {
-            window.location.href = '/dashboard'
-          }, 2000)
-        }
-
-      } catch (error) {
-        console.error('Google OAuth callback error:', error)
-        const errorMessage = error instanceof Error ? error.message : 'Authentication failed'
-        
-        setStatus('error')
-        setMessage(errorMessage)
-
-        // Send error message to parent window
-        if (window.opener) {
-          window.opener.postMessage({
-            type: 'GOOGLE_AUTH_ERROR',
-            error: errorMessage
-          }, '*')
-          window.close()
-        }
-      }
+    if (state && isAppGoogleState(state) && !isNativeApp()) {
+      // Started in the app: hand everything back to it. Only the app holds the secret that finishes it.
+      const link = `${APP_SCHEME}://auth/google/callback?${searchParams?.toString() ?? ''}`
+      setAppLink(link)
+      window.location.replace(link)
+      return
     }
 
-    handleGoogleCallback()
-  }, [searchParams])
+    if (googleError || !code || !state) {
+      setError(GOOGLE_ERRORS[googleError ?? ''] ?? "Google didn't finish signing you in. Try again.")
+      return
+    }
+
+    ;(async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/auth/google/callback`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code, state, app_proof: isAppGoogleState(state) ? takeGoogleAppProof() : undefined }),
+        })
+        const body = await response.json().catch(() => ({}))
+        const data = body?.data
+        if (!response.ok || !data?.access_token) {
+          throw new Error(typeof body?.detail === 'string' ? body.detail : body?.message || "Google didn't finish signing you in. Try again.")
+        }
+        login(data.access_token, {
+          id: data.user.id,
+          email: data.user.email,
+          name: `${data.user.first_name} ${data.user.last_name === '-' ? '' : data.user.last_name}`.trim(),
+          emailVerified: data.user.email_verified,
+          profilePictureUrl: data.user.profile_picture_url,
+        }, data.refresh_token)
+        router.replace(data.next || '/home')
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Google didn't finish signing you in. Try again.")
+      }
+    })()
+  }, [searchParams, login, router])
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="max-w-md w-full mx-auto p-6">
-        <div className="text-center">
-          {status === 'loading' && (
-            <>
-              <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
-              <h2 className="text-xl font-semibold text-foreground mb-2">
-                Completing Google Sign-In...
-              </h2>
-              <p className="text-muted-foreground">
-                Please wait while we complete your authentication.
-              </p>
-            </>
-          )}
-
-          {status === 'success' && (
-            <>
-              <div className="h-8 w-8 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="h-5 w-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <h2 className="text-xl font-semibold text-foreground mb-2">
-                Authentication Successful!
-              </h2>
-              <p className="text-muted-foreground">{message}</p>
-            </>
-          )}
-
-          {status === 'error' && (
-            <>
-              <div className="h-8 w-8 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="h-5 w-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </div>
-              <h2 className="text-xl font-semibold text-foreground mb-2">
-                Authentication Failed
-              </h2>
-              <p className="text-muted-foreground mb-4">{message}</p>
-              <button
-                onClick={() => window.close()}
-                className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 transition-colors border border-border"
-              >
-                Close Window
-              </button>
-            </>
-          )}
+    <AuthShell
+      skipWelcome
+      visual={
+        <div className="flex h-full items-center justify-center">
+          <div className="lp-glass flex h-24 w-24 items-center justify-center rounded-full">
+            {error ? <X className="h-10 w-10" strokeWidth={2} /> : <Loader2 className="h-10 w-10 animate-spin" strokeWidth={1.5} />}
+          </div>
         </div>
-      </div>
-    </div>
+      }
+      footerLink={
+        <>
+          <span>New here? </span>
+          <Link href="/signup" className="lp-auth-link">Create an account</Link>
+        </>
+      }
+    >
+      {appLink ? (
+        <div className="lp-auth-stack">
+          <div>
+            <h1 className="lp-auth-title">Back to the Hoardrun app</h1>
+            <p className="lp-auth-sub">If the app didn&apos;t open by itself, tap below.</p>
+          </div>
+          <a href={appLink} className="lp-btn lp-btn-primary lp-auth-btn font-medium">Open Hoardrun</a>
+        </div>
+      ) : error ? (
+        <div className="lp-auth-stack">
+          <div>
+            <h1 className="lp-auth-title">Couldn&apos;t sign you in</h1>
+            <p className="lp-auth-sub">{error}</p>
+          </div>
+          <Link href="/signin" className="lp-btn lp-btn-primary lp-auth-btn font-medium">Back to sign in</Link>
+        </div>
+      ) : (
+        <div>
+          <h1 className="lp-auth-title">Signing you in…</h1>
+          <p className="lp-auth-sub">Finishing up with Google.</p>
+        </div>
+      )}
+    </AuthShell>
   )
 }
 
 export default function GoogleCallbackPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
-          <h2 className="text-xl font-semibold text-foreground mb-2">
-            Loading...
-          </h2>
-          <p className="text-muted-foreground">
-            Please wait while we process your request.
-          </p>
-        </div>
-      </div>
-    }>
+    <Suspense fallback={<div className="fixed inset-0 bg-black" />}>
       <GoogleCallbackContent />
     </Suspense>
   )

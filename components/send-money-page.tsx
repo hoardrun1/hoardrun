@@ -1,712 +1,360 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
+import { useCallback, useEffect, useState } from 'react'
+import Link from 'next/link'
+import { AnimatePresence, motion } from 'framer-motion'
+import { ArrowLeft, Building2, Check, Delete, Landmark, Plus, Search, Wallet, Zap } from 'lucide-react'
 import { useBankAccounts } from '@/hooks/useBankAccounts'
-import { useTransactions } from '@/hooks/useTransactions'
 import { useBeneficiaries } from '@/hooks/useBeneficiaries'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Separator } from '@/components/ui/separator'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { motion, AnimatePresence } from 'framer-motion'
-import {
-  Loader2,
-  AlertCircle,
-  Clock,
-  ArrowLeft,
-  Send,
-  Check,
-  DollarSign,
-  User,
-  CreditCard,
-  Smartphone,
-  Plus
-} from 'lucide-react'
-import { formatCurrency, calculateTransactionFee } from '@/lib/banking'
-import { cn } from '@/lib/utils'
-import { LayoutWrapper } from "@/components/ui/layout-wrapper"
-import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sidebar-layout'
-import { SidebarContent } from '@/components/ui/sidebar-content-unified'
-import { SidebarToggle } from '@/components/ui/sidebar-toggle'
-import { Skeleton } from '@/components/ui/skeleton'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ui/use-toast'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { DepositModal } from '@/components/deposit-modal'
-import { MomoClient } from '@/lib/momo-client'
-import { MastercardClient } from '@/lib/mastercard-client'
-import { VisaClient } from '@/lib/visa-client'
-import { SectionFooter } from '@/components/ui/section-footer'
-import { useTheme } from '@/contexts/ThemeContext'
 import { apiClient } from '@/lib/api-client'
-import { PlaidLink } from '@/components/plaid/PlaidLink'
+import { DepositModal } from '@/components/deposit-modal'
 import { ConnectBankAccountModal } from '@/components/send-money/ConnectBankAccountModal'
 import { AddBeneficiaryModal } from '@/components/send-money/AddBeneficiaryModal'
+import { Sheet, SheetHeader } from '@/components/investment-opportunities-page'
 
-// Types
-type AccountType = 'CHECKING' | 'SAVINGS' | 'CREDIT'
-type TransactionType = 'SEND' | 'RECEIVE' | 'DEPOSIT' | 'WITHDRAWAL' | 'TRANSFER'
+type Mode = 'hoardrun' | 'bank'
+interface Recipient { name: string; email: string }
+interface Quote { fee: number; total: number }
+interface Receipt { amount: number; to: string; reference: string; detail: string }
 
-interface Account {
-  id: string
-  type: AccountType
-  number: string
-  balance: number
-  currency: string
-  isActive: boolean
-}
+const usd = (value: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value)
+const initials = (name: string) => name.split(/\s+/).map((part) => part[0]).join('').slice(0, 2).toUpperCase()
+const isEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value.trim())
+const errorText = (error: unknown) => (typeof error === 'string' ? error : 'Something went wrong. Please try again.')
 
-interface Beneficiary {
-  id: string
-  name: string
-  accountNumber: string
-  bankName: string
-  bankCode?: string
-  email?: string
-  phoneNumber?: string
-  isActive: boolean
-}
-
-interface TransactionPreview {
-  amount: number
-  fee: number
-  total: number
-  estimatedTime: string
-}
-
-interface TransactionData {
-  accountId: string
-  type: TransactionType
-  amount: number
-  description?: string
-  beneficiaryId: string
-}
-
-// Loading Component
-function LoadingSkeleton() {
+function Avatar({ name, size = 44, muted = false }: { name: string; size?: number; muted?: boolean }) {
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-md mx-auto pt-20 px-4 space-y-6">
-        <Skeleton className="h-8 w-32" />
-        <Skeleton className="h-16 w-full" />
-        <Skeleton className="h-16 w-full" />
-        <Skeleton className="h-16 w-full" />
-        <Skeleton className="h-12 w-full" />
-      </div>
-    </div>
+    <span className="hr-avatar" style={{ width: size, height: size, fontSize: size * 0.36, opacity: muted ? 0.75 : 1 }} aria-hidden="true">
+      {initials(name) || '?'}
+    </span>
   )
 }
 
-// Error Component
-function ErrorDisplay({ message }: { message: string }) {
+/** Cash App style: one big number, typed or tapped on the keypad. */
+function AmountStage({ amount, setAmount, balance, balanceLabel, over }: { amount: string; setAmount: (value: string) => void; balance: number | null; balanceLabel: string; over: boolean }) {
+  const press = useCallback((key: string) => {
+    const current = amount
+    if (key === 'back') return setAmount(current.slice(0, -1))
+    if (key === '.') return current.includes('.') ? undefined : setAmount((current || '0') + '.')
+    if (current.includes('.') && current.split('.')[1].length >= 2) return
+    if (current === '0' && key !== '.') return setAmount(key)
+    if (current.replace('.', '').length >= 7) return
+    setAmount(current + key)
+  }, [amount, setAmount])
+
+  // Typing works too on a computer
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement
+      if (target.closest('input, textarea, [role=dialog]')) return
+      if (/^[0-9]$/.test(event.key) || event.key === '.') press(event.key)
+      else if (event.key === 'Backspace') press('back')
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [press])
+
+  const [whole, cents] = (amount || '0').split('.')
+  const size = whole.length > 5 ? 'text-[60px] sm:text-[72px]' : 'text-[76px] sm:text-[96px]'
+
   return (
-    <Alert variant="destructive" className="mb-6">
-      <AlertCircle className="h-4 w-4" />
-      <AlertDescription>{message}</AlertDescription>
-    </Alert>
+    <section className="hr-send-stage">
+      <div className="flex flex-1 flex-col items-center justify-center py-6">
+        <motion.p key={amount.length} initial={{ scale: 0.97 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 500, damping: 25 }} className={`hr-figure leading-none ${size} ${over ? 'text-[#ff9f95]' : amount ? 'text-white' : 'text-[#48484a]'}`} aria-live="polite" aria-label={`Amount ${usd(Number(amount) || 0)}`}>
+          <span className="text-[0.55em] align-top">$</span>{Number(whole).toLocaleString('en-US')}{amount.includes('.') && <span>.{cents}</span>}
+        </motion.p>
+        <span className={`mt-4 inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[12.5px] ${over ? 'border-[#ff9f95]/40 text-[#ff9f95]' : 'border-white/12 text-[#a1a1a6]'}`}>
+          <Wallet className="h-3.5 w-3.5" strokeWidth={2} />
+          {over ? `More than your ${balanceLabel}` : balance === null ? balanceLabel : `${balanceLabel} ${usd(balance)}`}
+        </span>
+        <div className="mt-4 flex gap-2">
+          {[20, 50, 100].map((preset) => (
+            <button key={preset} type="button" onClick={() => setAmount(String(preset))} className="hr-focus rounded-full border border-white/12 px-3.5 py-1.5 text-[13px] text-[#d1d1d6] hover:border-white/30">${preset}</button>
+          ))}
+        </div>
+      </div>
+      <div className="hr-keypad" role="group" aria-label="Amount keypad">
+        {['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'back'].map((key) => (
+          <button key={key} type="button" onClick={() => press(key)} className="hr-focus" aria-label={key === 'back' ? 'Delete' : key === '.' ? 'Decimal point' : key}>
+            {key === 'back' ? <Delete className="mx-auto h-6 w-6" strokeWidth={1.8} /> : key}
+          </button>
+        ))}
+      </div>
+    </section>
   )
 }
 
 export function SendMoneyPage() {
-  const { theme } = useTheme()
-  const router = useRouter()
   const { user } = useAuth()
   const { toast } = useToast()
-  
-  // Form state
+  const [mode, setMode] = useState<Mode>('hoardrun')
   const [amount, setAmount] = useState('')
-  const [description, setDescription] = useState('')
-  const [selectedAccountId, setSelectedAccountId] = useState('')
-  const [selectedBeneficiaryId, setSelectedBeneficiaryId] = useState('')
-  const [transferType, setTransferType] = useState<'bank' | 'momo' | 'card'>('bank')
-  const [momoPhone, setMomoPhone] = useState('')
-  const [cardNumber, setCardNumber] = useState('')
-  
-  // UI state
-  const [isProcessing, setIsProcessing] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [preview, setPreview] = useState<TransactionPreview | null>(null)
-  const [showSuccess, setShowSuccess] = useState(false)
-  const [isDepositModalOpen, setIsDepositModalOpen] = useState(false)
-  const [isConnectBankModalOpen, setIsConnectBankModalOpen] = useState(false)
-  const [isAddBeneficiaryModalOpen, setIsAddBeneficiaryModalOpen] = useState(false)
+  const [note, setNote] = useState('')
+  const [cash, setCash] = useState<number | null>(null)
+  const [recent, setRecent] = useState<Recipient[]>([])
+  const [query, setQuery] = useState('')
+  const [lookup, setLookup] = useState<{ email: string; name: string } | null | 'none'>(null)
+  const [recipient, setRecipient] = useState<Recipient | null>(null)
+  const [sourceId, setSourceId] = useState('')
+  const [beneficiaryId, setBeneficiaryId] = useState('')
+  const [quote, setQuote] = useState<Quote | null>(null)
+  const [reviewing, setReviewing] = useState(false)
+  const [sending, setSending] = useState(false)
+  const [receipt, setReceipt] = useState<Receipt | null>(null)
+  const [depositOpen, setDepositOpen] = useState(false)
+  const [connectOpen, setConnectOpen] = useState(false)
+  const [addRecipientOpen, setAddRecipientOpen] = useState(false)
 
-  // Hooks
-  const {
-    accounts, 
-    isLoading: accountsLoading, 
-    error: accountsError,
-    fetchAccounts,
-    getAccountById,
-  } = useBankAccounts()
+  const { accounts, fetchAccounts } = useBankAccounts()
+  const { beneficiaries, fetchBeneficiaries } = useBeneficiaries()
+  const banks = (Array.isArray(accounts) ? accounts : []).filter((account: any) => account.isPlaidAccount)
+  const payees = Array.isArray(beneficiaries) ? beneficiaries : []
 
-  const {
-    createTransaction,
-    isLoading: transactionLoading,
-  } = useTransactions()
+  const loadCash = useCallback(async () => {
+    const [balance, recents] = await Promise.all([apiClient.getCashBalance(), apiClient.getRecentCashRecipients()])
+    setCash(Number(balance.data?.cash_available) || 0)
+    setRecent(recents.data?.data ?? [])
+  }, [])
 
-  const {
-    beneficiaries,
-    isLoading: beneficiariesLoading,
-    error: beneficiariesError,
-    fetchBeneficiaries,
-  } = useBeneficiaries()
-
-  // Load data on mount
   useEffect(() => {
-    if (user) {
-      fetchAccounts()
-      fetchBeneficiaries()
+    if (!user) return
+    loadCash()
+    fetchAccounts()
+    fetchBeneficiaries()
+  }, [user, loadCash, fetchAccounts, fetchBeneficiaries])
+
+  useEffect(() => {
+    if (!sourceId && banks[0]) setSourceId(banks[0].id)
+  }, [banks, sourceId])
+
+  // Look up a Hoardrun member as an email is typed
+  useEffect(() => {
+    const email = query.trim()
+    if (!isEmail(email)) {
+      setLookup(null)
+      return
     }
-  }, [user, fetchAccounts, fetchBeneficiaries])
+    const timer = window.setTimeout(async () => {
+      const response = await apiClient.lookupCashRecipient(email)
+      setLookup(response.data?.found ? { email, name: response.data.name } : 'none')
+    }, 350)
+    return () => window.clearTimeout(timer)
+  }, [query])
 
-  // Ensure accounts and beneficiaries are arrays
-  const safeAccounts = Array.isArray(accounts) ? accounts : []
-  const safeBeneficiaries = Array.isArray(beneficiaries) ? beneficiaries : []
+  const value = Number(amount) || 0
+  const source = banks.find((account: any) => account.id === sourceId)
+  const payee = payees.find((item) => item.id === beneficiaryId)
 
-  // Handle Plaid success - refresh accounts and auto-select first one
-  const handlePlaidSuccess = useCallback(async (publicToken: string, metadata: any) => {
-    try {
-      await fetchAccounts()
-      toast({
-        title: 'Success',
-        description: 'Bank account connected successfully',
-      })
-    } catch (err) {
-      toast({
-        title: 'Error',
-        description: 'Failed to load connected account',
-        variant: 'destructive',
-      })
+  // Bank transfers get a real fee quote once there's an account, a recipient and an amount
+  useEffect(() => {
+    setQuote(null)
+    if (mode !== 'bank' || !value || !sourceId || !beneficiaryId) return
+    let cancelled = false
+    const timer = window.setTimeout(async () => {
+      const response = await apiClient.createPlaidTransferQuote({ source_account_id: sourceId, beneficiary_id: beneficiaryId, amount: value })
+      const data = response.data?.data?.quote
+      if (!cancelled && data) setQuote({ fee: Number(data.total_fees), total: Number(data.total_cost) })
+    }, 400)
+    return () => { cancelled = true; window.clearTimeout(timer) }
+  }, [mode, value, sourceId, beneficiaryId])
+
+  const balance = mode === 'hoardrun' ? cash : source ? Number(source.balance) : null
+  const over = balance !== null && value > balance
+  const ready = value >= 1 && !over && (mode === 'hoardrun' ? !!recipient : !!source && !!payee)
+  const toName = mode === 'hoardrun' ? recipient?.name : payee?.name
+
+  const send = async () => {
+    setSending(true)
+    const response = mode === 'hoardrun'
+      ? await apiClient.sendCash({ recipient_email: recipient!.email, amount: value, note: note.trim() || undefined })
+      : await apiClient.sendMoney({ source_account_id: sourceId, beneficiary_id: beneficiaryId, amount: value, description: note.trim() || 'Bank transfer' })
+    setSending(false)
+    if (response.error) {
+      toast({ title: "Couldn't send", description: errorText(response.error), variant: 'destructive' })
+      return
     }
-  }, [fetchAccounts, toast])
-
-  // Handle beneficiary added success
-  const handleBeneficiaryAdded = useCallback(async () => {
-    await fetchBeneficiaries()
-    toast({
-      title: 'Success',
-      description: 'Beneficiary added successfully',
+    const data = response.data?.data ?? {}
+    setReceipt({
+      amount: value,
+      to: toName ?? 'Recipient',
+      reference: data.reference ?? data.transfer?.transfer_id ?? data.transfer_id ?? '',
+      detail: mode === 'hoardrun' ? 'Arrived instantly in their Hoardrun cash' : 'On its way by ACH, usually 1–3 business days',
     })
-  }, [fetchBeneficiaries, toast])
-
-  // Auto-select first account when accounts are loaded and none selected
-  useEffect(() => {
-    if (safeAccounts.length > 0 && !selectedAccountId) {
-      setSelectedAccountId(safeAccounts[0].id)
-    }
-  }, [safeAccounts, selectedAccountId])
-
-  // Calculate preview when amount changes
-  useEffect(() => {
-    if (amount && !isNaN(parseFloat(amount))) {
-      const numAmount = parseFloat(amount)
-      const fee = calculateTransactionFee(numAmount, 'TRANSFER')
-      setPreview({
-        amount: numAmount,
-        fee,
-        total: numAmount + fee,
-        estimatedTime: transferType === 'momo' ? '~1 minute' : '~10 minutes'
-      })
+    setReviewing(false)
+    setAmount('')
+    setNote('')
+    if (mode === 'hoardrun') {
+      setCash(Number(data.cash_available) || 0)
+      loadCash()
     } else {
-      setPreview(null)
+      fetchAccounts()
     }
-  }, [amount, transferType])
+  }
 
-  // Validation
-  const validateForm = useCallback((): boolean => {
-    setError(null)
-
-    if (!selectedAccountId) {
-      setError('Please select an account')
-      return false
-    }
-
-    if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
-      setError('Please enter a valid amount')
-      return false
-    }
-
-    const selectedAccount = getAccountById(selectedAccountId)
-    if (selectedAccount && parseFloat(amount) > selectedAccount.balance) {
-      setError('Insufficient funds')
-      return false
-    }
-
-    if (transferType === 'bank' && !selectedBeneficiaryId) {
-      setError('Please select a beneficiary')
-      return false
-    }
-
-    if (transferType === 'momo' && !momoPhone) {
-      setError('Please enter a phone number')
-      return false
-    }
-
-    if (transferType === 'card' && !cardNumber) {
-      setError('Please enter a card number')
-      return false
-    }
-
-    return true
-  }, [selectedAccountId, amount, transferType, selectedBeneficiaryId, momoPhone, cardNumber, getAccountById])
-
-  // Handle form submission
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!validateForm()) return
-
-    setIsProcessing(true)
-    setError(null)
-
-    try {
-      const numAmount = parseFloat(amount)
-
-      if (transferType === 'bank') {
-        // Use sendMoney API for bank transfers to beneficiaries
-        const response = await apiClient.sendMoney({
-          beneficiary_id: selectedBeneficiaryId,
-          amount: numAmount,
-          description: description || 'Bank transfer',
-        })
-
-        if (response.error) {
-          throw new Error(response.error)
-        }
-      } else if (transferType === 'momo') {
-        // Use createTransaction for mobile money transfers
-        const result = await createTransaction({
-          type: 'TRANSFER',
-          amount: numAmount,
-          description: description || `Mobile money transfer to ${momoPhone}`,
-          category: 'Mobile Money',
-        })
-
-        if (!result) {
-          throw new Error('Mobile money transfer failed')
-        }
-      } else if (transferType === 'card') {
-        // Use createTransaction for card transfers
-        const result = await createTransaction({
-          type: 'TRANSFER',
-          amount: numAmount,
-          description: description || `Card transfer to ${cardNumber.slice(-4)}`,
-          category: 'Card Transfer',
-        })
-
-        if (!result) {
-          throw new Error('Card transfer failed')
-        }
-      }
-
-      // Show success animation
-      setShowSuccess(true)
-
-      toast({
-        title: 'Success',
-        description: 'Money sent successfully',
-      })
-
-      // Reset form after delay
-      setTimeout(() => {
-        setAmount('')
-        setDescription('')
-        setSelectedBeneficiaryId('')
-        setMomoPhone('')
-        setCardNumber('')
-        setPreview(null)
-        setShowSuccess(false)
-        router.push('/finance')
-      }, 2000)
-
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Transaction failed. Please try again.'
-      setError(errorMessage)
-      toast({
-        title: 'Error',
-        description: errorMessage,
-        variant: 'destructive',
-      })
-    } finally {
-      setIsProcessing(false)
-    }
-  }, [validateForm, toast, router, amount, transferType, selectedBeneficiaryId, description, momoPhone, cardNumber, createTransaction])
-
-  // Get selected account
-  const selectedAccount = selectedAccountId ? getAccountById(selectedAccountId) : null
-
-  // Error state
-  if (accountsError || beneficiariesError) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center px-4">
-        <ErrorDisplay message={accountsError || beneficiariesError || 'An error occurred'} />
-      </div>
-    )
+  const pickRecent = (item: Recipient) => {
+    setRecipient(item)
+    setQuery('')
   }
 
   return (
-    <SidebarProvider>
-      <ResponsiveSidebarLayout
-        sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
-      >
-        <SidebarToggle />
-        <LayoutWrapper showBreadcrumbs={false}>
-          <div className="min-h-screen-mobile bg-background pb-20 sm:pb-6 pt-16">
-            {/* Main Content - Mobile Optimized */}
-            <div className="w-full max-w-md mx-auto px-3 sm:px-4 py-4 sm:py-6">
-              <motion.form
-                onSubmit={handleSubmit}
-                className="space-y-4 sm:space-y-6"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                {/* Error Display */}
-                {error && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                  >
-                    <ErrorDisplay message={error} />
-                  </motion.div>
-                )}
+    <div className="space-y-5 sm:space-y-6">
+      <div>
+        <Link href="/home" className="hr-focus -ml-1 inline-flex items-center gap-1.5 rounded-full px-1 py-1 text-[14px] text-[#a1a1a6] hover:text-white"><ArrowLeft className="h-4 w-4" strokeWidth={2} />Home</Link>
+        <h1 className="hr-title mt-2">Send money</h1>
+        <p className="hr-sub mt-2">Instantly to anyone on Hoardrun, or to a US bank account by ACH.</p>
+      </div>
 
-                {/* Amount Input */}
-                <motion.div 
-                  className="space-y-3"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 }}
-                >
-                  <Label className="text-sm font-medium text-foreground">Amount</Label>
-                  <div className="relative">
-                    <DollarSign className="absolute left-4 top-1/2 transform -translate-y-1/2 h-6 w-6 text-muted-foreground" />
-                    <Input
-                      type="number"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                      placeholder="0.00"
-                      className="pl-12 h-16 text-2xl font-semibold text-center border-2 transition-colors"
-                      step="0.01"
-                      min="0"
-                    />
-                  </div>
-                </motion.div>
+      <div className="hr-choice max-w-md" role="radiogroup" aria-label="How to send">
+        <button type="button" role="radio" aria-checked={mode === 'hoardrun'} onClick={() => setMode('hoardrun')} className="hr-focus inline-flex items-center justify-center gap-1.5"><Zap className="h-3.5 w-3.5" strokeWidth={2.2} />Hoardrun · instant</button>
+        <button type="button" role="radio" aria-checked={mode === 'bank'} onClick={() => setMode('bank')} className="hr-focus inline-flex items-center justify-center gap-1.5"><Landmark className="h-3.5 w-3.5" strokeWidth={2.2} />Bank · ACH</button>
+      </div>
 
-                {/* From Account */}
-                <motion.div
-                  className="space-y-3"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                >
-                  <Label className="text-sm font-medium text-foreground">From Account</Label>
-                  {safeAccounts.length === 0 ? (
-                    <div className="space-y-3">
-                      <Alert className="border-2 border-dashed">
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertDescription>
-                          No accounts connected. Connect a bank account to send money.
-                        </AlertDescription>
-                      </Alert>
-                      <Button
-                        onClick={() => setIsConnectBankModalOpen(true)}
-                        className="w-full h-14"
-                        variant="default"
-                      >
-                        <div className="flex items-center justify-center gap-2">
-                          <Plus className="h-5 w-5" />
-                          Connect Bank Account
-                        </div>
-                      </Button>
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,420px)]">
+        <AmountStage amount={amount} setAmount={setAmount} balance={balance} balanceLabel={mode === 'hoardrun' ? 'Hoardrun cash' : source ? `${source.name ?? 'Bank'} ••${source.mask ?? ''}` : 'Pick a bank account'} over={over} />
+
+        <div className="space-y-4">
+          {mode === 'hoardrun' ? (
+            <section className="hr-panel p-5">
+              <h2 className="text-[15px] font-medium">To</h2>
+              {recipient ? (
+                <div className="mt-3 flex items-center gap-3 rounded-2xl border border-white/15 bg-white/[0.05] p-3">
+                  <Avatar name={recipient.name} />
+                  <div className="min-w-0 flex-1"><p className="truncate text-[15px] font-medium">{recipient.name}</p><p className="truncate text-[12.5px] text-[#8e8e93]">{recipient.email}</p></div>
+                  <button onClick={() => setRecipient(null)} className="hr-focus rounded-full border border-white/15 px-3 py-1 text-[12.5px]">Change</button>
+                </div>
+              ) : (
+                <>
+                  <label className="relative mt-3 block">
+                    <span className="sr-only">Their email</span>
+                    <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8e8e93]" strokeWidth={2} />
+                    <input type="email" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Their email address" className="hr-field !rounded-full !pl-10" autoComplete="off" />
+                  </label>
+                  <AnimatePresence>
+                    {lookup && lookup !== 'none' && (
+                      <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="mt-3 flex items-center gap-3 rounded-2xl border border-white/10 p-3">
+                        <Avatar name={lookup.name} />
+                        <div className="min-w-0 flex-1"><p className="truncate text-[15px] font-medium">{lookup.name}</p><p className="text-[12.5px] text-[#8e8e93]">On Hoardrun</p></div>
+                        <button onClick={() => pickRecent({ name: lookup.name, email: lookup.email })} className="hr-focus rounded-full bg-white px-4 py-1.5 text-[13px] font-medium text-black">Send</button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                  {lookup === 'none' && <p className="mt-3 text-[13px] text-[#8e8e93]">No one on Hoardrun uses that email yet. Check it, or send to their bank instead.</p>}
+                  {recent.length > 0 && (
+                    <div className="mt-4">
+                      <p className="text-[12px] font-medium uppercase tracking-[0.08em] text-[#8e8e93]">Recent</p>
+                      <div className="mt-2 flex gap-3 overflow-x-auto pb-1">
+                        {recent.map((item) => (
+                          <button key={item.email} onClick={() => pickRecent(item)} className="hr-focus flex w-16 shrink-0 flex-col items-center gap-1.5 rounded-xl">
+                            <Avatar name={item.name} size={48} />
+                            <span className="w-full truncate text-center text-[12px] text-[#c7c7cc]">{item.name.split(' ')[0]}</span>
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  ) : (
-                    <>
-                      <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
-                        <SelectTrigger className="h-14 border-2">
-                          <div className="flex items-center gap-3">
-                            <CreditCard className="h-5 w-5 text-muted-foreground" />
-                            <SelectValue placeholder="Select account" />
-                          </div>
-                        </SelectTrigger>
-                        <SelectContent>
-                          {safeAccounts.map((account) => (
-                            <SelectItem key={account.id} value={account.id}>
-                              <div className="flex justify-between items-center w-full">
-                                <div>
-                                  <div className="font-medium">{account.account_type}</div>
-                                  <div className="text-sm text-muted-foreground">•••• {account.account_number?.slice(-4) || '****'}</div>
-                                </div>
-                                <div className="text-sm font-medium">
-                                  {formatCurrency(account.balance)}
-                                </div>
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {selectedAccount && (
-                        <div className="text-sm text-muted-foreground">
-                          Available: {formatCurrency(selectedAccount.balance)}
-                        </div>
-                      )}
-                    </>
                   )}
-                </motion.div>
-
-                {/* Transfer Type */}
-                <motion.div 
-                  className="space-y-3"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                >
-                  <Label className="text-sm font-medium text-foreground">Transfer Method</Label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { value: 'bank', label: 'Bank', icon: CreditCard },
-                      { value: 'momo', label: 'Mobile', icon: Smartphone },
-                      { value: 'card', label: 'Card', icon: CreditCard }
-                    ].map(({ value, label, icon: Icon }) => (
-                      <Button
-                        key={value}
-                        type="button"
-                        variant={transferType === value ? "default" : "outline"}
-                        className="h-14 flex-col gap-1"
-                        onClick={() => setTransferType(value as any)}
-                      >
-                        <Icon className="h-4 w-4" />
-                        <span className="text-xs">{label}</span>
-                      </Button>
+                </>
+              )}
+            </section>
+          ) : (
+            <>
+              <section className="hr-panel p-5">
+                <div className="flex items-center justify-between"><h2 className="text-[15px] font-medium">From</h2><button onClick={() => setConnectOpen(true)} className="hr-focus inline-flex items-center gap-1 rounded-full text-[13px] text-[#c7c7cc] hover:text-white"><Plus className="h-3.5 w-3.5" />Connect a bank</button></div>
+                {banks.length ? (
+                  <div className="mt-3 space-y-2" role="radiogroup" aria-label="Bank account to send from">
+                    {banks.map((account: any) => (
+                      <button key={account.id} type="button" role="radio" aria-checked={account.id === sourceId} onClick={() => setSourceId(account.id)} className="hr-bank-option hr-focus">
+                        <span className="hr-bank-chip" aria-hidden="true"><Building2 className="h-4 w-4" strokeWidth={2} /></span>
+                        <span className="min-w-0 flex-1 text-left"><span className="block truncate text-[14px] font-medium">{account.name ?? 'Bank account'}</span><span className="block text-[12px] opacity-70">•• {account.mask ?? '----'} · {account.subtype ?? account.type ?? 'checking'}</span></span>
+                        <span className="text-[13px] tabular-nums">{usd(Number(account.balance) || 0)}</span>
+                      </button>
                     ))}
                   </div>
-                </motion.div>
+                ) : (
+                  <button onClick={() => setConnectOpen(true)} className="hr-focus mt-3 flex w-full items-center gap-3 rounded-2xl border border-dashed border-white/20 p-4 text-left hover:border-white/40">
+                    <span className="hr-bank-chip" aria-hidden="true"><Landmark className="h-4 w-4" strokeWidth={2} /></span>
+                    <span><span className="block text-[14px] font-medium">Connect your bank</span><span className="block text-[12.5px] text-[#8e8e93]">Chase, Bank of America, Wells Fargo and thousands more, securely through Plaid.</span></span>
+                  </button>
+                )}
+              </section>
+              <section className="hr-panel p-5">
+                <div className="flex items-center justify-between"><h2 className="text-[15px] font-medium">To</h2><button onClick={() => setAddRecipientOpen(true)} className="hr-focus inline-flex items-center gap-1 rounded-full text-[13px] text-[#c7c7cc] hover:text-white"><Plus className="h-3.5 w-3.5" />Add recipient</button></div>
+                {payees.length ? (
+                  <div className="mt-3 space-y-2" role="radiogroup" aria-label="Recipient">
+                    {payees.map((item) => (
+                      <button key={item.id} type="button" role="radio" aria-checked={item.id === beneficiaryId} onClick={() => setBeneficiaryId(item.id)} className="hr-bank-option hr-focus">
+                        <Avatar name={item.name} size={36} />
+                        <span className="min-w-0 flex-1 text-left"><span className="block truncate text-[14px] font-medium">{item.name}</span><span className="block truncate text-[12px] opacity-70">{item.bankName} •• {String(item.accountNumber ?? '').slice(-4)}</span></span>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="mt-3 text-[13px] text-[#8e8e93]">Add someone's US bank details (routing and account number) to send to them.</p>
+                )}
+              </section>
+            </>
+          )}
 
-                {/* Recipient Selection */}
-                <motion.div 
-                  className="space-y-3"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 }}
-                >
-                  {transferType === 'bank' && (
-                    <>
-                      <Label className="text-sm font-medium text-foreground">To Beneficiary</Label>
-                      <Select value={selectedBeneficiaryId} onValueChange={setSelectedBeneficiaryId}>
-                        <SelectTrigger className="h-14 border-2">
-                          <div className="flex items-center gap-3">
-                            <User className="h-5 w-5 text-muted-foreground" />
-                            <SelectValue placeholder="Select beneficiary" />
-                          </div>
-                        </SelectTrigger>
-                        <SelectContent>
-                          {safeBeneficiaries.map((beneficiary) => (
-                            <SelectItem key={beneficiary.id} value={beneficiary.id}>
-                              <div>
-                                <div className="font-medium">{beneficiary.name}</div>
-                                <div className="text-sm text-muted-foreground">
-                                  {beneficiary.bankName} • •••• {beneficiary.accountNumber?.slice(-4) || '****'}
-                                </div>
-                              </div>
-                            </SelectItem>
-                          ))}
-                          <div className="p-2 border-t">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setIsAddBeneficiaryModalOpen(true)}
-                              className="w-full justify-start"
-                            >
-                              <Plus className="h-4 w-4 mr-2" />
-                              Add New Beneficiary
-                            </Button>
-                          </div>
-                        </SelectContent>
-                      </Select>
-                    </>
-                  )}
+          <section className="hr-panel p-5">
+            <label className="block">
+              <span className="text-[15px] font-medium">Note</span>
+              <input value={note} onChange={(event) => setNote(event.target.value)} maxLength={140} placeholder="What's it for?" className="hr-field mt-3" />
+            </label>
+            {mode === 'bank' && quote && <p className="mt-3 text-[12.5px] text-[#8e8e93]">Fee {usd(quote.fee)} · total {usd(quote.total)} · arrives in 1–3 business days</p>}
+          </section>
 
-                  {transferType === 'momo' && (
-                    <>
-                      <Label className="text-sm font-medium text-foreground">Phone Number</Label>
-                      <div className="relative">
-                        <Smartphone className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                        <Input
-                          type="tel"
-                          value={momoPhone}
-                          onChange={(e) => setMomoPhone(e.target.value)}
-                          placeholder="+1 (555) 000-0000"
-                          className="pl-12 h-14 border-2"
-                        />
-                      </div>
-                    </>
-                  )}
+          {mode === 'hoardrun' && cash !== null && cash < 1 && (
+            <button onClick={() => setDepositOpen(true)} className="hr-focus flex w-full items-center justify-between rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-left">
+              <span className="text-[13.5px] text-[#c7c7cc]">Your Hoardrun cash is empty. Add money to send.</span>
+              <span className="rounded-full bg-white px-3 py-1 text-[13px] font-medium text-black">Add money</span>
+            </button>
+          )}
 
-                  {transferType === 'card' && (
-                    <>
-                      <Label className="text-sm font-medium text-foreground">Card Number</Label>
-                      <div className="relative">
-                        <CreditCard className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                        <Input
-                          type="text"
-                          value={cardNumber}
-                          onChange={(e) => setCardNumber(e.target.value)}
-                          placeholder="1234 5678 9012 3456"
-                          className="pl-12 h-14 border-2"
-                        />
-                      </div>
-                    </>
-                  )}
-                </motion.div>
+          <button onClick={() => setReviewing(true)} disabled={!ready} className="hr-focus h-14 w-full rounded-full bg-white text-[16px] font-medium text-black disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-[#8e8e93]">
+            {ready ? `Send ${usd(value)}${toName ? ` to ${toName.split(' ')[0]}` : ''}` : value < 1 ? 'Enter an amount' : mode === 'hoardrun' ? 'Choose who to pay' : 'Choose an account and recipient'}
+          </button>
+        </div>
+      </div>
 
-                {/* Description */}
-                <motion.div 
-                  className="space-y-3"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5 }}
-                >
-                  <Label className="text-sm font-medium text-foreground">Description (Optional)</Label>
-                  <Input
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="What's this for?"
-                    className="h-12 border-2"
-                  />
-                </motion.div>
-
-                {/* Transaction Preview */}
-                <AnimatePresence>
-                  {preview && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <Card className="border-2 border-border">
-                        <CardContent className="p-4">
-                          <div className="space-y-3">
-                            <div className="flex justify-between text-sm">
-                              <span className="text-muted-foreground">Amount</span>
-                              <span className="font-medium text-foreground">{formatCurrency(preview.amount)}</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                              <span className="text-muted-foreground">Fee</span>
-                              <span className="font-medium text-foreground">{formatCurrency(preview.fee)}</span>
-                            </div>
-                            <Separator />
-                            <div className="flex justify-between font-semibold text-foreground">
-                              <span>Total</span>
-                              <span>{formatCurrency(preview.total)}</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <Clock className="h-4 w-4" />
-                              <span>{preview.estimatedTime}</span>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {/* Submit Button */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.6 }}
-                >
-                  <Button
-                    type="submit"
-                    className="w-full h-14 text-lg font-semibold"
-                    disabled={isProcessing || !amount || !selectedAccountId}
-                  >
-                    {isProcessing ? (
-                      <div className="flex items-center gap-2">
-                        <Loader2 className="h-5 w-5 animate-spin" />
-                        Processing...
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <Send className="h-5 w-5" />
-                        Send {preview ? formatCurrency(preview.total) : 'Money'}
-                      </div>
-                    )}
-                  </Button>
-                </motion.div>
-              </motion.form>
-            </div>
-
-            {/* Success Animation */}
-            <AnimatePresence>
-              {showSuccess && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm"
-                >
-                  <motion.div
-                    initial={{ scale: 0.5, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    exit={{ scale: 0.5, opacity: 0 }}
-                    className="bg-background rounded-2xl p-8 shadow-2xl border border-border"
-                  >
-                    <div className="text-center">
-                      <motion.div
-                        animate={{
-                          scale: [1, 1.2, 1],
-                          rotate: [0, 360]
-                        }}
-                        transition={{ duration: 0.6 }}
-                        className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4"
-                      >
-                        <Check className="w-8 h-8 text-green-600 dark:text-green-400" />
-                      </motion.div>
-                      <h3 className="text-xl font-semibold text-foreground mb-2">Success!</h3>
-                      <p className="text-muted-foreground">Your money has been sent</p>
-                    </div>
-                  </motion.div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Deposit Modal */}
-            <DepositModal
-              open={isDepositModalOpen}
-              onOpenChange={setIsDepositModalOpen}
-            />
-
-            {/* Connect Bank Account Modal */}
-            <ConnectBankAccountModal
-              open={isConnectBankModalOpen}
-              onOpenChange={setIsConnectBankModalOpen}
-              onSuccess={handlePlaidSuccess}
-            />
-
-            {/* Add Beneficiary Modal */}
-            <AddBeneficiaryModal
-              open={isAddBeneficiaryModalOpen}
-              onOpenChange={setIsAddBeneficiaryModalOpen}
-              onSuccess={handleBeneficiaryAdded}
-            />
+      <Sheet open={reviewing} onClose={() => setReviewing(false)} label="Review">
+        <SheetHeader title="Review" onClose={() => setReviewing(false)} />
+        <div className="flex-1 space-y-5 overflow-y-auto px-5 pb-8">
+          <div className="flex flex-col items-center pt-2 text-center">
+            <Avatar name={toName ?? '?'} size={72} />
+            <p className="mt-4 text-[14px] text-[#a1a1a6]">You're sending</p>
+            <p className="hr-figure text-[52px] leading-none">{usd(value)}</p>
+            <p className="mt-2 text-[15px]">to {toName}</p>
           </div>
+          <dl className="divide-y divide-white/[0.07] rounded-[20px] border border-white/[0.08] text-[14px]">
+            <div className="flex justify-between px-4 py-3"><dt className="text-[#8e8e93]">From</dt><dd>{mode === 'hoardrun' ? 'Hoardrun cash' : `${source?.name ?? 'Bank'} ••${source?.mask ?? ''}`}</dd></div>
+            <div className="flex justify-between px-4 py-3"><dt className="text-[#8e8e93]">Speed</dt><dd>{mode === 'hoardrun' ? 'Instant' : '1–3 business days'}</dd></div>
+            <div className="flex justify-between px-4 py-3"><dt className="text-[#8e8e93]">Fee</dt><dd>{mode === 'hoardrun' ? 'Free' : quote ? usd(quote.fee) : '—'}</dd></div>
+            {note.trim() && <div className="flex justify-between gap-4 px-4 py-3"><dt className="text-[#8e8e93]">Note</dt><dd className="truncate">{note.trim()}</dd></div>}
+          </dl>
+          <button onClick={send} disabled={sending} className="hr-focus h-14 w-full rounded-full bg-white text-[16px] font-medium text-black disabled:opacity-60">{sending ? 'Sending…' : `Send ${usd(value)}`}</button>
+        </div>
+      </Sheet>
 
-          <SectionFooter section="financial" activePage="/send-money" />
-        </LayoutWrapper>
-      </ResponsiveSidebarLayout>
-    </SidebarProvider>
+      <AnimatePresence>
+        {receipt && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[80] flex items-center justify-center bg-black/80 p-6 backdrop-blur-md" role="dialog" aria-modal="true" aria-label="Sent">
+            <motion.div initial={{ y: 30, scale: 0.94, opacity: 0 }} animate={{ y: 0, scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 220, damping: 20 }} className="hr-certificate w-full max-w-sm text-center">
+              <motion.span initial={{ scale: 0, rotate: -90 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: 'spring', stiffness: 260, damping: 14, delay: 0.1 }} className="hr-sent-orb mx-auto"><Check className="h-9 w-9" strokeWidth={3} /></motion.span>
+              <p className="mt-5 text-[13px] font-medium uppercase tracking-[0.14em] text-[#8e8e93]">Sent</p>
+              <p className="hr-figure mt-1 text-[48px] leading-none">{usd(receipt.amount)}</p>
+              <p className="mt-2 text-[15px]">to {receipt.to}</p>
+              <p className="mt-1 text-[13px] text-[#a1a1a6]">{receipt.detail}</p>
+              {receipt.reference && <p className="mt-4 text-[11px] tabular-nums text-[#8e8e93]">{receipt.reference}</p>}
+              <button onClick={() => setReceipt(null)} className="hr-focus mt-6 h-12 w-full rounded-full bg-white text-[15px] font-medium text-black">Done</button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <DepositModal open={depositOpen} onOpenChange={setDepositOpen} />
+      <ConnectBankAccountModal open={connectOpen} onOpenChange={setConnectOpen} onSuccess={() => { fetchAccounts(); toast({ title: 'Bank connected', description: 'You can send from it now.' }) }} />
+      <AddBeneficiaryModal open={addRecipientOpen} onOpenChange={setAddRecipientOpen} onSuccess={() => fetchBeneficiaries()} />
+    </div>
   )
 }

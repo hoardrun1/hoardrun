@@ -47,7 +47,7 @@
   },
   "signin": {
     "welcomeBack": "Welkom Terug",
-    "subtitle": "Teken in op jou HoardRun-rekening",
+    "subtitle": "Teken in op jou Hoardrun-rekening",
     "emailPlaceholder": "Voer jou e-pos in",
     "passwordPlaceholder": "Voer jou wagwoord in",
     "rememberMe": "Onthou my",
@@ -56,11 +56,12 @@
     "signingIn": "Teken In...",
     "noAccount": "Het jy nie 'n rekening nie?",
     "signUpHere": "Teken hier aan",
-    "continueWithGoogle": "Gaan voort met Google"
+    "continueWithGoogle": "Gaan voort met Google",
+    "continueWithApple": "Gaan voort met Apple"
   },
   "signup": {
     "createAccount": "Skep Rekening",
-    "subtitle": "Sluit aan by HoardRun en begin jou reis",
+    "subtitle": "Sluit aan by Hoardrun en begin jou reis",
     "steps": {
       "account": "Rekening",
       "accountDesc": "Basiese inligting",
@@ -204,7 +205,7 @@
         "watchYourSpending": "Hou jou uitgawes dop",
         "categoriesOverBudget": "kategorieë is oor begroting",
         "overallProgress": "Algehele vordering",
-        "usedOfTotalBudget": "Jy het {percentage}% van jou totale begroting gebruik"
+        "usedOfTotalBudget": "Jy het {{percentage}}% van jou totale begroting gebruik"
       }
     },
     "analytics": {

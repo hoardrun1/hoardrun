@@ -1,678 +1,183 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
-import { 
-  ArrowLeft, 
-  Copy, 
-  Share2, 
-  QrCode, 
-  Wallet, 
-  Building2, 
-  Phone, 
-  Bell, 
-  Info, 
-  CheckCircle2,
-  ArrowUpRight,
-  Clock,
-  Settings,
-  Download,
-  Shield
-} from 'lucide-react'
+import { FormEvent, useEffect, useState } from 'react'
+import { Check, Copy, Loader2 } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { LayoutWrapper } from "@/components/ui/layout-wrapper"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { formatCurrency } from '@/lib/banking'
-import { MomoClient } from '@/lib/momo-client'
-import { MastercardClient } from '@/lib/mastercard-client'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ui/use-toast'
-import { Loader2 } from 'lucide-react'
-import { VisaClient } from '@/lib/visa-client'
 import { apiClient } from '@/lib/api-client'
 
-const banks = ['GCB Bank', 'Ecobank', 'Fidelity Bank', 'Zenith Bank', 'Stanbic Bank']
-const mobileWallets = ['MTN Mobile Money', 'Vodafone Cash', 'AirtelTigo Money']
+interface MobileProvider {
+  provider: string
+  name: string
+  currency: string
+}
 
-const paymentStats = [
-  {
-    title: 'Total Received',
-    amount: 15250.75,
-    change: 12.5,
-    color: 'blue'
-  },
-  {
-    title: 'Pending',
-    amount: 500.00,
-    change: -2.3,
-    color: 'orange'
-  },
-  {
-    title: 'Last 7 Days',
-    amount: 3200.50,
-    change: 8.7,
-    color: 'green'
-  },
-  {
-    title: 'Average',
-    amount: 458.65,
-    change: 5.2,
-    color: 'purple'
-  }
-]
+const CARD_CURRENCIES = ['USD', 'GHS', 'NGN', 'KES', 'ZAR']
 
 export function ReceiveMoneyPageComponent() {
-  const router = useRouter()
-  const [walletAddress, setWalletAddress] = useState('0x1234...5678')
-  const [amount, setAmount] = useState('')
-  const [selectedBank, setSelectedBank] = useState('')
-  const [accountNumber, setAccountNumber] = useState('')
-  const [selectedWallet, setSelectedWallet] = useState('')
-  const [phoneNumber, setPhoneNumber] = useState('')
-  const [copied, setCopied] = useState(false)
-  const [qrVisible, setQrVisible] = useState(false)
   const { user } = useAuth()
-  const [momoPhone, setMomoPhone] = useState('')
-  const [isGeneratingLink, setIsGeneratingLink] = useState(false)
-  const [isGeneratingCardLink, setIsGeneratingCardLink] = useState(false)
-  const [paymentLink, setPaymentLink] = useState('')
   const { toast } = useToast()
-  const [isProcessingVisa, setIsProcessingVisa] = useState(false)
-  const [visaCardNumber, setVisaCardNumber] = useState('')
 
-  const handleCopyAddress = () => {
-    navigator.clipboard.writeText(walletAddress)
+  const [providers, setProviders] = useState<MobileProvider[]>([])
+  const [providerId, setProviderId] = useState('')
+  const [mobileAmount, setMobileAmount] = useState('')
+  const [senderPhone, setSenderPhone] = useState('')
+  const [isRequesting, setIsRequesting] = useState(false)
+
+  const [cardAmount, setCardAmount] = useState('')
+  const [cardCurrency, setCardCurrency] = useState(CARD_CURRENCIES[0])
+  const [isCreatingLink, setIsCreatingLink] = useState(false)
+  const [paymentLink, setPaymentLink] = useState('')
+  const [copied, setCopied] = useState(false)
+
+  useEffect(() => {
+    apiClient.getMobileMoneyProviders().then((response) => {
+      setProviders(response.data?.data?.providers ?? [])
+    })
+  }, [])
+
+  const provider = providers.find((item) => item.provider === providerId)
+
+  const requestMobileMoney = async (event: FormEvent) => {
+    event.preventDefault()
+    if (!provider) return
+
+    setIsRequesting(true)
+    const response = await apiClient.requestMobileMoney({
+      provider: provider.provider,
+      sender_phone: senderPhone,
+      amount: parseFloat(mobileAmount),
+      currency: provider.currency,
+    })
+    setIsRequesting(false)
+
+    if (response.error) {
+      toast({ title: "Request not sent", description: response.error, variant: "destructive" })
+      return
+    }
+
+    setMobileAmount('')
+    setSenderPhone('')
+    toast({ title: "Request sent", description: `They'll get a prompt on ${provider.name} to approve it.` })
+  }
+
+  const createPaymentLink = async (event: FormEvent) => {
+    event.preventDefault()
+    if (!user?.email) return
+
+    setIsCreatingLink(true)
+    setPaymentLink('')
+    setCopied(false)
+    const response = await apiClient.initializePayment({
+      email: user.email,
+      amount: parseFloat(cardAmount),
+      currency: cardCurrency,
+    })
+    setIsCreatingLink(false)
+
+    if (response.error || !response.data?.authorization_url) {
+      toast({ title: "Link not created", description: response.error || "Please try again in a moment.", variant: "destructive" })
+      return
+    }
+
+    setPaymentLink(response.data.authorization_url)
+  }
+
+  const copyLink = async () => {
+    await navigator.clipboard.writeText(paymentLink)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: 'My Payment Details',
-        text: `Here's my wallet address: ${walletAddress}`,
-        url: window.location.href,
-      })
-    }
-  }
-
-  const handleGeneratePaymentLink = async () => {
-    if (!amount || !momoPhone) {
-      toast({
-        title: "Error",
-        description: "Please enter amount and phone number",
-        variant: "destructive",
-      })
-      return
-    }
-
-    setIsGeneratingLink(true)
-    try {
-      const response = await apiClient.createTransaction({
-        type: 'income',
-        amount: parseFloat(amount),
-        description: `Mobile money payment from ${momoPhone}`,
-        category: 'mobile_money'
-      })
-
-      if (response.error) {
-        throw new Error(response.error)
-      }
-      
-      toast({
-        title: "Success",
-        description: "Payment link generated and sent to the phone number",
-      })
-
-      // Clear form
-      setAmount('')
-      setMomoPhone('')
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to generate payment link",
-        variant: "destructive",
-      })
-    } finally {
-      setIsGeneratingLink(false)
-    }
-  }
-
-  const handleGenerateCardPaymentLink = async () => {
-    if (!amount) {
-      toast({
-        title: "Error",
-        description: "Please enter amount",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsGeneratingCardLink(true);
-    try {
-      const response = await apiClient.createTransaction({
-        type: 'income',
-        amount: parseFloat(amount),
-        description: 'Payment request via card',
-        category: 'payment_link'
-      });
-
-      if (response.error) {
-        throw new Error(response.error);
-      }
-
-      // Generate a mock payment URL for demonstration
-      const paymentUrl = `${window.location.origin}/payment/${response.data?.id}`;
-      setPaymentLink(paymentUrl);
-      
-      toast({
-        title: "Success",
-        description: "Payment link generated successfully",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to generate payment link",
-        variant: "destructive",
-      });
-    } finally {
-      setIsGeneratingCardLink(false);
-    }
-  };
-
-  const handleVisaDeposit = async () => {
-    if (!amount || !visaCardNumber) {
-      toast({
-        title: "Error",
-        description: "Please enter amount and card number",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsProcessingVisa(true);
-    try {
-      const visaClient = new VisaClient({
-        apiKey: 'U2CB9EXCQOX9FPUT6DUS2106HUAHml5g_sDhH1Ql_oOq0D0xQ',
-        environment: 'sandbox'
-      });
-
-      const response = await visaClient.initiateDeposit({
-        userId: user?.id || '', // Get from auth context
-        amount: parseFloat(amount),
-        currency: 'EUR',
-        cardNumber: visaCardNumber,
-        expiryMonth: 12, // Mock values - in real app, get from form
-        expiryYear: 2025,
-        cvv: '123',
-        description: 'Visa deposit'
-      });
-
-      // Create a deposit transaction record
-      await apiClient.createTransaction({
-        type: 'income',
-        amount: parseFloat(amount),
-        description: 'Visa deposit',
-        category: 'deposit'
-      });
-
-      await fetch('/api/user/balance/update', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          amount: parseFloat(amount),
-          type: 'DEPOSIT',
-          provider: 'VISA'
-        }),
-      });
-
-      toast({
-        title: "Success",
-        description: "Deposit successful",
-      });
-
-      // Reset form
-      setAmount('');
-      setVisaCardNumber('');
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Deposit failed",
-        variant: "destructive",
-      });
-    } finally {
-      setIsProcessingVisa(false);
-    }
-  };
-
   return (
-    <LayoutWrapper className="bg-gray-50 dark:bg-gray-900 min-h-screen" showBreadcrumbs={false}>
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <div className="container mx-auto px-4">
-          <div className="flex h-16 items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => router.back()}
-                className="lg:hidden"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <h1 className="text-xl font-semibold dark:text-white">Receive Money</h1>
-            </div>
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-5 w-5" />
-                <span className="absolute top-1 right-1 h-2 w-2 bg-gray-500 rounded-full" />
-              </Button>
-              <Button variant="ghost" size="icon">
-                <Settings className="h-5 w-5" />
-              </Button>
-            </div>
-          </div>
-        </div>
+    <div className="mx-auto w-full max-w-5xl space-y-4">
+      <header>
+        <h1 className="hr-title">Receive money</h1>
+        <p className="mt-1 text-sm text-[#a1a1a6] sm:text-base">Ask someone to pay you by mobile money or card.</p>
       </header>
 
-      <main className="container mx-auto px-4 py-6 space-y-6">
-        {/* Payment Stats */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {paymentStats.map((stat, index) => (
-            <motion.div
-              key={stat.title}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.1 }}
-            >
-              <Card className={`bg-gradient-to-br from-${stat.color}-500 to-${stat.color}-600 text-white`}>
-                <CardHeader className="pb-2">
-                  <CardTitle className={`text-sm font-medium text-${stat.color}-100`}>{stat.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{formatCurrency(stat.amount)}</div>
-                  <div className="flex items-center mt-1 text-gray-100">
-                    <ArrowUpRight className="h-4 w-4 mr-1" />
-                    <span className="text-sm">{stat.change > 0 ? '+' : ''}{stat.change}% from last month</span>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
-        </div>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <form onSubmit={requestMobileMoney} className="hr-panel space-y-4 p-4 sm:p-6">
+          <div>
+            <h2 className="text-lg font-semibold tracking-tight">Mobile money</h2>
+            <p className="mt-1 text-sm text-[#a1a1a6]">They get a prompt on their phone to approve the payment.</p>
+          </div>
 
-        {/* Amount Input */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.4 }}
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle>Request Amount</CardTitle>
-              <CardDescription>Enter the amount you want to receive</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center space-x-4">
-                <div className="flex-grow">
-                  <div className="relative">
-                    <Input
-                      type="number"
-                      placeholder="0.00"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                      className="text-2xl font-bold h-16 text-center pr-20"
-                    />
-                    <Select defaultValue="usd">
-                      <SelectTrigger className="absolute right-0 top-0 bottom-0 w-20 border-l">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="usd">USD</SelectItem>
-                        <SelectItem value="eur">EUR</SelectItem>
-                        <SelectItem value="gbp">GBP</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+          <div className="space-y-2">
+            <Label>Provider</Label>
+            <Select value={providerId} onValueChange={setProviderId}>
+              <SelectTrigger className="h-12">
+                <SelectValue placeholder="Choose a provider" />
+              </SelectTrigger>
+              <SelectContent>
+                {providers.map((item) => (
+                  <SelectItem key={item.provider} value={item.provider}>{item.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-        {/* Payment Methods */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.5 }}
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle>Payment Method</CardTitle>
-              <CardDescription>Choose how you want to receive money</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Tabs defaultValue="wallet" className="w-full">
-                <TabsList className="grid w-full grid-cols-3 mb-8">
-                  <TabsTrigger value="wallet" className="data-[state=active]:bg-gray-600 data-[state=active]:text-white">
-                    <Wallet className="h-4 w-4 mr-2" />
-                    Wallet
-                  </TabsTrigger>
-                  <TabsTrigger value="bank" className="data-[state=active]:bg-gray-600 data-[state=active]:text-white">
-                    <Building2 className="h-4 w-4 mr-2" />
-                    Bank
-                  </TabsTrigger>
-                  <TabsTrigger value="mobile" className="data-[state=active]:bg-gray-600 data-[state=active]:text-white">
-                    <Phone className="h-4 w-4 mr-2" />
-                    Mobile
-                  </TabsTrigger>
-                </TabsList>
+          <div className="space-y-2">
+            <Label htmlFor="sender-phone">Their phone number</Label>
+            <Input id="sender-phone" type="tel" value={senderPhone} onChange={(event) => setSenderPhone(event.target.value)} required className="h-12" />
+          </div>
 
-                <TabsContent value="wallet">
-                  <div className="space-y-6">
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center">
-                        <Label className="text-gray-500 dark:text-gray-400">Your Wallet Address</Label>
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              className="text-gray-600 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
-                            >
-                              <Info className="h-4 w-4 mr-1" />
-                              View Details
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Wallet Details</DialogTitle>
-                            </DialogHeader>
-                            <div className="space-y-4">
-                              <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                                <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Wallet Address</div>
-                                <div className="font-mono break-all">{walletAddress}</div>
-                              </div>
-                              <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                                <Shield className="h-4 w-4 mr-2" />
-                                Your wallet is protected by end-to-end encryption
-                              </div>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
-                      </div>
-                      <div className="flex space-x-2">
-                        <Input
-                          value={walletAddress}
-                          readOnly
-                          className="font-mono bg-gray-50 dark:bg-gray-800"
-                        />
-                        <Button 
-                          onClick={handleCopyAddress}
-                          variant="outline"
-                          className="min-w-[40px]"
-                        >
-                          {copied ? (
-                            <CheckCircle2 className="h-4 w-4 text-gray-500" />
-                          ) : (
-                            <Copy className="h-4 w-4" />
-                          )}
-                        </Button>
-                        <Button 
-                          onClick={handleShare}
-                          variant="outline"
-                          className="min-w-[40px]"
-                        >
-                          <Share2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
+          <div className="space-y-2">
+            <Label htmlFor="mobile-amount">Amount{provider ? ` (${provider.currency})` : ''}</Label>
+            <Input id="mobile-amount" type="number" inputMode="decimal" min="0" step="any" value={mobileAmount} onChange={(event) => setMobileAmount(event.target.value)} required className="h-12" />
+          </div>
 
-                    <AnimatePresence>
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        transition={{ duration: 0.2 }}
-                        className="relative"
-                      >
-                        <Card className="overflow-hidden">
-                          <CardContent className="p-6">
-                            <div className="absolute top-2 right-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setQrVisible(!qrVisible)}
-                              >
-                                {qrVisible ? 'Hide QR' : 'Show QR'}
-                              </Button>
-                            </div>
-                            <AnimatePresence>
-                              {qrVisible && (
-                                <motion.div
-                                  initial={{ opacity: 0, height: 0 }}
-                                  animate={{ opacity: 1, height: 'auto' }}
-                                  exit={{ opacity: 0, height: 0 }}
-                                  transition={{ duration: 0.2 }}
-                                  className="flex flex-col items-center justify-center pt-4"
-                                >
-                                  <div className="bg-white p-4 rounded-lg shadow-inner">
-                                    <QrCode className="h-48 w-48 text-gray-800" />
-                                  </div>
-                                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
-                                    Scan QR code to get wallet address
-                                  </p>
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
-                          </CardContent>
-                        </Card>
-                      </motion.div>
-                    </AnimatePresence>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="bank">
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label>Select Bank</Label>
-                      <Select value={selectedBank} onValueChange={setSelectedBank}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Choose your bank" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {banks.map((bank) => (
-                            <SelectItem key={bank} value={bank}>{bank}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Account Number</Label>
-                      <Input
-                        value={accountNumber}
-                        onChange={(e) => setAccountNumber(e.target.value)}
-                        placeholder="Enter your account number"
-                      />
-                    </div>
-
-                    <Alert>
-                      <Info className="h-4 w-4" />
-                      <AlertDescription>
-                        Bank transfers typically take 1-3 business days to process
-                      </AlertDescription>
-                    </Alert>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="mobile">
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label>Select Mobile Wallet</Label>
-                      <Select value={selectedWallet} onValueChange={setSelectedWallet}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Choose mobile wallet" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {mobileWallets.map((wallet) => (
-                            <SelectItem key={wallet} value={wallet}>{wallet}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Phone Number</Label>
-                      <Input
-                        type="tel"
-                        value={momoPhone}
-                        onChange={(e) => setMomoPhone(e.target.value)}
-                        placeholder="Enter your phone number"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Amount</Label>
-                      <Input
-                        type="number"
-                        value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
-                        placeholder="Enter amount"
-                      />
-                    </div>
-
-                    <Button
-                      className="w-full"
-                      onClick={handleGeneratePaymentLink}
-                      disabled={isGeneratingLink}
-                    >
-                      {isGeneratingLink ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Generating Link...
-                        </>
-                      ) : (
-                        'Generate Payment Link'
-                      )}
-                    </Button>
-
-                    <Alert>
-                      <Clock className="h-4 w-4" />
-                      <AlertDescription>
-                        Mobile money transfers are usually instant
-                      </AlertDescription>
-                    </Alert>
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Receive Card Payment</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <Input
-                type="number"
-                placeholder="Amount"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-              />
-              <Button 
-                onClick={handleGenerateCardPaymentLink}
-                disabled={isGeneratingCardLink}
-                className="w-full"
-              >
-                {isGeneratingCardLink && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Generate Payment Link
-              </Button>
-              {paymentLink && (
-                <div className="mt-4">
-                  <Label>Payment Link</Label>
-                  <div className="flex items-center gap-2">
-                    <Input value={paymentLink} readOnly />
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        navigator.clipboard.writeText(paymentLink);
-                        toast({
-                          title: "Copied",
-                          description: "Payment link copied to clipboard",
-                        });
-                      }}
-                    >
-                      Copy
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="mt-4">
-          <CardHeader>
-            <CardTitle>Deposit via Visa</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <Input
-                type="text"
-                placeholder="Amount"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-              />
-              <Input
-                type="text"
-                placeholder="Card Number"
-                value={visaCardNumber}
-                onChange={(e) => setVisaCardNumber(e.target.value)}
-              />
-              <Button 
-                onClick={handleVisaDeposit}
-                disabled={isProcessingVisa}
-                className="w-full"
-              >
-                {isProcessingVisa ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  'Deposit with Visa'
-                )}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Action Button */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.6 }}
-        >
-          <Button 
-            className="w-full bg-gray-600 hover:bg-gray-700 text-white h-12 text-lg font-semibold"
-            onClick={() => {}}
-          >
-            Generate Payment Link
+          <Button type="submit" disabled={!provider || isRequesting} className="h-12 w-full rounded-full">
+            {isRequesting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Send request
           </Button>
-        </motion.div>
-      </main>
-    </LayoutWrapper>
+        </form>
+
+        <form onSubmit={createPaymentLink} className="hr-panel space-y-4 p-4 sm:p-6">
+          <div>
+            <h2 className="text-lg font-semibold tracking-tight">Card payment link</h2>
+            <p className="mt-1 text-sm text-[#a1a1a6]">Share the link and they can pay on a secure Paystack page.</p>
+          </div>
+
+          <div className="flex gap-3">
+            <div className="min-w-0 flex-1 space-y-2">
+              <Label htmlFor="card-amount">Amount</Label>
+              <Input id="card-amount" type="number" inputMode="decimal" min="0" step="any" value={cardAmount} onChange={(event) => setCardAmount(event.target.value)} required className="h-12" />
+            </div>
+            <div className="w-28 space-y-2">
+              <Label>Currency</Label>
+              <Select value={cardCurrency} onValueChange={setCardCurrency}>
+                <SelectTrigger className="h-12">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {CARD_CURRENCIES.map((currency) => (
+                    <SelectItem key={currency} value={currency}>{currency}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <Button type="submit" disabled={isCreatingLink} className="h-12 w-full rounded-full">
+            {isCreatingLink && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Create link
+          </Button>
+
+          {paymentLink && (
+            <div className="flex items-center gap-2">
+              <Input value={paymentLink} readOnly aria-label="Payment link" className="h-12" />
+              <button type="button" onClick={copyLink} aria-label="Copy link" className="hr-icon-btn hr-focus shrink-0">
+                {copied ? <Check className="h-[18px] w-[18px]" /> : <Copy className="h-[18px] w-[18px]" />}
+              </button>
+            </div>
+          )}
+        </form>
+      </div>
+    </div>
   )
 }

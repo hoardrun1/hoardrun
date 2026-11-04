@@ -32,7 +32,7 @@ export function ConnectBankAccountModal({ open, onOpenChange, onSuccess }: Conne
             <div className="space-y-2">
               <h3 className="text-lg font-semibold">Secure Bank Connection</h3>
               <p className="text-sm text-muted-foreground">
-                Connect your bank account to enable instant transfers and view your account balances.
+                Connect your bank account to send money from it and see your balance.
               </p>
             </div>
           </div>
@@ -48,7 +48,7 @@ export function ConnectBankAccountModal({ open, onOpenChange, onSuccess }: Conne
             </div>
             <div className="flex items-center gap-3 text-sm">
               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span>Instant transfers between accounts</span>
+              <span>Send to any US bank account by ACH</span>
             </div>
           </div>
 

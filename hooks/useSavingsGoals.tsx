@@ -92,8 +92,10 @@ export function useSavingsGoals() {
 
       const response = await apiClient.createSavingsGoal({
         name: data.name,
-        target_amount: data.targetAmount,
-        description: `Savings goal: ${data.name}`
+        targetAmount: data.targetAmount,
+        monthlyContribution: 0,
+        category: 'General',
+        isAutoSave: false,
       })
 
       if (response.error) {

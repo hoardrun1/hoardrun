@@ -1,113 +1,67 @@
 "use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Repeat } from "lucide-react"
+import { Calendar, Pause, Play, Repeat, Trash2 } from "lucide-react"
+import { BarsGraphic } from "@/components/app/home-graphics"
+import { SavingsEmpty, SavingsEmptyButton } from "@/components/savings/savings-empty"
 
 interface AutomatedTabProps {
-  savings: any[]
-  setSavings: (savings: any[]) => void
+  plans: any[]
   onNewSaving: () => void
+  onToggle?: (plan: any) => void
+  onDelete?: (plan: any) => void
 }
 
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(amount)
-}
+const usd = (n: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n)
+const PER_MONTH: Record<string, number> = { DAILY: 30, WEEKLY: 4.33, MONTHLY: 1 }
 
-export function AutomatedTab({ savings, setSavings, onNewSaving }: AutomatedTabProps) {
-  if (savings.length === 0) {
+/** Auto-save plans held on the server. Each run moves the amount from cash into the plan. */
+export function AutomatedTab({ plans, onNewSaving, onToggle, onDelete }: AutomatedTabProps) {
+  if (plans.length === 0) {
     return (
-      <Card className="border-dashed">
-        <CardContent className="flex flex-col items-center justify-center py-8 sm:py-12">
-          <div className="rounded-full bg-muted p-3 sm:p-4 mb-3 sm:mb-4">
-            <Repeat className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground" />
-          </div>
-          <h3 className="text-sm sm:text-base font-semibold mb-1">No Automated Savings Yet</h3>
-          <p className="text-xs sm:text-sm text-muted-foreground text-center mb-4 max-w-xs">
-            Set up automatic transfers to build savings consistently
-          </p>
-          <Button onClick={onNewSaving} size="sm" className="text-xs sm:text-sm h-8 sm:h-9">
-            <Repeat className="h-3.5 w-3.5 mr-1" />
-            Create Auto Save
-          </Button>
-        </CardContent>
-      </Card>
+      <SavingsEmpty
+        graphic={<BarsGraphic tone="violet" className="h-full w-full" />}
+        title="No automatic saving yet"
+        text="Move a set amount into savings every day, week or month."
+        action={<SavingsEmptyButton onClick={onNewSaving}><Repeat className="h-4 w-4" strokeWidth={2.2} />Set up auto-save</SavingsEmptyButton>}
+      />
     )
   }
 
   return (
-    <div className="grid gap-2 sm:gap-3 md:grid-cols-2 lg:grid-cols-3">
-      {savings.map((saving) => {
-        let monthlyAmount = 0
-        if (saving.frequency === "DAILY") monthlyAmount = saving.amount * 30
-        else if (saving.frequency === "WEEKLY") monthlyAmount = saving.amount * 4.33
-        else monthlyAmount = saving.amount
-
+    <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+      {plans.map((plan) => {
+        const tone = plan.isActive ? "147 197 253" : "142 142 147"
         return (
-          <Card key={saving.id} className="border-border/50 hover:shadow-sm transition-shadow overflow-hidden">
-            <div className={`h-1 ${saving.isActive ? "bg-foreground/30" : "bg-muted"}`} />
-            <CardHeader className="p-3 sm:p-4 pb-2 sm:pb-3">
-              <div className="flex justify-between items-start gap-2">
-                <div className="space-y-1 flex-1 min-w-0">
-                  <CardTitle className="text-sm sm:text-base line-clamp-1 flex items-center gap-1.5">
-                    <Repeat
-                      className={`h-3.5 w-3.5 flex-shrink-0 ${saving.isActive ? "text-foreground" : "text-muted-foreground"}`}
-                    />
-                    {saving.name}
-                  </CardTitle>
-                  <CardDescription className="text-xs">
-                    {formatCurrency(saving.amount)} • {saving.frequency.toLowerCase()}
-                  </CardDescription>
-                </div>
-                <div className="text-right flex-shrink-0">
-                  <div className="text-xs sm:text-sm font-bold">{formatCurrency(saving.totalSaved)}</div>
-                  <div className="text-xs text-muted-foreground">Total</div>
-                </div>
+          <article key={plan.id} className="hr-goal" style={{ ["--tone" as string]: tone }}>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h3 className="hr-card-title truncate text-[18px]">{plan.name}</h3>
+                <p className="mt-0.5 text-[12.5px] text-[#a1a1a6]">
+                  {usd(plan.amount)} {plan.frequency.toLowerCase()} · about {usd(plan.amount * PER_MONTH[plan.frequency])}/mo
+                </p>
               </div>
-            </CardHeader>
-            <CardContent className="p-3 sm:p-4 pt-2 sm:pt-3 space-y-2 sm:space-y-3">
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div>
-                  <p className="text-muted-foreground mb-0.5">Next Transfer</p>
-                  <p className="font-medium">
-                    {saving.nextDeduction.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-muted-foreground mb-0.5">Status</p>
-                  <p
-                    className={`font-semibold text-xs ${saving.isActive ? "text-foreground" : "text-muted-foreground"}`}
-                  >
-                    {saving.isActive ? "Active" : "Paused"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="p-2 sm:p-3 rounded-lg bg-muted/50 border border-border/50">
-                <p className="text-xs text-muted-foreground mb-0.5">Monthly</p>
-                <p className="text-sm sm:text-base font-bold">{formatCurrency(monthlyAmount)}</p>
-              </div>
-
-              <div className="flex gap-1.5">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex-1 text-xs h-7 sm:h-8 bg-transparent"
-                  onClick={() => {
-                    setSavings(savings.map((s) => (s.id === saving.id ? { ...s, isActive: !s.isActive } : s)))
-                  }}
-                >
-                  {saving.isActive ? "Pause" : "Resume"}
-                </Button>
-                <Button variant="ghost" size="sm" className="text-xs h-7 sm:h-8">
-                  Edit
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+              <span className="rounded-full px-2.5 py-1 text-[12px] font-medium" style={{ background: `rgb(${tone} / 0.16)`, color: `rgb(${tone})` }}>
+                {plan.isActive ? "Active" : "Paused"}
+              </span>
+            </div>
+            <p className="mt-4 text-[13px] text-[#a1a1a6]">
+              <span className="hr-figure text-[22px] text-white">{usd(plan.savedTotal)}</span> saved in {plan.runs} run{plan.runs === 1 ? "" : "s"}
+            </p>
+            <p className="mt-2 inline-flex items-center gap-1 text-[12.5px] text-[#a1a1a6]">
+              <Calendar className="h-3.5 w-3.5" />
+              {plan.isActive ? `Next: ${new Date(`${plan.nextRun}T00:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric" })}` : "Paused"}
+            </p>
+            {plan.lastStatus && <p className="mt-1 text-[12px] text-[#6e6e73]">{plan.lastStatus}</p>}
+            <div className="mt-4 flex gap-2">
+              <button onClick={() => onToggle?.(plan)} className="hr-focus inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-full bg-white text-[13px] font-medium text-black">
+                {plan.isActive ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
+                {plan.isActive ? "Pause" : "Resume"}
+              </button>
+              <button onClick={() => onDelete?.(plan)} aria-label={`Stop ${plan.name}`} className="hr-focus inline-flex h-9 items-center gap-1.5 rounded-full border border-white/15 px-4 text-[13px]">
+                <Trash2 className="h-3.5 w-3.5" />Stop
+              </button>
+            </div>
+          </article>
         )
       })}
     </div>

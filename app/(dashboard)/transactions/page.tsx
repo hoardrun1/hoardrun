@@ -11,6 +11,9 @@ import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useTransactions } from '@/hooks/useTransactions'
+import { useToast } from '@/components/ui/use-toast'
+import { PageHero, StatPills, HeroAction, CountUp, usd } from '@/components/app/page-hero'
+import { HexCoinGraphic, CoinsGraphic } from '@/components/app/home-graphics'
 import { 
   Receipt, 
   ArrowUpRight, 
@@ -52,93 +55,80 @@ export default function TransactionsPage() {
     return matchesSearch && matchesCategory && matchesType
   })
 
+  const { toast } = useToast()
+
+  // Downloads what's on screen, filters included, as a CSV that opens in Excel, Numbers or Sheets
+  const exportTransactions = () => {
+    if (filteredTransactions.length === 0) {
+      toast({ title: 'Nothing to export yet', description: 'Transactions you make will appear here first.' })
+      return
+    }
+    const cell = (value: unknown) => {
+      // Amounts stay numbers so spreadsheets can add them up
+      if (typeof value === 'number') return value.toFixed(2)
+      let text = String(value ?? '')
+      // A leading =, +, - or @ would run as a formula in a spreadsheet
+      if (/^[=+\-@\t\r]/.test(text)) text = `'${text}`
+      return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
+    }
+    const rows = filteredTransactions.map(t => [
+      new Date(t.date).toISOString().slice(0, 10),
+      t.description,
+      t.category,
+      t.type === 'DEPOSIT' ? 'Money in' : 'Money out',
+      t.type === 'DEPOSIT' ? Math.abs(t.amount) : -Math.abs(t.amount),
+      'USD',
+      t.id,
+    ])
+    const csv = [['Date', 'Description', 'Category', 'Type', 'Amount', 'Currency', 'Reference'], ...rows]
+      .map(row => row.map(cell).join(','))
+      .join('\r\n')
+    // The byte-order mark makes Excel read the file as UTF-8
+    const url = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' }))
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `hoardrun-transactions-${new Date().toISOString().slice(0, 10)}.csv`
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    URL.revokeObjectURL(url)
+    toast({ title: 'Export ready', description: `${filteredTransactions.length} transaction${filteredTransactions.length === 1 ? '' : 's'} saved as CSV.` })
+  }
+
   const totalIncome = transactions.filter(t => t.type === 'DEPOSIT').reduce((sum, t) => sum + t.amount, 0)
   const totalExpenses = Math.abs(transactions.filter(t => t.type !== 'DEPOSIT').reduce((sum, t) => sum + t.amount, 0))
   const netAmount = totalIncome - totalExpenses
 
   return (
-    <div className="min-h-screen bg-background w-full">
-      <div className="w-full px-2 pt-16 pb-32 space-y-4 sm:space-y-6">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-                  Transactions
-                </h1>
-                <p className="text-muted-foreground mt-1 text-sm sm:text-base">
-                  View and manage your transaction history
-                </p>
-              </div>
-              <Button className="bg-primary text-primary-foreground hover:bg-primary/90 w-full sm:w-auto">
-                <Receipt className="h-4 w-4 mr-2" />
-                Export
-              </Button>
-            </div>
+    <div className="w-full">
+      <div className="w-full space-y-4 pb-28 sm:space-y-5 lg:pb-8">
+            <PageHero
+              title="Transactions"
+              subtitle="Every dollar in and out of your account."
+              tone="amber"
+              graphic={HexCoinGraphic}
+              figureLabel="Net this month"
+              figure={<CountUp value={netAmount} format={(n) => (n < 0 ? '-' : '') + usd(Math.abs(n))} />}
+              actions={
+                <HeroAction onClick={exportTransactions}>
+                  <Receipt className="h-4 w-4" strokeWidth={2.2} />
+                  Export
+                </HeroAction>
+              }
+            />
 
-            {/* Summary Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Income</CardTitle>
-                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-xl sm:text-2xl font-bold text-foreground">
-                    ${totalIncome.toLocaleString()}
-                  </div>
-                  <p className="text-xs text-muted-foreground">This month</p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
-                  <TrendingDown className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-foreground">
-                    ${totalExpenses.toLocaleString()}
-                  </div>
-                  <p className="text-xs text-muted-foreground">This month</p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Net Amount</CardTitle>
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className={`text-2xl font-bold ${netAmount >= 0 ? 'text-foreground' : 'text-foreground'}`}>
-                    ${Math.abs(netAmount).toLocaleString()}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {netAmount >= 0 ? 'Positive' : 'Negative'} balance
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Transactions</CardTitle>
-                  <Receipt className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-foreground">
-                    {transactions.length}
-                  </div>
-                  <p className="text-xs text-muted-foreground">Total count</p>
-                </CardContent>
-              </Card>
-            </div>
+            <StatPills
+              items={[
+                { label: 'Money in', value: <CountUp value={totalIncome} format={(n) => usd(n, 0)} />, note: 'This month', tone: 'mint', icon: ArrowDownLeft },
+                { label: 'Money out', value: <CountUp value={totalExpenses} format={(n) => usd(n, 0)} />, note: 'This month', tone: 'coral', icon: ArrowUpRight },
+                { label: 'Net amount', value: <CountUp value={Math.abs(netAmount)} format={(n) => usd(n, 0)} />, note: `${netAmount >= 0 ? 'Positive' : 'Negative'} balance`, tone: 'sky', icon: DollarSign },
+                { label: 'Transactions', value: transactions.length, note: 'Total count', tone: 'iris', icon: Receipt },
+              ]}
+            />
 
             {/* Filters */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Filter Transactions</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col sm:flex-row gap-4">
+            <div className="hr-filter-bar hr-rise" style={{ animationDelay: '120ms' }}>
+                <div className="flex flex-col gap-2 sm:flex-row">
                   <div className="flex-1">
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -150,7 +140,7 @@ export default function TransactionsPage() {
                       />
                     </div>
                   </div>
-                  <div className="flex flex-col sm:flex-row gap-4 sm:gap-2">
+                  <div className="grid grid-cols-2 gap-2 sm:flex">
                     <Select value={selectedType} onValueChange={setSelectedType}>
                       <SelectTrigger className="w-full sm:w-[160px]">
                         <SelectValue placeholder="Transaction Type" />
@@ -176,30 +166,38 @@ export default function TransactionsPage() {
                     </Select>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+            </div>
 
             {/* Transactions List */}
             <Card>
-              <CardHeader>
+              <CardHeader className="pb-2">
                 <CardTitle>Recent Transactions</CardTitle>
                 <p className="text-sm text-muted-foreground">
                   {filteredTransactions.length} transactions found
                 </p>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
+                {filteredTransactions.length === 0 && (
+                  <div className="hr-promo !min-h-[170px]" style={{ ['--tone' as string]: '251 191 36' }}>
+                    <span className="hr-promo-art"><CoinsGraphic tone="amber" className="h-full w-full" /></span>
+                    <div className="relative max-w-[62%]">
+                      <h3 className="hr-card-title text-[21px]">{transactions.length === 0 ? 'No transactions yet' : 'Nothing matches'}</h3>
+                      <p className="hr-sub mt-1.5 !text-[#aeaeb2]">{transactions.length === 0 ? 'Add money or send some and it will show up here.' : 'Try another search or filter.'}</p>
+                    </div>
+                  </div>
+                )}
+                <div className="divide-y divide-white/[0.06]">
                   {filteredTransactions.map((transaction) => (
                     <div
                       key={transaction.id}
-                      className="flex items-center justify-between p-3 sm:p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors"
+                      className="hr-tx-row"
                     >
                       <div className="flex items-center space-x-3 sm:space-x-4 flex-1 min-w-0">
-                        <div className={`p-1.5 sm:p-2 rounded-full bg-muted`}>
+                        <div className="hr-tx-icon" data-tone={transaction.type === 'DEPOSIT' ? 'mint' : 'coral'}>
                           {transaction.type === 'DEPOSIT' ? (
-                            <ArrowDownLeft className="h-3 w-3 sm:h-4 sm:w-4 text-foreground" />
+                            <ArrowDownLeft className="h-4 w-4" strokeWidth={2.2} />
                           ) : (
-                            <ArrowUpRight className="h-3 w-3 sm:h-4 sm:w-4 text-foreground" />
+                            <ArrowUpRight className="h-4 w-4" strokeWidth={2.2} />
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -208,7 +206,7 @@ export default function TransactionsPage() {
                         </div>
                       </div>
                       <div className="text-right ml-2">
-                        <p className={`font-bold text-sm sm:text-base text-foreground`}>
+                        <p className={`hr-figure text-[16px] ${transaction.type === 'DEPOSIT' ? 'text-[#6ee7b7]' : 'text-white'}`}>
                           {transaction.type === 'DEPOSIT' ? '+' : '-'}${Math.abs(transaction.amount).toLocaleString()}
                         </p>
                         <p className="text-xs sm:text-sm text-muted-foreground">{new Date(transaction.date).toLocaleDateString()}</p>

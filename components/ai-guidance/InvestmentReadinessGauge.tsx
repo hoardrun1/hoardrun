@@ -95,7 +95,7 @@ export const InvestmentReadinessGauge: React.FC<InvestmentReadinessGaugeProps> =
 
       <CardContent className="space-y-6">
         {/* Overall Score */}
-        <div className="text-center p-6 bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg">
+        <div className="text-center p-6 bg-gradient-to-br from-blue-50 to-blue-50 rounded-lg">
           <div className={`text-6xl font-bold ${config.color} mb-2`}>
             {readiness.overall_score}
           </div>
@@ -161,8 +161,8 @@ export const InvestmentReadinessGauge: React.FC<InvestmentReadinessGaugeProps> =
         )}
 
         {/* Recommended Allocation */}
-        <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
-          <h3 className="font-semibold text-purple-900 mb-3">Recommended Portfolio</h3>
+        <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <h3 className="font-semibold text-blue-900 mb-3">Recommended Portfolio</h3>
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
               <div className="text-2xl font-bold text-blue-600">

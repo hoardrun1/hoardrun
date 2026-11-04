@@ -25,14 +25,14 @@ export function Navigation() {
         <Link href="/" className="flex items-center space-x-2">
           <Image
             src="/hoardrun-logo.png"
-            alt="HoardRun Logo"
+            alt="Hoardrun Logo"
             width={40}
             height={40}
             className="object-contain"
             priority
           />
           <span className="text-xl font-bold bg-gradient-to-r from-gray-200 to-white bg-clip-text text-transparent hidden sm:inline">
-            HoardRun
+            Hoardrun
           </span>
         </Link>
         

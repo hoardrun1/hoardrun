@@ -3,49 +3,55 @@
 import { Button } from '@/components/ui/button'
 import { Loader2 } from 'lucide-react'
 import { useState } from 'react'
-import Image from 'next/image'
-import { apiClient } from '@/lib/api-client'
 import { useToast } from '@/components/ui/use-toast'
 import { useTranslation } from 'react-i18next'
+import { API_BASE_URL } from '@/lib/api-url'
+import { isNativeApp, newGoogleAppProof, openOutside } from '@/lib/native'
 
 interface GoogleSignInButtonProps {
   className?: string
+  // signup only changes Google's wording; either way a new person gets an account and a returning one signs in
+  mode?: 'signin' | 'signup'
 }
 
-export function GoogleSignInButton({ className }: GoogleSignInButtonProps) {
+/** Starts Sign in with Google: the backend makes a one-time state and sends the person to Google's consent page. */
+export function GoogleSignInButton({ className, mode = 'signin' }: GoogleSignInButtonProps) {
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
   const { t } = useTranslation()
 
   const handleGoogleSignIn = async () => {
+    setIsLoading(true)
     try {
-      setIsLoading(true)
-      // Simulate "coming soon" - no actual API call needed for this task
-      await new Promise(resolve => setTimeout(resolve, 1000)) // Brief loading simulation
-
-      // Use alert as fallback to ensure message shows
-      alert("Google login will be available soon");
-
-      // Also try toast if available
-      if (toast) {
-        toast({
-          title: "Google Sign In",
-          description: "Google login will be available soon",
-          variant: "default",
-        })
+      const callbackUrl = new URLSearchParams(window.location.search).get('callbackUrl')
+      // Google won't sign in inside an app, so the app uses the phone's browser and proves it's the same app afterwards
+      const inApp = isNativeApp()
+      const response = await fetch(`${API_BASE_URL}/auth/google/start`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mode,
+          next: callbackUrl || undefined,
+          app_proof_hash: inApp ? await newGoogleAppProof() : undefined,
+        }),
+      })
+      const body = await response.json().catch(() => ({}))
+      if (!response.ok || !body?.url) {
+        throw new Error(typeof body?.detail === 'string' ? body.detail : body?.message || "Couldn't reach Google. Try again.")
       }
+      if (inApp) {
+        await openOutside(body.url)
+        // The app comes back through a hoardrun:// link (components/native/native-shell.tsx)
+        setIsLoading(false)
+        return
+      }
+      window.location.assign(body.url)
     } catch (error) {
-      console.error('Google sign-in error:', error)
-      alert("Google login will be available soon");
-
-      if (toast) {
-        toast({
-          title: "Google Sign In",
-          description: "Google login will be available soon",
-          variant: "default",
-        })
-      }
-    } finally {
+      toast({
+        title: 'Google sign-in',
+        description: error instanceof Error ? error.message : "Couldn't reach Google. Try again.",
+        variant: 'destructive',
+      })
       setIsLoading(false)
     }
   }
@@ -54,7 +60,7 @@ export function GoogleSignInButton({ className }: GoogleSignInButtonProps) {
     <Button
       type="button"
       variant="outline"
-      className={`w-full bg-white hover:bg-gray-50 border-gray-300 text-black py-6 text-base ${className}`}
+      className={`w-full bg-white hover:bg-gray-200 border-gray-300 text-black hover:text-black py-6 text-base ${className}`}
       onClick={handleGoogleSignIn}
       disabled={isLoading}
     >

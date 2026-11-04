@@ -9,15 +9,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { LayoutWrapper } from "@/components/ui/layout-wrapper"
 import { DepositModal } from '@/components/deposit-modal'
 import { useToast } from "@/components/ui/use-toast"
-import { MastercardClient } from '@/lib/mastercard-client'
-import { COUNTRY_CODES, type CountryCode } from '@/lib/constants/country-codes'
-import { SectionFooter } from '@/components/ui/section-footer'
-import { apiClient } from '@/lib/api-client'
+import { apiClient, type IssuedCard } from '@/lib/api-client'
+import { GetHoardrunCardDialog, HoardrunCardDetailsDialog } from '@/components/cards/hoardrun-card'
 import { PlaidLink } from '@/components/plaid/PlaidLink'
 import { DebitCardSelectionModal } from '@/components/DebitCardSelectionModal'
+import { CardManageDialog, type ManagedCard } from '@/components/cards/card-manage'
 
 interface CardData {
   id: string
@@ -29,6 +27,11 @@ interface CardData {
   isContactless: boolean
   network: 'mastercard' | 'visa' | 'american_express' | 'discover'
   status: 'active' | 'inactive' | 'blocked' | 'locked' | 'frozen' | 'lost'
+  onlinePayments: boolean
+  isDefault: boolean
+  perTransactionLimit: number | null
+  monthlyLimit: number | null
+  source: string
 }
 
 const mapPaymentMethodToCard = (paymentMethod: any): CardData | null => {
@@ -58,7 +61,12 @@ const mapPaymentMethodToCard = (paymentMethod: any): CardData | null => {
     expiryDate,
     cardholderName: paymentMethod.card_holder_name || 'Card Holder',
     isLocked,
-    isContactless: true,
+    isContactless: paymentMethod.contactless ?? true,
+    onlinePayments: paymentMethod.online_payments ?? true,
+    isDefault: !!paymentMethod.is_default,
+    perTransactionLimit: paymentMethod.per_transaction_limit ?? null,
+    monthlyLimit: paymentMethod.monthly_limit ?? null,
+    source: paymentMethod.source || 'manual',
     network: networkMap[paymentMethod.card_type] || 'visa',
     status: paymentMethod.status === 'active' ? 'active' : 
             paymentMethod.status === 'inactive' ? 'inactive' : 'blocked'
@@ -74,7 +82,58 @@ export function CardsPageComponent() {
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false)
   const [selectedCard, setSelectedCard] = useState<string | null>(null)
   const [isDebitCardModalOpen, setIsDebitCardModalOpen] = useState(false)
+  const [manageId, setManageId] = useState<string | null>(null)
+  // The open Manage sheet follows the list, so its switches show what was just saved
+  const managed = cards.find(c => c.id === manageId) ?? null
   const { addToast } = useToast()
+  // Hoardrun cards: virtual Visa cards issued by Stripe that spend from Hoardrun cash
+  const [issued, setIssued] = useState<IssuedCard[]>([])
+  const [hasBillingAddress, setHasBillingAddress] = useState(false)
+  const [issuing, setIssuing] = useState<{ configured: boolean; publishable_key: string | null; monthly_limit: number }>({ configured: false, publishable_key: null, monthly_limit: 2000 })
+  const [getCardOpen, setGetCardOpen] = useState(false)
+  const [detailsCard, setDetailsCard] = useState<IssuedCard | null>(null)
+
+  const fetchIssued = async () => {
+    const [config, list] = await Promise.all([apiClient.getIssuingConfig(), apiClient.getIssuedCards()])
+    if (config.data) setIssuing(config.data)
+    if (list.data) {
+      setIssued(list.data.cards)
+      setHasBillingAddress(list.data.has_billing_address)
+    }
+  }
+
+  useEffect(() => {
+    fetchIssued()
+  }, [])
+
+  const openGetCard = () => {
+    if (!issuing.configured) {
+      addToast({ title: "Hoardrun cards", description: "Hoardrun cards aren't set up yet." })
+      return
+    }
+    setGetCardOpen(true)
+  }
+
+  const toggleIssuedFreeze = async (card: IssuedCard) => {
+    const response = await apiClient.setIssuedCardFrozen(card.id, card.status === 'active')
+    if (response.error || !response.data) {
+      addToast({ title: "Couldn't update the card", description: response.error || 'Please try again.', variant: 'destructive' })
+      return
+    }
+    setIssued((list) => list.map((c) => (c.id === card.id ? response.data! : c)))
+    addToast({ title: response.data.status === 'frozen' ? 'Card frozen' : 'Card unfrozen', description: response.data.status === 'frozen' ? 'Payments with it are declined until you unfreeze it.' : 'It works again.' })
+  }
+
+  const cancelIssued = async (card: IssuedCard) => {
+    if (!window.confirm(`Cancel the card ending ${card.last4}? This can't be undone; purchases already approved still go through.`)) return
+    const response = await apiClient.cancelIssuedCard(card.id)
+    if (response.error) {
+      addToast({ title: "Couldn't cancel the card", description: response.error, variant: 'destructive' })
+      return
+    }
+    setIssued((list) => list.filter((c) => c.id !== card.id))
+    addToast({ title: 'Card cancelled', description: `The card ending ${card.last4} no longer works.` })
+  }
 
   const fetchPaymentMethods = async () => {
     try {
@@ -158,8 +217,12 @@ export function CardsPageComponent() {
 
   const toggleContactless = async (cardId: string) => {
     try {
-      setCards(cards.map(card =>
-        card.id === cardId ? { ...card, isContactless: !card.isContactless } : card
+      const card = cards.find(c => c.id === cardId)
+      if (!card) return
+      const response = await apiClient.updatePaymentMethod(cardId, { contactless: !card.isContactless })
+      if (response.error) throw new Error(response.error)
+      setCards(cards.map(c =>
+        c.id === cardId ? { ...c, isContactless: !c.isContactless } : c
       ))
 
       addToast({
@@ -177,425 +240,222 @@ export function CardsPageComponent() {
     }
   }
 
-  const handleIssueVirtualCard = async () => {
-    try {
-      const userResponse = await apiClient.getProfile()
-      
-      if (userResponse.error) {
-        throw new Error(userResponse.error)
-      }
+  const activeCount = cards.filter(card => card.status === 'active').length + issued.filter(card => card.status === 'active').length
+  const totalCount = cards.length + issued.length
 
-      const user = userResponse.data
-      const country = ((user as any)?.country as CountryCode) || process.env.NEXT_PUBLIC_MASTERCARD_COUNTRY
-
-      if (!(country in COUNTRY_CODES)) {
-        throw new Error('Invalid country configuration')
-      }
-
-      const mastercardClient = new MastercardClient({
-        apiKey: process.env.NEXT_PUBLIC_MASTERCARD_API_KEY!,
-        partnerId: process.env.NEXT_PUBLIC_MASTERCARD_PARTNER_ID!,
-        environment: process.env.NODE_ENV === 'production' ? 'production' : 'sandbox',
-        clientId: process.env.MASTERCARD_CLIENT_ID!,
-        orgName: process.env.MASTERCARD_ORG_NAME!,
-        country: country,
-      })
-    } catch (error) {
-      addToast({
-        title: "Error",
-        description: "Failed to issue virtual card",
-        variant: "destructive",
-      })
-    }
-  }
-
-  const getNetworkGradient = (network: string) => {
-    switch (network) {
-      case 'mastercard':
-        return 'from-orange-500 via-red-500 to-pink-500'
-      case 'visa':
-        return 'from-blue-600 via-blue-700 to-indigo-700'
-      case 'american_express':
-        return 'from-blue-400 via-cyan-500 to-teal-500'
-      case 'discover':
-        return 'from-orange-400 via-amber-500 to-yellow-500'
-      default:
-        return 'from-purple-500 via-purple-600 to-indigo-600'
-    }
-  }
+  const addCardDialog = (trigger: React.ReactNode, title: string, description: string) => (
+    <Dialog>
+      <DialogTrigger asChild>{trigger}</DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="font-bold text-xl">{title}</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-3 py-4">
+          <button onClick={openGetCard} className="hr-card-option hr-focus">
+            <span className="hr-card-option-art" aria-hidden="true"><CardFace network="visa" mini /></span>
+            <span className="min-w-0 flex-1 text-left">
+              <span className="block font-semibold text-foreground">Get a Hoardrun card</span>
+              <span className="block text-sm text-muted-foreground">A virtual Visa that spends from your Hoardrun cash</span>
+            </span>
+            <ChevronRight className="h-4 w-4 text-[#8e8e93]" />
+          </button>
+          <button onClick={() => setIsDebitCardModalOpen(true)} className="hr-card-option hr-focus">
+            <span className="hr-card-option-art" aria-hidden="true"><CardFace network="visa" mini /></span>
+            <span className="min-w-0 flex-1 text-left">
+              <span className="block font-semibold text-foreground">Add Debit Card</span>
+              <span className="block text-sm text-muted-foreground">{description}</span>
+            </span>
+            <ChevronRight className="h-4 w-4 text-[#8e8e93]" />
+          </button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
 
   return (
-    <React.Fragment>
-      <LayoutWrapper className="min-h-screen pb-4 px-3 sm:px-4 lg:px-6" showBreadcrumbs={false}>
-
-      {/* Floating Header */}
-      <header className="sticky top-14 sm:top-16 z-30 bg-background/80 backdrop-blur-xl border-b border-border/50 shadow-sm">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
-          <div className="flex items-center justify-between py-3 sm:py-4 gap-3">
-            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-              <div className="p-2 sm:p-2.5 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
-                <CreditCard className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <h1 className="text-xl sm:text-2xl lg:text-3xl text-foreground font-bold truncate">Cards</h1>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <span className="px-2 sm:px-3 py-0.5 sm:py-1 text-xs font-semibold bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-full shadow-sm">
-                    {loading ? '...' : `${cards.filter(card => card.status === 'active').length} Active`}
-                  </span>
-                  <span className="hidden sm:inline text-xs text-muted-foreground">
-                    {loading ? '...' : `${cards.length} Total`}
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="hidden lg:inline-flex text-sm hover:bg-accent transition-all"
-                onClick={() => router.push('/cards/settings')}
-              >
-                <Settings className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Settings</span>
-              </Button>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button size="sm" className="font-medium shadow-md hover:shadow-lg transition-all bg-gradient-to-r from-primary to-primary/90">
-                    <Plus className="h-4 w-4 sm:mr-2" />
-                    <span className="hidden sm:inline">New Card</span>
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
-                  <DialogHeader>
-                    <DialogTitle className="font-bold text-xl">Request New Card</DialogTitle>
-                  </DialogHeader>
-                  <div className="grid gap-3 py-4">
-                    <Card
-                      className="cursor-pointer hover:border-primary hover:shadow-lg transition-all group"
-                      onClick={() => setIsDebitCardModalOpen(true)}
-                    >
-                      <CardContent className="flex items-center p-4 sm:p-6">
-                        <div className="mr-4 p-3 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 group-hover:from-primary/20 group-hover:to-primary/10 transition-all">
-                          <CreditCard className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-foreground">Add Debit Card</h3>
-                          <p className="text-sm text-muted-foreground">Enter your debit card details to add it</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </div>
+    <div className="space-y-5 sm:space-y-6">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="hr-title">Cards</h1>
+          <div className="mt-2 flex items-center gap-2 text-[13px]">
+            <span className="hr-card-count">{loading ? '…' : `${activeCount} active`}</span>
+            <span className="text-[#8e8e93]">{loading ? '' : `${totalCount} total`}</span>
           </div>
         </div>
-      </header>
+        <div className="flex items-center gap-2">
+          <button onClick={() => router.push('/cards/settings')} className="hr-pill hr-focus" aria-label="Card settings">
+            <Settings className="h-4 w-4" strokeWidth={2} />
+            <span className="hidden sm:inline">Settings</span>
+          </button>
+          {addCardDialog(
+            <button className="hr-pill hr-focus" data-primary="true"><Plus className="h-4 w-4" strokeWidth={2.4} />New card</button>,
+            'Request New Card',
+            'Enter your debit card details to add it'
+          )}
+        </div>
+      </div>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-6 sm:py-8 lg:py-10 pb-24">
-        {loading ? (
-          <div className="flex flex-col items-center justify-center py-16 sm:py-24">
-            <div className="relative">
-              <Loader2 className="h-12 w-12 sm:h-16 sm:w-16 animate-spin text-primary" />
-              <div className="absolute inset-0 h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-primary/20 animate-ping" />
-            </div>
-            <span className="mt-4 text-base sm:text-lg text-muted-foreground font-medium">Loading your cards...</span>
-          </div>
-        ) : error ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col items-center justify-center py-16 sm:py-24"
-          >
-            <div className="p-4 sm:p-6 rounded-full bg-destructive/10 mb-4 sm:mb-6">
-              <AlertCircle className="h-12 w-12 sm:h-16 sm:w-16 text-destructive" />
-            </div>
-            <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-2 text-center px-4">Failed to load cards</h3>
-            <p className="text-sm sm:text-base text-muted-foreground mb-6 text-center px-4">{error}</p>
-            <Button 
-              onClick={() => window.location.reload()} 
-              variant="outline"
-              className="shadow-md hover:shadow-lg transition-all"
-            >
-              Try Again
-            </Button>
-          </motion.div>
-        ) : cards.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col items-center justify-center py-16 sm:py-24"
-          >
-            <div className="p-6 sm:p-8 rounded-full bg-gradient-to-br from-primary/10 to-primary/5 mb-6">
-              <CreditCard className="h-16 w-16 sm:h-20 sm:w-20 text-primary" />
-            </div>
-            <h3 className="text-xl sm:text-2xl font-semibold text-foreground mb-2 text-center px-4">No cards found</h3>
-            <p className="text-sm sm:text-base text-muted-foreground mb-6 text-center px-4 max-w-md">You don't have any cards yet. Add your first card to get started.</p>
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button className="shadow-md hover:shadow-lg transition-all">
-                  <Plus className="h-4 w-4 mr-2" /> Add Card
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle className="font-bold text-xl">Add New Card</DialogTitle>
-                </DialogHeader>
-                <div className="grid gap-3 py-4">
-                  <Card
-                    className="cursor-pointer hover:border-primary hover:shadow-lg transition-all group"
-                    onClick={() => setIsDebitCardModalOpen(true)}
-                  >
-                    <CardContent className="flex items-center p-4 sm:p-6">
-                      <div className="mr-4 p-3 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 group-hover:from-primary/20 group-hover:to-primary/10 transition-all">
-                        <CreditCard className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-foreground">Link Debit Card</h3>
-                        <p className="text-sm text-muted-foreground">Connect your bank account to add debit cards</p>
-                      </div>
-                    </CardContent>
-                  </Card>
+      {issued.length > 0 && (
+        <section aria-label="Hoardrun cards" className="space-y-3">
+          <h2 className="hr-card-title text-[20px]">Hoardrun cards</h2>
+          <div className="grid gap-5 lg:grid-cols-2">
+            {issued.map((card) => (
+              <div key={card.id} className="hr-wallet-item">
+                <CardFace
+                  network="visa"
+                  type="virtual"
+                  lastFour={card.last4}
+                  holder="Hoardrun"
+                  expiry={card.exp_month && card.exp_year ? `${String(card.exp_month).padStart(2, '0')}/${String(card.exp_year).slice(-2)}` : '••/••'}
+                  locked={card.status === 'frozen'}
+                />
+                <div className="mt-4 grid grid-cols-3 gap-2">
+                  <button onClick={() => toggleIssuedFreeze(card)} className="hr-card-action hr-focus" data-on={card.status === 'frozen'}>
+                    <span className="hr-card-action-icon" data-tone="coral"><Lock className="h-[18px] w-[18px]" strokeWidth={2} /></span>
+                    {card.status === 'frozen' ? 'Unfreeze' : 'Freeze'}
+                  </button>
+                  <button onClick={() => setDetailsCard(card)} className="hr-card-action hr-focus">
+                    <span className="hr-card-action-icon" data-tone="sky"><Eye className="h-[18px] w-[18px]" strokeWidth={2} /></span>
+                    Details
+                  </button>
+                  <button onClick={() => cancelIssued(card)} className="hr-card-action hr-focus">
+                    <span className="hr-card-action-icon" data-tone="iris"><Trash2 className="h-[18px] w-[18px]" strokeWidth={2} /></span>
+                    Cancel
+                  </button>
                 </div>
-              </DialogContent>
-            </Dialog>
-          </motion.div>
-        ) : (
-          <div className="grid gap-4 sm:gap-6">
-            <AnimatePresence mode="popLayout">
-              {cards.map((card, index) => (
+                {card.monthly_limit != null && (
+                  <p className="mt-2 text-center text-[12.5px] text-[#8e8e93]">Spends from your Hoardrun cash · up to ${card.monthly_limit.toLocaleString('en-US')} a month</p>
+                )}
+              </div>
+            ))}
+          </div>
+          {cards.length > 0 && <h2 className="hr-card-title pt-2 text-[20px]">Saved cards</h2>}
+        </section>
+      )}
+
+      {loading ? (
+        <div className="grid gap-5 lg:grid-cols-2">
+          {[0, 1].map((key) => <div key={key} className="hr-skeleton aspect-[1.586] !rounded-[24px]" />)}
+        </div>
+      ) : error ? (
+        <div className="hr-promo">
+          <div className="relative">
+            <h2 className="hr-card-title text-[22px]">Failed to load cards</h2>
+            <p className="hr-sub mt-1.5">{error}</p>
+            <button onClick={() => window.location.reload()} className="hr-focus mt-4 inline-flex h-10 items-center rounded-full bg-white px-4 text-sm font-medium text-black">Try again</button>
+          </div>
+        </div>
+      ) : cards.length === 0 && issued.length > 0 ? null : cards.length === 0 ? (
+        <section className="hr-wallet-empty">
+          <div className="hr-wallet-stack" aria-hidden="true">
+            {(['discover', 'mastercard', 'visa'] as const).map((network, index) => (
               <motion.div
+                key={network}
+                className="hr-wallet-stack-card"
+                style={{ zIndex: index }}
+                initial={{ opacity: 0, y: 40, rotate: 0 }}
+                animate={{ opacity: 1, y: index * -26, rotate: (index - 1) * -7, x: (index - 1) * 18 }}
+                transition={{ type: 'spring', stiffness: 120, damping: 16, delay: index * 0.08 }}
+              >
+                <CardFace network={network} />
+              </motion.div>
+            ))}
+          </div>
+          <div className="relative text-center lg:text-left">
+            <h2 className="hr-card-title text-[26px] sm:text-[30px]">No cards yet</h2>
+            <p className="hr-sub mx-auto mt-2 max-w-sm lg:mx-0">Get a Hoardrun card to spend your cash anywhere Visa works, or add a debit card. Freeze either in a tap.</p>
+            <div className="mt-4 flex flex-wrap justify-center gap-2 lg:justify-start">
+              {[{ icon: Lock, label: 'Lock in a tap' }, { icon: Wifi, label: 'Contactless control' }, { icon: Eye, label: 'Details on demand' }].map(({ icon: Icon, label }) => (
+                <span key={label} className="hr-feature-chip"><Icon className="h-3.5 w-3.5" strokeWidth={2} />{label}</span>
+              ))}
+            </div>
+            <div className="mt-5">
+              {addCardDialog(
+                <button className="hr-focus inline-flex h-12 items-center gap-2 rounded-full bg-white px-6 text-[15px] font-medium text-black"><Plus className="h-4 w-4" strokeWidth={2.4} />Add card</button>,
+                'Add New Card',
+                'Connect your bank account to add debit cards'
+              )}
+            </div>
+          </div>
+        </section>
+      ) : (
+        <div className="grid gap-5 lg:grid-cols-2">
+          <AnimatePresence mode="popLayout">
+            {cards.map((card, index) => (
+              <motion.section
                 key={card.id}
                 layout
-                initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: -20 }}
-                transition={{ 
-                  duration: 0.4, 
-                  delay: index * 0.1,
-                  layout: { duration: 0.3 }
-                }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.35, delay: index * 0.06 }}
+                className="hr-wallet-item"
               >
-                <Card className={`overflow-hidden transition-all duration-300 border-2 shadow-md hover:shadow-xl ${
-                  card.isLocked 
-                    ? 'bg-secondary/30 border-muted/50'
-                    : 'bg-card border-border hover:border-primary/50'
-                }`}>
-                  <CardContent className="p-4 sm:p-6">
-                    {/* Card Visual Representation */}
-                    <div className="mb-4 sm:mb-6">
-                      <motion.div 
-                        whileHover={{ scale: 1.02 }}
-                        className={`relative h-48 sm:h-56 rounded-2xl bg-gradient-to-br ${getNetworkGradient(card.network)} p-5 sm:p-6 text-white shadow-2xl overflow-hidden`}
-                      >
-                        <div className="absolute inset-0 bg-black/5 backdrop-blur-[1px]" />
-                        <div className="absolute top-0 right-0 w-48 h-48 sm:w-64 sm:h-64 bg-white/5 rounded-full -mr-24 -mt-24" />
-                        <div className="absolute bottom-0 left-0 w-32 h-32 sm:w-48 sm:h-48 bg-black/10 rounded-full -ml-16 -mb-16" />
-                        
-                        <div className="relative z-10 h-full flex flex-col justify-between">
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <div className="text-xs sm:text-sm opacity-80 mb-1 font-medium">
-                                {card.type === 'physical' ? 'Physical Card' : 'Virtual Card'}
-                              </div>
-                              {card.isContactless && card.type === 'physical' && (
-                                <div className="flex items-center gap-1 text-xs opacity-90">
-                                  <Wifi className="h-3 w-3 rotate-90" />
-                                  <span className="font-medium">Contactless</span>
-                                </div>
-                              )}
-                            </div>
-                            <div className="text-right">
-                              <div className="text-xl sm:text-2xl font-bold uppercase tracking-wider">
-                                {card.network}
-                              </div>
-                              {card.isLocked && (
-                                <div className="mt-1 px-2 py-0.5 bg-black/30 rounded-full flex items-center gap-1 text-xs backdrop-blur-sm">
-                                  <Lock className="h-3 w-3" />
-                                  <span className="font-semibold">Locked</span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          
-                          <div>
-                            <div className="flex items-center gap-2 mb-3 sm:mb-4">
-                              <div className="text-2xl sm:text-3xl font-bold tracking-[0.2em]">
-                                •••• {card.lastFourDigits}
-                              </div>
-                              <button
-                                onClick={() => toggleCardDetails(card.id)}
-                                className="p-1.5 sm:p-2 rounded-lg bg-white/20 hover:bg-white/30 transition-all backdrop-blur-sm"
-                              >
-                                {showCardDetails[card.id] ? (
-                                  <EyeOff className="h-4 w-4" />
-                                ) : (
-                                  <Eye className="h-4 w-4" />
-                                )}
-                              </button>
-                            </div>
-                            
-                            <div className="flex items-end justify-between">
-                              <div>
-                                <div className="text-xs opacity-70 mb-0.5 font-medium">Cardholder</div>
-                                <div className="text-sm sm:text-base font-semibold uppercase tracking-wide">
-                                  {card.cardholderName}
-                                </div>
-                              </div>
-                              <div className="text-right">
-                                <div className="text-xs opacity-70 mb-0.5 font-medium">Expires</div>
-                                <div className="text-sm sm:text-base font-semibold tracking-wider">
-                                  {card.expiryDate}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </motion.div>
-                    </div>
+                <motion.div whileHover={{ rotateX: 4, rotateY: -6, y: -4 }} transition={{ type: 'spring', stiffness: 200, damping: 18 }} style={{ transformPerspective: 900 }}>
+                  <CardFace
+                    network={card.network}
+                    type={card.type}
+                    lastFour={card.lastFourDigits}
+                    holder={card.cardholderName}
+                    expiry={card.expiryDate}
+                    locked={card.isLocked}
+                    contactless={card.isContactless}
+                  />
+                </motion.div>
 
-                    {/* Card Details Expansion */}
-                    <AnimatePresence>
-                      {showCardDetails[card.id] && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: 'auto', opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.3 }}
-                          className="mb-4 sm:mb-6 overflow-hidden"
-                        >
-                          <div className="p-4 sm:p-5 rounded-xl bg-secondary/30 border border-border">
-                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                              <div className="space-y-1">
-                                <div className="text-xs text-muted-foreground font-medium">Card Number</div>
-                                <div className="font-bold text-foreground text-sm sm:text-base">•••• •••• •••• {card.lastFourDigits}</div>
-                              </div>
-                              <div className="space-y-1">
-                                <div className="text-xs text-muted-foreground font-medium">Expiry Date</div>
-                                <div className="font-bold text-foreground text-sm sm:text-base">{card.expiryDate}</div>
-                              </div>
-                              <div className="space-y-1">
-                                <div className="text-xs text-muted-foreground font-medium">Cardholder</div>
-                                <div className="font-bold text-foreground text-sm sm:text-base truncate">{card.cardholderName}</div>
-                              </div>
-                              <div className="space-y-1">
-                                <div className="text-xs text-muted-foreground font-medium">CVV</div>
-                                <div className="font-bold text-foreground text-sm sm:text-base">•••</div>
-                              </div>
-                            </div>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                <div className="mt-4 grid grid-cols-3 gap-2">
+                  <button onClick={() => toggleCardLock(card.id)} className="hr-card-action hr-focus" data-on={card.isLocked}>
+                    <span className="hr-card-action-icon" data-tone="coral"><Lock className="h-[18px] w-[18px]" strokeWidth={2} /></span>
+                    {card.isLocked ? 'Unlock' : 'Lock'}
+                  </button>
+                  <button onClick={() => toggleCardDetails(card.id)} className="hr-card-action hr-focus" data-on={!!showCardDetails[card.id]}>
+                    <span className="hr-card-action-icon" data-tone="sky">{showCardDetails[card.id] ? <EyeOff className="h-[18px] w-[18px]" strokeWidth={2} /> : <Eye className="h-[18px] w-[18px]" strokeWidth={2} />}</span>
+                    {showCardDetails[card.id] ? 'Hide' : 'Details'}
+                  </button>
+                  <button onClick={() => setManageId(card.id)} className="hr-card-action hr-focus">
+                    <span className="hr-card-action-icon" data-tone="iris"><Settings className="h-[18px] w-[18px]" strokeWidth={2} /></span>
+                    Manage
+                  </button>
+                </div>
 
-                    {/* Card Controls */}
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
-                      <div className="flex flex-col sm:flex-row flex-1 gap-3 sm:gap-4">
-                        <div className="flex items-center justify-between sm:justify-start gap-3 p-3 rounded-lg bg-secondary/30 border border-border flex-1">
-                          <span className="text-sm text-foreground font-medium whitespace-nowrap">
-                            {card.isLocked ? 'Unlock card' : 'Lock card'}
-                          </span>
-                          <Switch
-                            checked={!card.isLocked}
-                            onCheckedChange={() => toggleCardLock(card.id)}
-                            className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-muted"
-                          />
-                        </div>
-                        
-                        {card.type === 'physical' && (
-                          <div className="flex items-center justify-between sm:justify-start gap-3 p-3 rounded-lg bg-secondary/30 border border-border flex-1">
-                            <span className="text-sm text-foreground font-medium whitespace-nowrap">
-                              Contactless
-                            </span>
-                            <Switch
-                              checked={card.isContactless}
-                              onCheckedChange={() => toggleContactless(card.id)}
-                              className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-muted"
-                            />
-                          </div>
-                        )}
-                      </div>
-                      
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button
-                            variant="outline"
-                            className="font-medium shadow-sm hover:shadow-md transition-all w-full sm:w-auto"
-                          >
-                            <Settings className="h-4 w-4 mr-2" />
-                            Manage Card
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-md">
-                          <DialogHeader>
-                            <DialogTitle className="font-bold text-xl">Manage Card</DialogTitle>
-                          </DialogHeader>
-                          <div className="grid gap-3 py-4">
-                            <Card className="cursor-pointer hover:border-primary hover:shadow-lg transition-all group">
-                              <CardContent className="flex items-center p-4 sm:p-6">
-                                <div className="mr-4 p-3 rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-500/5 group-hover:from-blue-500/20 group-hover:to-blue-500/10 transition-all">
-                                  <BarChart2 className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 dark:text-blue-400" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <h3 className="font-semibold text-foreground">View Transactions</h3>
-                                  <p className="text-sm text-muted-foreground">See recent card activity</p>
-                                </div>
-                              </CardContent>
-                            </Card>
-                            <Card className="cursor-pointer hover:border-primary hover:shadow-lg transition-all group">
-                              <CardContent className="flex items-center p-4 sm:p-6">
-                                <div className="mr-4 p-3 rounded-xl bg-gradient-to-br from-green-500/10 to-green-500/5 group-hover:from-green-500/20 group-hover:to-green-500/10 transition-all">
-                                  <DollarSign className="h-6 w-6 sm:h-8 sm:w-8 text-green-600 dark:text-green-400" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <h3 className="font-semibold text-foreground">Set Spending Limits</h3>
-                                  <p className="text-sm text-muted-foreground">Control your spending</p>
-                                </div>
-                              </CardContent>
-                            </Card>
-                            <Card className="cursor-pointer hover:border-primary hover:shadow-lg transition-all group">
-                              <CardContent className="flex items-center p-4 sm:p-6">
-                                <div className="mr-4 p-3 rounded-xl bg-gradient-to-br from-red-500/10 to-red-500/5 group-hover:from-red-500/20 group-hover:to-red-500/10 transition-all">
-                                  <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-red-600 dark:text-red-400" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <h3 className="font-semibold text-foreground">Security Settings</h3>
-                                  <p className="text-sm text-muted-foreground">Manage card security</p>
-                                </div>
-                              </CardContent>
-                            </Card>
-                            <Card className="cursor-pointer hover:border-primary hover:shadow-lg transition-all group">
-                              <CardContent className="flex items-center p-4 sm:p-6">
-                                <div className="mr-4 p-3 rounded-xl bg-gradient-to-br from-purple-500/10 to-purple-500/5 group-hover:from-purple-500/20 group-hover:to-purple-500/10 transition-all">
-                                  <Download className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600 dark:text-purple-400" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <h3 className="font-semibold text-foreground">Download Statement</h3>
-                                  <p className="text-sm text-muted-foreground">Get card statement</p>
-                                </div>
-                              </CardContent>
-                            </Card>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
-        )}
-      </main>
+                <AnimatePresence>
+                  {showCardDetails[card.id] && (
+                    <motion.dl
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3 overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4 text-[13px] sm:grid-cols-4"
+                    >
+                      <div><dt className="text-[#8e8e93]">Card number</dt><dd className="mt-0.5 font-medium tabular-nums">•••• {card.lastFourDigits}</dd></div>
+                      <div><dt className="text-[#8e8e93]">Expiry</dt><dd className="mt-0.5 font-medium tabular-nums">{card.expiryDate}</dd></div>
+                      <div><dt className="text-[#8e8e93]">Cardholder</dt><dd className="mt-0.5 truncate font-medium">{card.cardholderName}</dd></div>
+                      <div><dt className="text-[#8e8e93]">CVV</dt><dd className="mt-0.5 font-medium">•••</dd></div>
+                    </motion.dl>
+                  )}
+                </AnimatePresence>
 
-      <SectionFooter section="financial" activePage="/cards" />
+                {card.type === 'physical' && (
+                  <div className="mt-3 flex items-center justify-between rounded-2xl border border-white/[0.08] bg-white/[0.03] px-4 py-3">
+                    <span className="inline-flex items-center gap-2 text-[14px]"><Wifi className="h-4 w-4 rotate-90 text-[#7dd3fc]" strokeWidth={2} />Contactless</span>
+                    <Switch checked={card.isContactless} onCheckedChange={() => toggleContactless(card.id)} />
+                  </div>
+                )}
+              </motion.section>
+            ))}
+          </AnimatePresence>
+        </div>
+      )}
 
-      <DepositModal
-        open={isDepositModalOpen}
-        onOpenChange={setIsDepositModalOpen}
+      <DepositModal open={isDepositModalOpen} onOpenChange={setIsDepositModalOpen} />
+      <GetHoardrunCardDialog
+        open={getCardOpen}
+        onOpenChange={setGetCardOpen}
+        needsAddress={!hasBillingAddress}
+        monthlyLimit={issuing.monthly_limit}
+        onCreated={() => fetchIssued()}
       />
-
+      <HoardrunCardDetailsDialog card={detailsCard} publishableKey={issuing.publishable_key} onOpenChange={(open) => { if (!open) setDetailsCard(null) }} />
+      <CardManageDialog card={managed as ManagedCard | null} onClose={() => setManageId(null)} onChanged={fetchPaymentMethods} />
       <DebitCardSelectionModal
         open={isDebitCardModalOpen}
         onOpenChange={setIsDebitCardModalOpen}
@@ -604,7 +464,66 @@ export function CardsPageComponent() {
           fetchPaymentMethods()
         }}
       />
-      </LayoutWrapper>
-    </React.Fragment>
+    </div>
+  )
+}
+
+const CARD_FINISH: Record<CardData['network'], { className: string; label: string }> = {
+  visa: { className: 'hr-cardface-visa', label: 'VISA' },
+  mastercard: { className: 'hr-cardface-mastercard', label: 'mastercard' },
+  american_express: { className: 'hr-cardface-amex', label: 'AMEX' },
+  discover: { className: 'hr-cardface-discover', label: 'DISCOVER' },
+}
+
+/** A card drawn like the real thing: tinted glass, a chip, sheen and the network mark. */
+function CardFace({ network, type = 'virtual', lastFour = '0000', holder = 'Hoardrun', expiry = '••/••', locked = false, contactless = false, mini = false }: {
+  network: CardData['network']; type?: CardData['type']; lastFour?: string; holder?: string; expiry?: string; locked?: boolean; contactless?: boolean; mini?: boolean
+}) {
+  const finish = CARD_FINISH[network] ?? CARD_FINISH.visa
+  return (
+    <div className={`hr-cardface ${finish.className} ${mini ? 'hr-cardface-mini' : ''}`} data-locked={locked}>
+      <span className="hr-cardface-sheen" aria-hidden="true" />
+      <span className="hr-cardface-orb" aria-hidden="true" />
+      {!mini && (
+        <div className="relative z-[1] flex h-full flex-col justify-between">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-[12px] font-medium uppercase tracking-[0.14em] text-white/75">{type === 'physical' ? 'Physical' : 'Virtual'}</p>
+              {contactless && type === 'physical' && <Wifi className="mt-1.5 h-4 w-4 rotate-90 text-white/85" strokeWidth={2} />}
+            </div>
+            {locked ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-black/40 px-2.5 py-1 text-[11px] font-semibold backdrop-blur"><Lock className="h-3 w-3" />Locked</span>
+            ) : (
+              <span className="text-[13px] font-semibold text-white/80">Hoardrun</span>
+            )}
+          </div>
+          <div className="flex items-center gap-3">
+            <svg viewBox="0 0 44 34" className="h-8 w-11" aria-hidden="true">
+              <defs>
+                <linearGradient id={`chip-${network}`} x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stopColor="#fff7d6" /><stop offset="0.5" stopColor="#e6c36a" /><stop offset="1" stopColor="#a37b1e" />
+                </linearGradient>
+              </defs>
+              <rect x="1" y="1" width="42" height="32" rx="7" fill={`url(#chip-${network})`} />
+              <path d="M1 12h12M1 22h12M31 12h12M31 22h12M13 1v32M31 1v32M13 17h18" stroke="#7a5a12" strokeOpacity="0.55" fill="none" />
+            </svg>
+            <p className="hr-figure text-[22px] tracking-[0.12em] sm:text-[24px]">•••• {lastFour}</p>
+          </div>
+          <div className="flex items-end justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[10.5px] uppercase tracking-[0.12em] text-white/60">Cardholder</p>
+              <p className="truncate text-[14px] font-semibold uppercase tracking-wide">{holder}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-[10.5px] uppercase tracking-[0.12em] text-white/60">Expires</p>
+              <p className="text-[14px] font-semibold tabular-nums">{expiry}</p>
+            </div>
+            <p className={`hr-cardface-mark ${network === 'mastercard' ? 'hr-cardface-mark-mc' : ''}`}>
+              {network === 'mastercard' ? <><span /><span /></> : finish.label}
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
   )
 }

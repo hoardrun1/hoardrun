@@ -13,6 +13,8 @@ interface AutomatedSavingDialogProps {
   onOpenChange: (open: boolean) => void
   form: any
   setForm: (form: any) => void
+  onSubmit?: () => void
+  submitting?: boolean
 }
 
 const formatCurrency = (amount: number) => {
@@ -22,7 +24,7 @@ const formatCurrency = (amount: number) => {
   }).format(amount)
 }
 
-export function AutomatedSavingDialog({ open, onOpenChange, form, setForm }: AutomatedSavingDialogProps) {
+export function AutomatedSavingDialog({ open, onOpenChange, form, setForm, onSubmit, submitting }: AutomatedSavingDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[95vw] sm:max-w-lg max-h-[90vh] overflow-y-auto p-4 sm:p-6">
@@ -119,9 +121,9 @@ export function AutomatedSavingDialog({ open, onOpenChange, form, setForm }: Aut
             </div>
           )}
 
-          <Button className="w-full h-9 sm:h-10 text-sm font-semibold">
+          <Button onClick={onSubmit} disabled={submitting} className="w-full h-9 sm:h-10 text-sm font-semibold">
             <Repeat className="h-3.5 w-3.5 mr-1.5" />
-            Create Auto Save
+            {submitting ? "Creating…" : "Create Auto Save"}
           </Button>
         </div>
       </DialogContent>

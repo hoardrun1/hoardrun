@@ -147,7 +147,8 @@ class ApiClient {
 
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    isRetry = false
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseUrl}${endpoint}`
     
@@ -202,6 +203,14 @@ class ApiClient {
             }
           }
 
+          // A fresh token was already rejected, so refreshing again cannot help.
+          if (isRetry) {
+            return {
+              error: data.detail || data.message || 'You are not authorized to do that.',
+              status: response.status,
+            }
+          }
+
           console.log('Token expired - attempting refresh')
 
           if (this._isRefreshing && this._refreshPromise) {
@@ -210,7 +219,7 @@ class ApiClient {
             
             if (newToken) {
               console.log('Retrying request with refreshed token')
-              return this.request(endpoint, options)
+              return this.request(endpoint, options, true)
             } else {
               console.log('Refresh failed - clearing auth')
               this.handleTokenExpiration()
@@ -230,7 +239,7 @@ class ApiClient {
               
               if (newToken) {
                 console.log('Token refreshed successfully, retrying original request')
-                return this.request(endpoint, options)
+                return this.request(endpoint, options, true)
               } else {
                 console.log('Token refresh failed - clearing auth')
                 this.handleTokenExpiration()
@@ -257,6 +266,19 @@ class ApiClient {
         if (response.status === 403) {
           return {
             error: 'You do not have permission to access this resource.',
+            status: response.status,
+          }
+        }
+
+        // The backend's validation handler lists each bad field; say which ones instead of "Validation failed"
+        const fieldErrors = data.details?.validation_errors
+        if (Array.isArray(fieldErrors) && fieldErrors.length) {
+          return {
+            error: fieldErrors.map((item: any) => {
+              const field = String(item.field ?? '').split(' -> ').pop()?.replace(/_/g, ' ')
+              const message = String(item.message ?? 'is not valid').replace(/^Value error, /, '')
+              return field && field !== 'body' ? `${field[0].toUpperCase()}${field.slice(1)}: ${message}` : message
+            }).join('. '),
             status: response.status,
           }
         }
@@ -368,41 +390,44 @@ class ApiClient {
   }
 
   // Beneficiary methods
-  async getBeneficiaries(): Promise<ApiResponse<any[]>> {
-    return this.request('/beneficiaries')
+  async getBeneficiaries(): Promise<ApiResponse<any>> {
+    return this.request('/transfers/beneficiaries')
   }
 
   async createBeneficiary(data: {
-    name: string
+    first_name: string
+    last_name: string
     account_number: string
     bank_name: string
     bank_code?: string
     email?: string
     phone_number?: string
+    address_line1: string
+    city: string
+    postal_code: string
+    country: string
   }): Promise<ApiResponse<any>> {
-    return this.request('/beneficiaries', {
+    return this.request('/transfers/beneficiaries', {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: JSON.stringify({ beneficiary_type: 'individual', ...data }),
     })
   }
 
   async updateBeneficiary(id: string, data: {
-    name?: string
     account_number?: string
     bank_name?: string
     bank_code?: string
     email?: string
     phone_number?: string
-    is_active?: boolean
   }): Promise<ApiResponse<any>> {
-    return this.request(`/beneficiaries/${id}`, {
-      method: 'PUT',
+    return this.request(`/transfers/beneficiaries/${id}`, {
+      method: 'PATCH',
       body: JSON.stringify(data),
     })
   }
 
   async deleteBeneficiary(id: string): Promise<ApiResponse<any>> {
-    return this.request(`/beneficiaries/${id}`, {
+    return this.request(`/transfers/beneficiaries/${id}`, {
       method: 'DELETE',
     })
   }
@@ -514,6 +539,38 @@ class ApiClient {
     return this.request('/plaid/webhook');
   }
 
+  // Whether bank linking is set up on the server, and whether it's Plaid's sandbox
+  async getPlaidStatus(): Promise<ApiResponse<{ configured: boolean; sandbox: boolean }>> {
+    return this.request('/plaid/status');
+  }
+
+  // ACH between a linked bank and Hoardrun cash
+  async depositFromBank(accountId: string, amount: number): Promise<ApiResponse<BankTransfer>> {
+    return this.request('/plaid/transfers/deposit', {
+      method: 'POST',
+      body: JSON.stringify({ account_id: accountId, amount }),
+    });
+  }
+
+  async withdrawToBank(accountId: string, amount: number): Promise<ApiResponse<BankTransfer>> {
+    return this.request('/plaid/transfers/withdraw', {
+      method: 'POST',
+      body: JSON.stringify({ account_id: accountId, amount }),
+    });
+  }
+
+  async getBankTransfers(): Promise<ApiResponse<{ transfers: BankTransfer[] }>> {
+    return this.request('/plaid/transfers/history');
+  }
+
+  // Plaid sandbox only: move a test transfer along
+  async simulateBankTransfer(transferId: string, event: 'posted' | 'settled' | 'failed' | 'returned'): Promise<ApiResponse<BankTransfer>> {
+    return this.request('/plaid/sandbox/simulate', {
+      method: 'POST',
+      body: JSON.stringify({ transfer_id: transferId, event }),
+    });
+  }
+
   // Plaid Transfer methods
   async createPlaidTransferQuote(data: {
     source_account_id: string;
@@ -585,6 +642,19 @@ class ApiClient {
     });
   }
 
+  async deletePaymentMethod(id: string): Promise<ApiResponse<any>> {
+    return this.request(`/payment-methods/${id}`, { method: 'DELETE' });
+  }
+
+  async setDefaultPaymentMethod(id: string): Promise<ApiResponse<any>> {
+    return this.request(`/payment-methods/${id}/set-default`, { method: 'POST' });
+  }
+
+  // Payments made with a saved card (deposits paid with it through Add money)
+  async getCardTransactions(id: string): Promise<ApiResponse<any>> {
+    return this.request(`/payment-methods/${id}/transactions`);
+  }
+
   async getDashboard(): Promise<ApiResponse<any>> {
     return this.request('/dashboard');
   }
@@ -633,6 +703,115 @@ class ApiClient {
     });
   }
 
+  // Card deposits: Stripe (US) when it's set up on the server, otherwise Paystack
+  async getPaymentProvider(): Promise<ApiResponse<{ provider: 'stripe' | 'paystack' | null }>> {
+    return this.request('/payments/provider');
+  }
+
+  async createStripeCheckout(amount: number, returnUrl: string): Promise<ApiResponse<{ url: string; session_id: string }>> {
+    return this.request('/payments/stripe/checkout', { method: 'POST', body: JSON.stringify({ amount, return_url: returnUrl }) });
+  }
+
+  async verifyStripeSession(sessionId: string): Promise<ApiResponse<{ status: string; credited: boolean; new?: boolean; amount?: number }>> {
+    return this.request('/payments/stripe/verify', { method: 'POST', body: JSON.stringify({ session_id: sessionId }) });
+  }
+
+  // Investing account at Alpaca (Hoardrun's broker for ETFs and crypto)
+  async getBrokerage(): Promise<ApiResponse<BrokerageStatus>> {
+    return this.request('/markets/brokerage');
+  }
+
+  async openBrokerage(body: {
+    date_of_birth: string
+    ssn: string
+    phone: string
+    address: { line1: string; line2?: string; city: string; state: string; postal_code: string }
+    employment_status: 'employed' | 'unemployed' | 'student' | 'retired'
+    disclosures: Record<string, boolean>
+    accept_agreements: boolean
+  }): Promise<ApiResponse<BrokerageStatus>> {
+    return this.request('/markets/brokerage/open', { method: 'POST', body: JSON.stringify(body) });
+  }
+
+  // Hoardrun cards (Stripe Issuing): virtual Visa cards that spend from Hoardrun cash
+  async getIssuingConfig(): Promise<ApiResponse<{ configured: boolean; publishable_key: string | null; monthly_limit: number }>> {
+    return this.request('/issuing/config');
+  }
+
+  async getIssuedCards(): Promise<ApiResponse<{ cards: IssuedCard[]; has_billing_address: boolean }>> {
+    return this.request('/issuing/cards');
+  }
+
+  async createIssuedCard(body: {
+    accept_terms: boolean
+    billing?: { line1: string; line2?: string; city: string; state: string; postal_code: string }
+  }): Promise<ApiResponse<IssuedCard>> {
+    return this.request('/issuing/cards', { method: 'POST', body: JSON.stringify(body) });
+  }
+
+  async setIssuedCardFrozen(cardId: string, frozen: boolean): Promise<ApiResponse<IssuedCard>> {
+    return this.request(`/issuing/cards/${cardId}/${frozen ? 'freeze' : 'unfreeze'}`, { method: 'POST' });
+  }
+
+  async cancelIssuedCard(cardId: string): Promise<ApiResponse<IssuedCard>> {
+    return this.request(`/issuing/cards/${cardId}`, { method: 'DELETE' });
+  }
+
+  async issuedCardEphemeralKey(cardId: string, nonce: string): Promise<ApiResponse<{ secret: string; stripe_card_id: string }>> {
+    return this.request(`/issuing/cards/${cardId}/ephemeral-key`, { method: 'POST', body: JSON.stringify({ nonce }) });
+  }
+
+  // Identity checks with Persona: where the person stands, a hosted check to open, and a re-check on return
+  async getIdentityStatus(): Promise<ApiResponse<IdentityStatus>> {
+    return this.request('/identity/status');
+  }
+
+  async startIdentityCheck(): Promise<ApiResponse<{ url: string }>> {
+    return this.request('/identity/start', { method: 'POST' });
+  }
+
+  async refreshIdentityCheck(): Promise<ApiResponse<IdentityStatus>> {
+    return this.request('/identity/refresh', { method: 'POST' });
+  }
+
+  // Whether account emails (money in and out, alerts) and product news are emailed. Security emails always are.
+  async getNotificationPrefs(): Promise<ApiResponse<{ email: boolean; marketing: boolean; security_always: boolean }>> {
+    return this.request('/notifications/preferences');
+  }
+
+  async updateNotificationPrefs(prefs: { email?: boolean; marketing?: boolean }): Promise<ApiResponse<{ email: boolean; marketing: boolean; security_always: boolean }>> {
+    return this.request('/notifications/preferences', {
+      method: 'PUT',
+      body: JSON.stringify(prefs),
+    });
+  }
+
+  // Everything Hoardrun holds about the signed-in person, as JSON
+  async exportAccountData(): Promise<ApiResponse<any>> {
+    return this.request('/account/export');
+  }
+
+  async getCloseAccountCheck(): Promise<ApiResponse<{ blockers: string[] }>> {
+    return this.request('/account/close-check');
+  }
+
+  async closeAccount(password: string): Promise<ApiResponse<{ closed: boolean }>> {
+    return this.request('/account/close', { method: 'POST', body: JSON.stringify({ password, confirm: 'CLOSE' }) });
+  }
+
+  async markAllNotificationsRead(): Promise<ApiResponse<any>> {
+    return this.request('/notifications/read-all', { method: 'POST' });
+  }
+
+  // The bell stops pulsing once looked at, without marking anything read
+  async markNotificationsSeen(): Promise<ApiResponse<any>> {
+    return this.request('/notifications/seen', { method: 'POST' });
+  }
+
+  async clearNotifications(): Promise<ApiResponse<any>> {
+    return this.request('/notifications', { method: 'DELETE' });
+  }
+
   async getProfile(): Promise<ApiResponse<any>> {
     return this.request('/users/profile');
   }
@@ -678,6 +857,23 @@ class ApiClient {
     return this.request('/budgets/summary');
   }
 
+  // Monthly budgets per category; spending is measured from real transactions on the server
+  async createBudget(data: { name: string; category: string; budgeted_amount: number }): Promise<ApiResponse<BudgetCategory>> {
+    return this.request('/budgets', { method: 'POST', body: JSON.stringify(data) });
+  }
+
+  async updateBudget(id: string, data: { name?: string; budgeted_amount?: number }): Promise<ApiResponse<BudgetCategory>> {
+    return this.request(`/budgets/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
+  }
+
+  async deleteBudget(id: string): Promise<ApiResponse<{ deleted: boolean }>> {
+    return this.request(`/budgets/${id}`, { method: 'DELETE' });
+  }
+
+  async getBudgetTrend(months = 6): Promise<ApiResponse<{ month: string; budgeted: number; spent: number }[]>> {
+    return this.request(`/budgets/trend?months=${months}`);
+  }
+
   async getSpendingAnalysis(params?: {
     period?: string;
     group_by?: string;
@@ -718,6 +914,277 @@ class ApiClient {
     return this.request('/analytics/financial-health');
   }
 
+  async getTransactions(params?: {
+    limit?: number
+    offset?: number
+    user_id?: string
+    type?: string
+    status?: string
+  }): Promise<ApiResponse<any>> {
+    return this.request(`/transactions/?limit=${params?.limit ?? 50}&offset=${params?.offset ?? 0}`);
+  }
+
+  async updateProfile(data: {
+    first_name?: string
+    last_name?: string
+    email?: string
+    phone_number?: string
+    date_of_birth?: string
+    bio?: string
+    country?: string
+    profile_picture_url?: string
+  }): Promise<ApiResponse<any>> {
+    return this.request('/users/profile', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async changePassword(data: { current_password: string; new_password: string }): Promise<ApiResponse<any>> {
+    return this.request('/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getUserSettings(): Promise<ApiResponse<any>> {
+    return this.request('/users/settings');
+  }
+
+  async updateUserSettings(data: Record<string, unknown>): Promise<ApiResponse<any>> {
+    return this.request('/users/settings', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getAuditLogs(params?: { limit?: number; page?: number }): Promise<ApiResponse<any>> {
+    return this.request(`/audit/logs?page=${params?.page ?? 1}&page_size=${params?.limit ?? 20}`);
+  }
+
+  async createAuditLog(data: {
+    event_type: string
+    description: string
+    metadata?: Record<string, unknown>
+  }): Promise<ApiResponse<any>> {
+    return this.request('/audit/logs', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // Companies users have listed; the response body is { data, total }
+  async getOpportunities(params: { category?: string; q?: string } = {}): Promise<ApiResponse<any>> {
+    const query = new URLSearchParams()
+    if (params.category) query.set('category', params.category)
+    if (params.q) query.set('q', params.q)
+    const suffix = query.toString()
+    return this.request(`/opportunities${suffix ? `?${suffix}` : ''}`)
+  }
+
+  async createOpportunity(data: Record<string, unknown>): Promise<ApiResponse<any>> {
+    return this.request('/opportunities', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async deleteOpportunity(id: string): Promise<ApiResponse<any>> {
+    return this.request(`/opportunities/${id}`, {
+      method: 'DELETE',
+    })
+  }
+
+  // Venture funds; list responses are { data, total, cash_available }
+  async getVentureFunds(q?: string): Promise<ApiResponse<any>> {
+    return this.request(`/venture-funds${q ? `?q=${encodeURIComponent(q)}` : ''}`)
+  }
+
+  async createVentureFund(data: Record<string, unknown>): Promise<ApiResponse<any>> {
+    return this.request('/venture-funds', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async buyFundShares(fundId: string, shares: number): Promise<ApiResponse<any>> {
+    return this.request(`/venture-funds/${fundId}/buy`, {
+      method: 'POST',
+      body: JSON.stringify({ shares }),
+    })
+  }
+
+  async deleteVentureFund(fundId: string): Promise<ApiResponse<any>> {
+    return this.request(`/venture-funds/${fundId}`, {
+      method: 'DELETE',
+    })
+  }
+
+  // Investment circles; every write returns the circle's full detail as { data }
+  async getCircles(): Promise<ApiResponse<any>> {
+    return this.request('/circles')
+  }
+
+  async getCircle(circleId: string): Promise<ApiResponse<any>> {
+    return this.request(`/circles/${circleId}`)
+  }
+
+  async createCircle(data: { name: string; purpose: string; min_contribution: number }): Promise<ApiResponse<any>> {
+    return this.request('/circles', { method: 'POST', body: JSON.stringify(data) })
+  }
+
+  async joinCircle(circleId: string): Promise<ApiResponse<any>> {
+    return this.request(`/circles/${circleId}/join`, { method: 'POST' })
+  }
+
+  async contributeToCircle(circleId: string, amount: number): Promise<ApiResponse<any>> {
+    return this.request(`/circles/${circleId}/contribute`, { method: 'POST', body: JSON.stringify({ amount }) })
+  }
+
+  async proposeCircleInvestment(circleId: string, data: { fund_id: string; shares: number; note?: string }): Promise<ApiResponse<any>> {
+    return this.request(`/circles/${circleId}/proposals`, { method: 'POST', body: JSON.stringify(data) })
+  }
+
+  async voteOnCircleProposal(circleId: string, proposalId: string, choice: 'yes' | 'no'): Promise<ApiResponse<any>> {
+    return this.request(`/circles/${circleId}/proposals/${proposalId}/vote`, { method: 'POST', body: JSON.stringify({ choice }) })
+  }
+
+  // Crypto and ETF markets
+  async getEtfQuotes(): Promise<ApiResponse<any>> {
+    return this.request('/markets/etfs')
+  }
+
+  async getEtfChart(symbol: string, range: string): Promise<ApiResponse<any>> {
+    return this.request(`/markets/etfs/${symbol}/chart?range=${range}`)
+  }
+
+  async getMarketPositions(assetType?: 'crypto' | 'etf'): Promise<ApiResponse<any>> {
+    return this.request(`/markets/positions${assetType ? `?asset_type=${assetType}` : ''}`)
+  }
+
+  async placeMarketOrder(data: { asset_type: 'crypto' | 'etf'; symbol: string; side: 'buy' | 'sell'; amount?: number; sell_all?: boolean }): Promise<ApiResponse<any>> {
+    return this.request('/markets/orders', { method: 'POST', body: JSON.stringify(data) })
+  }
+
+  // Instant sends between Hoardrun users, paid from Hoardrun cash
+  async getCashBalance(): Promise<ApiResponse<any>> {
+    return this.request('/cash/balance')
+  }
+
+  async lookupCashRecipient(email: string): Promise<ApiResponse<any>> {
+    return this.request(`/cash/lookup?email=${encodeURIComponent(email)}`)
+  }
+
+  async getRecentCashRecipients(): Promise<ApiResponse<any>> {
+    return this.request('/cash/recent')
+  }
+
+  async sendCash(data: { recipient_email: string; amount: number; note?: string }): Promise<ApiResponse<any>> {
+    return this.request('/cash/send', { method: 'POST', body: JSON.stringify(data) })
+  }
+
+  // Hoardrun AI: the conversation so far in, one reply out
+  async askAssistant(messages: { role: 'user' | 'assistant'; content: string }[]): Promise<ApiResponse<{ reply: string }>> {
+    return this.request('/assistant/chat', { method: 'POST', body: JSON.stringify({ messages }) })
+  }
+
+  async getInvestmentSummary(): Promise<ApiResponse<any>> {
+    return this.request('/investments/summary');
+  }
+
+  async getPerformanceSummary(period: string = '1M'): Promise<ApiResponse<any>> {
+    return this.request(`/investments/performance-summary?period=${period}`);
+  }
+
+  async getPortfolios(): Promise<ApiResponse<any>> {
+    return this.request('/investments/portfolios');
+  }
+
+  // Bank transfers run through a connected Plaid account: get a quote, then initiate it.
+  async sendMoney(data: {
+    beneficiary_id: string
+    amount: number
+    description?: string
+    category?: string
+    source_account_id?: string
+    currency?: string
+  }): Promise<ApiResponse<any>> {
+    let sourceAccountId = data.source_account_id
+    if (!sourceAccountId) {
+      const accounts = await this.getPlaidAccounts()
+      if (accounts.error) return accounts
+      sourceAccountId = accounts.data?.[0]?.account_id
+    }
+    if (!sourceAccountId) {
+      return { error: 'Connect a bank account to send money.', status: 400 }
+    }
+
+    const quote = await this.createPlaidTransferQuote({
+      source_account_id: sourceAccountId,
+      beneficiary_id: data.beneficiary_id,
+      amount: data.amount,
+      currency: data.currency,
+    })
+    if (quote.error) return quote
+
+    const quoteId = quote.data?.data?.quote?.quote_id
+    if (!quoteId) {
+      return { error: "We couldn't get a quote for this transfer.", status: 400 }
+    }
+
+    return this.initiatePlaidTransfer({ quote_id: quoteId, purpose: data.description || 'Bank transfer' })
+  }
+
+  async getMobileMoneyProviders(): Promise<ApiResponse<any>> {
+    return this.request('/momo/providers');
+  }
+
+  async sendMobileMoney(data: {
+    provider: string
+    recipient_phone: string
+    amount: number
+    currency: string
+    description?: string
+  }): Promise<ApiResponse<any>> {
+    return this.request('/momo/send', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async requestMobileMoney(data: {
+    provider: string
+    sender_phone: string
+    amount: number
+    currency: string
+  }): Promise<ApiResponse<any>> {
+    return this.request('/momo/receive', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // Confirms a Paystack payment; the backend adds it to Hoardrun cash once it has succeeded
+  async verifyPayment(reference: string): Promise<ApiResponse<any>> {
+    return this.request(`/paystack/verify/${encodeURIComponent(reference)}`)
+  }
+
+  async initializePayment(data: {
+    email: string
+    amount: number
+    currency: string
+    callback_url?: string
+  }): Promise<ApiResponse<any>> {
+    return this.request('/paystack/initialize', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getSupportContact(): Promise<ApiResponse<any>> {
+    return this.request('/support/contact');
+  }
+
   // Savings-related methods
   async getSavings(): Promise<ApiResponse<any>> {
     return this.request('/savings/goals');
@@ -731,16 +1198,59 @@ class ApiClient {
     return this.request('/savings/insights');
   }
 
-  async createSavingsGoal(data: {
-    name: string;
-    target_amount: number;
-    description?: string;
-  }): Promise<ApiResponse<any>> {
-    return this.request('/savings/goals', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
+  // Savings goals, fixed deposits and auto-save plans. Money moves to and from Hoardrun cash.
+  async createSavingsGoal(data: SavingsGoalInput): Promise<ApiResponse<any>> {
+    return this.request('/savings/goals', { method: 'POST', body: JSON.stringify(data) });
   }
+
+  async updateSavingsGoal(id: string, data: Partial<SavingsGoalInput>): Promise<ApiResponse<any>> {
+    return this.request(`/savings/goals/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
+  }
+
+  async deleteSavingsGoal(id: string): Promise<ApiResponse<any>> {
+    return this.request(`/savings/goals/${id}`, { method: 'DELETE' });
+  }
+
+  async moveGoalMoney(id: string, direction: 'contribute' | 'withdraw', amount: number): Promise<ApiResponse<any>> {
+    return this.request(`/savings/goals/${id}/${direction}`, { method: 'POST', body: JSON.stringify({ amount }) });
+  }
+
+  async getFixedDeposits(): Promise<ApiResponse<any>> {
+    return this.request('/savings/fixed-deposits');
+  }
+
+  async createFixedDeposit(data: { amount: number; termMonths: number; autoRenew: boolean; roundupEnabled: boolean }): Promise<ApiResponse<any>> {
+    return this.request('/savings/fixed-deposits', { method: 'POST', body: JSON.stringify(data) });
+  }
+
+  async breakFixedDeposit(id: string): Promise<ApiResponse<any>> {
+    return this.request(`/savings/fixed-deposits/${id}/break`, { method: 'POST' });
+  }
+
+  async getAutoSavePlans(): Promise<ApiResponse<any>> {
+    return this.request('/savings/automated-savings');
+  }
+
+  async createAutoSavePlan(data: { name: string; amount: number; frequency: 'DAILY' | 'WEEKLY' | 'MONTHLY'; startDate?: string }): Promise<ApiResponse<any>> {
+    return this.request('/savings/automated-savings', { method: 'POST', body: JSON.stringify(data) });
+  }
+
+  async setAutoSavePlanActive(id: string, isActive: boolean): Promise<ApiResponse<any>> {
+    return this.request(`/savings/automated-savings/${id}`, { method: 'PATCH', body: JSON.stringify({ isActive }) });
+  }
+
+  async deleteAutoSavePlan(id: string): Promise<ApiResponse<any>> {
+    return this.request(`/savings/automated-savings/${id}`, { method: 'DELETE' });
+  }
+}
+
+export interface SavingsGoalInput {
+  name: string
+  targetAmount: number
+  monthlyContribution: number
+  category: string
+  deadline?: string
+  isAutoSave: boolean
 }
 
 interface ApiResponse<T = any> {
@@ -758,6 +1268,7 @@ export interface BudgetCategory {
   budgeted_amount: number;
   spent_amount: number;
   percentage_used: number;
+  remaining?: number;
 }
 
 export interface BudgetSummary {
@@ -784,6 +1295,7 @@ export interface FinancialInsight {
 export interface PlaidAccount {
   account_id: string;
   connection_id: string;
+  institution_name?: string;
   name: string;
   official_name?: string;
   type: string;
@@ -847,10 +1359,53 @@ export interface PlaidExchangeTokenRequest {
   account_id?: string;
 }
 
+// The bank's access token stays on the server
 export interface PlaidExchangeTokenResponse {
   connection_id: string;
-  access_token: string;
   item_id: string;
+  institution_name?: string;
+  accounts_linked?: number;
+  accounts?: PlaidAccount[];
+}
+
+export interface BrokerageStatus {
+  configured: boolean;
+  status: string | null;
+  state: 'none' | 'pending' | 'open' | 'rejected' | 'action_required';
+  uninvested_cash: number;
+}
+
+export interface IssuedCard {
+  id: string;
+  stripe_card_id: string;
+  last4: string;
+  brand: string;
+  exp_month: number | null;
+  exp_year: number | null;
+  status: 'active' | 'frozen' | 'canceled';
+  monthly_limit: number | null;
+  created_at: string;
+}
+
+export interface IdentityStatus {
+  state: 'not_started' | 'in_progress' | 'in_review' | 'verified' | 'declined';
+  configured: boolean;
+  can_start: boolean;
+  verified_at: string | null;
+}
+
+export interface BankTransfer {
+  transfer_id: string;
+  direction: 'deposit' | 'withdrawal';
+  amount: number;
+  // pending, posted, settled, funds_available, failed, cancelled or returned
+  status: string;
+  account_id: string;
+  account?: string;
+  failure_reason?: string | null;
+  reference: string;
+  created_at: string;
+  updated_at?: string;
 }
 
 export interface PlaidSyncRequest {

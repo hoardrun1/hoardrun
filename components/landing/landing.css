@@ -1,0 +1,210 @@
+/* Landing page tokens and motion. Colours keep their roles:
+   mint is for actions and live highlights, ivory only for light sections. */
+.lp {
+  --lp-canvas: #000000;
+  --lp-emerald: #1d1d1f;
+  --lp-panel: #111113;
+  --lp-jade: #2c2c2e;
+  --lp-mint: #ffffff;
+  --lp-teal: #6e6e73;
+  --lp-muted: #a1a1a6;
+  --lp-ivory: #f5f5f7;
+  --lp-ink: #1d1d1f;
+  --lp-ink-muted: #6e6e73;
+  --lp-line: #d2d2d7;
+  background: var(--lp-canvas);
+  color: #fff;
+}
+
+.lp-display {
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+/* Black panel lit from above, like a product on a dark stage */
+.lp-panel-lit {
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background:
+    radial-gradient(110% 70% at 50% 0%, rgba(255, 255, 255, 0.09), transparent 62%),
+    #0b0b0c;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+/* Black disc with a rim of white light rising behind the product */
+.lp-eclipse {
+  position: absolute;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #000;
+  pointer-events: none;
+  box-shadow:
+    inset 0 3px 3px -1px rgba(255, 255, 255, 0.95),
+    inset 0 22px 44px -20px rgba(255, 255, 255, 0.38),
+    0 -3px 22px rgba(255, 255, 255, 0.45),
+    0 -28px 110px rgba(255, 255, 255, 0.22),
+    0 -90px 260px rgba(255, 255, 255, 0.1);
+  animation: lp-breathe 9s ease-in-out infinite;
+}
+.lp-eclipse-hero { width: 1000px; left: 50%; top: 58%; transform: translateX(-50%); }
+.lp-eclipse-cta { width: 1500px; left: 50%; top: 74%; transform: translateX(-50%); }
+@media (min-width: 1024px) {
+  .lp-eclipse-hero { width: 1040px; left: 73%; top: 15%; }
+}
+@keyframes lp-breathe {
+  0%, 100% { opacity: 0.86; }
+  50% { opacity: 1; }
+}
+
+.lp-grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.16;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Buttons */
+.lp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 60px;
+  padding: 0.8rem 1.6rem;
+  font-size: 0.95rem;
+  line-height: 1.2;
+  transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.lp-btn:active { transform: scale(0.97); }
+.lp-btn:focus-visible,
+.lp-link:focus-visible {
+  outline: 2px solid var(--lp-mint);
+  outline-offset: 3px;
+}
+.lp-btn-primary { background: var(--lp-mint); color: var(--lp-emerald); }
+.lp-btn-primary:hover { box-shadow: 0 0 28px 2px rgba(255, 255, 255, 0.45); }
+.lp-btn-ghost { border: 1px solid rgba(255, 255, 255, 0.32); color: #fff; }
+.lp-btn-ghost:hover { border-color: var(--lp-mint); color: var(--lp-mint); }
+
+/* Glass navigation. The nav's blur sits on a pseudo-element so that the inner
+   capsule isn't cut off from the page and can blur what is behind it too. */
+.lp-nav { position: relative; isolation: isolate; }
+.lp-nav::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(22px) saturate(160%);
+  -webkit-backdrop-filter: blur(22px) saturate(160%);
+}
+/* White material: porcelain with a lit top edge, and a black pill for what's selected.
+   Shared by the landing page, sign-up and the app. */
+:root {
+  --material-white: linear-gradient(180deg, #ffffff 0%, #f6f6f8 48%, #e7e7eb 100%);
+  --material-white-shadow:
+    inset 0 1px 0 #fff,
+    inset 0 -1px 0 rgba(0, 0, 0, 0.1),
+    0 10px 30px -8px rgba(0, 0, 0, 0.7),
+    0 0 28px -8px rgba(255, 255, 255, 0.3);
+  --material-ink: linear-gradient(180deg, #3a3a3c 0%, #111113 60%, #050506 100%);
+  --material-ink-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    0 1px 2px rgba(0, 0, 0, 0.4),
+    0 6px 14px -4px rgba(0, 0, 0, 0.45);
+  --material-text: #1c1c1e;
+}
+.lp-glass {
+  --lp-muted: #6e6e73;
+  position: relative;
+  background: var(--material-white);
+  box-shadow: var(--material-white-shadow);
+  color: var(--material-text);
+}
+.lp-glass .lp-link:focus-visible { outline-color: #000; }
+.lp-glass-lens {
+  background: var(--material-ink);
+  box-shadow: var(--material-ink-shadow);
+}
+
+/* The language switcher is styled for light surfaces by default */
+.lp-lang button { color: #fff; box-shadow: none; }
+.lp-lang button:hover { background: rgba(255, 255, 255, 0.1); }
+.lp-lang button svg { color: #fff; }
+
+/* Signature pulse line */
+.lp-pulse-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: lp-draw 3.2s cubic-bezier(0.6, 0.05, 0.2, 1) 0.25s forwards;
+}
+.lp-pulse-spark {
+  stroke-dasharray: 0.035 0.965;
+  stroke-dashoffset: 1;
+  animation: lp-spark 6s linear 3.4s infinite;
+}
+@keyframes lp-draw { to { stroke-dashoffset: 0; } }
+@keyframes lp-spark { to { stroke-dashoffset: 0; } }
+
+/* Hero entrance */
+.lp-rise { opacity: 0; animation: lp-rise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) forwards; }
+@keyframes lp-rise {
+  from { opacity: 0; transform: translateY(22px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Product stage */
+.lp-stage { perspective: 1400px; }
+.lp-tilt {
+  transform: rotateX(calc(var(--ry, 0) * -5deg)) rotateY(calc(var(--rx, 0) * 7deg));
+  transform-style: preserve-3d;
+  transition: transform 0.25s ease-out;
+}
+.lp-float-a { animation: lp-float 7s ease-in-out infinite; }
+.lp-float-b { animation: lp-float 8.5s ease-in-out -2s infinite; }
+.lp-float-c { animation: lp-float 6.5s ease-in-out -4s infinite; }
+@keyframes lp-float {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -12px; }
+}
+.lp-card-sheen {
+  background: linear-gradient(
+    calc(115deg + var(--rx, 0) * 30deg),
+    transparent 30%,
+    rgba(255, 255, 255, 0.16) 46%,
+    rgba(255, 255, 255, 0.28) 50%,
+    rgba(255, 255, 255, 0.1) 54%,
+    transparent 70%
+  );
+  background-size: 220% 220%;
+  background-position: calc(50% + var(--rx, 0) * 40%) 50%;
+}
+
+/* Graphics */
+.lp-stream { animation: lp-stream 16s linear infinite; }
+@keyframes lp-stream { to { transform: translateY(-50%); } }
+.lp-ring { transform-origin: center; transform-box: fill-box; animation: lp-spin 26s linear infinite; }
+.lp-ring-rev { transform-origin: center; transform-box: fill-box; animation: lp-spin 38s linear reverse infinite; }
+@keyframes lp-spin { to { transform: rotate(360deg); } }
+.lp-flow { stroke-dasharray: 5 9; animation: lp-flow 1.5s linear infinite; }
+@keyframes lp-flow { to { stroke-dashoffset: -14; } }
+.lp-beat { animation: lp-beat 3s ease-in-out infinite; transform-origin: center; transform-box: fill-box; }
+@keyframes lp-beat {
+  0%, 100% { opacity: 0.35; transform: scale(0.94); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp *,
+  .lp *::before,
+  .lp *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0s !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -46,7 +46,7 @@
   },
   "signin": {
     "welcomeBack": "Bienvenido de Vuelta",
-    "subtitle": "Inicia sesión en tu cuenta de HoardRun",
+    "subtitle": "Inicia sesión en tu cuenta de Hoardrun",
     "emailPlaceholder": "Ingresa tu correo electrónico",
     "passwordPlaceholder": "Ingresa tu contraseña",
     "rememberMe": "Recordarme",
@@ -55,11 +55,12 @@
     "signingIn": "Iniciando Sesión...",
     "noAccount": "¿No tienes una cuenta?",
     "signUpHere": "Regístrate aquí",
-    "continueWithGoogle": "Continuar con Google"
+    "continueWithGoogle": "Continuar con Google",
+    "continueWithApple": "Continuar con Apple"
   },
   "signup": {
     "createAccount": "Crear Cuenta",
-    "subtitle": "Únete a HoardRun y comienza tu viaje",
+    "subtitle": "Únete a Hoardrun y comienza tu viaje",
     "steps": {
       "account": "Cuenta",
       "accountDesc": "Información básica",
@@ -203,7 +204,7 @@
         "watchYourSpending": "Vigila tus gastos",
         "categoriesOverBudget": "categorías están por encima del presupuesto",
         "overallProgress": "Progreso general",
-        "usedOfTotalBudget": "Has usado {percentage}% de tu presupuesto total"
+        "usedOfTotalBudget": "Has usado {{percentage}}% de tu presupuesto total"
       }
     },
     "analytics": {

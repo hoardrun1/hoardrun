@@ -290,13 +290,13 @@ export function ResponsiveSidebarLayout({ children, sidebar, className = '' }: S
       <AnimatePresence>
         {isLargeScreen && (
           <motion.div
-            initial={{ x: isOpen ? 0 : -360 }}
-            animate={{ x: isOpen ? 0 : -360 }}
+            initial={{ x: isOpen ? 0 : -264 }}
+            animate={{ x: isOpen ? 0 : -264 }}
             transition={{
               duration: 0.3,
               ease: [0.23, 1, 0.320, 1]
             }}
-            className="hidden lg:block w-[360px] h-screen fixed left-0 top-0 z-[100]"
+            className="hidden lg:block w-[264px] h-screen fixed left-0 top-0 z-[100]"
           >
             {sidebar}
           </motion.div>
@@ -349,7 +349,7 @@ export function ResponsiveSidebarLayout({ children, sidebar, className = '' }: S
       <motion.div
         className="flex-1 min-w-0 relative"
         animate={{
-          marginLeft: isLargeScreen && isOpen ? 360 : 0
+          marginLeft: isLargeScreen && isOpen ? 264 : 0
         }}
         transition={{
           duration: 0.3,

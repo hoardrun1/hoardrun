@@ -48,7 +48,7 @@
   },
   "signin": {
     "welcomeBack": "欢迎回来",
-    "subtitle": "登录您的 HoardRun 账户",
+    "subtitle": "登录您的 Hoardrun 账户",
     "emailPlaceholder": "输入您的电子邮件",
     "passwordPlaceholder": "输入您的密码",
     "rememberMe": "记住我",
@@ -57,11 +57,12 @@
     "signingIn": "登录中...",
     "noAccount": "还没有账户？",
     "signUpHere": "在此注册",
-    "continueWithGoogle": "继续使用 Google"
+    "continueWithGoogle": "继续使用 Google",
+    "continueWithApple": "继续使用 Apple"
   },
   "signup": {
     "createAccount": "创建账户",
-    "subtitle": "加入 HoardRun 并开始您的旅程",
+    "subtitle": "加入 Hoardrun 并开始您的旅程",
     "steps": {
       "account": "账户",
       "accountDesc": "基本信息",
@@ -205,7 +206,7 @@
         "watchYourSpending": "注意您的支出",
         "categoriesOverBudget": "类别超预算",
         "overallProgress": "整体进度",
-        "usedOfTotalBudget": "您使用了总预算的 {percentage}%"
+        "usedOfTotalBudget": "您使用了总预算的 {{percentage}}%"
       }
     },
     "analytics": {

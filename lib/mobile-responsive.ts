@@ -1,4 +1,4 @@
-// Mobile-first responsive design utilities for HoardRun
+// Mobile-first responsive design utilities for Hoardrun
 
 export const mobileStyles = {
   // Container and layout - Mobile First

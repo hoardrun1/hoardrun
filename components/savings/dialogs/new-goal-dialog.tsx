@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
-import { TrendingUp, Plus } from "lucide-react"
+import { TrendingUp, Plus, Check } from "lucide-react"
 
 interface NewGoalDialogProps {
   open: boolean
@@ -15,6 +15,10 @@ interface NewGoalDialogProps {
   form: any
   setForm: (form: any) => void
   onSubmit: () => void
+  /** Editing an existing goal: changes the title and button, and offers delete */
+  mode?: "create" | "edit"
+  onDelete?: () => void
+  submitting?: boolean
 }
 
 const formatCurrency = (amount: number) => {
@@ -24,12 +28,12 @@ const formatCurrency = (amount: number) => {
   }).format(amount)
 }
 
-export function NewGoalDialog({ open, onOpenChange, form, setForm, onSubmit }: NewGoalDialogProps) {
+export function NewGoalDialog({ open, onOpenChange, form, setForm, onSubmit, mode = "create", onDelete, submitting }: NewGoalDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[95vw] sm:max-w-lg max-h-[90vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader className="space-y-1 sm:space-y-2">
-          <DialogTitle className="text-lg sm:text-xl">Create Savings Goal</DialogTitle>
+          <DialogTitle className="text-lg sm:text-xl">{mode === "edit" ? "Edit Savings Goal" : "Create Savings Goal"}</DialogTitle>
           <DialogDescription className="text-xs sm:text-sm">
             Set up a new savings goal with regular contributions
           </DialogDescription>
@@ -170,10 +174,15 @@ export function NewGoalDialog({ open, onOpenChange, form, setForm, onSubmit }: N
             </div>
           </div>
 
-          <Button onClick={onSubmit} className="w-full h-9 sm:h-10 text-sm font-semibold">
-            <Plus className="h-3.5 w-3.5 mr-1.5" />
-            Create Goal
+          <Button onClick={onSubmit} disabled={submitting} className="w-full h-9 sm:h-10 text-sm font-semibold">
+            {mode === "edit" ? <Check className="h-3.5 w-3.5 mr-1.5" /> : <Plus className="h-3.5 w-3.5 mr-1.5" />}
+            {submitting ? "Saving…" : mode === "edit" ? "Save Changes" : "Create Goal"}
           </Button>
+          {mode === "edit" && onDelete && (
+            <button type="button" onClick={onDelete} disabled={submitting} className="w-full text-center text-[13px] text-[#fb7185] hover:underline">
+              Delete goal and move its money to cash
+            </button>
+          )}
         </div>
       </DialogContent>
     </Dialog>

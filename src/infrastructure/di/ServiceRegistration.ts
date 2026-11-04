@@ -33,7 +33,7 @@ export function registerServices(container: Container): void {
     smtpUser: process.env.SMTP_USER || '',
     smtpPassword: process.env.SMTP_PASSWORD || '',
     fromEmail: process.env.FROM_EMAIL || 'noreply@hoardrun.com',
-    fromName: process.env.FROM_NAME || 'HoardRun',
+    fromName: process.env.FROM_NAME || 'Hoardrun',
   }))
 
   // External Services

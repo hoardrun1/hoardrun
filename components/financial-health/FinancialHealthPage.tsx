@@ -1,172 +1,157 @@
 /**
  * Financial Health Page Component
- * 
- * Main page for displaying comprehensive financial health score and analysis.
+ *
+ * Shows the score, the five things behind it, and what to do next.
  */
 
 'use client';
 
-import React from 'react';
-import { RefreshCw, TrendingUp, AlertCircle } from 'lucide-react';
-import { useFinancialHealthScore } from '@/hooks/useFinancialHealthScore';
-import { HealthScoreGauge } from './HealthScoreGauge';
-import { FactorBreakdown } from './FactorBreakdown';
-import { ImprovementPlan } from './ImprovementPlan';
-import { ScoreTrendChart } from './ScoreTrendChart';
+import React, { useCallback, useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
+import { RefreshCw } from 'lucide-react';
+import { apiClient } from '@/lib/api-client';
+
+interface HealthScore {
+  overall_score: number;
+  spending_score: number;
+  savings_score: number;
+  budget_adherence_score: number;
+  debt_management_score: number;
+  emergency_fund_score: number;
+  recommendations: string[];
+}
+
+const RADIUS = 86;
+const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+
+const levelFor = (score: number) => {
+  if (score >= 80) return 'Excellent';
+  if (score >= 60) return 'Good';
+  if (score >= 40) return 'Fair';
+  return 'Needs attention';
+};
 
 export function FinancialHealthPage() {
-  const {
-    score,
-    history,
-    loading,
-    error,
-    refreshing,
-    recalculateScore,
-  } = useFinancialHealthScore();
+  const [score, setScore] = useState<HealthScore | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-center h-64">
-            <div className="text-center">
-              <RefreshCw className="w-12 h-12 text-blue-500 animate-spin mx-auto mb-4" />
-              <p className="text-gray-600 dark:text-gray-400">
-                Calculating your financial health score...
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(false);
+    const response = await apiClient.getFinancialHealthScore();
+    if (response.error || !response.data) {
+      setError(true);
+    } else {
+      setScore(response.data);
+    }
+    setLoading(false);
+  }, []);
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0" />
-              <div>
-                <h3 className="font-semibold text-red-900 dark:text-red-100 mb-1">
-                  Error Loading Health Score
-                </h3>
-                <p className="text-red-700 dark:text-red-300">
-                  {error}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    load();
+  }, [load]);
 
-  if (!score) {
-    return null;
-  }
+  const factors = score
+    ? [
+        { label: 'Spending', value: score.spending_score },
+        { label: 'Savings', value: score.savings_score },
+        { label: 'Budgets', value: score.budget_adherence_score },
+        { label: 'Debt', value: score.debt_management_score },
+        { label: 'Emergency fund', value: score.emergency_fund_score },
+      ]
+    : [];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-2">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-              Financial Health Score
-            </h1>
-            <button
-              onClick={recalculateScore}
-              disabled={refreshing}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg transition-colors"
-            >
-              <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-              {refreshing ? 'Updating...' : 'Refresh Score'}
-            </button>
-          </div>
-          <p className="text-gray-600 dark:text-gray-400">
-            Comprehensive analysis of your financial well-being
-          </p>
-        </div>
-
-        {/* Strengths and Weaknesses Banner */}
-        {(score.top_strengths.length > 0 || score.areas_for_improvement.length > 0) && (
-          <div className="grid md:grid-cols-2 gap-6 mb-8">
-            {/* Strengths */}
-            {score.top_strengths.length > 0 && (
-              <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <TrendingUp className="w-5 h-5 text-green-600 dark:text-green-400" />
-                  <h3 className="font-semibold text-green-900 dark:text-green-100">
-                    Your Strengths
-                  </h3>
-                </div>
-                <ul className="space-y-2">
-                  {score.top_strengths.map((strength, index) => (
-                    <li key={index} className="text-sm text-green-700 dark:text-green-300 flex items-start gap-2">
-                      <span className="text-green-500 mt-1">✓</span>
-                      <span>{strength}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {/* Areas for Improvement */}
-            {score.areas_for_improvement.length > 0 && (
-              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
-                  <h3 className="font-semibold text-yellow-900 dark:text-yellow-100">
-                    Areas to Improve
-                  </h3>
-                </div>
-                <ul className="space-y-2">
-                  {score.areas_for_improvement.map((area, index) => (
-                    <li key={index} className="text-sm text-yellow-700 dark:text-yellow-300 flex items-start gap-2">
-                      <span className="text-yellow-500 mt-1">→</span>
-                      <span>{area}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Main Content Grid */}
-        <div className="grid lg:grid-cols-3 gap-6 mb-8">
-          {/* Gauge - Takes 1 column */}
-          <div className="lg:col-span-1">
-            <HealthScoreGauge
-              score={score.overall_score}
-              level={score.level}
-              trendDirection={score.trend_direction}
-              scoreChange30d={score.score_change_30d}
-              percentile={score.percentile}
-            />
-          </div>
-
-          {/* Factor Breakdown - Takes 2 columns */}
-          <div className="lg:col-span-2">
-            <FactorBreakdown factors={score.factors} />
-          </div>
-        </div>
-
-        {/* Trend Chart */}
-        {history && history.trends.length > 0 && (
-          <div className="mb-8">
-            <ScoreTrendChart history={history} />
-          </div>
-        )}
-
-        {/* Improvement Plan */}
+    <div className="mx-auto w-full max-w-5xl space-y-4">
+      <header className="flex items-start justify-between gap-4">
         <div>
-          <ImprovementPlan improvements={score.improvements} />
+          <h1 className="hr-title">Health Score</h1>
+          <p className="mt-1 text-sm text-[#a1a1a6] sm:text-base">How your money looks today, and what to do next.</p>
         </div>
-      </div>
+        <button onClick={load} disabled={loading} aria-label="Refresh score" className="hr-icon-btn hr-focus shrink-0">
+          <RefreshCw className={`h-[18px] w-[18px] ${loading ? 'animate-spin' : ''}`} />
+        </button>
+      </header>
+
+      {error ? (
+        <div role="alert" className="hr-panel flex items-center justify-between gap-3 px-5 py-4 text-sm">
+          <span>We couldn't load your score.</span>
+          <button onClick={load} className="hr-focus shrink-0 font-medium underline underline-offset-4">Try again</button>
+        </div>
+      ) : !score ? (
+        <div className="grid gap-4 lg:grid-cols-12">
+          <div className="hr-skeleton h-[340px] rounded-[24px] lg:col-span-5" />
+          <div className="hr-skeleton h-[340px] rounded-[24px] lg:col-span-7" />
+        </div>
+      ) : (
+        <>
+          <div className="grid gap-4 lg:grid-cols-12">
+            <section className="hr-panel flex flex-col items-center justify-center p-6 lg:col-span-5">
+              <div className="relative h-[220px] w-[220px]">
+                <svg viewBox="0 0 200 200" className="h-full w-full -rotate-90" role="img" aria-label={`Score ${score.overall_score} out of 100`}>
+                  <circle cx="100" cy="100" r={RADIUS} fill="none" stroke="rgba(255,255,255,.1)" strokeWidth="10" />
+                  <motion.circle
+                    cx="100"
+                    cy="100"
+                    r={RADIUS}
+                    fill="none"
+                    stroke="#fff"
+                    strokeWidth="10"
+                    strokeLinecap="round"
+                    strokeDasharray={CIRCUMFERENCE}
+                    initial={{ strokeDashoffset: CIRCUMFERENCE }}
+                    animate={{ strokeDashoffset: CIRCUMFERENCE * (1 - score.overall_score / 100) }}
+                    transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
+                  />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-[64px] font-semibold leading-none tracking-tight tabular-nums">{score.overall_score}</span>
+                  <span className="mt-2 text-sm text-[#a1a1a6]">out of 100</span>
+                </div>
+              </div>
+              <p className="mt-4 text-lg font-semibold">{levelFor(score.overall_score)}</p>
+              <p className="mt-1 text-center text-sm text-[#a1a1a6]">Based on the activity in your account so far.</p>
+            </section>
+
+            <section className="hr-panel p-5 sm:p-6 lg:col-span-7">
+              <h2 className="text-lg font-semibold tracking-tight">What's behind it</h2>
+              <ul className="mt-5 space-y-5">
+                {factors.map((factor, index) => (
+                  <li key={factor.label}>
+                    <div className="mb-2 flex items-baseline justify-between text-sm">
+                      <span>{factor.label}</span>
+                      <span className="font-medium tabular-nums">{factor.value}</span>
+                    </div>
+                    <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+                      <motion.div
+                        className="h-full rounded-full bg-white"
+                        initial={{ width: 0 }}
+                        animate={{ width: `${factor.value}%` }}
+                        transition={{ duration: 0.8, delay: index * 0.07, ease: [0.22, 1, 0.36, 1] }}
+                      />
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          </div>
+
+          {score.recommendations.length > 0 && (
+            <section className="hr-panel p-5 sm:p-6">
+              <h2 className="text-lg font-semibold tracking-tight">What to do next</h2>
+              <ol className="mt-4 divide-y divide-white/10">
+                {score.recommendations.map((recommendation, index) => (
+                  <li key={recommendation} className="flex gap-4 py-3.5 text-sm leading-relaxed first:pt-0 last:pb-0">
+                    <span className="w-4 shrink-0 font-medium tabular-nums text-[#a1a1a6]">{index + 1}</span>
+                    {recommendation}
+                  </li>
+                ))}
+              </ol>
+            </section>
+          )}
+        </>
+      )}
     </div>
   );
 }
-

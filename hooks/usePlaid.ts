@@ -50,15 +50,7 @@ export function usePlaid() {
       setError(errorMessage)
       console.error('Create link token error:', err)
 
-      // Only show toast for non-authentication errors
-      if (!errorMessage.includes('Authentication required')) {
-        toast({
-          title: 'Error',
-          description: errorMessage,
-          variant: 'destructive',
-        })
-      }
-
+      // Tokens are requested on page load, so PlaidLink shows this on its button instead of a popup
       throw err
     } finally {
       setIsLoading(false)

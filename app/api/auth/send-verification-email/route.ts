@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { API_BASE_URL } from '@/lib/api-url'
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,8 +13,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Forward the request to the backend API
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://hoardrun-backend-py-1.onrender.com'
-    const response = await fetch(`${backendUrl}/api/v1/auth/send-verification-email`, {
+    const response = await fetch(`${API_BASE_URL}/auth/resend-verification`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

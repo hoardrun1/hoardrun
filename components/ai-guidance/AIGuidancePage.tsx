@@ -69,7 +69,7 @@ export const AIGuidancePage: React.FC = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-3">
-            <Brain className="w-8 h-8 text-purple-600" />
+            <Brain className="w-8 h-8 text-blue-600" />
             AI Financial Guidance
           </h1>
           <p className="text-gray-600 mt-1">
@@ -108,7 +108,7 @@ export const AIGuidancePage: React.FC = () => {
       {/* Financial Persona & Health */}
       {guidance && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card className="bg-gradient-to-br from-purple-50 to-blue-50">
+          <Card className="bg-gradient-to-br from-blue-50 to-blue-50">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <span className="text-2xl">{getPersonaIcon(guidance.financial_persona.persona)}</span>
@@ -117,7 +117,7 @@ export const AIGuidancePage: React.FC = () => {
               <CardDescription>Based on your behavior patterns</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-purple-600 capitalize mb-2">
+              <div className="text-2xl font-bold text-blue-600 capitalize mb-2">
                 {guidance.financial_persona.persona.replace('_', ' ')}
               </div>
               <div className="text-sm text-gray-600 mb-3">
@@ -186,7 +186,7 @@ export const AIGuidancePage: React.FC = () => {
           {loading ? (
             <Card>
               <CardContent className="py-12 text-center">
-                <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-3 text-purple-600" />
+                <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-3 text-blue-600" />
                 <p className="text-gray-600">Loading your personalized guidance...</p>
               </CardContent>
             </Card>
@@ -196,7 +196,7 @@ export const AIGuidancePage: React.FC = () => {
               {recommendations.length > 0 && (
                 <div>
                   <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                    <Target className="w-5 h-5 text-purple-600" />
+                    <Target className="w-5 h-5 text-blue-600" />
                     Top Recommendations
                   </h2>
                   <div className="space-y-4">
@@ -255,7 +255,7 @@ export const AIGuidancePage: React.FC = () => {
           {loading ? (
             <Card>
               <CardContent className="py-12 text-center">
-                <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-3 text-purple-600" />
+                <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-3 text-blue-600" />
                 <p className="text-gray-600">Loading recommendations...</p>
               </CardContent>
             </Card>

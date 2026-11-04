@@ -43,7 +43,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, firstName?: string, lastName?: string, phone?: string, dateOfBirth?: string, country?: string, idNumber?: string, bio?: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
-  login: (newToken: string, newUser: User) => void;
+  login: (newToken: string, newUser: User, refreshToken?: string) => void;
   logout: () => Promise<void>;
   signup: (email: string, password: string, firstName?: string, lastName?: string, phone?: string, dateOfBirth?: string, country?: string, bio?: string) => Promise<void>;
   clearError: () => void;
@@ -175,10 +175,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   useEffect(() => {
+    // Token state starts empty on every page load, so an empty token here must not clear the stored session.
     if (token) {
       apiClient.setToken(token);
-    } else {
-      apiClient.clearToken();
     }
   }, [token]);
 

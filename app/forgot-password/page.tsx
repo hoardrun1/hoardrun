@@ -1,163 +1,95 @@
 'use client'
 
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Mail, ArrowLeft, Loader2 } from 'lucide-react'
 import Link from 'next/link'
+import { Check, Loader2, Mail } from 'lucide-react'
+import { AuthError, AuthField, AuthShell } from '@/components/auth/auth-shell'
+import { API_BASE_URL } from '@/lib/api-url'
 
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+/** Ask for a reset link. The answer is the same whether or not the email has an account. */
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [message, setMessage] = useState('')
-  const [isSuccess, setIsSuccess] = useState(false)
+  const [error, setError] = useState('')
+  const [sent, setSent] = useState(false)
 
-  const handleForgotPassword = async (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    if (!email) {
-      setMessage('Please enter your email address')
-      setIsSuccess(false)
+    if (!EMAIL.test(email.trim())) {
+      setError('Enter the email you use for Hoardrun.')
       return
     }
-
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(email)) {
-      setMessage('Please enter a valid email address')
-      setIsSuccess(false)
-      return
-    }
-
     setIsLoading(true)
-    setMessage('')
-
+    setError('')
     try {
-      const response = await fetch('/api/auth/forgot-password', {
+      const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim() }),
       })
-
-      const data = await response.json()
-
-      // Always show success message for security (don't reveal if email exists)
-      setIsSuccess(true)
-      setMessage(data.message || 'If an account with that email exists, a password reset link has been sent.')
-      
-    } catch (error) {
-      setIsSuccess(true)
-      setMessage('If an account with that email exists, a password reset link has been sent.')
+      if (!response.ok && response.status !== 422) throw new Error()
+      if (response.status === 422) {
+        setError('Enter the email you use for Hoardrun.')
+        return
+      }
+      setSent(true)
+    } catch {
+      setError("We couldn't send the email right now. Try again in a moment.")
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">🏦 HoardRun</h1>
-          <p className="text-gray-600">Forgot Your Password?</p>
+    <AuthShell
+      skipWelcome
+      visual={
+        <div className="flex h-full items-center justify-center">
+          <div className="lp-glass flex h-24 w-24 items-center justify-center rounded-full">
+            {sent ? <Check className="h-10 w-10" strokeWidth={2.5} /> : <Mail className="h-10 w-10" strokeWidth={1.5} />}
+          </div>
         </div>
-
-        <Card>
-          <CardHeader className="text-center">
-            <div className="flex justify-center mb-4">
-              <Mail className="h-16 w-16 text-blue-500" />
-            </div>
-            <CardTitle className="text-xl">Reset Your Password</CardTitle>
-            <CardDescription>
-              Enter your email address and we'll send you a link to reset your password
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {message && (
-              <Alert className={isSuccess ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}>
-                <AlertDescription className={isSuccess ? 'text-green-800' : 'text-red-800'}>
-                  {message}
-                </AlertDescription>
-              </Alert>
-            )}
-
-            {!isSuccess && (
-              <form onSubmit={handleForgotPassword} className="space-y-4">
-                <div>
-                  <Label htmlFor="email">Email Address</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter your email address"
-                    required
-                  />
-                </div>
-                <Button type="submit" disabled={isLoading} className="w-full">
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Sending Reset Link...
-                    </>
-                  ) : (
-                    'Send Reset Link'
-                  )}
-                </Button>
-              </form>
-            )}
-
-            {isSuccess && (
-              <div className="space-y-4">
-                <div className="text-center text-sm text-gray-600">
-                  <p>Check your email for the password reset link.</p>
-                  <p className="mt-2">Don't see it? Check your spam folder.</p>
-                </div>
-                
-                <Button 
-                  onClick={() => {
-                    setIsSuccess(false)
-                    setMessage('')
-                    setEmail('')
-                  }} 
-                  variant="outline" 
-                  className="w-full"
-                >
-                  Send Another Reset Link
-                </Button>
-              </div>
-            )}
-
-            <div className="text-center">
-              <Button asChild variant="ghost" size="sm">
-                <Link href="/signin">
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Back to Sign In
-                </Link>
-              </Button>
-            </div>
-
-            <div className="text-center text-sm text-gray-500">
-              <p>
-                Remember your password?{' '}
-                <Link href="/signin" className="text-blue-600 hover:text-blue-500 font-medium">
-                  Sign In
-                </Link>
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="text-center">
-          <p className="text-sm text-gray-500">
-            Need help? <Link href="/support" className="text-blue-600 hover:text-blue-500">Contact Support</Link>
+      }
+      footerLink={
+        <>
+          <span>Remembered it? </span>
+          <Link href="/signin" className="lp-auth-link">Sign in</Link>
+        </>
+      }
+    >
+      {sent ? (
+        <div className="lp-auth-stack">
+          <div>
+            <h1 className="lp-auth-title">Check your email</h1>
+            <p className="lp-auth-sub">
+              If there&apos;s a Hoardrun account for <span className="break-all font-medium text-white">{email.trim()}</span>, a link to
+              choose a new password is on its way. It works once, for 1 hour.
+            </p>
+          </div>
+          <button type="button" onClick={() => setSent(false)} className="lp-link self-center rounded text-[13px] underline underline-offset-4">
+            Use a different email
+          </button>
+          <p className="text-center text-xs font-light text-[var(--lp-muted)]">
+            Nothing after a few minutes? Check spam or junk, then ask again. You can ask once a minute.
           </p>
         </div>
-      </div>
-    </div>
+      ) : (
+        <form onSubmit={submit} className="lp-auth-stack" noValidate>
+          <div>
+            <h1 className="lp-auth-title">Forgot your password?</h1>
+            <p className="lp-auth-sub">Enter your email and we&apos;ll send you a link to choose a new one.</p>
+          </div>
+          <AuthField id="email" label="Email">
+            <input id="email" type="email" autoComplete="email" value={email} onChange={(e) => { setEmail(e.target.value); setError('') }} className="lp-input" required />
+          </AuthField>
+          {error && <AuthError>{error}</AuthError>}
+          <button type="submit" disabled={isLoading} className="lp-btn lp-btn-primary lp-auth-btn font-medium">
+            {isLoading ? <><Loader2 className="h-4 w-4 animate-spin" /> Sending…</> : 'Send reset link'}
+          </button>
+        </form>
+      )}
+    </AuthShell>
   )
 }

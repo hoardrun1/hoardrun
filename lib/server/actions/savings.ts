@@ -52,8 +52,10 @@ export async function createSavingsGoal(data: any) {
     // Use API client to create savings goal in backend
     const response = await apiClient.createSavingsGoal({
       name: data.name,
-      target_amount: data.targetAmount,
-      description: data.description
+      targetAmount: data.targetAmount,
+      monthlyContribution: 0,
+      category: 'General',
+      isAutoSave: false,
     });
     
     return { success: true, data: response };

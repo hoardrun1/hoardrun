@@ -60,13 +60,9 @@ export function useBankAccounts() {
       if (plaidResponse.error) {
         console.error('Error fetching Plaid accounts:', plaidResponse.error)
         
-        // Don't show error toast for auth errors (handled by AuthContext)
+        // Auth errors are handled by AuthContext
         if (plaidResponse.status !== 401 && plaidResponse.status !== 403) {
-          toast({
-            title: 'Warning',
-            description: 'Unable to load connected bank accounts',
-            variant: 'default',
-          })
+          setError(plaidResponse.error)
         }
       }
 

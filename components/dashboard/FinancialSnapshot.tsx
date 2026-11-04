@@ -53,7 +53,7 @@ export const FinancialSnapshot: React.FC<FinancialSnapshotProps> = ({ data, load
     <Card className="col-span-1 md:col-span-2">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <PieChart className="w-5 h-5 text-purple-600" />
+          <PieChart className="w-5 h-5 text-blue-600" />
           Financial Snapshot
         </CardTitle>
         <CardDescription>Your financial overview at a glance</CardDescription>
@@ -111,7 +111,7 @@ export const FinancialSnapshot: React.FC<FinancialSnapshotProps> = ({ data, load
               <span className="text-gray-600">Investments</span>
               <span className="font-semibold">{investmentPercentage.toFixed(1)}%</span>
             </div>
-            <Progress value={investmentPercentage} className="h-2 bg-purple-100" />
+            <Progress value={investmentPercentage} className="h-2 bg-blue-100" />
           </div>
 
           {/* Amounts */}
@@ -124,7 +124,7 @@ export const FinancialSnapshot: React.FC<FinancialSnapshotProps> = ({ data, load
             </div>
             <div>
               <p className="text-xs text-gray-500">Investments</p>
-              <p className="text-sm font-bold text-purple-600">
+              <p className="text-sm font-bold text-blue-600">
                 {financial_summary.assets.investments.formatted}
               </p>
             </div>

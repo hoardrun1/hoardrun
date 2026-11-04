@@ -166,7 +166,7 @@ export function PlaidLink({
         style={{ cursor: (ready && linkToken && !error) ? 'pointer' : 'not-allowed' }}
         title={error || undefined}
       >
-        {children}
+        {error ? 'Bank linking unavailable' : children}
       </div>
     )
   }

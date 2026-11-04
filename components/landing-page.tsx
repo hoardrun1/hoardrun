@@ -192,7 +192,7 @@ export function LandingPageComponent() {
             >
               <Image
                 src="/hoardrun-logo.png"
-                alt="HoardRun Logo"
+                alt="Hoardrun Logo"
                 width={40}
                 height={40}
                 className="object-contain"
@@ -865,7 +865,7 @@ export function LandingPageComponent() {
               >
                 <Image
                   src="/hoardrun-logo.png"
-                  alt="HoardRun Logo"
+                  alt="Hoardrun Logo"
                   width={32}
                   height={32}
                   className="object-contain"

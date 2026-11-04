@@ -46,7 +46,7 @@
   },
   "signin": {
     "welcomeBack": "Welcome Back",
-    "subtitle": "Sign in to your HoardRun account",
+    "subtitle": "Sign in to your Hoardrun account",
     "emailPlaceholder": "Enter your email",
     "passwordPlaceholder": "Enter your password",
     "rememberMe": "Remember me",
@@ -55,11 +55,12 @@
     "signingIn": "Signing In...",
     "noAccount": "Don't have an account?",
     "signUpHere": "Sign up here",
-    "continueWithGoogle": "Continue with Google"
+    "continueWithGoogle": "Continue with Google",
+    "continueWithApple": "Continue with Apple"
   },
   "signup": {
     "createAccount": "Create Account",
-    "subtitle": "Join HoardRun and start your journey",
+    "subtitle": "Join Hoardrun and start your journey",
     "steps": {
       "account": "Account",
       "accountDesc": "Basic information",
@@ -203,7 +204,7 @@
         "watchYourSpending": "Watch your spending",
         "categoriesOverBudget": "categories are over budget",
         "overallProgress": "Overall progress",
-        "usedOfTotalBudget": "You've used {percentage}% of your total budget"
+        "usedOfTotalBudget": "You've used {{percentage}}% of your total budget"
       }
     },
     "analytics": {
@@ -322,7 +323,7 @@
       },
       "fixedDeposits": {
         "noFixedDepositsYet": "No Fixed Deposits Yet",
-        "earnGuaranteedReturns": "Start earning guaranteed returns with fixed deposits",
+        "earnGuaranteedReturns": "Lock in a fixed rate for a set term",
         "createYourFirstFD": "Create Your First FD",
         "maturityDate": "Maturity Date",
         "returns": "Returns",
@@ -364,7 +365,7 @@
         "automaticallyTransfer": "Automatically transfer funds monthly",
         "createSavingsGoal": "Create Savings Goal",
         "createFixedDeposit": "Create Fixed Deposit",
-        "lockInSavings": "Lock in your savings for guaranteed returns",
+        "lockInSavings": "Lock in a fixed rate for a set term",
         "depositAmount": "Deposit Amount",
         "minimumDeposit": "Minimum deposit: $1,000",
         "depositTerm": "Deposit Term",
@@ -430,44 +431,44 @@
       "signUp": "Sign up"
     },
     "hero": {
-      "title1": "Banking",
+      "title1": "Money",
       "title2": "Reimagined",
       "subtitle": "Experience seamless financial management with cutting-edge security and user-centric design for the digital age.",
       "getStarted": "Get Started",
       "learnMore": "Learn More",
-      "experienceFuture": "Experience the future of banking"
+      "experienceFuture": "Saving, spending, sending and investing in one app"
     },
     "features": {
       "lightningFast": "Lightning Fast",
       "lightningFastDesc": "Process transactions in milliseconds with our advanced infrastructure built for speed and efficiency.",
-      "bankLevelSecurity": "Bank-Level Security",
-      "bankLevelSecurityDesc": "Military-grade encryption and multi-layered security protocols protect your financial data 24/7.",
+      "bankLevelSecurity": "Serious Security",
+      "bankLevelSecurityDesc": "Your data is encrypted in transit and at rest, and we tell you about every payment and every change to how you sign in.",
       "globalAccess": "Global Access",
-      "globalAccessDesc": "Access your accounts and make transactions from anywhere in the world with full regulatory compliance."
+      "globalAccessDesc": "Use Hoardrun on your phone or computer, wherever you are."
     },
     "stats": {
-      "activeUsers": "Active Users",
-      "assetsUnderManagement": "Assets Under Management",
-      "uptimeGuarantee": "Uptime Guarantee",
-      "countriesSupported": "Countries Supported"
+      "activeUsers": "To start investing",
+      "assetsUnderManagement": "To send to Hoardrun members",
+      "uptimeGuarantee": "Freeze your card any time",
+      "countriesSupported": "To check your identity"
     },
     "services": {
       "title": "Our Services",
       "smartSavings": "Smart Savings",
       "smartSavingsDesc": "Flexible long-term and short-term savings options, helping users securely grow their funds with competitive interest rates.",
       "intelligentInvesting": "Intelligent Investing",
-      "intelligentInvestingDesc": "AI-powered investment strategies offering both long-term and short-term options to grow your wealth securely.",
+      "intelligentInvestingDesc": "Buy ETFs and crypto from $1, held at a licensed broker. Investments can lose value.",
       "secureDeposits": "Secure Deposits",
-      "secureDepositsDesc": "Safely transfer funds from bank accounts, credit cards, or other payment methods for savings and investments worldwide.",
+      "secureDepositsDesc": "Add money from your bank account or your debit card.",
       "instantTransfers": "Instant Transfers",
-      "instantTransfersDesc": "Lightning-fast money transfers between accounts, both within the platform and to external bank accounts globally."
+      "instantTransfersDesc": "Send money to other Hoardrun members instantly, and move money to and from your own bank."
     },
     "about": {
       "title": "About Us",
-      "description1": "At Hoardrun, we offer comprehensive universal banking services tailored for corporations, investors, and individuals. Our mission is to empower you with low-cost investment opportunities and expert guidance in the digital age.",
+      "description1": "Hoardrun is a financial technology company, not a bank. We bring saving, spending, sending and investing together in one app, with low costs and clear information so you can decide for yourself.",
       "description2": "We specialize in identifying promising startups, taking minimal equity stakes, and ensuring they thrive in the market. Our innovative debit card system allows seamless transactions with minimal fees, while our AI-powered insights help you make informed decisions and avoid fraud.",
       "corporateServices": "Corporate Services",
-      "individualBanking": "Individual Banking",
+      "individualBanking": "Personal Accounts",
       "investmentOpportunities": "Investment Opportunities",
       "smartDebitCards": "Smart Debit Cards",
       "aiPoweredInsights": "AI-Powered Insights",
@@ -492,7 +493,8 @@
       "privacyPolicy": "Privacy Policy",
       "termsOfService": "Terms of Service",
       "cookiePolicy": "Cookie Policy",
-      "copyright": "© 2024 Hoardrun. All rights reserved."
+      "copyright": "© Hoardrun. All rights reserved.",
+        "disclosure": "Hoardrun is a financial technology company, not a bank. Investments are offered through a licensed broker-dealer, are not FDIC insured, and may lose value."
     }
   }
 }

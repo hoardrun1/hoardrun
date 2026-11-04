@@ -141,7 +141,7 @@ export const EnhancedDashboard: React.FC = () => {
 
       {/* Footer Stats */}
       {dashboardData && (
-        <Card className="bg-gradient-to-r from-blue-50 to-purple-50">
+        <Card className="bg-gradient-to-r from-blue-50 to-blue-50">
           <CardContent className="py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">

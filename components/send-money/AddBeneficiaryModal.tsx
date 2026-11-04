@@ -6,8 +6,13 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, User, Building2, Hash, Mail, Phone } from 'lucide-react'
-import { useToast } from '@/components/ui/use-toast'
 import { useBeneficiaries } from '@/hooks/useBeneficiaries'
+
+const COUNTRIES = [
+  ['GH', 'Ghana'], ['KE', 'Kenya'], ['NG', 'Nigeria'], ['TZ', 'Tanzania'], ['UG', 'Uganda'], ['ZA', 'South Africa'],
+  ['EG', 'Egypt'], ['US', 'United States'], ['CA', 'Canada'], ['GB', 'United Kingdom'], ['DE', 'Germany'],
+  ['FR', 'France'], ['AU', 'Australia'], ['JP', 'Japan'], ['CN', 'China'], ['IN', 'India'], ['BR', 'Brazil'], ['MX', 'Mexico'],
+]
 
 interface AddBeneficiaryModalProps {
   open: boolean
@@ -16,7 +21,6 @@ interface AddBeneficiaryModalProps {
 }
 
 export function AddBeneficiaryModal({ open, onOpenChange, onSuccess }: AddBeneficiaryModalProps) {
-  const { toast } = useToast()
   const { addBeneficiary } = useBeneficiaries()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -28,6 +32,10 @@ export function AddBeneficiaryModal({ open, onOpenChange, onSuccess }: AddBenefi
   const [bankCode, setBankCode] = useState('')
   const [email, setEmail] = useState('')
   const [phoneNumber, setPhoneNumber] = useState('')
+  const [addressLine1, setAddressLine1] = useState('')
+  const [city, setCity] = useState('')
+  const [postalCode, setPostalCode] = useState('')
+  const [country, setCountry] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -36,8 +44,8 @@ export function AddBeneficiaryModal({ open, onOpenChange, onSuccess }: AddBenefi
 
     try {
       // Validate required fields
-      if (!name.trim() || !accountNumber.trim() || !bankName.trim()) {
-        throw new Error('Name, account number, and bank name are required')
+      if (!name.trim() || !accountNumber.trim() || !bankName.trim() || !addressLine1.trim() || !city.trim() || !postalCode.trim() || !country.trim()) {
+        throw new Error('Please fill in all the required fields')
       }
 
       const result = await addBeneficiary({
@@ -47,16 +55,15 @@ export function AddBeneficiaryModal({ open, onOpenChange, onSuccess }: AddBenefi
         bankCode: bankCode.trim() || undefined,
         email: email.trim() || undefined,
         phoneNumber: phoneNumber.trim() || undefined,
+        addressLine1: addressLine1.trim(),
+        city: city.trim(),
+        postalCode: postalCode.trim(),
+        country: country.trim().toUpperCase(),
       })
 
       if (!result) {
         throw new Error('Failed to add beneficiary')
       }
-
-      toast({
-        title: 'Success',
-        description: 'Beneficiary added successfully',
-      })
 
       // Reset form
       setName('')
@@ -65,17 +72,16 @@ export function AddBeneficiaryModal({ open, onOpenChange, onSuccess }: AddBenefi
       setBankCode('')
       setEmail('')
       setPhoneNumber('')
+      setAddressLine1('')
+      setCity('')
+      setPostalCode('')
+      setCountry('')
 
       onSuccess?.()
       onOpenChange(false)
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to add beneficiary'
       setError(errorMessage)
-      toast({
-        title: 'Error',
-        description: errorMessage,
-        variant: 'destructive',
-      })
     } finally {
       setIsLoading(false)
     }
@@ -89,6 +95,10 @@ export function AddBeneficiaryModal({ open, onOpenChange, onSuccess }: AddBenefi
       setBankCode('')
       setEmail('')
       setPhoneNumber('')
+      setAddressLine1('')
+      setCity('')
+      setPostalCode('')
+      setCountry('')
       setError(null)
       onOpenChange(false)
     }
@@ -96,14 +106,14 @@ export function AddBeneficiaryModal({ open, onOpenChange, onSuccess }: AddBenefi
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <User className="h-5 w-5" />
             Add New Beneficiary
           </DialogTitle>
           <DialogDescription>
-            Add a new beneficiary to send money to. All information is securely stored.
+            Save someone you send money to. Their account number is encrypted.
           </DialogDescription>
         </DialogHeader>
 
@@ -178,6 +188,58 @@ export function AddBeneficiaryModal({ open, onOpenChange, onSuccess }: AddBenefi
               />
             </div>
 
+            {/* Address */}
+            <div className="space-y-2">
+              <Label htmlFor="addressLine1">Their address *</Label>
+              <Input
+                id="addressLine1"
+                type="text"
+                value={addressLine1}
+                onChange={(e) => setAddressLine1(e.target.value)}
+                maxLength={100}
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="city">City *</Label>
+                <Input
+                  id="city"
+                  type="text"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  maxLength={50}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="postalCode">Postal code *</Label>
+                <Input
+                  id="postalCode"
+                  type="text"
+                  value={postalCode}
+                  onChange={(e) => setPostalCode(e.target.value)}
+                  maxLength={20}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Country *</Label>
+              <Select value={country} onValueChange={setCountry}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose a country" />
+                </SelectTrigger>
+                <SelectContent>
+                  {COUNTRIES.map(([code, label]) => (
+                    <SelectItem key={code} value={code}>{label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             {/* Email */}
             <div className="space-y-2">
               <Label htmlFor="email">Email (Optional)</Label>
@@ -223,7 +285,7 @@ export function AddBeneficiaryModal({ open, onOpenChange, onSuccess }: AddBenefi
             </Button>
             <Button
               type="submit"
-              disabled={isLoading || !name.trim() || !accountNumber.trim() || !bankName.trim()}
+              disabled={isLoading || !name.trim() || !accountNumber.trim() || !bankName.trim() || !addressLine1.trim() || !city.trim() || !postalCode.trim() || !country}
               className="flex-1"
             >
               {isLoading ? (

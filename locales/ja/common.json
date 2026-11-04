@@ -49,7 +49,7 @@
   },
   "signin": {
     "welcomeBack": "おかえりなさい",
-    "subtitle": "HoardRun アカウントにサインイン",
+    "subtitle": "Hoardrun アカウントにサインイン",
     "emailPlaceholder": "メールアドレスを入力",
     "passwordPlaceholder": "パスワードを入力",
     "rememberMe": "ログイン状態を保持",
@@ -58,11 +58,12 @@
     "signingIn": "サインイン中...",
     "noAccount": "アカウントをお持ちでないですか？",
     "signUpHere": "こちらでサインアップ",
-    "continueWithGoogle": "Google で続行"
+    "continueWithGoogle": "Google で続行",
+    "continueWithApple": "Apple で続行"
   },
   "signup": {
     "createAccount": "アカウント作成",
-    "subtitle": "HoardRun に参加して旅を始めましょう",
+    "subtitle": "Hoardrun に参加して旅を始めましょう",
     "steps": {
       "account": "アカウント",
       "accountDesc": "基本情報",
@@ -206,7 +207,7 @@
         "watchYourSpending": "支出に注意",
         "categoriesOverBudget": "カテゴリが予算オーバー",
         "overallProgress": "全体の進捗",
-        "usedOfTotalBudget": "総予算の {percentage}% を使用しました"
+        "usedOfTotalBudget": "総予算の {{percentage}}% を使用しました"
       }
     },
     "analytics": {

@@ -1,0 +1,384 @@
+/* Black and white auth screens. Spacing tightens on short screens so nothing scrolls. */
+.lp-auth {
+  --auth-field: 46px;
+  --auth-gap: 14px;
+  color-scheme: dark;
+}
+@media (max-height: 760px) {
+  .lp-auth { --auth-field: 42px; --auth-gap: 10px; }
+}
+@media (max-height: 620px) {
+  .lp-auth { --auth-field: 38px; --auth-gap: 7px; }
+}
+
+.lp-auth-body { scrollbar-width: none; }
+.lp-auth-body::-webkit-scrollbar { display: none; }
+
+.lp-auth-title {
+  font-size: clamp(1.65rem, 4.6vh, 2.5rem);
+  font-weight: 600;
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+.lp-auth-sub {
+  margin-top: 6px;
+  font-size: 15px;
+  font-weight: 300;
+  color: var(--lp-muted);
+}
+.lp-auth-stack { display: flex; flex-direction: column; gap: var(--auth-gap); }
+
+.lp-auth-label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 12px;
+  color: var(--lp-muted);
+}
+
+.lp-input {
+  width: 100%;
+  height: var(--auth-field);
+  padding: 0 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+.lp-input::placeholder { color: #6e6e73; }
+.lp-input:hover { border-color: rgba(255, 255, 255, 0.26); }
+.lp-input:focus {
+  border-color: rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.12);
+}
+.lp-input:-webkit-autofill {
+  -webkit-text-fill-color: #fff;
+  -webkit-box-shadow: 0 0 0 40px #161617 inset;
+  caret-color: #fff;
+}
+select.lp-input { appearance: none; padding-right: 34px; background-image: linear-gradient(45deg, transparent 50%, #a1a1a6 50%), linear-gradient(135deg, #a1a1a6 50%, transparent 50%); background-position: calc(100% - 18px) 50%, calc(100% - 13px) 50%; background-size: 5px 5px; background-repeat: no-repeat; }
+select.lp-input option { background: #1c1c1e; color: #fff; }
+textarea.lp-input { height: calc(var(--auth-field) * 1.5); padding-top: 10px; resize: none; }
+
+.lp-auth-check {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  accent-color: #fff;
+  cursor: pointer;
+}
+
+.lp-auth-btn { width: 100%; height: var(--auth-field); padding: 0 20px; }
+.lp-auth-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.lp-auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: #6e6e73;
+}
+.lp-auth-divider::before,
+.lp-auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.lp-auth-error {
+  padding: 9px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.lp-auth-link { color: #fff; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(255, 255, 255, 0.4); transition: text-decoration-color 0.15s ease; }
+.lp-auth-link:hover { text-decoration-color: #fff; }
+
+.lp-eclipse-auth { width: 135%; left: 50%; top: 56%; transform: translateX(-50%); }
+.lp-eclipse-signout { width: max(1100px, 150vw); left: 50%; top: 68%; transform: translateX(-50%); }
+
+/* Soft light above the form on screens without the stage */
+.lp-auth-glow {
+  position: absolute;
+  top: -180px;
+  left: 50%;
+  width: 640px;
+  height: 320px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255, 255, 255, 0.16), transparent);
+  pointer-events: none;
+}
+
+/* Keeps the product art inside the stage on short laptop screens */
+@media (max-height: 800px) {
+  .lp-auth-art { transform: scale(0.84); }
+}
+@media (max-height: 660px) {
+  .lp-auth-art { transform: scale(0.7); }
+}
+
+.lp-auth-meter { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+.lp-auth-meter span { height: 3px; border-radius: 3px; background: rgba(255, 255, 255, 0.14); transition: background-color 0.25s ease; }
+.lp-auth-meter span[data-on="true"] { background: #fff; }
+
+/* Phones: brand header in Hoardrun's iris, the form on a sheet that rises over its lower edge */
+.lp-auth-wordmark { font-weight: 600; letter-spacing: -0.04em; line-height: 1; color: #fff; text-shadow: 0 0 28px rgba(90, 169, 255, 0.55); }
+.lp-auth-aurora {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(60% 70% at 50% 42%, rgba(47, 107, 255, 0.55), transparent 70%),
+    radial-gradient(45% 50% at 14% 10%, rgba(125, 200, 255, 0.35), transparent 70%),
+    radial-gradient(45% 55% at 90% 20%, rgba(56, 189, 248, 0.3), transparent 70%),
+    linear-gradient(180deg, #050a18 0%, #071433 55%, #030712 100%);
+  animation: lp-aurora 8s ease-in-out infinite alternate;
+}
+@keyframes lp-aurora { from { opacity: 0.8; } to { opacity: 1; } }
+.lp-auth-rings {
+  position: absolute;
+  inset: 0;
+  background: repeating-radial-gradient(circle at 50% 48%, transparent 0 34px, rgba(255, 255, 255, 0.07) 34px 35px);
+  mask-image: radial-gradient(closest-side at 50% 48%, #000 40%, transparent 100%);
+}
+.lp-auth-brand {
+  position: relative;
+  display: flex;
+  height: clamp(168px, 27dvh, 250px);
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: 26px;
+}
+.lp-auth-brand-art {
+  height: clamp(54px, 9dvh, 84px);
+  animation: lp-bob 6s ease-in-out infinite;
+}
+@keyframes lp-bob { 0%, 100% { translate: 0 0; rotate: 0deg; } 50% { translate: 0 -6px; rotate: -4deg; } }
+@media (max-width: 1023px) {
+  .lp-auth-sheet {
+    margin-top: -30px;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 30px 30px 0 0;
+    background: radial-gradient(90% 40% at 50% 0%, rgba(77, 148, 255, 0.16), transparent 70%), #0b0b0c;
+    box-shadow: 0 -20px 50px rgba(5, 20, 60, 0.7);
+    padding-top: 22px;
+    padding-bottom: max(14px, env(safe-area-inset-bottom, 0px));
+    animation: lp-sheet-up 0.7s cubic-bezier(0.23, 1, 0.32, 1) both;
+  }
+  .lp-auth-sheet::before {
+    content: "";
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    width: 38px;
+    height: 4px;
+    margin-left: -19px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.18);
+  }
+  .lp-auth-sheet > div { margin-top: 0; }
+  .lp-auth { --auth-field: 48px; }
+  .lp-auth .lp-input:focus { border-color: #5aa9ff; box-shadow: 0 0 0 3px rgba(77, 148, 255, 0.25); }
+  .lp-auth .lp-btn-primary { background: linear-gradient(135deg, #8fd0ff 0%, #3b82f6 55%, #2f6bff 100%); color: #fff; box-shadow: 0 12px 28px -10px rgba(47, 107, 255, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.35); }
+  .lp-auth .lp-auth-link { color: #8cc8ff; text-decoration-color: rgba(165, 166, 255, 0.45); }
+  .lp-auth .lp-auth-title { font-size: 28px; }
+}
+@media (max-width: 1023px) and (max-height: 700px) { .lp-auth { --auth-field: 44px; --auth-gap: 9px; } }
+@keyframes lp-sheet-up { from { transform: translateY(60px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* Launch screen */
+.lp-auth-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  animation: lp-splash-out 0.5s cubic-bezier(0.65, 0, 0.35, 1) 1.2s forwards;
+}
+.lp-auth-splash-mark { position: relative; display: flex; flex-direction: column; align-items: center; animation: lp-splash-in 0.8s cubic-bezier(0.23, 1, 0.32, 1) both; }
+.lp-auth-splash-bar { position: absolute; bottom: calc(40px + env(safe-area-inset-bottom, 0px)); left: 50%; width: 64px; height: 4px; margin-left: -32px; overflow: hidden; border-radius: 4px; background: rgba(255, 255, 255, 0.2); }
+.lp-auth-splash-bar::after { content: ""; position: absolute; inset: 0; border-radius: 4px; background: #fff; transform-origin: left; animation: lp-splash-load 1.2s ease-out forwards; }
+@keyframes lp-splash-in { from { transform: scale(0.82); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes lp-splash-out { to { transform: translateY(-100%); opacity: 0.6; } }
+@keyframes lp-splash-load { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@media (prefers-reduced-motion: reduce) { .lp-auth-aurora, .lp-auth-brand-art, .lp-auth-sheet { animation: none; } }
+/* Tailwind's lg:hidden loses to the display rules above, so large screens hide these here */
+@media (min-width: 1024px) { .lp-auth-brand, .lp-auth-splash { display: none; } }
+
+/* The logo's pulse line runs faintly through the header behind the mark */
+.lp-auth-pulse { position: absolute; inset: 18% -10% auto; width: 120%; height: 64%; opacity: 0.2; }
+.lp-auth-logo { width: auto; filter: drop-shadow(0 0 18px rgba(90, 169, 255, 0.6)); }
+.lp-auth-splash .lp-auth-aurora { background: radial-gradient(55% 40% at 50% 46%, rgba(47, 107, 255, 0.5), transparent 70%), radial-gradient(60% 40% at 50% 100%, rgba(56, 189, 248, 0.18), transparent 70%), #02050d; }
+
+/* ===== Revolut-style phone auth: welcome stories, then a plain black form ===== */
+@media (max-width: 1023px) {
+  /* The form: black page, big left-aligned title, filled fields, pill buttons */
+  .lp-auth-sheet {
+    margin-top: 0;
+    border: 0;
+    border-radius: 0;
+    background: #000;
+    box-shadow: none;
+    padding-top: 6px;
+    animation: lp-form-in 0.5s cubic-bezier(0.23, 1, 0.32, 1) both;
+  }
+  .lp-auth-sheet::before { display: none; }
+  .lp-auth-sheet > div { margin: 0 auto auto; }
+  .lp-auth { --auth-field: 56px; --auth-gap: 14px; background: #000; }
+  .lp-auth .lp-auth-title { font-size: 34px; font-weight: 600; letter-spacing: -0.04em; text-align: left; }
+  .lp-auth .lp-auth-sub { font-size: 15px; color: #8e8e93; }
+  .lp-auth .lp-auth-label { margin-bottom: 7px; font-size: 13px; color: #8e8e93; }
+  .lp-auth .lp-input { border: 1px solid transparent; border-radius: 16px; background: #1c1c1e; font-size: 16px; padding: 0 16px; }
+  .lp-auth .lp-input:hover { border-color: transparent; }
+  .lp-auth .lp-input:focus { border-color: #2f6bff; background: #1c1c1e; box-shadow: 0 0 0 3px rgba(47, 107, 255, 0.22); }
+  .lp-auth .lp-btn-primary { height: 56px; border-radius: 999px; background: #2f6bff; color: #fff; font-size: 16px; box-shadow: 0 12px 28px -12px rgba(47, 107, 255, 0.9); }
+  .lp-auth .lp-btn-primary:active { transform: scale(0.98); }
+  /* Social sign-in as Revolut's dark pill */
+  .lp-auth .lp-auth-stack > button.w-full:not(.lp-btn) { height: 56px !important; border: 0 !important; border-radius: 999px !important; background: #1c1c1e !important; color: #fff !important; }
+  .lp-auth .lp-auth-stack > button.w-full:not(.lp-btn):hover { background: #26262a !important; }
+  .lp-auth .lp-auth-divider { color: #8e8e93; }
+  .lp-auth .lp-auth-link { color: #5aa9ff; text-decoration: none; }
+  .lp-auth .lp-auth-check { accent-color: #2f6bff; }
+}
+@keyframes lp-form-in { from { transform: translateX(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+.lp-auth-topbar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 6px;
+}
+.lp-auth-back { display: inline-flex; width: 42px; height: 42px; align-items: center; justify-content: center; border-radius: 50%; background: #1c1c1e; color: #fff; transition: transform 0.15s ease; }
+.lp-auth-back:active { transform: scale(0.92); }
+
+/* Welcome stories */
+.lp-welcome {
+  --glow: 47 107 255;
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #000;
+  color: #fff;
+  padding: calc(10px + env(safe-area-inset-top, 0px)) 18px calc(18px + env(safe-area-inset-bottom, 0px));
+  transition: background-color 0.4s ease, color 0.4s ease;
+}
+.lp-welcome[data-theme="light"] { background: #fff; color: #0b0b0c; }
+.lp-welcome-bg {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(70% 45% at 50% 62%, rgb(var(--glow) / 0.35), transparent 70%);
+  transition: background 0.5s ease;
+  pointer-events: none;
+}
+.lp-welcome[data-theme="light"] .lp-welcome-bg { background: radial-gradient(70% 45% at 50% 62%, rgb(var(--glow) / 0.12), transparent 70%); }
+.lp-welcome-bars { position: relative; z-index: 2; display: grid; grid-auto-columns: 1fr; grid-auto-flow: column; gap: 4px; }
+.lp-welcome-bar { height: 3px; overflow: hidden; border-radius: 3px; background: rgba(255, 255, 255, 0.25); }
+.lp-welcome[data-theme="light"] .lp-welcome-bar { background: rgba(0, 0, 0, 0.12); }
+.lp-welcome-bar-fill { display: block; height: 100%; width: 0; border-radius: 3px; background: currentColor; }
+.lp-welcome-bar-fill[data-state="done"] { width: 100%; }
+.lp-welcome-bar-fill[data-state="run"] { animation: lp-bar-fill linear forwards; }
+@keyframes lp-bar-fill { from { width: 0; } to { width: 100%; } }
+.lp-welcome-brand { position: relative; z-index: 2; display: flex; align-items: center; gap: 8px; margin-top: 14px; font-size: 15px; font-weight: 500; }
+.lp-welcome[data-theme="light"] .lp-welcome-logo { filter: invert(1) hue-rotate(180deg); }
+.lp-welcome-tap { position: absolute; top: 0; bottom: 110px; z-index: 3; background: transparent; }
+.lp-welcome-story { position: relative; z-index: 1; display: flex; min-height: 0; flex: 1; flex-direction: column; padding-top: 18px; }
+.lp-welcome-headline { max-width: 13ch; font-size: clamp(34px, 10.4vw, 46px); font-weight: 800; line-height: 0.98; letter-spacing: -0.035em; text-transform: uppercase; text-wrap: balance; }
+.lp-welcome-sub { margin-top: 12px; max-width: 32ch; font-size: 15px; line-height: 1.45; opacity: 0.7; }
+.lp-welcome-art { position: relative; display: flex; min-height: 0; flex: 1; align-items: center; justify-content: center; }
+.lp-welcome-actions { position: relative; z-index: 4; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.lp-welcome-btn { height: 56px; border-radius: 999px; font-size: 16px; font-weight: 600; transition: transform 0.15s ease; }
+.lp-welcome-btn:active { transform: scale(0.97); }
+.lp-welcome-btn[data-kind="login"] { background: #1c1c1e; color: #fff; }
+.lp-welcome-btn[data-kind="signup"] { background: #fff; color: #000; }
+.lp-welcome[data-theme="light"] .lp-welcome-btn[data-kind="login"] { background: #191c1f; }
+.lp-welcome[data-theme="light"] .lp-welcome-btn[data-kind="signup"] { background: #f1f1f4; }
+
+/* Story 1: a silver coin carrying the logo, over hyperspace light streaks */
+.lp-story-coin-stage { position: relative; width: 100%; height: 100%; min-height: 300px; }
+.lp-story-warp {
+  position: absolute;
+  inset: -40% -60%;
+  background:
+    repeating-conic-gradient(from 0deg at 50% 50%, transparent 0deg 5deg, rgba(90, 169, 255, 0.55) 5deg 5.4deg, transparent 5.4deg 11deg, rgba(163, 230, 53, 0.35) 11deg 11.3deg, transparent 11.3deg 17deg, rgba(255, 255, 255, 0.45) 17deg 17.25deg);
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, transparent 6%, #000 30%, #000 60%, transparent 75%);
+  mask-image: radial-gradient(circle at 50% 50%, transparent 6%, #000 30%, #000 60%, transparent 75%);
+  animation: lp-warp 14s linear infinite;
+}
+@keyframes lp-warp { from { transform: rotate(0deg) scale(1); } 50% { transform: rotate(8deg) scale(1.12); } to { transform: rotate(0deg) scale(1); } }
+.lp-story-coin { position: absolute; left: 50%; top: 58%; width: 230px; height: 230px; margin: -115px 0 0 -115px; perspective: 700px; animation: lp-coin-float 5s ease-in-out infinite; }
+.lp-story-coin-face {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: radial-gradient(circle at 34% 28%, #ffffff 0%, #e5e7eb 22%, #9ca3af 52%, #e5e7eb 72%, #6b7280 100%);
+  box-shadow: inset 0 -10px 18px rgba(0, 0, 0, 0.35), inset 0 6px 10px rgba(255, 255, 255, 0.8), 0 0 0 8px #9ca3af, 0 0 0 10px #4b5563, 0 30px 60px rgba(0, 0, 0, 0.7), 0 0 80px rgba(47, 107, 255, 0.45);
+  transform: rotateX(58deg);
+}
+.lp-story-coin-face img { filter: invert(1) brightness(0.4) drop-shadow(0 1px 0 rgba(255, 255, 255, 0.8)); }
+@keyframes lp-coin-float { 0%, 100% { translate: 0 0; } 50% { translate: 0 -12px; } }
+
+/* Story 2: two translucent cards, stacked */
+.lp-story-cards { position: relative; width: min(340px, 92%); height: 280px; }
+.lp-story-card { position: absolute; left: 0; right: 0; height: 196px; border-radius: 22px; padding: 18px 20px; color: #fff; box-shadow: 0 30px 50px -20px rgba(0, 0, 0, 0.45); }
+.lp-story-card[data-tone="blue"] { top: 0; background: linear-gradient(140deg, #5aa9ff, #2f6bff 60%, #1d4ed8); animation: lp-card-a 6s ease-in-out infinite; }
+.lp-story-card[data-tone="coral"] { top: 86px; background: linear-gradient(140deg, rgba(251, 113, 133, 0.92), rgba(190, 24, 93, 0.92)); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); animation: lp-card-b 6s ease-in-out infinite; }
+.lp-story-card-brand { font-size: 24px; font-weight: 600; letter-spacing: -0.03em; }
+.lp-story-card-tag { position: absolute; top: 22px; right: 20px; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; opacity: 0.9; }
+.lp-story-card-chip { position: absolute; left: 20px; top: 74px; width: 40px; height: 30px; border-radius: 7px; background: linear-gradient(135deg, #fde68a, #d97706); }
+.lp-story-card-number { position: absolute; left: 20px; bottom: 20px; font-size: 16px; letter-spacing: 0.08em; opacity: 0.9; }
+@keyframes lp-card-a { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(-1deg) translateY(-6px); } }
+@keyframes lp-card-b { 0%, 100% { transform: rotate(2deg); } 50% { transform: rotate(4deg) translateY(4px); } }
+
+/* Story 3: a filling savings ring around the vault */
+.lp-story-save { position: relative; width: 270px; height: 270px; }
+.lp-story-ring { position: absolute; inset: 0; filter: drop-shadow(0 0 22px rgba(16, 185, 129, 0.5)); }
+.lp-story-ring-arc { stroke-dashoffset: 380; animation: lp-ring 1.6s cubic-bezier(0.23, 1, 0.32, 1) 0.2s forwards; }
+@keyframes lp-ring { to { stroke-dashoffset: 0; } }
+.lp-story-save-vault { position: absolute; left: 50%; top: 50%; width: 150px; height: 150px; margin: -75px 0 0 -75px; }
+.lp-story-save-target { position: absolute; right: -10px; top: -6px; width: 84px; height: 84px; animation: lp-coin-float 4s ease-in-out infinite; }
+
+/* Story 4: market objects with labels */
+.lp-story-invest { position: relative; width: min(330px, 94%); height: 300px; }
+.lp-story-invest-bars { position: absolute; left: 8%; bottom: 8%; width: 190px; height: 190px; }
+.lp-story-invest-gem { position: absolute; right: 2%; top: 20%; width: 150px; height: 150px; animation: lp-coin-float 5s ease-in-out infinite; }
+.lp-story-pill { position: absolute; border-radius: 999px; background: rgba(255, 255, 255, 0.12); padding: 7px 13px; font-size: 13px; font-weight: 600; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+
+/* Story 5: the assistant orb and a short exchange */
+.lp-story-ai { display: flex; width: min(330px, 94%); flex-direction: column; align-items: center; gap: 12px; }
+.lp-story-ai-orb { display: flex; width: 110px; height: 110px; margin-bottom: 8px; align-items: center; justify-content: center; border-radius: 50%; background: radial-gradient(circle at 32% 28%, #b9e0ff, #2f6bff 58%, #0d2370); box-shadow: 0 0 70px rgba(47, 107, 255, 0.7); animation: lp-coin-float 4s ease-in-out infinite; }
+.lp-story-bubble { max-width: 86%; border-radius: 20px; padding: 10px 14px; font-size: 14.5px; line-height: 1.4; }
+.lp-story-bubble[data-side="user"] { align-self: flex-end; border-bottom-right-radius: 6px; background: #2f6bff; }
+.lp-story-bubble[data-side="ai"] { align-self: flex-start; border-bottom-left-radius: 6px; background: #1c1c1e; }
+
+@media (min-width: 1024px) { .lp-welcome, .lp-auth-topbar { display: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .lp-story-warp, .lp-story-coin, .lp-story-card, .lp-story-save-target, .lp-story-invest-gem, .lp-story-ai-orb { animation: none; }
+}
+
+/* The language button would sit on the Sign up pill */
+body:has(.lp-welcome) .hr-lang-fab { display: none; }
+@media (max-width: 1023px) {
+  /* Sign-up steps as a dark segmented control, the current step in blue */
+  .lp-auth ol.lp-glass { background: #1c1c1e; box-shadow: none; }
+  .lp-auth .lp-glass-lens { background: #2f6bff; box-shadow: none; }
+}

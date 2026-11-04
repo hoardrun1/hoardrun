@@ -36,7 +36,7 @@ const cards = [
     balance: 5000, 
     limit: 10000, 
     type: 'Visa', 
-    color: 'from-violet-500 to-purple-600',
+    color: 'from-blue-500 to-blue-600',
     expiryMonth: '12',
     expiryYear: '25',
     cvv: '***'

@@ -1,50 +1,16 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
-import { 
-  ArrowUpRight, 
-  ArrowDownRight, 
-  TrendingUp, 
-  TrendingDown,
-  DollarSign,
-  Calendar,
-  Filter,
-  Search,
-  Plus,
-  ChevronRight,
-  Bell,
-  Settings,
-  Download,
-  Upload,
-  Brain,
-  Loader2,
-  RefreshCcw,
-  Building2
-} from 'lucide-react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { ArrowDownLeft, ArrowUpRight, Building2, Loader2, Plus, RefreshCcw, Search, Unlink } from 'lucide-react'
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
-import { Skeleton } from "@/components/ui/skeleton"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { useToast } from "@/components/ui/use-toast"
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts'
-import { cn } from "@/lib/utils"
-import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sidebar-layout'
-import { SidebarContent } from '@/components/ui/sidebar-content-unified'
-import { SidebarToggle } from '@/components/ui/sidebar-toggle'
-import { DepositModal } from '@/components/deposit-modal'
 import { PlaidLink } from '@/components/plaid/PlaidLink'
+import { BankMoveDialog, type BankDirection } from '@/components/bank/bank-move-dialog'
 import { usePlaid } from '@/hooks/usePlaid'
-import { apiClient } from '@/lib/api-client'
+import { apiClient, type BankTransfer, type PlaidAccount, type PlaidConnection } from '@/lib/api-client'
 import { formatCurrency } from '@/lib/banking'
-import Link from 'next/link'
-import { Home, BarChart2, CreditCard, PieChart } from 'lucide-react'
 
 interface Transaction {
   id: string
@@ -54,847 +20,436 @@ interface Transaction {
   category: string
   date: string
   merchant: string
-  status: 'completed' | 'pending' | 'failed'
+  status: string
 }
 
-interface Category {
-  name: string
-  amount: number
-  percentage: number
-  color: string
-  trend: number
+const INCOME_TYPES = /deposit|income|credit|refund|interest/i
+const PLAID_BUTTON = 'inline-flex h-10 shrink-0 items-center rounded-full border border-white/20 px-4 text-sm font-medium'
+
+const isThisMonth = (value: string) => {
+  const date = new Date(value)
+  const now = new Date()
+  return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth()
 }
 
-interface AIInsight {
-  id: string
-  type: 'spending' | 'saving' | 'investment'
-  title: string
-  description: string
-  impact: number
-  confidence: number
-}
+const sum = (items: Transaction[]) => items.reduce((total, item) => total + item.amount, 0)
 
-interface FinancialMetrics {
-  totalBalance: number
-  monthlyIncome: number
-  monthlyExpenses: number
-  savingsRate: number
-  trends: {
-    balance: number
-    income: number
-    expenses: number
-    savings: number
-  }
+const ON_THE_WAY = ['pending', 'posted']
+
+// What an ACH transfer's status means to the person
+const transferState = (t: BankTransfer) => {
+  if (ON_THE_WAY.includes(t.status)) return 'On the way'
+  if (t.status === 'settled' || t.status === 'funds_available') return t.direction === 'deposit' ? 'Added' : 'Arrived'
+  if (t.status === 'returned') return t.direction === 'deposit' ? 'Returned by your bank' : 'Returned to your cash'
+  if (t.status === 'failed') return t.direction === 'deposit' ? 'Failed' : 'Failed, back in your cash'
+  return 'Cancelled'
 }
 
 export function FinancePageComponent() {
-  const router = useRouter()
   const { toast } = useToast()
-  const { 
-    getAccounts, 
-    getTransactions, 
-    getConnections,
-    syncTransactions,
-    isLoading: plaidLoading 
-  } = usePlaid()
+  const { getAccounts, syncTransactions } = usePlaid()
+  const [bankAccounts, setBankAccounts] = useState<PlaidAccount[]>([])
+  const [banks, setBanks] = useState<PlaidConnection[]>([])
+  const [bankTransfers, setBankTransfers] = useState<BankTransfer[]>([])
+  const [sandbox, setSandbox] = useState(false)
+  const [move, setMove] = useState<{ direction: BankDirection; accountId: string } | null>(null)
 
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [selectedPeriod, setSelectedPeriod] = useState('month')
-  const [selectedCategory, setSelectedCategory] = useState('all')
+  const [error, setError] = useState(false)
+  const [transactionsFailed, setTransactionsFailed] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [transactions, setTransactions] = useState<Transaction[]>([])
-  const [categories, setCategories] = useState<Category[]>([])
-  const [metrics, setMetrics] = useState<FinancialMetrics | null>(null)
-  const [aiInsights, setAIInsights] = useState<AIInsight[]>([])
-  const [showInsights, setShowInsights] = useState(true)
-  const [isDepositModalOpen, setIsDepositModalOpen] = useState(false)
+  const [balance, setBalance] = useState<number | null>(null)
+  const [plaidAvailable, setPlaidAvailable] = useState(false)
   const [hasPlaidAccounts, setHasPlaidAccounts] = useState(false)
   const [syncing, setSyncing] = useState(false)
 
-  // Chart data for financial overview
-  const [chartData, setChartData] = useState([
-    { name: 'Jan', income: 4000, expenses: 2400 },
-    { name: 'Feb', income: 3000, expenses: 1398 },
-    { name: 'Mar', income: 2000, expenses: 9800 },
-    { name: 'Apr', income: 2780, expenses: 3908 },
-    { name: 'May', income: 1890, expenses: 4800 },
-    { name: 'Jun', income: 2390, expenses: 3800 },
-  ])
+  // The linked banks' own balances and activity (Plaid amounts are positive for money out)
+  const loadFromPlaid = useCallback(async () => {
+    const [accounts, transactionsResponse] = await Promise.all([getAccounts(), apiClient.getPlaidTransactions()])
+    setBankAccounts(accounts || [])
+    setBalance((accounts || []).reduce((total, account) => total + (account.balances?.current || 0), 0))
+    setTransactionsFailed(Boolean(transactionsResponse.error))
+    setTransactions((transactionsResponse.data ?? []).map((t: any) => ({
+      id: t.transaction_id,
+      type: Number(t.amount) > 0 ? 'expense' : 'income', // Plaid: positive means money out
+      amount: Math.abs(Number(t.amount)),
+      description: t.name,
+      category: t.merchant_name || 'General',
+      date: t.date,
+      merchant: t.merchant_name || t.name,
+      status: t.pending ? 'pending' : 'completed',
+    })))
+  }, [getAccounts])
 
-  // Fetch initial data
+  const loadFromAccount = useCallback(async () => {
+    const [transactionsResponse, dashboardResponse] = await Promise.all([
+      apiClient.getTransactions({ limit: 50 }),
+      apiClient.getDashboard(),
+    ])
+
+    if (dashboardResponse.error || !dashboardResponse.data) {
+      setError(true)
+      return
+    }
+    const dashboard = dashboardResponse.data.data ?? dashboardResponse.data
+    setBalance(dashboard.financial_summary?.balances?.total_balance?.amount ?? 0)
+
+    setTransactionsFailed(Boolean(transactionsResponse.error))
+    const body: any = (transactionsResponse.data as any)?.data ?? transactionsResponse.data
+    const list: any[] = Array.isArray(body) ? body : body?.transactions ?? body?.items ?? []
+    setTransactions(list.map((t) => ({
+      id: t.id,
+      type: INCOME_TYPES.test(String(t.type)) ? 'income' : 'expense',
+      amount: Math.abs(Number(t.amount) || 0),
+      description: t.description || 'Transaction',
+      category: t.category || 'General',
+      date: t.date || t.created_at,
+      merchant: t.beneficiary || t.merchant || '',
+      status: String(t.status || 'completed').toLowerCase(),
+    })))
+  }, [])
+
   const fetchData = useCallback(async () => {
+    setIsLoading(true)
+    setError(false)
+    setTransactionsFailed(false)
     try {
-      setIsLoading(true)
-      setError(null)
-
-      // Check for Plaid connections
-      const connections = await getConnections()
-      const hasConnections = connections && connections.length > 0
-      setHasPlaidAccounts(hasConnections)
-
-      if (hasConnections) {
-        // Use Plaid data
-        const [plaidAccounts, plaidTransactions] = await Promise.all([
-          getAccounts(),
-          getTransactions({ limit: 50 })
-        ])
-
-        // Transform Plaid transactions to our format
-        if (plaidTransactions && plaidTransactions.length > 0) {
-          const transformedTransactions: Transaction[] = plaidTransactions.map(t => ({
-            id: t.transaction_id,
-            type: t.amount < 0 ? 'expense' : 'income',
-            amount: Math.abs(t.amount),
-            description: t.name,
-            category: t.category?.[0] || 'General',
-            date: t.date,
-            merchant: t.merchant_name || t.name,
-            status: t.pending ? 'pending' : 'completed'
-          }))
-          setTransactions(transformedTransactions)
-
-          // Calculate categories from Plaid transactions
-          const categoryMap = new Map<string, number>()
-          transformedTransactions
-            .filter(t => t.type === 'expense')
-            .forEach(t => {
-              const current = categoryMap.get(t.category) || 0
-              categoryMap.set(t.category, current + t.amount)
-            })
-
-          const totalExpenses = Array.from(categoryMap.values()).reduce((sum, val) => sum + val, 0)
-          const categoryData: Category[] = Array.from(categoryMap.entries())
-            .map(([name, amount]) => ({
-              name,
-              amount,
-              percentage: totalExpenses > 0 ? (amount / totalExpenses) * 100 : 0,
-              color: '#374151',
-              trend: 0
-            }))
-            .sort((a, b) => b.amount - a.amount)
-            .slice(0, 5)
-
-          setCategories(categoryData)
-        }
-
-        // Calculate metrics from Plaid accounts
-        if (plaidAccounts && plaidAccounts.length > 0) {
-          const totalBalance = plaidAccounts.reduce((sum, acc) => 
-            sum + (acc.balances?.current || 0), 0
-          )
-
-          // Calculate income and expenses from transactions
-          const income = plaidTransactions
-            ?.filter(t => t.amount > 0)
-            .reduce((sum, t) => sum + t.amount, 0) || 0
-          
-          const expenses = plaidTransactions
-            ?.filter(t => t.amount < 0)
-            .reduce((sum, t) => sum + Math.abs(t.amount), 0) || 0
-
-          setMetrics({
-            totalBalance,
-            monthlyIncome: income,
-            monthlyExpenses: expenses,
-            savingsRate: income > 0 ? ((income - expenses) / income) * 100 : 0,
-            trends: {
-              balance: 2.5,
-              income: 8.2,
-              expenses: -3.1,
-              savings: 5.0
-            }
-          })
-        }
-      } else {
-        // Fallback to regular API data
-        const [transactionsResponse, dashboardResponse] = await Promise.all([
-          apiClient.getTransactions({ limit: 50 }),
-          apiClient.getDashboard()
-        ])
-
-        if (transactionsResponse.data) {
-          setTransactions(transactionsResponse.data.map(t => ({
-            id: t.id,
-            type: t.type === 'DEPOSIT' || t.type === 'TRANSFER' ? 'income' : 'expense',
-            amount: t.amount,
-            description: t.description,
-            category: t.category || 'General',
-            date: t.date,
-            merchant: t.beneficiary || 'System',
-            status: t.status.toLowerCase() as 'completed' | 'pending' | 'failed'
-          })))
-        }
-
-        // Set mock categories
-        setCategories([
-          { name: 'Food & Dining', amount: 1200, percentage: 35, color: '#374151', trend: 5 },
-          { name: 'Transportation', amount: 800, percentage: 23, color: '#6b7280', trend: -2 },
-          { name: 'Shopping', amount: 600, percentage: 18, color: '#9ca3af', trend: 8 },
-          { name: 'Entertainment', amount: 400, percentage: 12, color: '#d1d5db', trend: -5 },
-          { name: 'Utilities', amount: 300, percentage: 12, color: '#e5e7eb', trend: 1 }
-        ])
-
-        if (dashboardResponse.data) {
-          setMetrics({
-            totalBalance: dashboardResponse.data.balance,
-            monthlyIncome: dashboardResponse.data.total_income || 3200,
-            monthlyExpenses: dashboardResponse.data.total_expenses || 1850,
-            savingsRate: 42.2,
-            trends: {
-              balance: 2.5,
-              income: 8.2,
-              expenses: -3.1,
-              savings: 5.0
-            }
-          })
-        }
-      }
-
-      // Set AI insights
-      setAIInsights([
-        {
-          id: '1',
-          type: 'spending',
-          title: 'High Dining Expenses',
-          description: 'Your dining expenses are 25% higher than similar users',
-          impact: -15,
-          confidence: 85
-        },
-        {
-          id: '2',
-          type: 'saving',
-          title: 'Savings Goal Achievement',
-          description: 'You\'re on track to reach your savings goal 2 months early',
-          impact: 12,
-          confidence: 92
-        }
+      // Bank linking is optional: if it's unavailable the page still works from the account's own data.
+      const [status, connections, transfers] = await Promise.all([
+        apiClient.getPlaidStatus(), apiClient.getPlaidConnections(), apiClient.getBankTransfers(),
       ])
-    } catch (err) {
-      const errorMessage = 'Failed to load financial data. Please try again.'
-      setError(errorMessage)
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive"
-      })
+      setPlaidAvailable(Boolean(status.data?.configured))
+      setSandbox(Boolean(status.data?.sandbox))
+      setBanks(Array.isArray(connections.data) ? connections.data : [])
+      setBankTransfers(transfers.data?.transfers ?? [])
+      const connected = !connections.error && Array.isArray(connections.data) && connections.data.length > 0
+      setHasPlaidAccounts(connected)
+      if (!connected) setBankAccounts([])
+      await (connected ? loadFromPlaid() : loadFromAccount())
+    } catch {
+      setError(true)
     } finally {
       setIsLoading(false)
     }
-  }, [toast, getAccounts, getTransactions, getConnections])
+  }, [loadFromAccount, loadFromPlaid])
 
   useEffect(() => {
     fetchData()
   }, [fetchData])
 
-  // Handle Plaid sync
   const handleSyncPlaid = async () => {
+    setSyncing(true)
     try {
-      setSyncing(true)
       await syncTransactions()
       await fetchData()
-      toast({
-        title: "Success",
-        description: "Plaid data synchronized successfully",
-      })
-    } catch (err) {
-      toast({
-        title: "Error",
-        description: "Failed to sync Plaid data",
-        variant: "destructive",
-      })
+      toast({ title: "Accounts updated", description: "Your latest activity is now showing." })
+    } catch {
+      toast({ title: "We couldn't update your accounts", description: "Please try again in a moment.", variant: "destructive" })
     } finally {
       setSyncing(false)
     }
   }
 
-  // Handle Plaid connection success
-  const handlePlaidSuccess = async (publicToken: string, metadata: any) => {
-    try {
-      await fetchData()
-      toast({
-        title: "Success",
-        description: "Bank account connected successfully",
-      })
-    } catch (err) {
-      toast({
-        title: "Error",
-        description: "Failed to load updated data",
-        variant: "destructive",
-      })
-    }
+  const handlePlaidSuccess = async () => {
+    await fetchData()
+    toast({ title: "Bank account connected", description: "Your accounts and activity will show here." })
   }
 
-  // Filter transactions
-  const filteredTransactions = useCallback(() => {
-    let filtered = transactions
-
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase()
-      filtered = filtered.filter(transaction => 
-        transaction.description.toLowerCase().includes(query) ||
-        transaction.merchant.toLowerCase().includes(query)
-      )
+  const unlinkBank = async (bank: PlaidConnection) => {
+    if (!window.confirm(`Unlink ${bank.institution_name || 'this bank'}? Transfers already on the way still finish.`)) return
+    const response = await apiClient.disconnectPlaidConnection(bank.connection_id)
+    if (response.error) {
+      toast({ title: "Couldn't unlink the bank", description: response.error, variant: "destructive" })
+      return
     }
-
-    if (selectedCategory !== 'all') {
-      filtered = filtered.filter(transaction => 
-        transaction.category.toLowerCase() === selectedCategory.toLowerCase()
-      )
-    }
-
-    return filtered
-  }, [transactions, searchQuery, selectedCategory])
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
-        <Alert variant="destructive" className="max-w-md">
-          <AlertDescription>{error}</AlertDescription>
-          <Button 
-            onClick={fetchData}
-            variant="outline"
-            className="mt-4"
-          >
-            <RefreshCcw className="mr-2 h-4 w-4" />
-            Retry
-          </Button>
-        </Alert>
-      </div>
-    )
+    toast({ title: "Bank unlinked", description: response.data?.message })
+    fetchData()
   }
+
+  // Plaid sandbox only: push a test transfer along to see what happens next
+  const simulate = async (transfer: BankTransfer, event: 'settled' | 'failed') => {
+    const response = await apiClient.simulateBankTransfer(transfer.transfer_id, event)
+    if (response.error) {
+      toast({ title: "Test step failed", description: response.error, variant: "destructive" })
+      return
+    }
+    window.dispatchEvent(new Event('hoardrun:balance-changed'))
+    fetchData()
+  }
+
+  const thisMonth = useMemo(() => transactions.filter((t) => isThisMonth(t.date)), [transactions])
+  const income = sum(thisMonth.filter((t) => t.type === 'income'))
+  const expenses = sum(thisMonth.filter((t) => t.type === 'expense'))
+
+  const chartData = useMemo(() => {
+    const months = new Map<string, { name: string; income: number; expenses: number }>()
+    ;[...transactions]
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+      .forEach((t) => {
+        const date = new Date(t.date)
+        const key = `${date.getFullYear()}-${date.getMonth()}`
+        const month = months.get(key) ?? { name: date.toLocaleDateString(undefined, { month: 'short' }), income: 0, expenses: 0 }
+        if (t.type === 'income') month.income += t.amount
+        else month.expenses += t.amount
+        months.set(key, month)
+      })
+    return Array.from(months.values()).slice(-6)
+  }, [transactions])
+
+  const categories = useMemo(() => {
+    const spending = transactions.filter((t) => t.type === 'expense')
+    const total = sum(spending)
+    const totals = new Map<string, number>()
+    spending.forEach((t) => totals.set(t.category, (totals.get(t.category) || 0) + t.amount))
+    return Array.from(totals.entries())
+      .map(([name, amount]) => ({ name, amount, percentage: total > 0 ? (amount / total) * 100 : 0 }))
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 5)
+  }, [transactions])
+
+  const visibleTransactions = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase()
+    if (!query) return transactions
+    return transactions.filter((t) => `${t.description} ${t.merchant}`.toLowerCase().includes(query))
+  }, [transactions, searchQuery])
+
+  const moneyOrDash = (value: number) => (transactionsFailed ? '--' : formatCurrency(value))
+
+  const stats = [
+    { label: 'Total balance', value: balance === null ? '--' : formatCurrency(balance) },
+    { label: 'Income this month', value: moneyOrDash(income) },
+    { label: 'Spent this month', value: moneyOrDash(expenses) },
+    { label: 'Saved this month', value: transactionsFailed || income <= 0 ? '--' : `${(((income - expenses) / income) * 100).toFixed(0)}%` },
+  ]
 
   return (
-    <SidebarProvider>
-      <ResponsiveSidebarLayout
-        sidebar={<SidebarContent onAddMoney={() => setIsDepositModalOpen(true)} />}
-      >
-        <SidebarToggle />
-        <div className="min-h-screen bg-background pt-16 pb-4 px-3 sm:pt-20 sm:pb-6 sm:px-4">
-          <div className="max-w-7xl mx-auto space-y-3 sm:space-y-4">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-xs sm:text-base font-bold bg-gradient-to-r from-black to-gray-700 bg-clip-text text-transparent">
-                  Finance Overview
-                </h1>
-                <p className="text-black/60 mt-1 text-xs sm:text-sm">
-                  {hasPlaidAccounts ? 'Connected via Plaid' : 'Track your financial activities'}
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                {hasPlaidAccounts ? (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleSyncPlaid}
-                    disabled={syncing}
-                  >
-                    {syncing ? (
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    ) : (
-                      <RefreshCcw className="h-4 w-4 mr-2" />
-                    )}
-                    Sync
-                  </Button>
-                ) : (
-                  <PlaidLink onSuccess={handlePlaidSuccess}>
-                    <Building2 className="h-4 w-4 mr-2" />
-                    Connect Bank
-                  </PlaidLink>
-                )}
-                <Button variant="ghost" size="icon" className="relative">
-                  <Bell className="h-5 w-5" />
-                  <span className="absolute top-1 right-1 h-2 w-2 bg-gray-500 rounded-full" />
-                </Button>
-                <Button variant="ghost" size="icon">
-                  <Settings className="h-5 w-5" />
-                </Button>
-              </div>
-            </div>
-
-            {/* Plaid Connection Banner */}
-            {!hasPlaidAccounts && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-              >
-                <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-950">
-                  <Building2 className="h-4 w-4" />
-                  <AlertDescription className="flex items-center justify-between">
-                    <span>Connect your bank accounts with Plaid for real-time data</span>
-                    <PlaidLink onSuccess={handlePlaidSuccess} className="ml-4">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Connect Now
-                    </PlaidLink>
-                  </AlertDescription>
-                </Alert>
-              </motion.div>
-            )}
-
-        {/* AI Insights */}
-        {showInsights && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <Card className="border-2 border-gray-300 dark:border-gray-700">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Brain className="h-5 w-5 text-gray-500" />
-                    <CardTitle>Financial Insights</CardTitle>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowInsights(false)}
-                  >
-                    Hide
-                  </Button>
-                </div>
-                <CardDescription>AI-powered financial recommendations</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {isLoading ? (
-                  <div className="space-y-4">
-                    {[1, 2, 3].map((i) => (
-                      <Skeleton key={i} className="h-24 w-full" />
-                    ))}
-                  </div>
-                ) : (
-                  <AnimatePresence>
-                    {aiInsights.map((insight, index) => (
-                      <motion.div
-                        key={insight.id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: 20 }}
-                        transition={{ delay: index * 0.1 }}
-                      >
-                        <Card className="border-l-4 border-gray-800 dark:border-gray-200">
-                          <CardContent className="p-4">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <h3 className="font-medium">{insight.title}</h3>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">
-                                  {insight.description}
-                                </p>
-                                <div className="flex items-center gap-4 mt-2">
-                                  <Badge variant="secondary">
-                                    {insight.impact > 0 ? '+' : ''}{insight.impact}% Impact
-                                  </Badge>
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-xs text-gray-500">AI Confidence:</span>
-                                    <Progress value={insight.confidence} className="w-24" />
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                )}
-              </CardContent>
-            </Card>
-          </motion.div>
+    <div className="mx-auto w-full max-w-6xl space-y-4">
+      <header className="flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="hr-title">Finance</h1>
+          <p className="mt-1 text-sm text-[#a1a1a6] sm:text-base">{hasPlaidAccounts ? 'Connected to your bank' : 'Your money at a glance'}</p>
+        </div>
+        {hasPlaidAccounts ? (
+          <Button variant="outline" className="rounded-full" onClick={handleSyncPlaid} disabled={syncing}>
+            {syncing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCcw className="mr-2 h-4 w-4" />}
+            Update
+          </Button>
+        ) : plaidAvailable && (
+          <PlaidLink onSuccess={handlePlaidSuccess} className={PLAID_BUTTON}>
+            <Building2 className="mr-2 h-4 w-4" />
+            Connect bank
+          </PlaidLink>
         )}
+      </header>
 
-        {/* Financial Overview */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {isLoading ? (
-            Array(4).fill(0).map((_, i) => (
-              <Skeleton key={i} className="h-[140px] rounded-lg" />
-            ))
-          ) : (
-            <>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                <Card className="bg-black text-white border-gray-800">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-gray-100">
-                      Total Balance
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">
-                      {formatCurrency(metrics?.totalBalance || 0)}
-                    </div>
-                    <div className="flex items-center mt-1 text-gray-300">
-                      <ArrowUpRight className="h-4 w-4 mr-1" />
-                      <span className="text-sm">
-                        +{metrics?.trends?.balance || 0}% from last month
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: 0.1 }}
-              >
-                <Card className="bg-gray-900 text-white border-gray-700">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-gray-100">Monthly Income</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">
-                      {formatCurrency(metrics?.monthlyIncome || 0)}
-                    </div>
-                    <div className="flex items-center mt-1 text-gray-300">
-                      <ArrowUpRight className="h-4 w-4 mr-1" />
-                      <span className="text-sm">
-                        +{metrics?.trends?.income || 0}% from last month
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: 0.2 }}
-              >
-                <Card className="bg-gray-800 text-white border-gray-600">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-gray-100">Monthly Expenses</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">
-                      {formatCurrency(metrics?.monthlyExpenses || 0)}
-                    </div>
-                    <div className="flex items-center mt-1 text-gray-300">
-                      <ArrowDownRight className="h-4 w-4 mr-1" />
-                      <span className="text-sm">
-                        {metrics?.trends?.expenses || 0}% from last month
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: 0.3 }}
-              >
-                <Card className="bg-gray-700 text-white border-gray-500">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-gray-100">Savings Rate</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">
-                      {metrics?.savingsRate?.toFixed(1) || '0'}%
-                    </div>
-                    <div className="flex items-center mt-1 text-gray-300">
-                      <ArrowUpRight className="h-4 w-4 mr-1" />
-                      <span className="text-sm">
-                        +{metrics?.trends?.savings || 0}% from last month
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            </>
-          )}
+      {error && (
+        <div role="alert" className="hr-panel flex items-center justify-between gap-3 px-5 py-4 text-sm">
+          <span>We couldn't load your finances.</span>
+          <button onClick={fetchData} className="hr-focus shrink-0 font-medium underline underline-offset-4">Try again</button>
         </div>
+      )}
 
-        {/* Financial Chart */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.4 }}
-        >
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Financial Overview</CardTitle>
-                  <CardDescription>Track your income and expenses</CardDescription>
-                </div>
-                <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Select period" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="week">This Week</SelectItem>
-                    <SelectItem value="month">This Month</SelectItem>
-                    <SelectItem value="quarter">This Quarter</SelectItem>
-                    <SelectItem value="year">This Year</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardHeader>
-            <CardContent className="pl-2">
-              <ResponsiveContainer width="100%" height={350}>
-                <AreaChart data={chartData}>
-                  <defs>
-                    <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#6b7280" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#6b7280" stopOpacity={0}/>
-                    </linearGradient>
-                    <linearGradient id="colorExpenses" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#374151" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#374151" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <Tooltip />
-                  <Area 
-                    type="monotone" 
-                    dataKey="income" 
-                    stroke="#6b7280" 
-                    fillOpacity={1} 
-                    fill="url(#colorIncome)" 
-                    name="Income"
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="expenses" 
-                    stroke="#374151" 
-                    fillOpacity={1} 
-                    fill="url(#colorExpenses)" 
-                    name="Expenses"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </motion.div>
+      <section aria-label="Summary" className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {stats.map((stat) => isLoading ? (
+          <div key={stat.label} className="hr-skeleton h-[112px] rounded-[24px]" />
+        ) : (
+          <div key={stat.label} className="hr-panel flex min-w-0 flex-col justify-between gap-6 p-4 sm:p-5">
+            <span className="text-sm text-[#a1a1a6]">{stat.label}</span>
+            <span className="truncate text-xl font-semibold tracking-tight tabular-nums sm:text-2xl">{stat.value}</span>
+          </div>
+        ))}
+      </section>
 
-        {/* Spending Categories */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.5 }}
-        >
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Spending Categories</CardTitle>
-                  <CardDescription>
-                    {hasPlaidAccounts ? 'From your connected accounts' : 'Your spending breakdown'}
-                  </CardDescription>
+      {!isLoading && hasPlaidAccounts && (
+        <section aria-label="Your banks" className="hr-panel p-4 sm:p-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-lg font-semibold tracking-tight">Your banks</h2>
+            {plaidAvailable && (
+              <PlaidLink onSuccess={handlePlaidSuccess} className={PLAID_BUTTON}>
+                <Plus className="mr-2 h-4 w-4" />
+                Link another
+              </PlaidLink>
+            )}
+          </div>
+          <ul className="mt-3 divide-y divide-white/10">
+            {banks.map((bank) => (
+              <li key={bank.connection_id} className="py-3">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="flex min-w-0 items-center gap-2 text-sm font-medium">
+                    <Building2 className="h-4 w-4 shrink-0 text-[#a1a1a6]" />
+                    <span className="truncate">{bank.institution_name}</span>
+                  </span>
+                  <button onClick={() => unlinkBank(bank)} className="hr-focus inline-flex shrink-0 items-center gap-1.5 rounded-full px-2 py-1 text-[13px] text-[#a1a1a6] hover:text-white">
+                    <Unlink className="h-3.5 w-3.5" />
+                    Unlink
+                  </button>
                 </div>
-                <Button variant="outline" size="sm">
-                  <Download className="h-4 w-4 mr-2" />
-                  Export
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <div className="space-y-4">
-                  {Array(5).fill(0).map((_, i) => (
-                    <Skeleton key={i} className="h-8 w-full" />
-                  ))}
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {categories.map((category, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="flex items-center gap-4"
-                    >
-                      <div className="w-2 h-2 rounded-full bg-gray-800 dark:bg-gray-200" />
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="font-medium dark:text-white">
-                            {category.name}
-                          </span>
-                          <span className="text-sm text-gray-500 dark:text-gray-400">
-                            {formatCurrency(category.amount)}
-                          </span>
-                        </div>
-                        <div className="w-full h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                          <motion.div 
-                            className="h-full bg-gray-800 dark:bg-gray-200"
-                            initial={{ width: 0 }}
-                            animate={{ width: `${category.percentage}%` }}
-                            transition={{ duration: 0.5, delay: index * 0.1 }}
-                          />
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">{category.percentage.toFixed(0)}%</span>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Recent Transactions */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.6 }}
-        >
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Recent Transactions</CardTitle>
-                  <CardDescription>
-                    {hasPlaidAccounts ? 'Real-time data from Plaid' : 'Your latest activities'}
-                  </CardDescription>
-                </div>
-                <div className="flex gap-2">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
-                    <Input 
-                      placeholder="Search..." 
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-9 w-48"
-                    />
-                  </div>
-                  <Button variant="outline" size="sm">
-                    <Filter className="h-4 w-4 mr-2" />
-                    Filter
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-[400px]">
-                {isLoading ? (
-                  <div className="space-y-4">
-                    {Array(5).fill(0).map((_, i) => (
-                      <Skeleton key={i} className="h-20 rounded-lg" />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <AnimatePresence>
-                      {filteredTransactions().map((transaction, index) => (
-                        <motion.div
-                          key={transaction.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -20 }}
-                          transition={{ duration: 0.2, delay: index * 0.05 }}
-                        >
-                          <div className="flex items-center justify-between p-4 rounded-lg bg-gray-50 dark:bg-gray-800">
-                            <div className="flex items-center gap-4">
-                              <div className={cn(
-                                "w-10 h-10 rounded-full flex items-center justify-center",
-                                transaction.type === 'income' 
-                                  ? 'bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-400'
-                                  : 'bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-400'
-                              )}>
-                                {transaction.type === 'income' ? (
-                                  <ArrowDownRight className="h-5 w-5" />
-                                ) : (
-                                  <ArrowUpRight className="h-5 w-5" />
-                                )}
-                              </div>
-                              <div>
-                                <div className="font-medium dark:text-white">
-                                  {transaction.description}
-                                </div>
-                                <div className="text-sm text-gray-500 dark:text-gray-400">
-                                  {transaction.merchant} • {transaction.category}
-                                </div>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <div className={cn(
-                                "font-medium",
-                                transaction.type === 'income' 
-                                  ? 'text-green-600 dark:text-green-400'
-                                  : 'text-red-600 dark:text-red-400'
-                              )}>
-                                {transaction.type === 'income' ? '+' : '-'}
-                                {formatCurrency(transaction.amount)}
-                              </div>
-                              <div className="text-sm text-gray-500 dark:text-gray-400">
-                                {new Date(transaction.date).toLocaleDateString()}
-                              </div>
-                              {transaction.status === 'pending' && (
-                                <Badge variant="secondary" className="mt-1">Pending</Badge>
-                              )}
-                            </div>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </AnimatePresence>
-                  </div>
+                {bank.status !== 'active' && (
+                  <p className="mt-1 text-[13px] text-[#fbbf24]">{bank.error_message || "This bank needs attention. Unlink it and link it again."}</p>
                 )}
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        </motion.div>
-          </div>
-        </div>
+                <ul className="mt-2 space-y-2">
+                  {bankAccounts.filter((a) => a.connection_id === bank.connection_id).map((account) => (
+                    <li key={account.account_id} className="flex flex-wrap items-center gap-3 rounded-2xl bg-white/[.04] px-3 py-3">
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm">{account.name}{account.mask ? ` •••• ${account.mask}` : ''}</span>
+                        <span className="block text-[13px] tabular-nums text-[#a1a1a6]">
+                          {formatCurrency(account.balances?.available ?? account.balances?.current ?? 0)} available
+                        </span>
+                      </span>
+                      {bank.status === 'active' && account.type === 'depository' && (
+                        <span className="flex shrink-0 gap-2">
+                          <button onClick={() => setMove({ direction: 'deposit', accountId: account.account_id })} className="hr-focus h-9 rounded-full bg-[#2f6bff] px-4 text-[13px] font-medium text-white">
+                            Add money
+                          </button>
+                          <button onClick={() => setMove({ direction: 'withdrawal', accountId: account.account_id })} className="hr-focus h-9 rounded-full bg-white/10 px-4 text-[13px] font-medium">
+                            Withdraw
+                          </button>
+                        </span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
-        {/* Navigation Footer - Only show on mobile */}
-        <footer className="fixed bottom-0 left-0 right-0 bg-background border-t border-border py-2 lg:hidden">
-          <div className="container mx-auto px-4">
-            <nav className="grid grid-cols-5 gap-1 sm:gap-2">
-              {[
-                { icon: Home, label: 'Home', href: '/home' },
-                { icon: BarChart2, label: 'Finance', active: true, href: '/finance' },
-                { icon: CreditCard, label: 'Cards', href: '/cards' },
-                { icon: PieChart, label: 'Investment', href: '/investment' },
-                { icon: Settings, label: 'Settings', href: '/settings' }
-              ].map((item, index) => (
-                item.href ? (
-                  <Link key={index} href={item.href}>
-                    <Button
-                      variant="ghost"
-                      className={`w-full flex flex-col items-center py-1 sm:py-2 h-auto transition-colors ${
-                        item.active
-                          ? 'text-black dark:text-white font-bold bg-gray-100 dark:bg-gray-900'
-                          : 'text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-900'
-                      }`}
-                    >
-                      <item.icon className="h-5 w-5 sm:h-6 sm:w-6" />
-                      <span className="text-[10px] sm:text-xs mt-1">{item.label}</span>
-                    </Button>
-                  </Link>
-                ) : (
-                  <Button
-                    key={index}
-                    variant="ghost"
-                    className={`w-full flex flex-col items-center py-1 sm:py-2 h-auto transition-colors ${
-                      item.active
-                        ? 'text-black dark:text-white font-bold bg-gray-100 dark:bg-gray-900'
-                        : 'text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-900'
-                    }`}
-                  >
-                    <item.icon className="h-5 w-5 sm:h-6 sm:w-6" />
-                    <span className="text-[10px] sm:text-xs mt-1">{item.label}</span>
-                  </Button>
-                )
+      {!isLoading && bankTransfers.length > 0 && (
+        <section aria-label="Bank transfers" className="hr-panel p-4 sm:p-6">
+          <h2 className="text-lg font-semibold tracking-tight">Bank transfers</h2>
+          <ul className="mt-2 divide-y divide-white/10">
+            {bankTransfers.slice(0, 8).map((t) => (
+              <li key={t.transfer_id} className="flex flex-wrap items-center gap-3 py-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/[.08]">
+                  {t.direction === 'deposit' ? <ArrowDownLeft className="h-[18px] w-[18px]" /> : <ArrowUpRight className="h-[18px] w-[18px]" />}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-medium">{t.direction === 'deposit' ? `From ${t.account}` : `To ${t.account}`}</span>
+                  <span className="block truncate text-[13px] text-[#a1a1a6]">
+                    {new Date(t.created_at).toLocaleDateString()} · {transferState(t)}{t.failure_reason ? ` · ${t.failure_reason}` : ''}
+                  </span>
+                </span>
+                <span className="shrink-0 text-sm font-medium tabular-nums">
+                  {t.direction === 'deposit' ? '+' : '-'}{formatCurrency(t.amount)}
+                </span>
+                {sandbox && ON_THE_WAY.includes(t.status) && (
+                  <span className="flex w-full justify-end gap-2 sm:w-auto">
+                    <button onClick={() => simulate(t, 'settled')} className="hr-focus rounded-full border border-white/20 px-3 py-1 text-[12px]">Test: settle</button>
+                    <button onClick={() => simulate(t, 'failed')} className="hr-focus rounded-full border border-white/20 px-3 py-1 text-[12px]">Test: fail</button>
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {!isLoading && chartData.length >= 2 && (
+        <section className="hr-panel p-4 sm:p-6">
+          <h2 className="text-lg font-semibold tracking-tight">Income and spending</h2>
+          <div className="mt-4 h-[240px] sm:h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={chartData} margin={{ left: 0, right: 8, top: 8, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="financeIncome" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#fff" stopOpacity={0.28} />
+                    <stop offset="100%" stopColor="#fff" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid stroke="rgba(255,255,255,.08)" vertical={false} />
+                <XAxis dataKey="name" tickLine={false} axisLine={false} tick={{ fill: '#a1a1a6', fontSize: 12 }} />
+                <YAxis width={44} tickLine={false} axisLine={false} tick={{ fill: '#a1a1a6', fontSize: 12 }} />
+                <Tooltip contentStyle={{ background: '#1c1c1e', border: '1px solid rgba(255,255,255,.12)', borderRadius: 12 }} formatter={(value: number) => formatCurrency(value)} />
+                <Area type="monotone" dataKey="income" name="Income" stroke="#fff" strokeWidth={2} fill="url(#financeIncome)" />
+                <Area type="monotone" dataKey="expenses" name="Spending" stroke="#a1a1a6" strokeWidth={2} strokeDasharray="4 4" fill="none" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </section>
+      )}
+
+      <div className="grid gap-4 lg:grid-cols-12">
+        <section className="hr-panel p-4 sm:p-6 lg:col-span-5">
+          <h2 className="text-lg font-semibold tracking-tight">Where it goes</h2>
+          {categories.length > 0 ? (
+            <ul className="mt-5 space-y-4">
+              {categories.map((category) => (
+                <li key={category.name}>
+                  <div className="mb-2 flex items-baseline justify-between gap-3 text-sm">
+                    <span className="truncate">{category.name}</span>
+                    <span className="shrink-0 tabular-nums text-[#a1a1a6]">{formatCurrency(category.amount)}</span>
+                  </div>
+                  <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+                    <div className="h-full rounded-full bg-white" style={{ width: `${category.percentage}%` }} />
+                  </div>
+                </li>
               ))}
-            </nav>
-          </div>
-        </footer>
+            </ul>
+          ) : (
+            <p className="mt-3 text-sm text-[#a1a1a6]">{isLoading ? 'Loading…' : 'Your spending by category will show here.'}</p>
+          )}
+        </section>
 
-        {/* Deposit Modal */}
-        <DepositModal
-          open={isDepositModalOpen}
-          onOpenChange={setIsDepositModalOpen}
-        />
-      </ResponsiveSidebarLayout>
-    </SidebarProvider>
+        <section className="hr-panel min-w-0 p-4 sm:p-6 lg:col-span-7">
+          <h2 className="text-lg font-semibold tracking-tight">Recent activity</h2>
+          {transactions.length > 0 && (
+            <div className="relative mt-3">
+              <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#a1a1a6]" />
+              <Input value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="Search" aria-label="Search activity" className="h-11 pl-10" />
+            </div>
+          )}
+          {visibleTransactions.length > 0 ? (
+            <ul className="mt-2 divide-y divide-white/10">
+              {visibleTransactions.map((t) => (
+                <li key={t.id} className="flex items-center gap-3 py-3">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/[.08]">
+                    {t.type === 'income' ? <ArrowDownLeft className="h-[18px] w-[18px]" /> : <ArrowUpRight className="h-[18px] w-[18px]" />}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-medium">{t.description}</span>
+                    <span className="block truncate text-[13px] text-[#a1a1a6]">
+                      {new Date(t.date).toLocaleDateString()} · {t.status === 'pending' ? 'Pending' : t.category}
+                    </span>
+                  </span>
+                  <span className="shrink-0 text-sm font-medium tabular-nums">
+                    {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-3 text-sm text-[#a1a1a6]">
+              {isLoading
+                ? 'Loading…'
+                : transactionsFailed
+                  ? "We couldn't load your activity right now."
+                  : searchQuery
+                    ? 'Nothing matches that search.'
+                    : 'Nothing here yet. Add money to get started.'}
+            </p>
+          )}
+        </section>
+      </div>
+
+      {!isLoading && plaidAvailable && !hasPlaidAccounts && (
+        <section className="hr-panel flex flex-col items-start justify-between gap-3 p-4 sm:flex-row sm:items-center sm:p-5">
+          <p className="text-sm text-[#a1a1a6]">Connect a bank account to add money and withdraw by ACH, and see all your money in one place.</p>
+          <PlaidLink onSuccess={handlePlaidSuccess} className={PLAID_BUTTON}>
+            <Plus className="mr-2 h-4 w-4" />
+            Connect now
+          </PlaidLink>
+        </section>
+      )}
+
+      <BankMoveDialog
+        direction={move?.direction ?? null}
+        accountId={move?.accountId}
+        accounts={bankAccounts.filter((a) => a.type === 'depository' && banks.find((b) => b.connection_id === a.connection_id)?.status === 'active')}
+        onOpenChange={(open) => { if (!open) setMove(null) }}
+        onDone={() => fetchData()}
+      />
+    </div>
   )
 }

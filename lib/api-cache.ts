@@ -83,15 +83,18 @@ class ApiCache {
 const apiCache = new ApiCache()
 
 // Hook for using API cache
+// One shared object, so it is safe to use as an effect dependency.
+const apiCacheApi = {
+  get: apiCache.get.bind(apiCache),
+  set: apiCache.set.bind(apiCache),
+  has: apiCache.has.bind(apiCache),
+  invalidate: apiCache.invalidate.bind(apiCache),
+  invalidatePattern: apiCache.invalidatePattern.bind(apiCache),
+  clear: apiCache.clear.bind(apiCache)
+}
+
 export function useApiCache() {
-  return {
-    get: apiCache.get.bind(apiCache),
-    set: apiCache.set.bind(apiCache),
-    has: apiCache.has.bind(apiCache),
-    invalidate: apiCache.invalidate.bind(apiCache),
-    invalidatePattern: apiCache.invalidatePattern.bind(apiCache),
-    clear: apiCache.clear.bind(apiCache)
-  }
+  return apiCacheApi
 }
 
 export default apiCache

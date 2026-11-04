@@ -10,6 +10,10 @@ interface CreateBeneficiaryData {
   bankCode?: string
   email?: string
   phoneNumber?: string
+  addressLine1: string
+  city: string
+  postalCode: string
+  country: string
 }
 
 interface BeneficiaryList {
@@ -37,6 +41,20 @@ interface UseBeneficiariesReturn {
   getBeneficiaryById: (beneficiaryId: string) => Beneficiary | undefined
   searchBeneficiaries: (query: string) => Beneficiary[]
 }
+
+const toBeneficiary = (raw: any): Beneficiary => ({
+  id: raw.beneficiary_id,
+  userId: raw.user_id,
+  name: `${raw.first_name} ${raw.last_name}`.trim(),
+  accountNumber: raw.account_number,
+  bankName: raw.bank_name,
+  bankCode: raw.bank_code,
+  email: raw.email,
+  phoneNumber: raw.phone_number,
+  isActive: raw.status !== 'inactive',
+  createdAt: raw.created_at,
+  updatedAt: raw.updated_at,
+})
 
 export function useBeneficiaries(): UseBeneficiariesReturn {
   const [beneficiaries, setBeneficiaries] = useState<Beneficiary[]>([])
@@ -83,7 +101,7 @@ export function useBeneficiaries(): UseBeneficiariesReturn {
         throw new Error(response.error || 'Failed to fetch beneficiaries')
       }
 
-      const beneficiaries = response.data || []
+      const beneficiaries: Beneficiary[] = (response.data?.data?.beneficiaries ?? []).map(toBeneficiary)
       setBeneficiaries(beneficiaries)
       setPagination({
         total: beneficiaries.length,
@@ -102,11 +120,6 @@ export function useBeneficiaries(): UseBeneficiariesReturn {
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to fetch beneficiaries'
       setError(message)
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: message,
-      })
       return null
     } finally {
       setIsLoading(false)
@@ -119,12 +132,17 @@ export function useBeneficiaries(): UseBeneficiariesReturn {
       setError(null)
 
       const response = await apiClient.createBeneficiary({
-        name: data.name,
+        first_name: data.name.split(' ')[0],
+        last_name: data.name.split(' ').slice(1).join(' ') || data.name.split(' ')[0],
         account_number: data.accountNumber,
         bank_name: data.bankName,
         bank_code: data.bankCode,
         email: data.email,
-        phone_number: data.phoneNumber
+        phone_number: data.phoneNumber,
+        address_line1: data.addressLine1,
+        city: data.city,
+        postal_code: data.postalCode,
+        country: data.country,
       })
 
       if (response.error) {
@@ -132,7 +150,7 @@ export function useBeneficiaries(): UseBeneficiariesReturn {
       }
 
       if (response.data) {
-        setBeneficiaries(prev => [response.data!, ...prev])
+        setBeneficiaries(prev => [toBeneficiary(response.data!.data.beneficiary), ...prev])
         toast({
           title: "Success",
           description: "Beneficiary added successfully",

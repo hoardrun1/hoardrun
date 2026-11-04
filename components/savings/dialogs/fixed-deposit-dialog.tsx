@@ -14,6 +14,8 @@ interface FixedDepositDialogProps {
   onOpenChange: (open: boolean) => void
   form: any
   setForm: (form: any) => void
+  onSubmit?: () => void
+  submitting?: boolean
 }
 
 const formatCurrency = (amount: number) => {
@@ -38,14 +40,14 @@ const calculateFixedDepositInterest = (amount: number, term: number, rate = 4.5)
   return { interest, maturityAmount, rate }
 }
 
-export function FixedDepositDialog({ open, onOpenChange, form, setForm }: FixedDepositDialogProps) {
+export function FixedDepositDialog({ open, onOpenChange, form, setForm, onSubmit, submitting }: FixedDepositDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[95vw] sm:max-w-lg max-h-[90vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader className="space-y-1 sm:space-y-2">
           <DialogTitle className="text-lg sm:text-xl">Create Fixed Deposit</DialogTitle>
           <DialogDescription className="text-xs sm:text-sm">
-            Lock in your savings for guaranteed returns
+            Lock in a fixed rate for a set term
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-3 sm:space-y-4 py-2">
@@ -150,9 +152,9 @@ export function FixedDepositDialog({ open, onOpenChange, form, setForm }: FixedD
             </div>
           </div>
 
-          <Button className="w-full h-9 sm:h-10 text-sm font-semibold">
+          <Button onClick={onSubmit} disabled={submitting} className="w-full h-9 sm:h-10 text-sm font-semibold">
             <Shield className="h-3.5 w-3.5 mr-1.5" />
-            Create FD
+            {submitting ? "Creating…" : "Create FD"}
           </Button>
         </div>
       </DialogContent>

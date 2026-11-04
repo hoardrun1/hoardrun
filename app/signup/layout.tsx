@@ -1,7 +1,7 @@
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Sign Up - Your App Name',
+  title: 'Sign Up - Hoardrun',
   description: 'Create a new account to get started',
 }
 

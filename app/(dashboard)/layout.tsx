@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, memo, useMemo } from 'react';
+import { useCallback, useEffect, memo, useMemo, useState } from 'react';
+import { Inter, Inter_Tight } from 'next/font/google';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { FinanceProvider } from '@/contexts/FinanceContext';
@@ -8,11 +9,16 @@ import { NotificationProvider } from '@/contexts/NotificationContext';
 import { Toaster } from '@/components/ui/toast';
 import { SidebarProvider, ResponsiveSidebarLayout } from '@/components/ui/sidebar-layout';
 import { SidebarContent } from '@/components/ui/sidebar-content-unified';
-import { SidebarToggle } from '@/components/ui/sidebar-toggle';
 import { MobileAppHeader } from '@/components/ui/mobile-app-header';
-import { FloatingLanguageSwitcher } from '@/components/ui/floating-language-switcher';
 import { MobileNavigation } from '@/components/ui/mobile-navigation';
 import { NavigationLoader } from '@/components/ui/navigation-loader-simple';
+import { DepositModal } from '@/components/deposit-modal';
+import '@/components/landing/landing.css';
+import '@/components/app/app-theme.css';
+
+const appFont = Inter({ subsets: ['latin'], weight: ['300', '400', '500', '600'], display: 'swap', variable: '--font-text' });
+// Headings and figures: a tighter cut of Inter, set close like Revolut's display type
+const displayFont = Inter_Tight({ subsets: ['latin'], display: 'swap', variable: '--font-display' });
 
 // Memoized loading component to prevent re-renders
 const LoadingSpinner = memo(() => (
@@ -27,8 +33,8 @@ const LoadingSpinner = memo(() => (
 LoadingSpinner.displayName = 'LoadingSpinner';
 
 // Memoized sidebar content to prevent unnecessary re-renders
-const MemoizedSidebarContent = memo(() => (
-  <SidebarContent onAddMoney={() => {}} />
+const MemoizedSidebarContent = memo(({ onAddMoney }: { onAddMoney: () => void }) => (
+  <SidebarContent onAddMoney={onAddMoney} />
 ));
 
 MemoizedSidebarContent.displayName = 'MemoizedSidebarContent';
@@ -37,29 +43,16 @@ MemoizedSidebarContent.displayName = 'MemoizedSidebarContent';
 const MemoizedMobileAppHeader = memo(() => <MobileAppHeader />);
 MemoizedMobileAppHeader.displayName = 'MemoizedMobileAppHeader';
 
-const MemoizedMobileNavigation = memo(() => (
-  <MobileNavigation onAddMoney={() => {}} />
+const MemoizedMobileNavigation = memo(({ onAddMoney }: { onAddMoney: () => void }) => (
+  <MobileNavigation onAddMoney={onAddMoney} />
 ));
 MemoizedMobileNavigation.displayName = 'MemoizedMobileNavigation';
 
 // Enhanced content wrapper with better spacing and layout
 const ContentWrapper = memo(({ children }: { children: React.ReactNode }) => (
   <div className="w-full max-w-full">
-    {/* Mobile Layout */}
-    <div
-      className="lg:hidden min-h-screen bg-background"
-      style={{
-        paddingTop: 'calc(4rem + env(safe-area-inset-top, 0px))',
-        paddingBottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))'
-      }}
-    >
-      <div className="dashboard-container">
-        {children}
-      </div>
-    </div>
-
-    {/* Desktop Layout */}
-    <div className="hidden lg:block min-h-screen bg-background">
+    {/* One copy of the page: CSS adjusts the spacing, so pages mount and fetch once */}
+    <div className="hr-page min-h-screen bg-background">
       <div className="dashboard-container">
         {children}
       </div>
@@ -77,6 +70,20 @@ export default function DashboardLayout({
   const router = useRouter();
   const pathname = usePathname();
   const { user, loading } = useAuth();
+  const [isDepositOpen, setIsDepositOpen] = useState(false);
+  const openDeposit = useCallback(() => setIsDepositOpen(true), []);
+
+  // Dialogs and menus render outside this tree, so the page root needs the theme too.
+  useEffect(() => {
+    const root = document.documentElement;
+    const hadDark = root.classList.contains('dark');
+    const fonts = [appFont.variable, displayFont.variable];
+    root.classList.add('dark', 'hr-app', ...fonts);
+    return () => {
+      root.classList.remove('hr-app', ...fonts);
+      if (!hadDark) root.classList.remove('dark');
+    };
+  }, []);
 
   // Memoize authentication check to prevent unnecessary re-renders
   const authStatus = useMemo(() => ({
@@ -108,7 +115,7 @@ export default function DashboardLayout({
 
   // Always use the real FinanceProvider with API client integration
   return (
-    <div className="min-h-screen bg-background overflow-x-hidden">
+    <div className={`hr-app dark min-h-screen overflow-x-clip bg-background text-foreground ${appFont.className} ${appFont.variable} ${displayFont.variable}`}>
       {/* Navigation loader for page transitions */}
       <NavigationLoader />
 
@@ -123,10 +130,8 @@ export default function DashboardLayout({
             // Standard dashboard layout with sidebar
             <SidebarProvider>
               <ResponsiveSidebarLayout
-                sidebar={<MemoizedSidebarContent />}
+                sidebar={<MemoizedSidebarContent onAddMoney={openDeposit} />}
               >
-                <SidebarToggle />
-
                 {/* Mobile Header - Only show on mobile */}
                 <MemoizedMobileAppHeader />
 
@@ -135,14 +140,14 @@ export default function DashboardLayout({
                 </ContentWrapper>
 
                 {/* Mobile Navigation - Only show on mobile */}
-                <MemoizedMobileNavigation />
+                <MemoizedMobileNavigation onAddMoney={openDeposit} />
               </ResponsiveSidebarLayout>
+              <DepositModal open={isDepositOpen} onOpenChange={setIsDepositOpen} />
             </SidebarProvider>
           )}
         </NotificationProvider>
       </FinanceProvider>
       <Toaster />
-      <FloatingLanguageSwitcher />
     </div>
   );
 }

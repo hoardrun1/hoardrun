@@ -76,11 +76,11 @@ export const InsightsPanel: React.FC<InsightsPanelProps> = ({
     <div className="space-y-4">
       {/* AI Guidance Summary */}
       {aiGuidance && (
-        <Card className="border-purple-200 bg-gradient-to-br from-purple-50 to-white">
+        <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-white">
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2">
-                <Brain className="w-5 h-5 text-purple-600" />
+                <Brain className="w-5 h-5 text-blue-600" />
                 AI Financial Guidance
               </CardTitle>
               <Button 
@@ -105,7 +105,7 @@ export const InsightsPanel: React.FC<InsightsPanelProps> = ({
               </div>
               <div className="flex items-center gap-3">
                 <Progress value={aiGuidance.investment_readiness_score} className="flex-1 h-2" />
-                <span className="text-2xl font-bold text-purple-600">
+                <span className="text-2xl font-bold text-blue-600">
                   {aiGuidance.investment_readiness_score}
                 </span>
               </div>
@@ -132,10 +132,10 @@ export const InsightsPanel: React.FC<InsightsPanelProps> = ({
                 {aiGuidance.top_recommendations.map((rec) => (
                   <div 
                     key={rec.id}
-                    className="flex items-start gap-2 p-2 bg-white rounded border hover:border-purple-300 transition-colors cursor-pointer"
+                    className="flex items-start gap-2 p-2 bg-white rounded border hover:border-blue-300 transition-colors cursor-pointer"
                     onClick={() => router.push('/ai-guidance')}
                   >
-                    <CheckCircle className="w-4 h-4 text-purple-600 mt-0.5 flex-shrink-0" />
+                    <CheckCircle className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{rec.title}</p>
                       <div className="flex items-center gap-2 mt-1">
@@ -154,8 +154,8 @@ export const InsightsPanel: React.FC<InsightsPanelProps> = ({
 
             {/* Financial Persona */}
             <div className="flex items-center gap-2 p-3 bg-white rounded-lg border">
-              <div className="p-2 bg-purple-100 rounded-full">
-                <Brain className="w-4 h-4 text-purple-600" />
+              <div className="p-2 bg-blue-100 rounded-full">
+                <Brain className="w-4 h-4 text-blue-600" />
               </div>
               <div>
                 <p className="text-xs text-gray-500">Financial Persona</p>

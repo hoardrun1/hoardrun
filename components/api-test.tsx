@@ -31,13 +31,7 @@ export function ApiTest() {
     setIsLoading(true)
     setError(null)
     try {
-      // Test creating a transaction as a POST operation test
-      const response = await apiClient.createTransaction({
-        type: 'expense',
-        amount: 10.00,
-        description: 'API Test Transaction',
-        category: 'testing'
-      })
+      const response = await apiClient.getUserSettings()
       if (response.error) {
         setResult(`API Error: ${response.error}`)
       } else {

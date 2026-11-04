@@ -1,11 +1,22 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { TrendingUp } from "lucide-react"
+import { OrbsGraphic } from "@/components/app/home-graphics"
+import { SavingsEmpty } from "@/components/savings/savings-empty"
 
 interface InsightsTabProps {
   insights: Array<{ title: string; description: string }>
 }
 
 export function InsightsTab({ insights }: InsightsTabProps) {
+  if (!insights.length) {
+    return (
+      <SavingsEmpty
+        graphic={<OrbsGraphic tone="iris" className="h-full w-full" />}
+        title="No insights yet"
+        text="Tips about your saving appear here once you start."
+      />
+    )
+  }
   return (
     <Card className="border-border/50">
       <CardHeader className="p-3 sm:p-4">

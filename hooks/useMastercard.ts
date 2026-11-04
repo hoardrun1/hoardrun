@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { API_BASE_URL } from '@/lib/api-url'
 
 interface PaymentData {
   amount: number;
@@ -58,7 +59,7 @@ export const useMastercard = () => {
       if (!token) {
         throw new Error('Authentication token not available');
       }
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/mastercard${endpoint}`, {
+      const response = await fetch(`${API_BASE_URL}/mastercard${endpoint}`, {
         method,
         headers: {
           'Content-Type': 'application/json',

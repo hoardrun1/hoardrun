@@ -50,7 +50,7 @@
   },
   "signin": {
     "welcomeBack": "वापसी पर स्वागत है",
-    "subtitle": "अपने HoardRun खाते में साइन इन करें",
+    "subtitle": "अपने Hoardrun खाते में साइन इन करें",
     "emailPlaceholder": "अपना ईमेल दर्ज करें",
     "passwordPlaceholder": "अपना पासवर्ड दर्ज करें",
     "rememberMe": "मुझे याद रखें",
@@ -59,11 +59,12 @@
     "signingIn": "साइन इन हो रहा है...",
     "noAccount": "खाता नहीं है?",
     "signUpHere": "यहां साइन अप करें",
-    "continueWithGoogle": "Google के साथ जारी रखें"
+    "continueWithGoogle": "Google के साथ जारी रखें",
+    "continueWithApple": "Apple के साथ जारी रखें"
   },
   "signup": {
     "createAccount": "खाता बनाएं",
-    "subtitle": "HoardRun में शामिल हों और अपनी यात्रा शुरू करें",
+    "subtitle": "Hoardrun में शामिल हों और अपनी यात्रा शुरू करें",
     "steps": {
       "account": "खाता",
       "accountDesc": "मूल जानकारी",
@@ -207,7 +208,7 @@
         "watchYourSpending": "अपने खर्च पर नज़र रखें",
         "categoriesOverBudget": "श्रेणियां बजट से अधिक हैं",
         "overallProgress": "समग्र प्रगति",
-        "usedOfTotalBudget": "आपने अपने कुल बजट का {percentage}% उपयोग किया है"
+        "usedOfTotalBudget": "आपने अपने कुल बजट का {{percentage}}% उपयोग किया है"
       }
     },
     "analytics": {

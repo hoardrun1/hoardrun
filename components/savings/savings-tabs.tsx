@@ -13,8 +13,12 @@ interface SavingsTabsProps {
   createdGoals: any[]
   fixedDeposits: any[]
   automatedSavings: any[]
-  setAutomatedSavings: (savings: any[]) => void
   onNewGoal: () => void
+  onAddMoney: (goal: any) => void
+  onEditGoal: (goal: any) => void
+  onBreakDeposit: (deposit: any) => void
+  onTogglePlan: (plan: any) => void
+  onDeletePlan: (plan: any) => void
   onFixedDeposit: () => void
   onAutoSave: () => void
   analytics: any
@@ -26,8 +30,12 @@ export function SavingsTabs({
   createdGoals,
   fixedDeposits,
   automatedSavings,
-  setAutomatedSavings,
   onNewGoal,
+  onAddMoney,
+  onEditGoal,
+  onBreakDeposit,
+  onTogglePlan,
+  onDeletePlan,
   onFixedDeposit,
   onAutoSave,
   analytics,
@@ -42,7 +50,7 @@ export function SavingsTabs({
 
   return (
     <Tabs value={activeTab} onValueChange={onTabChange} className="space-y-3 sm:space-y-4">
-      <TabsList className="w-full h-auto p-0.5 sm:p-1 bg-muted grid grid-cols-5 gap-0.5 sm:gap-1">
+      <TabsList className="w-full">
         {tabs.map((tab) => (
           <TabsTrigger
             key={tab.value}
@@ -56,19 +64,19 @@ export function SavingsTabs({
       </TabsList>
 
       <TabsContent value="active" className="space-y-2 sm:space-y-3 mt-3 sm:mt-4">
-        <GoalsTab goals={createdGoals} onNewGoal={onNewGoal} />
+        <GoalsTab goals={createdGoals.filter((g) => !g.isCompleted)} onNewGoal={onNewGoal} onAddMoney={onAddMoney} onEdit={onEditGoal} />
       </TabsContent>
 
       <TabsContent value="fixed-deposits" className="space-y-2 sm:space-y-3 mt-3 sm:mt-4">
-        <FixedDepositsTab deposits={fixedDeposits} onNewDeposit={onFixedDeposit} />
+        <FixedDepositsTab deposits={fixedDeposits} onNewDeposit={onFixedDeposit} onBreak={onBreakDeposit} />
       </TabsContent>
 
       <TabsContent value="automated" className="space-y-2 sm:space-y-3 mt-3 sm:mt-4">
-        <AutomatedTab savings={automatedSavings} setSavings={setAutomatedSavings} onNewSaving={onAutoSave} />
+        <AutomatedTab plans={automatedSavings} onNewSaving={onAutoSave} onToggle={onTogglePlan} onDelete={onDeletePlan} />
       </TabsContent>
 
       <TabsContent value="completed" className="mt-3 sm:mt-4">
-        <CompletedTab />
+        <CompletedTab goals={createdGoals.filter((g) => g.isCompleted)} onAddMoney={onAddMoney} onEdit={onEditGoal} />
       </TabsContent>
 
       <TabsContent value="insights" className="mt-3 sm:mt-4">

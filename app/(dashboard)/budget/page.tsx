@@ -23,13 +23,15 @@ import { useToast } from "@/components/ui/use-toast"
 
 import { DepositModal } from '@/components/deposit-modal'
 import { SectionFooter } from '@/components/ui/section-footer'
+import { EmptyChart } from '@/components/app/home-graphics'
+import { PageHero, StatPills, ProgressRing, HeroAction, CountUp, usd } from '@/components/app/page-hero'
 import { useTheme } from '@/contexts/ThemeContext'
 import { apiClient, BudgetCategory, BudgetSummary, SpendingByCategory, FinancialInsight } from '@/lib/api-client'
 import {
   DollarSign, TrendingUp, TrendingDown, AlertTriangle,
   Plus, Target, PiggyBank, RefreshCcw, Loader2,
   ShoppingCart, Home, Car, Utensils, Gamepad2,
-  Heart, GraduationCap, Plane
+  Heart, GraduationCap, Plane, ArrowLeftRight, Pencil, Shapes
 } from 'lucide-react'
 
 // Icon mapping for categories
@@ -42,20 +44,38 @@ const categoryIcons: Record<string, any> = {
   healthcare: Heart,
   education: GraduationCap,
   travel: Plane,
+  transfers: ArrowLeftRight,
+  other: Shapes,
   default: ShoppingCart
 }
 
+// The categories the server measures; each covers related transaction types
+const BUDGET_CATEGORIES = [
+  { key: 'food', label: 'Food & dining' },
+  { key: 'housing', label: 'Home & bills' },
+  { key: 'transportation', label: 'Transport' },
+  { key: 'shopping', label: 'Shopping' },
+  { key: 'entertainment', label: 'Fun & subscriptions' },
+  { key: 'healthcare', label: 'Health' },
+  { key: 'education', label: 'Education' },
+  { key: 'travel', label: 'Travel' },
+  { key: 'transfers', label: 'Sending money' },
+  { key: 'other', label: 'Everything else' },
+]
+
 // Color mapping for categories
 const categoryColors: Record<string, string> = {
-  housing: '#000000',
-  food: '#333333',
-  transportation: '#666666',
-  entertainment: '#999999',
-  shopping: '#CCCCCC',
-  healthcare: '#FFFFFF',
-  education: '#444444',
-  travel: '#777777',
-  default: '#888888'
+  housing: '#38bdf8',
+  food: '#fbbf24',
+  transportation: '#34d399',
+  entertainment: '#c084fc',
+  shopping: '#fb7185',
+  healthcare: '#f472b6',
+  education: '#5aa9ff',
+  travel: '#2dd4bf',
+  transfers: '#93c5fd',
+  other: '#a1a1aa',
+  default: '#a1a1aa'
 }
 
 interface BudgetData {
@@ -66,6 +86,7 @@ interface BudgetData {
   budgeted: number
   spent: number
   percentage: number
+  category: string
 }
 
 interface MonthlyTrendData {
@@ -81,7 +102,9 @@ export default function BudgetPage() {
   const [error, setError] = useState<string | null>(null)
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false)
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false)
-  const [newCategory, setNewCategory] = useState({ name: '', budget: '', icon: 'ShoppingCart' })
+  const [newCategory, setNewCategory] = useState({ name: '', budget: '', category: 'food' })
+  const [editing, setEditing] = useState<{ id: string; name: string; budget: string } | null>(null)
+  const [saving, setSaving] = useState(false)
   
   // API data states
   const [budgetData, setBudgetData] = useState<BudgetData[]>([])
@@ -129,7 +152,8 @@ export default function BudgetPage() {
           color: categoryColors[budget.category.toLowerCase()] || categoryColors.default,
           budgeted: budget.budgeted_amount,
           spent: budget.spent_amount,
-          percentage: budget.percentage_used
+          percentage: budget.percentage_used,
+          category: budget.category
         }))
         setBudgetData(formattedBudgets)
       }
@@ -149,19 +173,10 @@ export default function BudgetPage() {
         setInsights(insightsResponse.data)
       }
 
-      // Generate monthly trend data from spending analysis
-      const trendResponse = await apiClient.getSpendingAnalysis({
-        period: 'monthly',
-        group_by: 'month'
-      })
-
-      if (trendResponse.data) {
-        const trendData: MonthlyTrendData[] = trendResponse.data.map((item: any) => ({
-          month: item.month || item.period,
-          budgeted: totalBudget, // Use current total budget as baseline
-          spent: item.amount
-        }))
-        setMonthlyTrend(trendData)
+      // Spent in budgeted categories over the last six months, against today's limits
+      const trendResponse = await apiClient.getBudgetTrend(6)
+      if (Array.isArray(trendResponse.data)) {
+        setMonthlyTrend(trendResponse.data)
       }
 
     } catch (err) {
@@ -175,53 +190,65 @@ export default function BudgetPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [toast, totalBudget])
+  }, [toast])
 
   // Load data on component mount
   useEffect(() => {
     fetchBudgetData()
   }, [fetchBudgetData])
 
+  const takenCategories = new Set(budgetData.map(b => b.category))
+
   const handleAddCategory = async () => {
-    if (newCategory.name && newCategory.budget) {
-      try {
-        setIsLoading(true)
-        
-        // Here you would typically call an API to create a new budget category
-        // For now, we'll add it locally and refresh the data
-        const newCat: BudgetData = {
-          id: newCategory.name.toLowerCase().replace(/\s+/g, '-'),
-          name: newCategory.name,
-          icon: categoryIcons[newCategory.icon.toLowerCase()] || categoryIcons.default,
-          color: '#' + Math.floor(Math.random()*16777215).toString(16),
-          budgeted: parseFloat(newCategory.budget),
-          spent: 0,
-          percentage: 0
-        }
-        
-        setBudgetData(prev => [...prev, newCat])
-        setNewCategory({ name: '', budget: '', icon: 'ShoppingCart' })
-        setIsAddCategoryOpen(false)
-        
-        toast({
-          title: "Success",
-          description: "Budget category added successfully",
-          duration: 3000
-        })
-        
-        // Refresh data from API
-        await fetchBudgetData()
-        
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to add budget category. Please try again.",
-          variant: "destructive"
-        })
-      } finally {
-        setIsLoading(false)
-      }
+    const amount = parseFloat(newCategory.budget)
+    if (!newCategory.name.trim() || !amount || amount <= 0) {
+      toast({ title: "Add a name and amount", description: "Both are needed for a budget.", variant: "destructive" })
+      return
     }
+    setSaving(true)
+    const response = await apiClient.createBudget({ name: newCategory.name.trim(), category: newCategory.category, budgeted_amount: amount })
+    setSaving(false)
+    if (response.error) {
+      toast({ title: "Couldn't add the budget", description: response.error, variant: "destructive" })
+      return
+    }
+    setNewCategory({ name: '', budget: '', category: BUDGET_CATEGORIES.find(c => c.key !== newCategory.category && !takenCategories.has(c.key))?.key || 'other' })
+    setIsAddCategoryOpen(false)
+    toast({ title: "Budget added", description: `${response.data?.name}: $${amount.toLocaleString()} a month.` })
+    await fetchBudgetData()
+  }
+
+  const handleSaveEdit = async () => {
+    if (!editing) return
+    const amount = parseFloat(editing.budget)
+    if (!editing.name.trim() || !amount || amount <= 0) {
+      toast({ title: "Add a name and amount", description: "Both are needed for a budget.", variant: "destructive" })
+      return
+    }
+    setSaving(true)
+    const response = await apiClient.updateBudget(editing.id, { name: editing.name.trim(), budgeted_amount: amount })
+    setSaving(false)
+    if (response.error) {
+      toast({ title: "Couldn't save the budget", description: response.error, variant: "destructive" })
+      return
+    }
+    setEditing(null)
+    toast({ title: "Budget updated", description: `${editing.name.trim()}: $${amount.toLocaleString()} a month.` })
+    await fetchBudgetData()
+  }
+
+  const handleDelete = async () => {
+    if (!editing || !window.confirm(`Delete the ${editing.name} budget? Your transactions aren't affected.`)) return
+    setSaving(true)
+    const response = await apiClient.deleteBudget(editing.id)
+    setSaving(false)
+    if (response.error) {
+      toast({ title: "Couldn't delete the budget", description: response.error, variant: "destructive" })
+      return
+    }
+    setEditing(null)
+    toast({ title: "Budget deleted", description: "Your transactions aren't affected." })
+    await fetchBudgetData()
   }
 
   // Error state
@@ -246,137 +273,93 @@ export default function BudgetPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="min-h-screen bg-background pt-16 pb-4 px-3 sm:pt-20 sm:pb-6 sm:px-4 mb-20">
-          <div className="max-w-7xl mx-auto space-y-3 sm:space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xs sm:text-base font-bold text-foreground">
-              {t('dashboard.budget.title')}
-            </h1>
-            <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
-              {t('dashboard.budget.description')}
-            </p>
-          </div>
-          <Dialog open={isAddCategoryOpen} onOpenChange={setIsAddCategoryOpen}>
-            <DialogTrigger asChild>
-              <Button className="text-xs sm:text-sm">
-                <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                {t('dashboard.budget.addCategory')}
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle className="text-xs sm:text-base">{t('dashboard.budget.dialog.addBudgetCategory')}</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-3 sm:space-y-4 py-3 sm:py-4">
-                <div className="space-y-1 sm:space-y-2">
-                  <Label className="text-xs sm:text-sm">{t('dashboard.budget.dialog.categoryName')}</Label>
-                  <Input
-                    className="text-xs sm:text-sm"
-                    placeholder="e.g., Groceries"
-                    value={newCategory.name}
-                    onChange={(e) => setNewCategory({...newCategory, name: e.target.value})}
-                  />
-                </div>
-                <div className="space-y-1 sm:space-y-2">
-                  <Label className="text-xs sm:text-sm">{t('dashboard.budget.dialog.monthlyBudget')}</Label>
-                  <Input
-                    className="text-xs sm:text-sm"
-                    type="number"
-                    placeholder="0.00"
-                    value={newCategory.budget}
-                    onChange={(e) => setNewCategory({...newCategory, budget: e.target.value})}
-                  />
-                </div>
-                <Button onClick={handleAddCategory} className="w-full text-xs sm:text-sm">
-                  {t('dashboard.budget.dialog.addCategory')}
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          {isLoading ? (
-            Array(4).fill(0).map((_, i) => (
-              <Skeleton key={i} className="h-[100px] rounded-lg" />
-            ))
-          ) : (
-            <>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-xs sm:text-sm font-medium">{t('dashboard.budget.totalBudget')}</CardTitle>
-                  <Target className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent className="p-3 sm:p-4">
-                  <div className="text-xs sm:text-base font-bold">${totalBudget.toLocaleString()}</div>
-                  <p className="text-xs sm:text-sm text-muted-foreground">{t('dashboard.budget.monthlyAllocation')}</p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-xs sm:text-sm font-medium">{t('dashboard.budget.totalSpent')}</CardTitle>
-                  <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent className="p-3 sm:p-4">
-                  <div className="text-xs sm:text-base font-bold">${totalSpent.toLocaleString()}</div>
-                  <p className="text-xs sm:text-sm text-muted-foreground">
-                    {budgetProgress.toFixed(1)}% {t('dashboard.budget.ofBudget')}
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-xs sm:text-sm font-medium">{t('dashboard.budget.remaining')}</CardTitle>
-                  <PiggyBank className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent className="p-3 sm:p-4">
-                  <div className={`text-xs sm:text-base font-bold ${remainingBudget >= 0 ? 'text-foreground' : 'text-destructive'}`}>
-                    ${Math.abs(remainingBudget).toLocaleString()}
+    <div>
+      <div className="pb-28 lg:pb-8">
+          <div className="space-y-4 sm:space-y-5">
+        <PageHero
+          title={t('dashboard.budget.title')}
+          subtitle={t('dashboard.budget.description')}
+          tone="amber"
+          art={<ProgressRing value={budgetProgress} label={t('dashboard.budget.insights.usedOfTotalBudget', { percentage: budgetProgress.toFixed(1) })} />}
+          figureLabel={t('dashboard.budget.totalSpent')}
+          figure={isLoading ? '…' : <CountUp value={totalSpent} format={(n) => usd(n)} />}
+          actions={
+              <Dialog open={isAddCategoryOpen} onOpenChange={setIsAddCategoryOpen}>
+                <DialogTrigger asChild>
+                  <HeroAction primary>
+                    <Plus className="h-4 w-4" strokeWidth={2.4} />
+                    {t('dashboard.budget.addCategory')}
+                  </HeroAction>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle className="text-xs sm:text-base">{t('dashboard.budget.dialog.addBudgetCategory')}</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-3 sm:space-y-4 py-3 sm:py-4">
+                    <div className="space-y-1 sm:space-y-2">
+                      <Label className="text-xs sm:text-sm">Category</Label>
+                      <div className="flex flex-wrap gap-1.5">
+                        {BUDGET_CATEGORIES.map(c => {
+                          const Icon = categoryIcons[c.key] || categoryIcons.default
+                          const taken = takenCategories.has(c.key)
+                          const active = newCategory.category === c.key
+                          return (
+                            <button
+                              key={c.key}
+                              type="button"
+                              disabled={taken}
+                              onClick={() => setNewCategory({ ...newCategory, category: c.key, name: newCategory.name && !BUDGET_CATEGORIES.some(x => x.label === newCategory.name) ? newCategory.name : c.label })}
+                              className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12.5px] transition-colors disabled:cursor-not-allowed disabled:opacity-35"
+                              style={{ borderColor: active ? categoryColors[c.key] : 'rgba(255,255,255,0.12)', background: active ? categoryColors[c.key] + '26' : 'transparent', color: active ? '#fff' : '#d1d1d6' }}
+                              title={taken ? 'You already have this budget' : undefined}
+                            >
+                              <Icon className="h-3.5 w-3.5" style={{ color: categoryColors[c.key] }} />
+                              {c.label}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                    <div className="space-y-1 sm:space-y-2">
+                      <Label className="text-xs sm:text-sm">{t('dashboard.budget.dialog.categoryName')}</Label>
+                      <Input
+                        className="text-xs sm:text-sm"
+                        placeholder="e.g., Groceries"
+                        value={newCategory.name}
+                        onChange={(e) => setNewCategory({...newCategory, name: e.target.value})}
+                      />
+                    </div>
+                    <div className="space-y-1 sm:space-y-2">
+                      <Label className="text-xs sm:text-sm">{t('dashboard.budget.dialog.monthlyBudget')}</Label>
+                      <Input
+                        className="text-xs sm:text-sm"
+                        type="number"
+                        placeholder="0.00"
+                        value={newCategory.budget}
+                        onChange={(e) => setNewCategory({...newCategory, budget: e.target.value})}
+                      />
+                    </div>
+                    <Button onClick={handleAddCategory} disabled={saving} className="w-full text-xs sm:text-sm">
+                      {saving ? 'Adding…' : t('dashboard.budget.dialog.addCategory')}
+                    </Button>
                   </div>
-                  <p className="text-xs sm:text-sm text-muted-foreground">
-                    {remainingBudget >= 0 ? t('dashboard.budget.underBudget') : t('dashboard.budget.overBudget')}
-                  </p>
-                </CardContent>
-              </Card>
+                </DialogContent>
+              </Dialog>
+          }
+        >
+          <p className="mt-3 text-[13px] text-[#a1a1a6]">
+            of <span className="text-white">{usd(totalBudget)}</span> {t('dashboard.budget.monthlyAllocation').toLowerCase()}
+          </p>
+        </PageHero>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-xs sm:text-sm font-medium">{t('dashboard.budget.alerts')}</CardTitle>
-                  <AlertTriangle className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent className="p-3 sm:p-4">
-                  <div className="text-xs sm:text-base font-bold text-foreground">
-                    {overBudgetCategories.length}
-                  </div>
-                  <p className="text-xs sm:text-sm text-muted-foreground">{t('dashboard.budget.categoriesOverBudget')}</p>
-                </CardContent>
-              </Card>
-            </>
-          )}
-        </div>
-
-        <Card>
-          <CardHeader className="p-3 sm:p-4">
-            <CardTitle className="text-xs sm:text-base">{t('dashboard.budget.overallBudgetProgress')}</CardTitle>
-            <CardDescription className="text-xs sm:text-sm">
-              {t('dashboard.budget.usedOfTotalBudget', { percentage: budgetProgress.toFixed(1) })}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="p-3 sm:p-4">
-            <div className="space-y-2">
-              <Progress value={budgetProgress} className="h-2 sm:h-3" />
-              <div className="flex justify-between text-xs sm:text-sm text-muted-foreground">
-                <span>0%</span>
-                <span>{budgetProgress.toFixed(1)}%</span>
-                <span>100%</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <StatPills
+          items={[
+            { label: t('dashboard.budget.totalBudget'), value: <CountUp value={totalBudget} format={(n) => usd(n, 0)} />, note: t('dashboard.budget.monthlyAllocation'), tone: 'iris', icon: Target },
+            { label: t('dashboard.budget.totalSpent'), value: <CountUp value={totalSpent} format={(n) => usd(n, 0)} />, note: `${budgetProgress.toFixed(1)}% ${t('dashboard.budget.ofBudget')}`, tone: 'coral', icon: DollarSign },
+            { label: t('dashboard.budget.remaining'), value: <CountUp value={Math.abs(remainingBudget)} format={(n) => usd(n, 0)} />, note: remainingBudget >= 0 ? t('dashboard.budget.underBudget') : t('dashboard.budget.overBudget'), tone: remainingBudget >= 0 ? 'mint' : 'coral', icon: PiggyBank },
+            { label: t('dashboard.budget.alerts'), value: overBudgetCategories.length, note: t('dashboard.budget.categoriesOverBudget'), tone: 'amber', icon: AlertTriangle },
+          ]}
+        />
 
         <Tabs defaultValue="categories" className="space-y-3 sm:space-y-4">
           <TabsList className="text-xs sm:text-sm">
@@ -394,6 +377,8 @@ export default function BudgetPage() {
                 <CardContent className="p-3 sm:p-4">
                   {isLoading ? (
                     <Skeleton className="h-[200px] w-full" />
+                  ) : pieChartData.length === 0 ? (
+                    <EmptyChart label="Add a category to see where your budget goes" />
                   ) : (
                     <ResponsiveContainer width="100%" height={200}>
                       <PieChart>
@@ -401,7 +386,10 @@ export default function BudgetPage() {
                           data={pieChartData}
                           cx="50%"
                           cy="50%"
-                          outerRadius={70}
+                          innerRadius={48}
+                          outerRadius={76}
+                          paddingAngle={3}
+                          stroke="none"
                           fill="#8884d8"
                           dataKey="value"
                           label={({name, value}) => `${name}: $${value}`}
@@ -456,7 +444,13 @@ export default function BudgetPage() {
                       const isOverBudget = category.percentage > 100
                       
                       return (
-                        <div key={category.id} className="flex items-center justify-between p-3 sm:p-4 border-border rounded-lg border bg-card">
+                        <button
+                          key={category.id}
+                          type="button"
+                          onClick={() => setEditing({ id: category.id, name: category.name, budget: String(category.budgeted) })}
+                          className="flex w-full items-center justify-between p-3 sm:p-4 border-border rounded-lg border bg-card text-left transition-colors hover:bg-white/[0.04]"
+                          aria-label={`Edit ${category.name} budget`}
+                        >
                           <div className="flex items-center space-x-3 sm:space-x-4">
                             <div className="p-1.5 sm:p-2 rounded-full" style={{ backgroundColor: category.color + '20' }}>
                               <IconComponent className="h-3 w-3 sm:h-4 sm:w-4" style={{ color: category.color }} />
@@ -479,7 +473,8 @@ export default function BudgetPage() {
                               />
                             </div>
                           </div>
-                        </div>
+                          <Pencil className="ml-3 h-3.5 w-3.5 flex-none text-[#6e6e73]" />
+                        </button>
                       )
                     })
                   ) : (
@@ -519,8 +514,8 @@ export default function BudgetPage() {
                       <XAxis dataKey="month" />
                       <YAxis />
                       <Tooltip />
-                      <Line type="monotone" dataKey="budgeted" stroke="hsl(var(--foreground))" name="Budgeted" />
-                      <Line type="monotone" dataKey="spent" stroke="hsl(var(--muted-foreground))" name="Actual Spent" />
+                      <Line type="monotone" dataKey="budgeted" stroke="#5aa9ff" strokeWidth={2.5} strokeDasharray="6 4" dot={false} name="Budgeted" />
+                      <Line type="monotone" dataKey="spent" stroke="#fb7185" strokeWidth={2.5} name="Actual Spent" />
                     </LineChart>
                   </ResponsiveContainer>
                 )}
@@ -660,6 +655,30 @@ export default function BudgetPage() {
         </Tabs>
           </div>
         </div>
+
+        <Dialog open={!!editing} onOpenChange={(open) => !open && setEditing(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="text-base">Edit budget</DialogTitle>
+            </DialogHeader>
+            {editing && (
+              <div className="space-y-3 py-2">
+                <div className="space-y-1.5">
+                  <Label className="text-sm">Name</Label>
+                  <Input value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-sm">Monthly limit</Label>
+                  <Input type="number" inputMode="decimal" value={editing.budget} onChange={(e) => setEditing({ ...editing, budget: e.target.value })} />
+                </div>
+                <Button onClick={handleSaveEdit} disabled={saving} className="w-full">{saving ? 'Saving…' : 'Save changes'}</Button>
+                <button type="button" onClick={handleDelete} disabled={saving} className="w-full text-center text-[13px] text-[#fb7185] hover:underline">
+                  Delete this budget
+                </button>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
 
         <DepositModal
           open={isDepositModalOpen}

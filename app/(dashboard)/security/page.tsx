@@ -28,6 +28,7 @@ import {
   Monitor
 } from 'lucide-react'
 import { SectionFooter } from '@/components/ui/section-footer'
+import { PageHero, ProgressRing } from '@/components/app/page-hero'
 
 export default function SecurityPage() {
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false)
@@ -45,31 +46,6 @@ export default function SecurityPage() {
   const { toast } = useToast()
   const { theme } = useTheme()
   const { user } = useAuth()
-
-  // Mock login sessions data (this would come from a sessions API in a real app)
-  const loginSessions = [
-    {
-      id: '1',
-      device: 'MacBook Pro',
-      location: 'New York, NY',
-      lastActive: '2024-01-15 14:30',
-      current: true
-    },
-    {
-      id: '2',
-      device: 'iPhone 15',
-      location: 'New York, NY',
-      lastActive: '2024-01-15 12:15',
-      current: false
-    },
-    {
-      id: '3',
-      device: 'Chrome Browser',
-      location: 'Boston, MA',
-      lastActive: '2024-01-14 09:45',
-      current: false
-    }
-  ]
 
   // Fetch user settings and security data on component mount
   useEffect(() => {
@@ -218,53 +194,41 @@ export default function SecurityPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background pt-16 pb-32 px-2">
-      <div className="w-full space-y-4 sm:space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-                  Security
-                </h1>
-                <p className="text-muted-foreground mt-1 text-sm sm:text-base">
-                  Manage your account security and authentication settings
-                </p>
+    <div className="pb-28 lg:pb-8">
+      <div className="w-full space-y-4 sm:space-y-5">
+            {/* Security status: one point for a verified account, one for two-factor */}
+            <PageHero
+              title="Security"
+              subtitle="Your password, two-factor sign-in and recent activity."
+              tone="mint"
+              art={
+                <ProgressRing
+                  value={userSettings?.two_factor_enabled ? 100 : 50}
+                  tone={userSettings?.two_factor_enabled ? 'mint' : 'amber'}
+                  caption="secure"
+                  label={`Security score ${userSettings?.two_factor_enabled ? 100 : 50}%`}
+                />
+              }
+            >
+              <div className="mt-4 flex max-w-[calc(100%-130px)] flex-wrap gap-1.5 sm:max-w-none">
+                <span className="hr-identity-chip inline-flex items-center gap-1" data-tone="mint">
+                  <CheckCircle className="h-3.5 w-3.5" />
+                  Account verified
+                </span>
+                <span className="hr-identity-chip inline-flex items-center gap-1" data-tone={userSettings?.two_factor_enabled ? 'mint' : 'amber'}>
+                  {userSettings?.two_factor_enabled ? <CheckCircle className="h-3.5 w-3.5" /> : <AlertTriangle className="h-3.5 w-3.5" />}
+                  Two-factor {userSettings?.two_factor_enabled ? 'on' : 'off'}
+                </span>
+                <span className="hr-identity-chip" data-tone={userSettings?.two_factor_enabled ? 'mint' : 'amber'}>
+                  {userSettings?.two_factor_enabled ? 'Strong security' : 'Turn on two-factor for strong security'}
+                </span>
               </div>
-            </div>
-
-            {/* Security Status */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Security Status</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center space-x-2">
-                    <CheckCircle className="h-5 w-5 text-foreground" />
-                    <span className="text-sm font-medium text-foreground">Account Verified</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    {userSettings?.two_factor_enabled ? (
-                      <CheckCircle className="h-5 w-5 text-foreground" />
-                    ) : (
-                      <AlertTriangle className="h-5 w-5 text-muted-foreground" />
-                    )}
-                    <span className="text-sm font-medium text-foreground">
-                      Two-Factor Authentication {userSettings?.two_factor_enabled ? 'Enabled' : 'Disabled'}
-                    </span>
-                  </div>
-                  <Badge variant="secondary" className="bg-muted text-foreground">
-                    Strong Security
-                  </Badge>
-                </div>
-              </CardContent>
-            </Card>
+            </PageHero>
 
             <Tabs defaultValue="password" className="space-y-4 sm:space-y-6">
-              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
+              <TabsList className="w-full">
                 <TabsTrigger value="password" className="text-xs sm:text-sm">Password</TabsTrigger>
                 <TabsTrigger value="2fa" className="text-xs sm:text-sm">Two-Factor Auth</TabsTrigger>
-                <TabsTrigger value="sessions" className="text-xs sm:text-sm">Active Sessions</TabsTrigger>
                 <TabsTrigger value="activity" className="text-xs sm:text-sm">Security Activity</TabsTrigger>
               </TabsList>
 
@@ -380,59 +344,6 @@ export default function SecurityPage() {
                 </Card>
               </TabsContent>
 
-              <TabsContent value="sessions" className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Active Sessions</CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      Manage devices that are currently signed in to your account
-                    </p>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {loginSessions.map((session) => (
-                        <div
-                          key={session.id}
-                          className="flex items-center justify-between p-4 border border-border rounded-lg"
-                        >
-                          <div className="flex items-center space-x-4">
-                            <Monitor className="h-5 w-5 text-foreground" />
-                            <div>
-                              <p className="font-medium flex items-center text-foreground">
-                                {session.device}
-                                {session.current && (
-                                  <Badge variant="secondary" className="ml-2 bg-muted text-foreground">
-                                    Current
-                                  </Badge>
-                                )}
-                              </p>
-                              <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                                <span className="flex items-center">
-                                  <MapPin className="h-3 w-3 mr-1" />
-                                  {session.location}
-                                </span>
-                                <span className="flex items-center">
-                                  <Clock className="h-3 w-3 mr-1" />
-                                  {session.lastActive}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                          {!session.current && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => terminateSession(session.id)}
-                            >
-                              Terminate
-                            </Button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
 
               <TabsContent value="activity" className="space-y-6">
                 <Card>

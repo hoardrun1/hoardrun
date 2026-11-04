@@ -6,6 +6,7 @@ import { useTheme } from '@/contexts/ThemeContext'
 
 import { DepositModal } from '@/components/deposit-modal'
 import { SectionFooter } from '@/components/ui/section-footer'
+import { HeroAction } from '@/components/app/page-hero'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -78,22 +79,23 @@ export default function ProfilePage() {
         }
 
         if (response.data) {
-          console.log('Profile data received:', response.data)
+          const body = response.data.data ?? response.data
+          const profile = body.user ?? body
           setProfileData({
-            firstName: response.data.first_name || '',
-            lastName: response.data.last_name || '',
-            email: response.data.email || '',
-            phone: response.data.phone_number || '',
-            dateOfBirth: response.data.date_of_birth || '',
-            bio: response.data.bio || '',
-            country: response.data.country || '',
-            profilePictureUrl: response.data.profile_picture_url || '',
-            status: response.data.status || '',
-            role: response.data.role || '',
-            emailVerified: response.data.email_verified || false,
-            createdAt: response.data.created_at || '',
-            updatedAt: response.data.updated_at || '',
-            lastLoginAt: response.data.last_login_at || ''
+            firstName: profile.first_name || '',
+            lastName: profile.last_name || '',
+            email: profile.email || '',
+            phone: profile.phone_number || '',
+            dateOfBirth: profile.date_of_birth || '',
+            bio: profile.bio || '',
+            country: profile.country || '',
+            profilePictureUrl: profile.profile_picture_url || '',
+            status: profile.status || '',
+            role: profile.role || '',
+            emailVerified: profile.email_verified || false,
+            createdAt: profile.created_at || '',
+            updatedAt: profile.updated_at || '',
+            lastLoginAt: profile.last_login_at || ''
           })
         } else {
           console.warn('No profile data received from API')
@@ -204,42 +206,64 @@ export default function ProfilePage() {
 
 
   return (
-    <div className="min-h-screen bg-background">
-        <div className="min-h-screen bg-background pt-16 pb-32 px-2">
-          <div className="w-full space-y-4 sm:space-y-6">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-                  {t('dashboard.profile.title')}
-                </h1>
-                <p className="text-muted-foreground mt-1 text-sm sm:text-base">
-                  {t('dashboard.profile.description')}
-                </p>
+    <div>
+        <div className="pb-28 lg:pb-8">
+          <div className="w-full space-y-4 sm:space-y-5">
+            <section className="hr-hero hr-identity hr-rise" data-tone="violet">
+              <div className="relative flex flex-col items-center gap-4 text-center sm:flex-row sm:items-center sm:text-left">
+                <div className="relative">
+                  <span className="hr-identity-ring" aria-hidden="true" />
+                  <Avatar className="hr-identity-avatar h-24 w-24">
+                    <AvatarImage src={profileData.profilePictureUrl || "/placeholder-avatar.jpg"} />
+                    <AvatarFallback className="hr-avatar h-full w-full text-[30px]">
+                      {profileData.firstName[0]}{profileData.lastName[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                  {isEditing && (
+                    <Button
+                      size="sm"
+                      className="absolute -bottom-1 -right-1 h-8 w-8 rounded-full bg-white p-0 text-black hover:bg-white/90"
+                    >
+                      <Camera className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[12.5px] text-[#a1a1a6]">{t('dashboard.profile.title')}</p>
+                  <h1 className="hr-title truncate">{profileData.firstName} {profileData.lastName}</h1>
+                  <p className="mt-1 truncate text-[14px] text-[#a1a1a6]">{profileData.email}</p>
+                  <div className="mt-3 flex flex-wrap justify-center gap-1.5 sm:justify-start">
+                    <span className="hr-identity-chip" data-tone={profileData.emailVerified ? 'mint' : 'amber'}>
+                      {profileData.emailVerified ? t('dashboard.profile.status.verifiedAccount') : t('dashboard.profile.status.unverifiedAccount')}
+                    </span>
+                    <span className="hr-identity-chip" data-tone="violet">
+                      {profileData.role === 'premium' ? t('dashboard.profile.status.premiumMember') : t('dashboard.profile.status.standardMember')}
+                    </span>
+                    <span className="hr-identity-chip" data-tone="sky">
+                      {t('dashboard.profile.status.status')}: {profileData.status}
+                    </span>
+                  </div>
+                </div>
+                <HeroAction primary disabled={saving} onClick={() => isEditing ? handleSave() : setIsEditing(true)}>
+                  {saving ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      {t('dashboard.profile.saving')}
+                    </>
+                  ) : isEditing ? (
+                    <>
+                      <Save className="h-4 w-4" />
+                      {t('dashboard.profile.saveChanges')}
+                    </>
+                  ) : (
+                    <>
+                      <Edit className="h-4 w-4" />
+                      {t('dashboard.profile.editProfile')}
+                    </>
+                  )}
+                </HeroAction>
               </div>
-              <Button
-                onClick={() => isEditing ? handleSave() : setIsEditing(true)}
-                disabled={saving}
-                className="bg-primary text-primary-foreground hover:bg-primary/90 w-full sm:w-auto"
-              >
-                {saving ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    {t('dashboard.profile.saving')}
-                  </>
-                ) : isEditing ? (
-                  <>
-                    <Save className="h-4 w-4 mr-2" />
-                    {t('dashboard.profile.saveChanges')}
-                  </>
-                ) : (
-                  <>
-                    <Edit className="h-4 w-4 mr-2" />
-                    {t('dashboard.profile.editProfile')}
-                  </>
-                )}
-              </Button>
-            </div>
+            </section>
 
             <Tabs defaultValue="personal" className="space-y-4 sm:space-y-6">
               <TabsList className="grid w-full grid-cols-3">
@@ -249,47 +273,6 @@ export default function ProfilePage() {
               </TabsList>
 
               <TabsContent value="personal" className="space-y-4 sm:space-y-6">
-                {/* Profile Header */}
-                <Card>
-                  <CardContent className="pt-4 sm:pt-6">
-                    <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-6">
-                      <div className="relative">
-                        <Avatar className="w-20 h-20 sm:w-24 sm:h-24">
-                          <AvatarImage src={profileData.profilePictureUrl || "/placeholder-avatar.jpg"} />
-                          <AvatarFallback className="text-xl sm:text-2xl bg-primary text-primary-foreground">
-                            {profileData.firstName[0]}{profileData.lastName[0]}
-                          </AvatarFallback>
-                        </Avatar>
-                        {isEditing && (
-                          <Button
-                            size="sm"
-                            className="absolute -bottom-2 -right-2 rounded-full w-7 h-7 sm:w-8 sm:h-8 p-0 bg-primary text-primary-foreground hover:bg-primary/90"
-                          >
-                            <Camera className="h-3 w-3 sm:h-4 sm:w-4" />
-                          </Button>
-                        )}
-                      </div>
-                      <div className="flex-1 text-center sm:text-left">
-                        <h2 className="text-xl sm:text-2xl font-bold text-foreground">
-                          {profileData.firstName} {profileData.lastName}
-                        </h2>
-                        <p className="text-muted-foreground text-sm sm:text-base">{profileData.email}</p>
-                        <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-2 sm:space-y-0 sm:space-x-4 mt-2">
-                          <Badge variant="secondary" className="bg-muted text-foreground text-xs">
-                            {profileData.emailVerified ? t('dashboard.profile.status.verifiedAccount') : t('dashboard.profile.status.unverifiedAccount')}
-                          </Badge>
-                          <Badge variant="secondary" className="bg-muted text-foreground text-xs">
-                            {profileData.role === 'premium' ? t('dashboard.profile.status.premiumMember') : t('dashboard.profile.status.standardMember')}
-                          </Badge>
-                          <Badge variant="secondary" className="bg-muted text-foreground text-xs">
-                            {t('dashboard.profile.status.status')}: {profileData.status}
-                          </Badge>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
                 {/* Personal Information */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <Card>

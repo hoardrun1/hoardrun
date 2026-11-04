@@ -24,9 +24,9 @@ export const MLInsightsFeed: React.FC<MLInsightsFeedProps> = ({ insights }) => {
       case 'spending_pattern':
         return {
           icon: <BarChart3 className="w-5 h-5" />,
-          color: 'text-purple-600',
-          bgColor: 'bg-purple-50',
-          borderColor: 'border-purple-200',
+          color: 'text-blue-600',
+          bgColor: 'bg-blue-50',
+          borderColor: 'border-blue-200',
           label: 'Spending Pattern'
         };
       case 'income_trend':

@@ -1,1112 +1,290 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import {
-  TrendingUp, DollarSign, Percent, ArrowUpRight,
-  ArrowDownRight, PieChart, BarChart, Wallet,
-  Globe, Shield, AlertCircle, Info, Target,
-  Clock, Filter, Brain, Loader2, RefreshCcw,
-  Building2, Briefcase, ChartBar, Menu, X,
-  LucideIcon,
-  Home, Activity, Users, Settings
-} from 'lucide-react'
-import { useRouter } from 'next/navigation'
-import { useToast } from "@/components/ui/use-toast"
-import { useFinance } from '@/contexts/FinanceContext'
-import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer, AreaChart, Area
-} from 'recharts'
-import {
-  Card, CardContent, CardHeader,
-  CardTitle, CardDescription
-} from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Slider } from "@/components/ui/slider"
-import { Switch } from "@/components/ui/switch"
-import { Badge } from "@/components/ui/badge"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useMarketData } from '@/hooks/useMarketData';
-import { useAuth } from '@/contexts/AuthContext';
-import { MarketQuote } from '@/types/market';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { apiClient } from '@/lib/api-client';
-import { LayoutWrapper } from '@/components/ui/layout-wrapper';
-import { DepositModal } from '@/components/deposit-modal';
-import { CollectiveCapitalCircles } from '@/components/collective-capital/CollectiveCapitalCircles';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { z } from "zod"
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { SectionFooter } from '@/components/ui/section-footer'
-import { useTheme } from '@/contexts/ThemeContext'
+import { motion } from 'framer-motion'
+import { ArrowRight, ArrowUpRight, Plus, Wallet } from 'lucide-react'
+import {
+  BarsGraphic, BriefcaseGraphic, EmptyChart, HexCoinGraphic, OrbsGraphic, PieGraphic,
+  RocketGraphic, ShieldGraphic, TowerGraphic,
+} from '@/components/app/home-graphics'
+import { DepositModal } from '@/components/deposit-modal'
+import { apiClient } from '@/lib/api-client'
 
-interface Investment {
-  id: string
-  name: string
-  return: number
-  risk: 'Low' | 'Moderate' | 'High'
-  description: string
-  minInvestment: number
-  popularity: number
-  volatility: string
-  holdings: string[]
-  performance: Array<{
-    period: string
-    value: number
-  }>
-}
+type Risk = 'Low' | 'Moderate' | 'High' | 'Very High'
 
-interface MLPrediction {
-  assetClass: string
-  predictedReturn: number
-  confidence: number
-  timeframe: string
-}
+const RISK_LEVEL: Record<Risk, number> = { Low: 1, Moderate: 2, High: 3, 'Very High': 4 }
 
-interface Startup {
-  id: string
-  companyName: string
-  companyType: string
-  description: string
-  registrationNumber: string
-  incorporationDate: string
-  jurisdiction: string
-  valuation: number
-  annualRevenue: number
-  profitMargin: number
-  availablePercentage: number
-  missionStatement: string
-  targetMarket: string
-  competitiveAdvantage: string
-  growthStrategy: string
-  shareType: string
-  sharesAvailable: number
-  pricePerShare: number
-  fundraisingGoal: number
-  fundUse: string
-  progress: number
-  videoUrl?: string
-  risks: string[]
-  testimonials: Array<{
-    name: string
-    role: string
-    comment: string
-  }>
-}
-
-// Mock performance data for demonstration
-const mockPerformanceData: Array<{ month: string; value: number; profit: number }> = [
-  { month: 'Jan', value: 10000, profit: 0 },
-  { month: 'Feb', value: 10500, profit: 500 },
-  { month: 'Mar', value: 10200, profit: -300 },
-  { month: 'Apr', value: 11000, profit: 800 },
-  { month: 'May', value: 11800, profit: 800 },
-  { month: 'Jun', value: 12500, profit: 700 }
-]
-
-const investmentCategories: InvestmentCategory[] = [
-  {
-    id: 'private-equity',
-    title: 'Private Equity',
-    icon: Briefcase,
-    return: 18.5,
-    risk: 'High',
-    minInvestment: 10000,
-    description: 'High-growth opportunities in private companies',
-    features: ['Direct ownership', 'High potential returns', 'Long-term growth']
-  },
-  {
-    id: 'real-estate',
-    title: 'Real Estate',
-    icon: Building2,
-    return: 12.3,
-    risk: 'Moderate',
-    minInvestment: 1000,
-    description: 'Stable returns from property investments',
-    features: ['Rental income', 'Property appreciation', 'Tax benefits']
-  },
-  {
-    id: 'bonds',
-    title: 'Fixed Income',
-    icon: Shield,
-    return: 5.8,
-    risk: 'Low',
-    minInvestment: 100,
-    description: 'Secure fixed-income investments',
-    features: ['Regular interest payments', 'Capital preservation', 'Government backed']
-  },
-  {
-    id: 'etfs',
-    title: 'ETFs',
-    icon: ChartBar,
-    return: 9.8,
-    risk: 'Low',
-    minInvestment: 50,
-    description: 'Diversified market exposure',
-    features: ['Low fees', 'High liquidity', 'Broad diversification']
-  },
-  {
-    id: 'venture-capital',
-    title: 'Venture Capital',
-    icon: Brain,
-    return: 25.5,
-    risk: 'Very High',
-    minInvestment: 25000,
-    description: 'Innovative startup investments',
-    features: ['Early-stage companies', 'High growth potential', 'Tech focus']
-  },
-  {
-    id: 'crypto',
-    title: 'Cryptocurrency',
-    icon: Globe,
-    return: 32.5,
-    risk: 'Very High',
-    minInvestment: 5,
-    description: 'Digital asset investments',
-    features: ['24/7 trading', 'High volatility', 'Blockchain technology']
-  }
-]
-
-interface InvestmentCategory {
+const categories: {
   id: string
   title: string
-  icon: LucideIcon
-  return: number
-  risk: 'Low' | 'Moderate' | 'High' | 'Very High'
-  minInvestment: number
   description: string
-  features: string[]
+  risk: Risk
+  Graphic: (props: { className?: string }) => JSX.Element
+  href?: string
+}[] = [
+  { id: 'private-equity', title: 'Private Equity', description: 'High-growth private companies', risk: 'High', Graphic: BriefcaseGraphic, href: '/investment-opportunities?category=private-equity' },
+  { id: 'real-estate', title: 'Real Estate', description: 'Income from property', risk: 'Moderate', Graphic: TowerGraphic, href: '/investment-opportunities?category=real-estate' },
+  { id: 'bonds', title: 'Fixed Income', description: 'Regular interest payments', risk: 'Low', Graphic: ShieldGraphic, href: '/investment-opportunities?category=fixed-income' },
+  { id: 'etfs', title: 'ETFs', description: 'Diversified market exposure', risk: 'Low', Graphic: PieGraphic, href: '/etfs' },
+  { id: 'venture-capital', title: 'Venture Capital', description: 'Buy shares in startup funds', risk: 'Very High', Graphic: RocketGraphic, href: '/venture-capital' },
+  { id: 'crypto', title: 'Cryptocurrency', description: 'Digital assets, traded 24/7', risk: 'Very High', Graphic: HexCoinGraphic, href: '/crypto' },
+]
+
+const sections = [
+  { id: 'overview', label: 'Overview' },
+  { id: 'options', label: 'Options' },
+  { id: 'startups', label: 'Startups' },
+  { id: 'circles', label: 'Circles' },
+]
+
+type Summary = {
+  total_value?: string | number
+  total_gain_loss?: string | number
+  total_gain_loss_percent?: string | number
+  day_change?: string | number
+  cash_available?: string | number
+  total_portfolios?: number
 }
 
-// Investment validation schema
-const investmentSchema = z.object({
-  amount: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, "Please enter a valid amount"),
-  riskTolerance: z.number().min(0).max(100),
-  strategy: z.string().min(1, "Please select an investment strategy"),
-  autoInvest: z.boolean(),
-  autoInvestFrequency: z.string().optional(),
-})
+const money = (value: number) => new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' }).format(value)
+const signedPercent = (value: number) => `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`
 
-// Startup investment validation schema
-const startupInvestmentSchema = z.object({
-  shares: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, "Please enter a valid number of shares"),
-})
+function RiskMeter({ risk }: { risk: Risk }) {
+  return (
+    <span className="flex items-center gap-1.5 text-[12px] text-[#a1a1a6]">
+      <span className="flex gap-0.5" aria-hidden="true">
+        {[1, 2, 3, 4].map((level) => (
+          <span key={level} className={`h-1.5 w-3 rounded-full ${level <= RISK_LEVEL[risk] ? 'bg-white' : 'bg-white/15'}`} />
+        ))}
+      </span>
+      {risk} risk
+    </span>
+  )
+}
+
+function SectionHeading({ title, description }: { title: string; description: string }) {
+  return (
+    <div className="mb-4">
+      <h2 className="hr-section-title">{title}</h2>
+      <p className="hr-sub mt-1">{description}</p>
+    </div>
+  )
+}
 
 export function InvestmentPage() {
-  const { theme } = useTheme()
-  const [selectedInvestment, setSelectedInvestment] = useState<InvestmentCategory | null>(null)
-  const [showInvestModal, setShowInvestModal] = useState(false)
-  const [investmentAmount, setInvestmentAmount] = useState<string>('')
-  const [riskTolerance, setRiskTolerance] = useState(50)
-  const [autoInvest, setAutoInvest] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [sortBy, setSortBy] = useState<'return' | 'risk' | 'popularity'>('return')
-  const [filterRisk, setFilterRisk] = useState<string[]>([])
-  const [isRefreshing, setIsRefreshing] = useState(false)
-  const [mlPredictions, setMLPredictions] = useState<MLPrediction | null>(null)
-  const [selectedCategory, setSelectedCategory] = useState<InvestmentCategory | null>(null)
-  const [marketData, setMarketData] = useState<MarketQuote | null>(null);
-  const [selectedStartup, setSelectedStartup] = useState<Startup | null>(null)
-  const [showStartupModal, setShowStartupModal] = useState(false)
-  const [startupView, setStartupView] = useState<'list' | 'detail'>('list')
-  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({})
+  const [summary, setSummary] = useState<Summary | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [failed, setFailed] = useState(false)
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false)
-  const [activeSection, setActiveSection] = useState('overview')
-  const [showQuickNav, setShowQuickNav] = useState(false)
-  // Move startup-related state to the top to avoid conditional hooks
-  const [startups, setStartups] = useState<Startup[]>([])
-  const [loadingStartups, setLoadingStartups] = useState(false)
-  // Investment data state
-  const [investmentSummary, setInvestmentSummary] = useState<any>(null)
-  const [performanceSummary, setPerformanceSummary] = useState<any>(null)
-  const [portfolios, setPortfolios] = useState<any[]>([])
-  const [loadingInvestmentData, setLoadingInvestmentData] = useState(false)
-  const [performanceData, setPerformanceData] = useState<Array<{ month: string; value: number; profit: number }>>([])
+  const [activeSection, setActiveSection] = useState(sections[0].id)
+  const scrollingTo = useRef<number | null>(null)
 
-  const router = useRouter()
-  const { addToast } = useToast()
-
-  // Load investment data from API
   useEffect(() => {
-    const loadInvestmentData = async () => {
-      try {
-        setLoadingInvestmentData(true)
-        
-        // Fetch investment data in parallel
-        const [summaryResponse, performanceResponse, portfoliosResponse] = await Promise.all([
-          apiClient.getInvestmentSummary(),
-          apiClient.getPerformanceSummary('6M'),
-          apiClient.getPortfolios()
-        ])
-
-        if (summaryResponse.data) {
-          setInvestmentSummary(summaryResponse.data)
-        }
-
-        if (performanceResponse.data) {
-          setPerformanceSummary(performanceResponse.data)
-
-          // Transform performance data for chart
-          if (performanceResponse.data.historical_performance && performanceResponse.data.historical_performance.length > 0) {
-            const chartData = performanceResponse.data.historical_performance.map((item: any) => ({
-              month: new Date(item.date).toLocaleDateString('en-US', { month: 'short' }),
-              value: item.portfolio_value || 0,
-              profit: item.profit_loss || 0
-            }))
-            setPerformanceData(chartData)
-          } else {
-            // Use mock data as fallback
-            setPerformanceData(mockPerformanceData)
-          }
-        } else {
-          // Use mock data when no API response
-          setPerformanceData(mockPerformanceData)
-          setPerformanceSummary({
-            total_return_amount: 2500,
-            total_return_percentage: 25.0,
-            period_return_percentage: 8.5
-          })
-        }
-
-        if (portfoliosResponse.data) {
-          setPortfolios(portfoliosResponse.data)
-        }
-
-      } catch (error) {
-        console.error('Error loading investment data:', error)
-
-        // Use mock data as fallback when API fails
-        setPerformanceData(mockPerformanceData)
-        setPerformanceSummary({
-          total_return_amount: 2500,
-          total_return_percentage: 25.0,
-          period_return_percentage: 8.5
-        })
-
-        addToast({
-          title: 'Error',
-          description: 'Failed to load investment data, showing demo data',
-          variant: 'destructive'
-        })
-      } finally {
-        setLoadingInvestmentData(false)
-      }
+    let cancelled = false
+    apiClient.getInvestmentSummary().then((response) => {
+      if (cancelled) return
+      if (response.error || !response.data) setFailed(true)
+      else setSummary(response.data)
+      setIsLoading(false)
+    })
+    return () => {
+      cancelled = true
     }
+  }, [])
 
-    loadInvestmentData()
-  }, [addToast])
-
-  // Use the finance context with proper error handling
-  const financeContext = useFinance();
-  const balance = financeContext?.balance || 25000; // Default investment balance
-  const depositFunds = financeContext?.depositFunds;
-  const withdrawFunds = financeContext?.withdrawFunds;
-
-  const { user, loading } = useAuth()
-  const { fetchStockQuote, isLoading: marketDataLoading } = useMarketData()
-
-  // Redirect if not authenticated (unless bypass is enabled)
+  // Keeps the section pill in step with what's on screen
   useEffect(() => {
-    // Check if we should bypass auth in development mode
-    const bypassAuth = process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true';
-    if (bypassAuth && process.env.NODE_ENV === 'development') {
-      console.log('Auth bypass enabled in development mode for investment page');
-      return;
-    }
-
-    if (!user && !loading) {
-      router.push('/signin')
-    }
-  }, [user, loading, router])
-
-  const validateInvestment = (data: any) => {
-    try {
-      investmentSchema.parse(data)
-      setFormErrors({})
-      return true
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        const newErrors: Record<string, string> = {}
-        error.errors.forEach((err) => {
-          const fieldName = err.path[0]
-          if (typeof fieldName === 'string') {
-            newErrors[fieldName] = err.message
-          }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (scrollingTo.current) return
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) setActiveSection(entry.target.id)
         })
-        setFormErrors(newErrors)
-      }
-      return false
-    }
+      },
+      { rootMargin: '-30% 0px -60% 0px' }
+    )
+    sections.forEach(({ id }) => {
+      const element = document.getElementById(id)
+      if (element) observer.observe(element)
+    })
+    return () => observer.disconnect()
+  }, [])
+
+  const goTo = (id: string) => {
+    setActiveSection(id)
+    if (scrollingTo.current) window.clearTimeout(scrollingTo.current)
+    scrollingTo.current = window.setTimeout(() => {
+      scrollingTo.current = null
+    }, 800)
+    const top = (document.getElementById(id)?.getBoundingClientRect().top ?? 0) + window.scrollY - 124
+    window.scrollTo({ top, behavior: 'smooth' })
   }
 
-  const validateStartupInvestment = (data: any) => {
-    try {
-      startupInvestmentSchema.parse(data)
-      setFormErrors({})
-      return true
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        const newErrors: Record<string, string> = {}
-        error.errors.forEach((err) => {
-          const fieldName = err.path[0]
-          if (typeof fieldName === 'string') {
-            newErrors[fieldName] = err.message
-          }
-        })
-        setFormErrors(newErrors)
-      }
-      return false
-    }
-  }
+  const value = Number(summary?.total_value) || 0
+  const gain = Number(summary?.total_gain_loss) || 0
+  const gainPercent = Number(summary?.total_gain_loss_percent) || 0
+  const [whole, cents] = money(value).split('.')
 
-  const handleStockSearch = useCallback(async (symbol: string) => {
-    try {
-      const quote = await fetchStockQuote(symbol)
-
-      if (quote) {
-        // Ensure the quote has all required MarketQuote properties
-        const completeQuote: MarketQuote = {
-          symbol: quote.symbol,
-          price: quote.price,
-          change: quote.change,
-          changePercent: quote.changePercent,
-          volume: quote.volume || 1000000, // Default volume if not provided
-          marketCap: quote.marketCap || 0,
-          high: quote.price * 1.05, // Mock high price
-          low: quote.price * 0.95,  // Mock low price
-          open: quote.price * 0.98, // Mock open price
-          close: quote.price,       // Use current price as close
-          timestamp: new Date(),    // Current timestamp
-        }
-        setMarketData(completeQuote)
-      }
-    } catch (error) {
-      console.error('Error fetching market data:', error)
-      addToast({
-        title: "Error",
-        description: "Failed to fetch market data. Please try again later.",
-        variant: "destructive",
-      })
-    }
-  }, [fetchStockQuote, addToast])
-
-  // Quick navigation sections
-  const quickNavSections = [
-    { id: 'overview', label: 'Overview', icon: Home },
-    { id: 'performance', label: 'Performance', icon: Activity },
-    { id: 'investments', label: 'Investments', icon: TrendingUp },
-    { id: 'startups', label: 'Startups', icon: Building2 },
-    { id: 'collective', label: 'Circles', icon: Users },
+  const stats = [
+    { label: 'Total return', value: money(gain), note: signedPercent(gainPercent) },
+    { label: 'Today', value: money(Number(summary?.day_change) || 0) },
+    { label: 'Cash to invest', value: money(Number(summary?.cash_available) || 0) },
+    { label: 'Portfolios', value: String(summary?.total_portfolios ?? 0) },
   ]
 
-  const scrollToSection = (sectionId: string) => {
-    console.log('Scrolling to section:', sectionId) // Debug log
-    setActiveSection(sectionId)
-    setShowQuickNav(false)
-    
-    // Add a small delay to ensure the nav closes first
-    setTimeout(() => {
-      const element = document.getElementById(sectionId)
-      console.log('Found element:', element) // Debug log
-      
-      if (element) {
-        // Get sticky header height to offset scroll position
-        const stickyHeader = document.querySelector('.sticky')
-        const headerHeight = stickyHeader ? stickyHeader.getBoundingClientRect().height : 0
-        const elementPosition = element.getBoundingClientRect().top + window.pageYOffset
-        const offsetPosition = elementPosition - headerHeight - 16 // 16px additional spacing
-
-        window.scrollTo({
-          top: offsetPosition,
-          behavior: 'smooth'
-        })
-        
-        // Alternative method with manual calculation
-        setTimeout(() => {
-          const rect = element.getBoundingClientRect()
-          const scrollTop = window.pageYOffset || document.documentElement.scrollTop
-          const elementTop = rect.top + scrollTop
-          const headerOffset = 80 // Fixed offset for header
-          
-          window.scrollTo({
-            top: elementTop - headerOffset,
-            behavior: 'smooth'
-          })
-        }, 50)
-      } else {
-        console.error('Element not found:', sectionId)
-      }
-    }, 150)
-  }
-
-  // Add scroll listener to update active section
-  useEffect(() => {
-    const handleScroll = () => {
-      const sections = quickNavSections.map(section => section.id)
-      const stickyHeader = document.querySelector('.sticky')
-      const headerHeight = stickyHeader ? stickyHeader.getBoundingClientRect().height : 0
-      
-      for (let i = sections.length - 1; i >= 0; i--) {
-        const section = document.getElementById(sections[i])
-        if (section) {
-          const rect = section.getBoundingClientRect()
-          if (rect.top <= headerHeight + 50) { // 50px threshold
-            setActiveSection(sections[i])
-            break
-          }
-        }
-      }
-    }
-
-    window.addEventListener('scroll', handleScroll)
-    handleScroll() // Call once to set initial active section
-
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [quickNavSections])
-
-  // Load startup data from API - moved before conditional return to avoid hooks violation
-  useEffect(() => {
-    const loadStartups = async () => {
-      try {
-        setLoadingStartups(true)
-        // TODO: Replace with actual API call when startup endpoints are available
-        // const response = await apiClient.getStartups()
-        // setStartups(response.data || [])
-        setStartups([]) // Empty for now until API is implemented
-      } catch (error) {
-        console.error('Failed to load startups:', error)
-        addToast({
-          title: 'Error',
-          description: 'Failed to load startup investments',
-          variant: 'destructive'
-        })
-      } finally {
-        setLoadingStartups(false)
-      }
-    }
-
-    loadStartups()
-  }, [addToast])
-
-
   return (
-    <LayoutWrapper className="min-h-screen-mobile bg-background" showBreadcrumbs={false}>
-      {/* Sticky Quick Navigation - Mobile First */}
-      <div className="sticky top-0 z-40 bg-background border-b border-border">
-            <div className="flex items-center justify-between p-3 sm:p-4">
-          <h1 className="text-base sm:text-lg md:text-xl font-bold text-foreground">Investments</h1>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowQuickNav(!showQuickNav)}
-            className="p-2 h-auto btn-mobile text-foreground hover:bg-muted"
-          >
-            {showQuickNav ? <X className="h-4 w-4 sm:h-5 sm:w-5 text-foreground" /> : <Menu className="h-4 w-4 sm:h-5 sm:w-5 text-foreground" />}
-          </Button>
-        </div>
-            
-            <AnimatePresence>
-              {showQuickNav && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="border-t border-border bg-background"
-                >
-                  <div className="grid grid-cols-5 gap-1 p-2">
-                    {quickNavSections.map((section) => (
-                      <Button
-                        key={section.id}
-                        variant={activeSection === section.id ? "default" : "ghost"}
-                        size="sm"
-                        onClick={() => scrollToSection(section.id)}
-                        className={`flex flex-col items-center gap-1 h-auto py-2 px-1 text-xs ${
-                          activeSection === section.id 
-                            ? 'bg-primary text-primary-foreground' 
-                            : 'text-foreground hover:bg-muted hover:text-foreground'
-                        }`}
-                      >
-                        <section.icon className="h-3 w-3" />
-                        <span className="text-xs sm:text-sm">{section.label}</span>
-                      </Button>
-                    ))}
-                  </div>
-                </motion.div>
+    <motion.div className="space-y-5 sm:space-y-6" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, ease: [0.2, 0.7, 0.2, 1] }}>
+      <h1 className="hr-title">Investments</h1>
+
+      <nav className="hr-section-nav" aria-label="Sections">
+        {sections.map((section) => (
+          <button key={section.id} onClick={() => goTo(section.id)} aria-current={activeSection === section.id ? 'true' : undefined} className="hr-section-tab hr-focus">
+            {activeSection === section.id && (
+              <motion.span layoutId="hr-section-lens" className="lp-glass-lens absolute inset-0 rounded-full" transition={{ type: 'spring', stiffness: 420, damping: 34 }} />
+            )}
+            <span className="relative">{section.label}</span>
+          </button>
+        ))}
+      </nav>
+
+      {failed && (
+        <div role="alert" className="hr-panel px-5 py-4 text-sm">We couldn't load your portfolio. Please try again in a moment.</div>
+      )}
+
+      {/* Overview */}
+      <div id="overview" className="grid scroll-mt-32 gap-4 sm:gap-5 lg:grid-cols-12">
+        <section className="hr-balance lg:col-span-8">
+          <div aria-hidden="true" className="lp-eclipse hr-eclipse lg:hidden" />
+          <div className="relative px-5 pt-8 text-center lg:p-6 lg:pb-3 lg:text-left">
+            <p className="text-sm text-[#a1a1a6]">Portfolio value</p>
+            {isLoading ? (
+              <div className="hr-skeleton mx-auto mt-2 h-14 w-56 lg:mx-0" />
+            ) : (
+              <p className="mt-1 hr-figure text-[60px] leading-none lg:text-[56px]">
+                {whole}
+                {cents && <span className="text-[0.46em] text-[#a1a1a6]">.{cents}</span>}
+              </p>
+            )}
+            <p className="mx-auto mt-3 max-w-[280px] text-[13px] leading-snug text-[#a1a1a6] lg:mx-0 lg:max-w-none">
+              {value > 0 ? (
+                <span className="inline-flex items-center gap-1">
+                  <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={2} />
+                  <span className="text-white">{signedPercent(gainPercent)}</span> all time
+                </span>
+              ) : (
+                'Once you start investing, your performance will appear here.'
               )}
-            </AnimatePresence>
+            </p>
           </div>
+          <div className="hidden px-6 pb-5 lg:block">
+            <EmptyChart label="Performance over time will show here" />
+          </div>
+          <div className="relative flex justify-center gap-2 px-4 pb-7 pt-24 lg:hidden">
+            <button onClick={() => setIsDepositModalOpen(true)} className="hr-pill hr-focus !h-11 !px-5" data-primary="true">
+              <Wallet className="h-4 w-4" strokeWidth={2} />
+              Deposit
+            </button>
+            <button onClick={() => goTo('options')} className="hr-pill hr-focus !h-11 !px-5">
+              Explore
+              <ArrowRight className="h-4 w-4" strokeWidth={2} />
+            </button>
+          </div>
+        </section>
 
-          {/* Portfolio Overview Section - Mobile Optimized */}
-          <section id="overview" className="p-3 sm:p-4 md:p-6 bg-primary text-primary-foreground">
-            <div className="space-y-3 sm:space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
-                <div>
-                  <h2 className="text-sm sm:text-base md:text-lg font-bold">Portfolio Overview</h2>
-                  <p className="text-xs sm:text-sm text-primary-foreground opacity-90">AI-Powered Management</p>
-                </div>
-                <div className="flex gap-2 sm:gap-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setIsDepositModalOpen(true)}
-                    className="text-xs border-white text-white hover:bg-white/10 dark:border-white dark:text-white"
-                  >
-                    <Wallet className="h-3 w-3 mr-1" />
-                    Deposit
-                  </Button>
-                </div>
-              </div>
-
-              {/* Key Metrics - Compact Grid */}
-              <div className="grid grid-cols-3 gap-2">
-                <Card className="bg-card border-border">
-                  <CardContent className="p-2">
-                    <div className="text-xs sm:text-sm text-muted-foreground">Portfolio</div>
-                    {loadingInvestmentData ? (
-                      <div className="text-xs sm:text-base font-bold text-foreground">Loading...</div>
-                    ) : (
-                      <div className="text-xs sm:text-base font-bold text-foreground">
-                        ${(investmentSummary?.total_portfolio_value || 0).toLocaleString()}
-                      </div>
-                    )}
-                    <div className="flex items-center text-xs sm:text-sm text-green-600 dark:text-green-400">
-                      {loadingInvestmentData ? (
-                        <span>--</span>
-                      ) : (
-                        <>
-                          {(performanceSummary?.total_return_percentage || 0) >= 0 ? (
-                            <ArrowUpRight className="h-2 w-2 mr-1" />
-                          ) : (
-                            <ArrowDownRight className="h-2 w-2 mr-1" />
-                          )}
-                          {(performanceSummary?.total_return_percentage || 0) >= 0 ? '+' : ''}
-                          {(performanceSummary?.total_return_percentage || 0).toFixed(1)}%
-                        </>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-card border-border">
-                  <CardContent className="p-2">
-                    <div className="text-xs sm:text-sm text-muted-foreground">Returns</div>
-                    {loadingInvestmentData ? (
-                      <div className="text-xs sm:text-base font-bold text-foreground">Loading...</div>
-                    ) : (
-                      <div className="text-xs sm:text-base font-bold text-foreground">
-                        ${(performanceSummary?.total_return_amount || 0).toLocaleString()}
-                      </div>
-                    )}
-                    <div className="flex items-center text-xs sm:text-sm text-green-600 dark:text-green-400">
-                      {loadingInvestmentData ? (
-                        <span>--</span>
-                      ) : (
-                        <>
-                          {(performanceSummary?.period_return_percentage || 0) >= 0 ? (
-                            <ArrowUpRight className="h-2 w-2 mr-1" />
-                          ) : (
-                            <ArrowDownRight className="h-2 w-2 mr-1" />
-                          )}
-                          {(performanceSummary?.period_return_percentage || 0) >= 0 ? '+' : ''}
-                          {(performanceSummary?.period_return_percentage || 0).toFixed(1)}%
-                        </>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-card border-border">
-                  <CardContent className="p-2">
-                    <div className="text-xs sm:text-sm text-muted-foreground">AI Score</div>
-                    {loadingInvestmentData ? (
-                      <div className="text-xs sm:text-base font-bold text-foreground">Loading...</div>
-                    ) : (
-                      <div className="text-xs sm:text-base font-bold text-foreground">
-                        {investmentSummary?.ai_optimization_score || 85}/100
-                      </div>
-                    )}
-                    <div className="text-xs sm:text-sm text-muted-foreground">
-                      {loadingInvestmentData ? '--' : (investmentSummary?.optimization_status || 'Optimized')}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          </section>
-
-          {/* Performance Chart Section - Mobile Optimized */}
-          <section id="performance" className="p-3 sm:p-4 bg-background">
-            <Card className="bg-card border-border shadow-sm">
-              <CardHeader className="p-3 sm:p-4 pb-2">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm sm:text-base md:text-lg text-foreground font-semibold">
-                    Portfolio Performance
-                  </CardTitle>
-                  <Badge variant="secondary" className="text-xs">
-                    6M
-                  </Badge>
-                </div>
-                <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                  Track your investment growth over time
-                </p>
-              </CardHeader>
-              <CardContent className="p-3 sm:p-4 pt-0">
-                {loadingInvestmentData ? (
-                  <div className="h-[200px] sm:h-[250px] flex items-center justify-center">
-                    <div className="flex flex-col items-center gap-2">
-                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                      <p className="text-xs sm:text-sm text-muted-foreground">Loading performance data...</p>
-                    </div>
-                  </div>
-                ) : performanceData.length === 0 ? (
-                  <div className="h-[200px] sm:h-[250px] flex items-center justify-center">
-                    <div className="flex flex-col items-center gap-3 text-center">
-                      <div className="p-3 bg-muted/50 rounded-full">
-                        <BarChart className="h-8 w-8 text-muted-foreground" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-foreground mb-1">No Performance Data</p>
-                        <p className="text-xs text-muted-foreground">
-                          Start investing to see your portfolio performance
-                        </p>
-                      </div>
-
-                    </div>
-                  </div>
+        <div className="grid gap-4 sm:gap-5 lg:col-span-4">
+          <ul className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-2">
+            {stats.map((stat) => (
+              <li key={stat.label} className="hr-panel flex min-w-0 flex-col justify-between gap-3 p-4">
+                <span className="truncate text-[13px] text-[#a1a1a6]">{stat.label}</span>
+                {isLoading ? (
+                  <span className="hr-skeleton block h-6 w-16" />
                 ) : (
-                  <>
-                    {/* Recharts Performance Chart */}
-                    <div className="h-[200px] sm:h-[250px] md:h-[300px] w-full bg-background/50 rounded-lg overflow-hidden">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart
-                          data={performanceData}
-                          margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
-                        >
-                        <defs>
-                          <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.8}/>
-                            <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.1}/>
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid
-                          strokeDasharray="3 3"
-                          stroke="hsl(var(--border))"
-                          opacity={0.3}
-                          horizontal={true}
-                          vertical={false}
-                        />
-                        <XAxis
-                          dataKey="month"
-                          stroke="hsl(var(--muted-foreground))"
-                          fontSize={10}
-                          tickLine={false}
-                          axisLine={false}
-                        />
-                        <YAxis
-                          stroke="hsl(var(--muted-foreground))"
-                          fontSize={10}
-                          tickLine={false}
-                          axisLine={false}
-                          tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
-                        />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: 'hsl(var(--popover))',
-                            border: '1px solid hsl(var(--border))',
-                            borderRadius: '8px',
-                            color: 'hsl(var(--popover-foreground))',
-                            fontSize: '12px',
-                            boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
-                          }}
-                          labelStyle={{ color: 'hsl(var(--popover-foreground))' }}
-                          formatter={(value: any, name: string) => [
-                            `$${Number(value).toLocaleString()}`,
-                            name === 'value' ? 'Portfolio Value' : 'Profit/Loss'
-                          ]}
-                        />
-                        <Area
-                          type="monotone"
-                          dataKey="value"
-                          stroke="hsl(var(--primary))"
-                          strokeWidth={2}
-                          fillOpacity={1}
-                          fill="url(#colorValue)"
-                        />
-                        </AreaChart>
-                      </ResponsiveContainer>
-                    </div>
-
-                    {/* CSS Fallback Chart - Always Visible */}
-                    <div className="mt-4 p-3 bg-muted/30 rounded-lg">
-                      <div className="flex items-end justify-between h-16 gap-1">
-                        {performanceData.map((data, index) => {
-                          const maxValue = Math.max(...performanceData.map(d => d.value))
-                          const height = (data.value / maxValue) * 100
-                          const isPositive = data.profit >= 0
-
-                          return (
-                            <div key={index} className="flex flex-col items-center flex-1">
-                              <div
-                                className={`w-full rounded-t transition-all duration-300 ${
-                                  isPositive ? 'bg-green-500' : 'bg-red-500'
-                                }`}
-                                style={{ height: `${height}%` }}
-                                title={`${data.month}: $${data.value.toLocaleString()}`}
-                              />
-                              <span className="text-xs text-muted-foreground mt-1">
-                                {data.month}
-                              </span>
-                            </div>
-                          )
-                        })}
-                      </div>
-                      <div className="flex justify-between items-center mt-2 text-xs text-muted-foreground">
-                        <span>Portfolio Growth</span>
-                        <span className="text-primary font-medium">
-                          {performanceData.length > 1 ? (
-                            ((performanceData[performanceData.length - 1].value - performanceData[0].value) / performanceData[0].value * 100).toFixed(1)
-                          ) : 0}% ↗
-                        </span>
-                      </div>
-                    </div>
-                  </>
+                  <span className="min-w-0">
+                    <span className="hr-figure block truncate text-[22px] leading-tight">{stat.value}</span>
+                    {stat.note && <span className="block text-[12px] tabular-nums text-[#a1a1a6]">{stat.note}</span>}
+                  </span>
                 )}
+              </li>
+            ))}
+          </ul>
 
-                {/* Performance Summary Cards - Mobile Optimized */}
-                {!loadingInvestmentData && performanceData.length > 0 && (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mt-4">
-                    <div className="bg-muted/50 rounded-lg p-3">
-                      <p className="text-xs text-muted-foreground">Total Return</p>
-                      <p className="text-sm sm:text-base font-semibold text-foreground">
-                        ${(performanceSummary?.total_return_amount || 0).toLocaleString()}
-                      </p>
-                      <p className={`text-xs ${
-                        (performanceSummary?.total_return_percentage || 0) >= 0
-                          ? 'text-green-600'
-                          : 'text-red-600'
-                      }`}>
-                        {(performanceSummary?.total_return_percentage || 0) >= 0 ? '+' : ''}
-                        {(performanceSummary?.total_return_percentage || 0).toFixed(1)}%
-                      </p>
-                    </div>
-
-                    <div className="bg-muted/50 rounded-lg p-3">
-                      <p className="text-xs text-muted-foreground">Best Month</p>
-                      <p className="text-sm sm:text-base font-semibold text-green-600">
-                        +{Math.max(...performanceData.map(d => d.profit)).toLocaleString()}
-                      </p>
-                    </div>
-
-                    <div className="bg-muted/50 rounded-lg p-3 col-span-2 sm:col-span-1">
-                      <p className="text-xs text-muted-foreground">Growth</p>
-                      <p className="text-sm sm:text-base font-semibold text-foreground">
-                        {performanceData.length > 1 ? (
-                          ((performanceData[performanceData.length - 1].value - performanceData[0].value) / performanceData[0].value * 100).toFixed(1)
-                        ) : 0}%
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </section>
-
-          {/* Investment Categories Section */}
-          <section id="investments" className="p-3 bg-background">
-            <div className="mb-3">
-              <h3 className="text-xs sm:text-base font-bold text-foreground mb-1">Investment Options</h3>
-              <p className="text-xs sm:text-sm text-muted-foreground">Diversified portfolio opportunities</p>
-            </div>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-              {investmentCategories.map((category) => (
-                <Card
-                  key={category.id}
-                  className="hover:shadow-md transition-shadow cursor-pointer bg-card border-border"
-                  onClick={() => {
-                    // Navigate to opportunities page for specific categories
-                    if (['private-equity', 'real-estate', 'bonds'].includes(category.id)) {
-                      const categoryParam = category.id === 'bonds' ? 'fixed-income' : category.id
-                      router.push(`/investment-opportunities?category=${categoryParam}`)
-                    } else {
-                      // Keep existing modal behavior for other categories
-                      setSelectedInvestment(category)
-                      setShowInvestModal(true)
-                    }
-                  }}
-                >
-                  <CardContent className="p-3">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-1">
-                        <category.icon className="h-3 w-3 text-foreground" />
-                        <span className="text-xs sm:text-sm font-medium text-foreground">{category.title}</span>
-                      </div>
-                      <Badge variant="outline" className="border-border text-foreground text-xs sm:text-sm px-1 py-0">
-                        {category.risk}
-                      </Badge>
-                    </div>
-                    
-                    <div className="space-y-1">
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs sm:text-sm text-muted-foreground">Return</span>
-                        <span className="text-xs sm:text-sm font-bold text-foreground">{category.return}%</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs sm:text-sm text-muted-foreground">Min</span>
-                        <span className="text-xs sm:text-sm text-foreground">${category.minInvestment.toLocaleString()}</span>
-                      </div>
-                    </div>
-                    
-                    <p className="text-xs sm:text-sm text-muted-foreground mt-2 line-clamp-2">{category.description}</p>
-                  </CardContent>
-                </Card>
-              ))}
+          <section className="hr-promo !hidden lg:!flex">
+            <BarsGraphic className="hr-promo-art" />
+            <div className="relative max-w-[66%]">
+              <h2 className="hr-card-title text-[22px]">Put your money to work</h2>
+              <button onClick={() => setIsDepositModalOpen(true)} className="hr-focus mt-3 inline-flex h-10 items-center gap-1.5 rounded-full bg-white px-4 text-sm font-medium text-black">
+                <Wallet className="h-4 w-4" strokeWidth={2} />
+                Deposit
+              </button>
             </div>
           </section>
+        </div>
+      </div>
 
-          {/* Startup Investments Section */}
-          <section id="startups" className="p-3 bg-muted/50">
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <h3 className="text-xs sm:text-base font-bold text-foreground">Startup Investments</h3>
-                <p className="text-xs sm:text-sm text-muted-foreground">Early-stage opportunities</p>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-xs sm:text-sm px-2 py-1 h-auto"
-              >
-                <RefreshCcw className="w-3 h-3 mr-1" />
-                Refresh
-              </Button>
-            </div>
-
-              <div className="grid grid-cols-1 gap-3">
-                {loadingStartups ? (
-                  <div className="flex items-center justify-center p-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
-                  </div>
-                ) : startups.length > 0 ? (
-                  startups.map((startup) => (
-                    <Card key={startup.id} className="bg-card border-border">
-                      <CardContent className="p-3">
-                        <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <h4 className="text-xs sm:text-base font-medium text-foreground">{startup.companyName}</h4>
-                            <p className="text-xs sm:text-sm text-muted-foreground">{startup.companyType}</p>
-                          </div>
-                          <Badge variant="outline" className="border-border text-foreground text-xs sm:text-sm">
-                            {startup.progress}% funded
-                          </Badge>
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-2 mb-2">
-                          <div>
-                            <span className="text-xs sm:text-sm text-muted-foreground">Valuation</span>
-                            <p className="text-xs sm:text-sm font-medium text-foreground">${(startup.valuation / 1000000).toFixed(1)}M</p>
-                          </div>
-                          <div>
-                            <span className="text-xs sm:text-sm text-muted-foreground">Min Investment</span>
-                            <p className="text-xs sm:text-sm font-medium text-foreground">${startup.pricePerShare}</p>
-                          </div>
-                        </div>
-                        
-                        <div className="w-full bg-muted rounded-full h-1.5 mb-2">
-                          <div
-                            className="bg-primary h-1.5 rounded-full"
-                            style={{ width: `${startup.progress}%` }}
-                          />
-                        </div>
-                        
-                        <Button
-                          size="sm"
-                          className="w-full text-xs sm:text-sm py-1 h-auto"
-                          onClick={() => setShowStartupModal(true)}
-                        >
-                          View Details
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  ))
+      {/* Investment options */}
+      <section id="options" className="scroll-mt-32">
+        <SectionHeading title="Investment options" description="Ways to grow your money, by risk." />
+        <ul className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3">
+          {categories.map(({ id, title, description, risk, Graphic, href }) => {
+            const content = (
+              <>
+                <span className="hr-collection-glow" aria-hidden="true" />
+                <Graphic className="hr-collection-art" />
+                <span className="hr-card-title relative block text-[18px] sm:text-[20px]">{title}</span>
+                <span className="relative mt-1 block text-[13.5px] leading-snug text-[#8e8e93]">{description}</span>
+                <span className="relative mt-auto flex flex-wrap items-center justify-between gap-x-2 gap-y-1 pt-2.5">
+                  <RiskMeter risk={risk} />
+                  {!href && <span className="text-[12px] font-medium text-white">Coming soon</span>}
+                </span>
+              </>
+            )
+            return (
+              <li key={id} className="min-w-0">
+                {href ? (
+                  <Link href={href} className="hr-collection hr-focus">{content}</Link>
                 ) : (
-                  <Card className="bg-card border-border">
-                    <CardContent className="p-6 text-center">
-                      <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <h4 className="text-sm font-medium text-foreground mb-2">No Startups Available</h4>
-                      <p className="text-xs text-muted-foreground mb-4">
-                        Check back later for new startup investment opportunities.
-                      </p>
-                      <Button
-                        variant="default"
-                        size="sm"
-                        onClick={() => router.push('/startupregistration')}
-                        className="text-xs bg-primary text-primary-foreground hover:bg-primary/90"
-                      >
-                        Register Your Startup
-                      </Button>
-                    </CardContent>
-                  </Card>
+                  <div className="hr-collection hr-collection-soon">{content}</div>
                 )}
-              </div>
-          </section>
+              </li>
+            )
+          })}
+        </ul>
+      </section>
 
-          {/* Collective Capital Circles Section */}
-          <section id="collective" className="p-3 bg-background">
-            <div className="mb-3">
-              <h3 className="text-xs sm:text-base font-bold text-foreground">Collective Circles</h3>
-              <p className="text-xs sm:text-sm text-muted-foreground">Join investment communities</p>
-            </div>
-            <CollectiveCapitalCircles />
-          </section>
+      {/* Startups */}
+      <section id="startups" className="scroll-mt-32">
+        <SectionHeading title="Startups" description="Early-stage companies raising money." />
+        <div className="hr-promo">
+          <RocketGraphic className="hr-promo-art" />
+          <div className="relative max-w-[62%] sm:max-w-[70%]">
+            <h3 className="hr-card-title text-[23px] sm:text-[26px]">No startups yet</h3>
+            <p className="hr-sub mt-2 !text-[#aeaeb2]">Raising money? Be one of the first to list your company.</p>
+            <Link href="/startupregistration" className="hr-focus mt-4 inline-flex h-10 items-center gap-1.5 rounded-full bg-white px-4 text-sm font-medium text-black">
+              <Plus className="h-4 w-4" strokeWidth={2.4} />
+              Register your startup
+            </Link>
+          </div>
+        </div>
+      </section>
 
-          {/* Investment Modal */}
-          <Dialog open={showInvestModal} onOpenChange={setShowInvestModal}>
-            <DialogContent className="sm:max-w-[90vw] max-w-[350px] bg-background border-border">
-              <DialogHeader>
-                <DialogTitle className="text-foreground text-sm">New Investment</DialogTitle>
-                <DialogDescription className="text-muted-foreground text-xs">
-                  Available Balance: ${balance?.toLocaleString() ?? '0'}
-                </DialogDescription>
-              </DialogHeader>
+      {/* Circles */}
+      <section id="circles" className="scroll-mt-32">
+        <SectionHeading title="Circles" description="Invest together with people you trust." />
+        <div className="hr-promo">
+          <OrbsGraphic className="hr-promo-art" />
+          <div className="relative max-w-[62%] sm:max-w-[70%]">
+            <h3 className="hr-card-title text-[23px] sm:text-[26px]">Invest as a group</h3>
+            <p className="hr-sub mt-2 !text-[#aeaeb2]">Pool money, vote with your stake, and own your share of everything the circle buys.</p>
+            <Link href="/circles" className="hr-focus mt-4 inline-flex h-10 items-center gap-1.5 rounded-full bg-white px-4 text-sm font-medium text-black">
+              Open circles
+              <ArrowRight className="h-4 w-4" strokeWidth={2} />
+            </Link>
+          </div>
+        </div>
+      </section>
 
-              <div className="grid gap-3 py-3">
-                <div className="space-y-2">
-                  <Label className="text-foreground text-xs">Investment Amount</Label>
-                  <div className="relative">
-                    <DollarSign className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground h-3 w-3" />
-                    <Input
-                      type="number"
-                      value={investmentAmount}
-                      onChange={(e) => setInvestmentAmount(e.target.value)}
-                      placeholder="Enter amount"
-                      className="pl-8 text-xs h-8"
-                      min={0}
-                      max={balance}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-foreground text-xs">Risk Tolerance</Label>
-                  <Slider
-                    value={[riskTolerance]}
-                    onValueChange={(value) => setRiskTolerance(value[0])}
-                    max={100}
-                    step={1}
-                    className="mt-2"
-                  />
-                  <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                    <span>Conservative</span>
-                    <span>Aggressive</span>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-foreground text-xs">Investment Strategy</Label>
-                  <Select>
-                    <SelectTrigger className="h-8 text-xs">
-                      <SelectValue placeholder="Select strategy" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="growth" className="text-xs">Growth</SelectItem>
-                      <SelectItem value="value" className="text-xs">Value</SelectItem>
-                      <SelectItem value="dividend" className="text-xs">Dividend</SelectItem>
-                      <SelectItem value="blend" className="text-xs">Blend</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    checked={autoInvest}
-                    onCheckedChange={setAutoInvest}
-                  />
-                  <Label className="text-foreground text-xs">Enable Auto-Invest</Label>
-                </div>
-              </div>
-
-              <DialogFooter>
-                <Button
-                  onClick={() => {
-                    addToast({
-                      title: "Investment Successful",
-                      description: `Successfully invested $${investmentAmount}`,
-                    })
-                    setShowInvestModal(false)
-                  }}
-                  disabled={isLoading || !investmentAmount ||
-                    Number(investmentAmount) <= 0 ||
-                    Number(investmentAmount) > (balance ?? 0)}
-                  className="text-xs px-3 py-1 h-auto"
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                      Processing...
-                    </>
-                  ) : (
-                    'Invest Now'
-                  )}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-
-          {/* Startup Investment Modal */}
-          <Dialog open={showStartupModal} onOpenChange={setShowStartupModal}>
-            <DialogContent className="sm:max-w-[90vw] max-w-[350px] bg-background border-border">
-              <DialogHeader>
-                <DialogTitle className="text-foreground text-sm">Invest in {selectedStartup?.companyName}</DialogTitle>
-                <DialogDescription className="text-muted-foreground text-xs">
-                  Enter the number of shares you would like to purchase
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-3 py-3">
-                <div className="space-y-2">
-                  <Label className="text-foreground text-xs">Number of Shares</Label>
-                  <Input
-                    type="number"
-                    placeholder="Enter number of shares"
-                    min="1"
-                    max={selectedStartup?.sharesAvailable}
-                    className="text-xs h-8"
-                  />
-                </div>
-                <div>
-                  <Label className="text-foreground text-xs">Total Investment</Label>
-                  <div className="text-sm font-bold text-foreground">
-                    $0.00
-                  </div>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button 
-                  variant="outline" 
-                  onClick={() => setShowStartupModal(false)}
-                  className="text-xs px-3 py-1 h-auto"
-                >
-                  Cancel
-                </Button>
-                <Button className="text-xs px-3 py-1 h-auto">
-                  Confirm Investment
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-
-          <SectionFooter section="main" activePage="/investment" />
-
-          {/* Deposit Modal */}
-          <DepositModal
-            open={isDepositModalOpen}
-            onOpenChange={setIsDepositModalOpen}
-          />
-        </LayoutWrapper>
+      <DepositModal open={isDepositModalOpen} onOpenChange={setIsDepositModalOpen} />
+    </motion.div>
   )
 }

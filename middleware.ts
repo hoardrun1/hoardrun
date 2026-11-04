@@ -3,10 +3,16 @@ import type { NextRequest } from 'next/server';
 import { navigation } from '@/lib/navigation';
 
 const publicRoutes = ['/signin', '/signup'];
+const DEV_ONLY = ['/api-test', '/auth/debug', '/dev', '/monitoring', '/test', '/test-cognito', '/test-email'];
 const protectedRoutes = ['home', 'dashboard', 'create-profile', 'verify-email'];
 
 export function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
+
+  // Developer and test pages exist for local work only; in production they don't exist
+  if (process.env.NODE_ENV === 'production' && DEV_ONLY.some((prefix) => path === prefix || path.startsWith(`${prefix}/`))) {
+    return new NextResponse(null, { status: 404 });
+  }
 
   // Check if we should bypass auth globally (not just in development)
   const bypassAuth = process.env.NEXT_PUBLIC_BYPASS_AUTH === 'true';
@@ -51,6 +57,13 @@ export const config = {
     '/savings/:path*',
     '/startupregistration/:path*',
     '/signin',
-    '/signup'
+    '/signup',
+    '/api-test/:path*',
+    '/auth/debug/:path*',
+    '/dev/:path*',
+    '/monitoring/:path*',
+    '/test/:path*',
+    '/test-cognito/:path*',
+    '/test-email/:path*'
   ]
 }

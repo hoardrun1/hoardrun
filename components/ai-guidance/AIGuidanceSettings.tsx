@@ -48,7 +48,7 @@ export const AIGuidanceSettings: React.FC<AIGuidanceSettingsProps> = ({
   };
 
   return (
-    <Card className="border-purple-200">
+    <Card className="border-blue-200">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>

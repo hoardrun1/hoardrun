@@ -83,7 +83,7 @@ const menuSections = {
 export function SidebarContent({ onAddMoney }: SidebarContentProps) {
   const router = useRouter()
   const pathname = usePathname()
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
   const { setIsOpen } = useSidebar()
   const { unreadCount, isLoading: notificationLoading } = useNotificationCount()
   const { navigate } = useAppNavigation()
@@ -137,22 +137,11 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
     }
   }
 
-  const handleLogout = async () => {
-    try {
-      console.log('Logout clicked - starting logout process')
-      await logout()
-      console.log('Logout successful - redirecting to landing page')
-      // Close sidebar first
-      setIsOpen(false)
-      // Redirect to landing page
-      router.push('/')
-    } catch (error) {
-      console.error('Logout error:', error)
-      // Still close sidebar even if logout fails
-      setIsOpen(false)
-      // Still redirect to landing page as a fallback
-      router.push('/')
-    }
+  const handleLogout = () => {
+    // The sign-out page ends the session. Doing it here would trigger the
+    // dashboard's redirect to sign-in before this navigation happens.
+    setIsOpen(false)
+    router.push('/signout')
   }
 
   const renderMenuSection = (title: string, items: MenuItem[]) => {
@@ -346,7 +335,7 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
                 animate={{ backgroundPosition: ['0%', '100%', '0%'] }}
                 transition={{ duration: 3, repeat: Infinity }}
               >
-                HoardRun
+                Hoardrun
               </motion.h1>
               <div className="flex items-center gap-2">
                 <p className="text-[10px] lg:text-xs font-medium" style={{ color: 'rgba(255,255,255,0.6)' }}>Premium Banking</p>

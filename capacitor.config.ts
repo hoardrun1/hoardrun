@@ -12,6 +12,11 @@ import type { CapacitorConfig } from '@capacitor/cli'
  */
 const appUrl = (process.env.HOARDRUN_APP_URL || 'https://hoardrun.com').replace(/\/+$/, '')
 const plainHttp = appUrl.startsWith('http://')
+const appHost = new URL(appUrl).host
+// The site redirects between hoardrun.com and www.hoardrun.com; both must stay inside the app,
+// or the redirect opens the site in Safari / Chrome instead
+const bareHost = appHost.replace(/^www\./, '')
+const appHosts = appHost.includes('.') && !/^[\d.:]+$/.test(bareHost) ? [bareHost, `www.${bareHost}`] : [appHost]
 
 const config: CapacitorConfig = {
   appId: 'com.hoardrun.app',
@@ -26,7 +31,7 @@ const config: CapacitorConfig = {
     errorPath: 'offline.html',
     // Pages that open inside the app. Anything else (including Google sign-in) opens in the phone's browser.
     allowNavigation: [
-      new URL(appUrl).host,
+      ...appHosts,
       'checkout.stripe.com',
       '*.withpersona.com',
       'withpersona.com',

@@ -48,8 +48,10 @@ const config: CapacitorConfig = {
   },
   plugins: {
     SplashScreen: {
-      launchShowDuration: 3000,
-      launchAutoHide: false,
+      // The web app hides the splash as soon as it loads (native-shell.tsx); this is the fallback,
+      // so the app is never stuck on the splash if the page is slow, fails, or is an older version
+      launchShowDuration: 4000,
+      launchAutoHide: true,
       backgroundColor: '#000000',
       showSpinner: false,
     },

@@ -2354,3 +2354,250 @@ html.hr-app, .hr-app {
 .hr-ai-send:disabled { opacity: 0.35; }
 .hr-ai-send:not(:disabled):active { transform: scale(0.92); }
 @media (prefers-reduced-motion: reduce) { .hr-ai-orb, .hr-ai-typing span { animation: none; } }
+
+/* Send money v3: a bold blue money panel (Cash App) beside a "Send to" panel with quick-send faces
+   (top send-money shots on Dribbble) and a fee / arrival summary (Wise). Blue = Hoardrun's own. */
+.hr-cash {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: visible;
+  isolation: isolate;
+  border-radius: 30px;
+  background:
+    radial-gradient(90% 60% at 85% 0%, rgba(124, 192, 255, 0.55), transparent 60%),
+    radial-gradient(70% 50% at 0% 100%, rgba(29, 78, 216, 0.9), transparent 70%),
+    linear-gradient(160deg, #3d86ff 0%, #2f6bff 45%, #2152d6 100%);
+  box-shadow: 0 30px 70px -30px rgba(47, 107, 255, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  padding: 18px;
+  color: #fff;
+}
+.hr-cash::before {
+  /* soft rings, like light on metal: texture without a picture */
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: repeating-radial-gradient(circle at 50% 38%, rgba(255, 255, 255, 0.06) 0 1px, transparent 1px 34px);
+  -webkit-mask-image: radial-gradient(65% 55% at 50% 38%, #000, transparent 80%);
+          mask-image: radial-gradient(65% 55% at 50% 38%, #000, transparent 80%);
+  pointer-events: none;
+}
+.hr-cash.is-over { background: linear-gradient(160deg, #ff7a6b 0%, #e5484d 55%, #b4232a 100%); box-shadow: 0 30px 70px -30px rgba(229, 72, 77, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.35); }
+.hr-cash .hr-party { border-color: rgba(255, 255, 255, 0.35); background: rgba(255, 255, 255, 0.14); }
+.hr-cash .hr-party:hover, .hr-cash .hr-party[aria-expanded="true"] { background: rgba(255, 255, 255, 0.22); }
+.hr-cash .hr-party-label, .hr-cash .hr-party .text-\[\#8e8e93\] { color: rgba(255, 255, 255, 0.75); }
+.hr-cash .hr-party-ghost { border-color: rgba(255, 255, 255, 0.6); color: #fff; }
+.hr-cash .hr-party .text-\[\#c7c7cc\] { color: #fff; }
+
+.hr-cash-top { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 28px; }
+.hr-cash-balance {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.18);
+  padding: 5px 11px;
+  font-size: 12.5px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.hr-cash-link {
+  border-radius: 999px;
+  background: #fff;
+  padding: 5px 11px;
+  color: #1d4ed8;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.hr-cash-amount {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  margin-top: 4px;
+  font-family: var(--font-display), var(--font-text), system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.045em;
+  line-height: 1;
+  cursor: text;
+}
+.hr-cash-currency { margin-top: 0.08em; margin-right: 0.03em; font-size: 0.5em; opacity: 0.85; }
+.hr-cash-amount input {
+  max-width: 100%;
+  appearance: none;
+  border: none !important;
+  border-radius: 0;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff;
+  font: inherit;
+  letter-spacing: inherit;
+  caret-color: #fff;
+  outline: none;
+  font-variant-numeric: tabular-nums;
+}
+.hr-cash-amount input::placeholder { color: rgba(255, 255, 255, 0.55); -webkit-text-fill-color: rgba(255, 255, 255, 0.55); }
+.hr-cash-hint { min-height: 17px; text-align: center; font-size: 12.5px; color: rgba(255, 255, 255, 0.75); }
+.hr-cash-preset {
+  min-width: 60px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  padding: 6px 13px;
+  color: #fff;
+  font-size: 13.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.hr-cash-preset:hover { background: rgba(255, 255, 255, 0.26); }
+.hr-cash-preset[aria-pressed="true"] { background: #fff; color: #1d4ed8; }
+.hr-cash-keypad {
+  display: grid;
+  width: 100%;
+  max-width: 420px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  margin: 0 auto;
+}
+.hr-cash-keypad > button {
+  height: 46px;
+  border-radius: 14px;
+  color: #fff;
+  font-family: var(--font-display), var(--font-text), system-ui, sans-serif;
+  font-size: 23px;
+  font-weight: 600;
+  transition: background-color 0.12s ease, transform 0.12s ease;
+}
+.hr-cash-keypad > button:hover { background: rgba(255, 255, 255, 0.12); }
+.hr-cash-keypad > button:active { background: rgba(255, 255, 255, 0.22); transform: scale(0.95); }
+/* The keypad: phones (instead of the phone keyboard) and wide screens (beside the Send to panel) */
+@media (min-width: 640px) and (max-width: 1023px) {
+  .hr-cash-keypad { display: none; }
+  .hr-cash { gap: 9px; padding: 16px; }
+}
+.hr-cash-note {
+  display: block;
+  width: 100%;
+  height: 40px;
+  border: none;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 0 14px;
+  color: #fff;
+  font-size: 14px;
+  text-align: center;
+  outline: none;
+}
+.hr-cash-note::placeholder { color: rgba(255, 255, 255, 0.6); }
+.hr-cash-pay {
+  display: inline-flex;
+  height: 54px;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border-radius: 999px;
+  background: #fff;
+  color: #0b0b0c;
+  font-size: 16px;
+  font-weight: 700;
+  transition: transform 0.12s ease, opacity 0.15s ease, box-shadow 0.2s ease;
+}
+.hr-cash-pay:active:not(:disabled) { transform: scale(0.985); }
+.hr-cash-pay:disabled { cursor: not-allowed; background: rgba(255, 255, 255, 0.22); color: rgba(255, 255, 255, 0.85); font-weight: 600; }
+.hr-cash-pay.is-side:disabled { background: rgba(255, 255, 255, 0.07); color: #8e8e93; }
+.hr-cash-pay.is-side:not(:disabled) {
+  background: linear-gradient(135deg, #7cc0ff 0%, #2f6bff 60%, #2152d6 100%);
+  color: #fff;
+  box-shadow: 0 14px 34px -10px rgba(47, 107, 255, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.hr-cash-pay .hr-avatar { box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.7); }
+/* Wide screens pay from the side panel; the blue panel's own button is for phones and tablets */
+@media (min-width: 1024px) { .hr-cash > .hr-cash-pay { display: none; } }
+
+.hr-cash-side {
+  flex-direction: column;
+  gap: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 30px;
+  background: linear-gradient(180deg, #121316 0%, #0b0b0d 100%);
+  padding: 20px;
+}
+.hr-cash-side-title { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+.hr-cash-side-sub { color: #8e8e93; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+.hr-cash-search {
+  display: block;
+  width: 100%;
+  height: 44px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 0 14px 0 38px;
+  color: #fff;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+.hr-cash-search:focus { border-color: rgba(124, 192, 255, 0.7); }
+.hr-cash-search::placeholder { color: #636366; }
+.hr-quick { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px 6px; margin-top: 10px; }
+.hr-quick-person {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  border-radius: 16px;
+  padding: 6px 2px;
+  color: #d1d1d6;
+  font-size: 12px;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+.hr-quick-person > span:last-child { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hr-quick-person:hover { background: rgba(255, 255, 255, 0.05); transform: translateY(-2px); }
+.hr-quick-person .hr-avatar { box-shadow: 0 0 0 2px #0b0b0d, 0 0 0 3.5px rgba(124, 192, 255, 0.55); }
+.hr-cash-chosen {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid rgba(124, 192, 255, 0.35);
+  border-radius: 18px;
+  background: rgba(47, 107, 255, 0.1);
+  padding: 12px;
+}
+.hr-cash-option {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 8px 10px;
+  color: #fff;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.hr-cash-option:hover { border-color: rgba(255, 255, 255, 0.22); }
+.hr-cash-option[aria-checked="true"] { border-color: rgba(124, 192, 255, 0.7); background: rgba(47, 107, 255, 0.12); }
+.hr-cash-summary { border-radius: 16px; background: rgba(255, 255, 255, 0.03); padding: 4px 14px; font-size: 13px; }
+.hr-cash-summary > div { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; }
+.hr-cash-summary > div + div { border-top: 1px solid rgba(255, 255, 255, 0.06); }
+.hr-cash-summary dt { color: #8e8e93; }
+.hr-cash-summary dd { color: #f2f2f7; font-weight: 500; }
+
+@media (prefers-reduced-motion: reduce) {
+  .hr-quick-person:hover { transform: none; }
+}
+@media (max-width: 639px) {
+  .hr-cash { gap: 10px; border-radius: 26px; padding: 14px 12px; }
+  .hr-cash-keypad > button { height: 44px; }
+}
+@media (max-height: 760px) and (min-width: 1024px) {
+  .hr-cash { gap: 8px; padding: 14px 16px; }
+  .hr-cash-keypad > button { height: 40px; font-size: 21px; }
+  .hr-cash-side { gap: 12px; padding: 16px; }
+}

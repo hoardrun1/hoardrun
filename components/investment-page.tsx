@@ -156,17 +156,17 @@ export function InvestmentPage() {
       <div id="overview" className="grid scroll-mt-32 gap-4 sm:gap-5 lg:grid-cols-12">
         <section className="hr-balance lg:col-span-8">
           <div aria-hidden="true" className="lp-eclipse hr-eclipse lg:hidden" />
-          <div className="relative px-5 pt-8 text-center lg:p-6 lg:pb-3 lg:text-left">
+          <div className="relative px-5 pt-4 text-center lg:p-6 lg:pb-3 lg:text-left">
             <p className="text-sm text-[#a1a1a6]">Portfolio value</p>
             {isLoading ? (
               <div className="hr-skeleton mx-auto mt-2 h-14 w-56 lg:mx-0" />
             ) : (
-              <p className="mt-1 hr-figure text-[60px] leading-none lg:text-[56px]">
+              <p className="mt-1 hr-figure text-[48px] leading-none lg:text-[56px]">
                 {whole}
                 {cents && <span className="text-[0.46em] text-[#a1a1a6]">.{cents}</span>}
               </p>
             )}
-            <p className="mx-auto mt-3 max-w-[280px] text-[13px] leading-snug text-[#a1a1a6] lg:mx-0 lg:max-w-none">
+            <p className="mx-auto mt-2 max-w-[280px] text-[13px] leading-snug text-[#a1a1a6] lg:mx-0 lg:max-w-none">
               {value > 0 ? (
                 <span className="inline-flex items-center gap-1">
                   <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={2} />
@@ -180,7 +180,7 @@ export function InvestmentPage() {
           <div className="hidden px-6 pb-5 lg:block">
             <EmptyChart label="Performance over time will show here" />
           </div>
-          <div className="relative flex justify-center gap-2 px-4 pb-7 pt-24 lg:hidden">
+          <div className="relative flex justify-center gap-2 px-4 pb-4 pt-5 lg:hidden">
             <button onClick={() => setIsDepositModalOpen(true)} className="hr-pill hr-focus !h-11 !px-5" data-primary="true">
               <Wallet className="h-4 w-4" strokeWidth={2} />
               Deposit
@@ -195,13 +195,13 @@ export function InvestmentPage() {
         <div className="grid gap-4 sm:gap-5 lg:col-span-4">
           <ul className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-2">
             {stats.map((stat) => (
-              <li key={stat.label} className="hr-panel flex min-w-0 flex-col justify-between gap-3 p-4">
+              <li key={stat.label} className="hr-panel flex min-w-0 flex-col justify-between gap-1.5 p-3 sm:gap-3 sm:p-4">
                 <span className="truncate text-[13px] text-[#a1a1a6]">{stat.label}</span>
                 {isLoading ? (
                   <span className="hr-skeleton block h-6 w-16" />
                 ) : (
                   <span className="min-w-0">
-                    <span className="hr-figure block truncate text-[22px] leading-tight">{stat.value}</span>
+                    <span className="hr-figure block truncate text-[19px] leading-tight sm:text-[22px]">{stat.value}</span>
                     {stat.note && <span className="block text-[12px] tabular-nums text-[#a1a1a6]">{stat.note}</span>}
                   </span>
                 )}

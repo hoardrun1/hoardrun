@@ -210,12 +210,12 @@ export default function ProfilePage() {
         <div className="pb-28 lg:pb-8">
           <div className="w-full space-y-4 sm:space-y-5">
             <section className="hr-hero hr-identity hr-rise" data-tone="violet">
-              <div className="relative flex flex-col items-center gap-4 text-center sm:flex-row sm:items-center sm:text-left">
+              <div className="relative flex flex-wrap items-center gap-x-4 gap-y-3 text-left sm:flex-nowrap">
                 <div className="relative">
                   <span className="hr-identity-ring" aria-hidden="true" />
-                  <Avatar className="hr-identity-avatar h-24 w-24">
+                  <Avatar className="hr-identity-avatar h-16 w-16 sm:h-24 sm:w-24">
                     <AvatarImage src={profileData.profilePictureUrl || "/placeholder-avatar.jpg"} />
-                    <AvatarFallback className="hr-avatar h-full w-full text-[30px]">
+                    <AvatarFallback className="hr-avatar h-full w-full text-[22px] sm:text-[30px]">
                       {profileData.firstName[0]}{profileData.lastName[0]}
                     </AvatarFallback>
                   </Avatar>
@@ -228,11 +228,11 @@ export default function ProfilePage() {
                     </Button>
                   )}
                 </div>
-                <div className="min-w-0 flex-1">
+                <div className="min-w-0 flex-1 basis-[calc(100%-84px)] sm:basis-auto">
                   <p className="text-[12.5px] text-[#a1a1a6]">{t('dashboard.profile.title')}</p>
                   <h1 className="hr-title truncate">{profileData.firstName} {profileData.lastName}</h1>
                   <p className="mt-1 truncate text-[14px] text-[#a1a1a6]">{profileData.email}</p>
-                  <div className="mt-3 flex flex-wrap justify-center gap-1.5 sm:justify-start">
+                  <div className="mt-2 flex flex-wrap gap-1.5 sm:mt-3">
                     <span className="hr-identity-chip" data-tone={profileData.emailVerified ? 'mint' : 'amber'}>
                       {profileData.emailVerified ? t('dashboard.profile.status.verifiedAccount') : t('dashboard.profile.status.unverifiedAccount')}
                     </span>

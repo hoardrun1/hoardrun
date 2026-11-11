@@ -49,10 +49,13 @@ const MemoizedMobileNavigation = memo(({ onAddMoney }: { onAddMoney: () => void 
 MemoizedMobileNavigation.displayName = 'MemoizedMobileNavigation';
 
 // Enhanced content wrapper with better spacing and layout
-const ContentWrapper = memo(({ children }: { children: React.ReactNode }) => (
+// Home and Overview keep their own layout; every other page gets the tighter, less-scrolling spacing
+const FULL_LAYOUT = new Set(['home', 'overview'])
+
+const ContentWrapper = memo(({ children, route }: { children: React.ReactNode; route: string }) => (
   <div className="w-full max-w-full">
     {/* One copy of the page: CSS adjusts the spacing, so pages mount and fetch once */}
-    <div className="hr-page min-h-screen bg-background">
+    <div className="hr-page min-h-screen bg-background" data-route={route} data-compact={FULL_LAYOUT.has(route) ? undefined : ''}>
       <div className="dashboard-container">
         {children}
       </div>
@@ -135,7 +138,7 @@ export default function DashboardLayout({
                 {/* Mobile Header - Only show on mobile */}
                 <MemoizedMobileAppHeader />
 
-                <ContentWrapper>
+                <ContentWrapper route={pathname?.split('/')[1] ?? ''}>
                   {children}
                 </ContentWrapper>
 

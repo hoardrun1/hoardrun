@@ -1204,7 +1204,9 @@ a.hr-collection:hover .hr-collection-art { transform: translateY(-3px) scale(1.0
 .hr-market-row[aria-current="true"] { background: rgba(255, 255, 255, 0.07); }
 @media (prefers-reduced-motion: reduce) { .hr-live-badge .hr-live-dot::after { animation: none; } }
 
-/* Send money: one compact card, a live preview beside it on desktop */
+/* Send money: one stage, the amount as the hero (Apple Cash / Cash App), recipient as a pill (Revolut),
+   what-happens line under the amount (Wise). Blue is Hoardrun's own --iris / --sky, used only for
+   the stage glow, the caret and the ready-to-send button. */
 .hr-send-back {
   display: inline-flex;
   width: 36px;
@@ -1218,103 +1220,157 @@ a.hr-collection:hover .hr-collection-art { transform: translateY(-3px) scale(1.0
   transition: background-color 0.15s ease, color 0.15s ease;
 }
 .hr-send-back:hover { background: rgba(255, 255, 255, 0.12); color: #fff; }
-.hr-choice-sm { width: 220px; }
+.hr-choice-sm { width: 210px; flex: none; }
 .hr-choice-sm > button { min-height: 34px; }
-.hr-send-card {
+
+.hr-pay {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 26px;
+  gap: 14px;
+  overflow: visible;
+  isolation: isolate;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 30px;
   background:
-    radial-gradient(80% 50% at 50% 0%, rgb(var(--iris) / 0.16), transparent 70%),
-    linear-gradient(180deg, #141416 0%, #0b0b0c 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 24px 60px -30px rgba(0, 0, 0, 0.8);
-  padding: 14px;
+    radial-gradient(60% 46% at 50% 40%, rgb(var(--iris) / 0.22), transparent 72%),
+    radial-gradient(45% 30% at 82% 8%, rgb(var(--sky) / 0.10), transparent 70%),
+    linear-gradient(180deg, #0f1218 0%, #0a0b0e 60%, #08080a 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 40px 80px -40px rgb(var(--iris) / 0.35);
+  padding: 16px 16px 14px;
 }
-.hr-send-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.035);
-  padding: 10px 12px;
+.hr-pay::before {
+  /* fine dot grid, faded toward the edges: gives the stage texture without a picture */
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+  background-size: 18px 18px;
+  -webkit-mask-image: radial-gradient(70% 60% at 50% 42%, #000 0%, transparent 75%);
+          mask-image: radial-gradient(70% 60% at 50% 42%, #000 0%, transparent 75%);
+  pointer-events: none;
 }
-.hr-send-label {
-  width: 40px;
-  flex: none;
-  padding-top: 9px;
+.hr-pay-orb {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  z-index: -1;
+  width: 260px;
+  height: 260px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgb(var(--iris) / 0.35), transparent 65%);
+  filter: blur(30px);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  transition: opacity 0.4s ease, transform 0.6s ease;
+  opacity: 0.55;
+}
+.hr-pay.is-ready .hr-pay-orb { opacity: 1; transform: translate(-50%, -50%) scale(1.15); }
+
+.hr-party {
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(10, 11, 14, 0.6);
+  -webkit-backdrop-filter: blur(12px);
+          backdrop-filter: blur(12px);
+  padding: 5px 12px 5px 6px;
+  min-height: 42px;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.hr-party:hover, .hr-party[aria-expanded="true"] { border-color: rgba(255, 255, 255, 0.3); background: rgba(20, 22, 28, 0.8); }
+.hr-party-label {
+  padding-left: 6px;
   color: #8e8e93;
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 500;
 }
-.hr-send-input {
-  display: block;
-  width: 100%;
-  height: 38px;
-  border: 1px solid transparent;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.05);
-  padding: 0 12px;
-  color: #fff;
-  font-size: 14.5px;
-  outline: none;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
-}
-.hr-send-input::placeholder { color: #636366; }
-.hr-send-input:focus { border-color: rgba(255, 255, 255, 0.35); background: rgba(255, 255, 255, 0.07); }
-.hr-send-icon-btn {
+.hr-party-ghost {
   display: inline-flex;
-  width: 30px;
-  height: 30px;
-  align-items: center;
-  justify-content: center;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.07);
-  color: #c7c7cc;
-}
-.hr-send-icon-btn:hover { background: rgba(255, 255, 255, 0.14); color: #fff; }
-.hr-send-chips {
-  display: flex;
-  gap: 6px;
-  overflow-x: auto;
-  padding-bottom: 2px;
-  scrollbar-width: none;
-}
-.hr-send-chips::-webkit-scrollbar { display: none; }
-.hr-send-chip {
-  display: inline-flex;
+  width: 26px;
+  height: 26px;
   flex: none;
   align-items: center;
-  gap: 7px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.04);
-  padding: 4px 11px 4px 4px;
-  color: #e5e5ea;
-  font-size: 13px;
-  white-space: nowrap;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
-}
-.hr-send-chip:hover { border-color: rgba(255, 255, 255, 0.28); }
-.hr-send-chip[aria-checked="true"] { border-color: #fff; background: rgba(255, 255, 255, 0.12); color: #fff; }
-.hr-send-chip-add { padding-left: 10px; border-style: dashed; color: #a1a1a6; }
-.hr-send-money {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  padding: 6px 0 2px;
-}
-.hr-send-amount {
-  display: flex;
-  align-items: baseline;
   justify-content: center;
-  gap: 2px;
+  border: 1px dashed rgba(255, 255, 255, 0.3);
+  border-radius: 999px;
+  color: #c7c7cc;
+}
+
+.hr-picker {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 30;
+  width: min(360px, calc(100vw - 48px));
+  margin: 0 auto;
+  max-height: 340px;
+  overflow-y: auto;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  background: #141518;
+  box-shadow: 0 24px 60px -12px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  padding: 8px;
+}
+.hr-picker-search {
+  display: block;
+  width: 100%;
+  height: 40px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 0 12px 0 36px;
+  color: #fff;
+  font-size: 14px;
+  outline: none;
+}
+.hr-picker-search:focus { border-color: rgba(255, 255, 255, 0.3); }
+.hr-picker-search::placeholder { color: #636366; }
+.hr-picker-head {
+  padding: 10px 8px 4px;
+  color: #6e6e73;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.hr-picker-row {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 10px;
+  border-radius: 14px;
+  padding: 8px;
+  color: #fff;
+  font-size: 14px;
+  text-align: left;
+  transition: background-color 0.12s ease;
+}
+.hr-picker-row:hover, .hr-picker-row[aria-current="true"] { background: rgba(255, 255, 255, 0.07); }
+
+.hr-pay-amount {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  margin-top: 2px;
+  color: #48484a;
+  font-family: var(--font-display), var(--font-text), system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.04em;
   line-height: 1;
   cursor: text;
+  transition: color 0.2s ease, text-shadow 0.3s ease;
 }
-.hr-send-amount > span:first-of-type { font-size: 0.55em; align-self: flex-start; padding-top: 0.35em; }
-.hr-send-amount input {
+.hr-pay-amount.is-set { color: #fff; text-shadow: 0 0 40px rgb(var(--iris) / 0.45); }
+.hr-pay-amount.is-over { color: #ff9f95; text-shadow: none; }
+.hr-pay-currency { margin-top: 0.1em; margin-right: 0.04em; font-size: 0.5em; opacity: 0.75; }
+.hr-pay-amount input {
   max-width: 100%;
   appearance: none;
   border: none !important;
@@ -1322,42 +1378,119 @@ a.hr-collection:hover .hr-collection-art { transform: translateY(-3px) scale(1.0
   background: transparent !important;
   box-shadow: none !important;
   padding: 0;
-  text-align: left;
+  color: inherit !important;
+  -webkit-text-fill-color: currentColor;
+  font: inherit;
+  letter-spacing: inherit;
   caret-color: rgb(var(--sky));
   outline: none;
   font-variant-numeric: tabular-nums;
 }
-.hr-send-amount input::placeholder { color: #48484a; }
-.hr-send-preset {
-  border: 1px solid rgba(255, 255, 255, 0.1);
+.hr-pay-amount input::placeholder { color: #48484a; }
+.hr-pay-preset {
+  min-width: 56px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 999px;
-  padding: 3px 10px;
+  background: rgba(10, 11, 14, 0.5);
+  padding: 5px 12px;
   color: #d1d1d6;
-  font-size: 12px;
-  transition: border-color 0.15s ease, color 0.15s ease;
+  font-size: 13px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
 }
-.hr-send-preset:hover { border-color: rgba(255, 255, 255, 0.32); color: #fff; }
-.hr-send-cta {
+.hr-pay-preset:hover { border-color: rgba(255, 255, 255, 0.32); color: #fff; }
+.hr-pay-preset[aria-pressed="true"] { border-color: #fff; background: #fff; color: #000; }
+
+.hr-pay-facts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  padding: 10px 0;
+  text-align: center;
+}
+.hr-pay-facts > div + div { border-left: 1px solid rgba(255, 255, 255, 0.07); }
+.hr-pay-facts dt { color: #6e6e73; font-size: 11px; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; }
+.hr-pay-facts dd { margin-top: 2px; color: #f2f2f7; font-size: 14px; font-weight: 500; }
+
+.hr-pay-note {
+  display: block;
+  width: 100%;
+  height: 42px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 0 14px;
+  color: #fff;
+  font-size: 14px;
+  text-align: center;
+  outline: none;
+}
+.hr-pay-note:focus { border-color: rgba(255, 255, 255, 0.3); }
+.hr-pay-note::placeholder { color: #636366; }
+.hr-pay-topup {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 10px 14px;
+  color: #a1a1a6;
+  font-size: 13px;
+}
+.hr-pay-topup:hover { border-color: rgba(255, 255, 255, 0.2); }
+
+.hr-pay-cta {
+  position: relative;
   display: inline-flex;
-  height: 50px;
+  height: 54px;
   width: 100%;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
+  overflow: hidden;
   border-radius: 999px;
-  background: #fff;
-  color: #000;
+  background: rgba(255, 255, 255, 0.07);
+  color: #8e8e93;
   font-size: 15.5px;
-  font-weight: 600;
-  transition: transform 0.12s ease, opacity 0.15s ease;
+  font-weight: 500;
+  transition: transform 0.12s ease, box-shadow 0.3s ease;
 }
-.hr-send-cta:active:not(:disabled) { transform: scale(0.985); }
-.hr-send-cta:disabled { cursor: not-allowed; background: rgba(255, 255, 255, 0.08); color: #8e8e93; font-weight: 500; }
+.hr-pay-cta:disabled { cursor: not-allowed; }
+.hr-pay.is-ready .hr-pay-cta {
+  background: linear-gradient(135deg, #7cc0ff 0%, #2f6bff 60%, #2a5ce0 100%);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 14px 34px -10px rgb(var(--iris) / 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.hr-pay.is-ready .hr-pay-cta::after {
+  /* one soft light sweep, every few seconds, only when ready */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.35) 50%, transparent 70%);
+  transform: translateX(-120%);
+  animation: hr-pay-sheen 3.2s ease-in-out infinite 0.6s;
+}
+.hr-pay.is-ready .hr-pay-cta:active { transform: scale(0.985); }
+.hr-pay-cta .hr-avatar { box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.6); }
+@keyframes hr-pay-sheen {
+  0% { transform: translateX(-120%); }
+  45%, 100% { transform: translateX(120%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hr-pay.is-ready .hr-pay-cta::after { animation: none; display: none; }
+  .hr-pay-orb { transition: none; }
+}
+
 .hr-keypad {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 2px;
-  margin-top: 8px;
 }
 .hr-keypad > button {
   height: 46px;
@@ -1370,85 +1503,20 @@ a.hr-collection:hover .hr-collection-art { transform: translateY(-3px) scale(1.0
 }
 .hr-keypad > button:hover { background: rgba(255, 255, 255, 0.06); }
 .hr-keypad > button:active { background: rgba(255, 255, 255, 0.12); transform: scale(0.96); }
-.hr-send-preview {
-  position: sticky;
-  top: 88px;
-  flex-direction: column;
-  gap: 18px;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 26px;
-  background:
-    radial-gradient(90% 60% at 50% 35%, rgb(var(--sky) / 0.14), transparent 70%),
-    linear-gradient(180deg, #111113 0%, #0a0a0b 100%);
-  padding: 20px;
+
+/* Short screens: keep the whole send on one screen */
+@media (max-height: 820px) {
+  .hr-pay { gap: 10px; }
+  .hr-pay-assure { display: none; }
+  .hr-pay-facts { padding: 7px 0; }
+  .hr-pay-cta { height: 50px; }
 }
-.hr-send-route {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 8px 0 0;
+@media (max-width: 639px) {
+  .hr-choice-sm { width: 168px; }
+  .hr-choice-sm > button { padding: 0 4px; font-size: 12.5px; }
+  .hr-pay { gap: 12px; border-radius: 26px; padding: 14px 12px 12px; }
+  .hr-pay-facts dd { font-size: 13px; }
 }
-.hr-send-node {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  color: #a1a1a6;
-  font-size: 12px;
-}
-.hr-send-ghost {
-  display: inline-flex;
-  width: 52px;
-  height: 52px;
-  align-items: center;
-  justify-content: center;
-  border: 1px dashed rgba(255, 255, 255, 0.25);
-  border-radius: 999px;
-  color: #8e8e93;
-}
-.hr-send-path {
-  position: relative;
-  height: 2px;
-  flex: 1;
-  margin-bottom: 20px;
-  background-image: linear-gradient(90deg, rgba(255, 255, 255, 0.25) 50%, transparent 50%);
-  background-size: 8px 2px;
-}
-.hr-send-pulse {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  width: 10px;
-  height: 10px;
-  border-radius: 999px;
-  background: rgb(var(--sky));
-  box-shadow: 0 0 14px rgb(var(--sky) / 0.9);
-  transform: translate(-50%, -50%);
-  animation: hr-send-travel 2.2s cubic-bezier(0.6, 0, 0.4, 1) infinite;
-}
-@keyframes hr-send-travel {
-  0% { left: 0; opacity: 0; }
-  15% { opacity: 1; }
-  85% { opacity: 1; }
-  100% { left: 100%; opacity: 0; }
-}
-@media (prefers-reduced-motion: reduce) { .hr-send-pulse { animation: none; left: 50%; } }
-.hr-send-facts {
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
-  font-size: 13px;
-}
-.hr-send-facts > div {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-  padding: 9px 0;
-}
-.hr-send-facts dt { color: #8e8e93; }
-.hr-send-facts dd { min-width: 0; color: #e5e5ea; }
 .hr-bank-option {
   display: flex;
   width: 100%;

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowLeft, ArrowUpRight, Building2, Check, Delete, Landmark, PenLine, Plus, Search, Wallet, X, Zap } from 'lucide-react'
+import { ArrowLeft, ArrowUpRight, Building2, Check, ChevronDown, Delete, Landmark, PenLine, Plus, Search, ShieldCheck, Zap } from 'lucide-react'
 import { useBankAccounts } from '@/hooks/useBankAccounts'
 import { useBeneficiaries } from '@/hooks/useBeneficiaries'
 import { useAuth } from '@/contexts/AuthContext'
@@ -15,6 +15,7 @@ import { AddBeneficiaryModal } from '@/components/send-money/AddBeneficiaryModal
 import { Sheet, SheetHeader } from '@/components/investment-opportunities-page'
 
 type Mode = 'hoardrun' | 'bank'
+type Picker = 'to' | 'from' | null
 interface Recipient { name: string; email: string }
 interface Quote { fee: number; total: number }
 interface Receipt { amount: number; to: string; reference: string; detail: string }
@@ -36,15 +37,15 @@ function cleanAmount(raw: string): string {
   return whole
 }
 
-function Avatar({ name, size = 40, muted = false }: { name: string; size?: number; muted?: boolean }) {
+function Avatar({ name, size = 40 }: { name: string; size?: number }) {
   return (
-    <span className="hr-avatar" style={{ width: size, height: size, fontSize: size * 0.36, opacity: muted ? 0.75 : 1 }} aria-hidden="true">
+    <span className="hr-avatar" style={{ width: size, height: size, fontSize: size * 0.36 }} aria-hidden="true">
       {initials(name) || '?'}
     </span>
   )
 }
 
-/** True on small touch screens, where Hoardrun's own keypad replaces the phone keyboard. */
+/** True on phones, where Hoardrun's own keypad replaces the phone keyboard. */
 function useCompactKeypad() {
   const [compact, setCompact] = useState(false)
   useEffect(() => {
@@ -57,83 +58,34 @@ function useCompactKeypad() {
   return compact
 }
 
-/** The amount: typed on a computer, tapped on a compact keypad on a phone. */
-function AmountField({ amount, setAmount, over, compact }: { amount: string; setAmount: (value: string) => void; over: boolean; compact: boolean }) {
-  const input = useRef<HTMLInputElement>(null)
-  const press = useCallback((key: string) => {
-    if (key === 'back') return setAmount(amount.slice(0, -1))
-    setAmount(cleanAmount(amount + key))
-  }, [amount, setAmount])
-
-  // On a computer, typing digits anywhere on the page fills the amount
+/** Close a floating panel on an outside click or Escape. */
+function useDismiss(open: boolean, close: () => void) {
+  const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
-    if (compact) return
-    const onKey = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement
-      if (target.closest('input, textarea, [role=dialog]')) return
-      if (/^[0-9.]$/.test(event.key)) {
-        event.preventDefault()
-        input.current?.focus()
-        press(event.key)
-      }
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [compact, press])
-
-  const length = (amount || '0').replace('.', '').length
-  const size = length > 6 ? 'text-[38px] sm:text-[44px]' : length > 4 ? 'text-[46px] sm:text-[54px]' : 'text-[54px] sm:text-[64px]'
-
-  return (
-    <>
-      <label className="hr-send-amount">
-        <span className="sr-only">Amount in US dollars</span>
-        <span className={`hr-figure ${size} ${over ? 'text-[#ff9f95]' : amount ? 'text-white' : 'text-[#48484a]'}`} aria-hidden="true">$</span>
-        <input
-          ref={input}
-          value={amount}
-          onChange={(event) => setAmount(cleanAmount(event.target.value))}
-          inputMode={compact ? 'none' : 'decimal'}
-          readOnly={compact}
-          placeholder="0"
-          aria-invalid={over}
-          className={`hr-figure ${size} ${over ? 'text-[#ff9f95]' : 'text-white'}`}
-          style={{ width: `${Math.max(1, (amount || '0').length) + 0.3}ch` }}
-        />
-      </label>
-      {compact && (
-        <div className="hr-keypad" role="group" aria-label="Amount keypad">
-          {['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'back'].map((key) => (
-            <button key={key} type="button" onClick={() => press(key)} className="hr-focus" aria-label={key === 'back' ? 'Delete' : key === '.' ? 'Decimal point' : key}>
-              {key === 'back' ? <Delete className="mx-auto h-5 w-5" strokeWidth={1.8} /> : key}
-            </button>
-          ))}
-        </div>
-      )}
-    </>
-  )
+    if (!open) return
+    const onDown = (event: MouseEvent) => { if (ref.current && !ref.current.contains(event.target as Node)) close() }
+    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') close() }
+    document.addEventListener('mousedown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => { document.removeEventListener('mousedown', onDown); document.removeEventListener('keydown', onKey) }
+  }, [open, close])
+  return ref
 }
 
-/** Desktop: the transfer taking shape as the form is filled in. */
-function TransferPreview({ from, to, amount, mode, fee, note }: { from: string; to?: string; amount: number; mode: Mode; fee: string; note: string }) {
+/** The pill at the top of the stage: who it's from or to, tap to change. */
+function PartyPill({ label, name, detail, placeholder, open, onToggle, icon }: {
+  label: string; name?: string; detail?: string; placeholder: string; open: boolean; onToggle: () => void; icon?: React.ReactNode
+}) {
   return (
-    <aside className="hr-send-preview hidden lg:flex" aria-label="Transfer preview">
-      <p className="text-[12px] font-medium uppercase tracking-[0.12em] text-[#8e8e93]">Preview</p>
-      <div className="hr-send-route" aria-hidden="true">
-        <span className="hr-send-node"><Avatar name={from} size={52} /><span>You</span></span>
-        <span className="hr-send-path"><span className="hr-send-pulse" /></span>
-        <span className="hr-send-node">
-          {to ? <Avatar name={to} size={52} /> : <span className="hr-send-ghost"><ArrowUpRight className="h-5 w-5" strokeWidth={2} /></span>}
-          <span className="max-w-[110px] truncate">{to ? to.split(' ')[0] : 'Recipient'}</span>
-        </span>
-      </div>
-      <p className="hr-figure text-center text-[40px] leading-none">{usd(amount)}</p>
-      <dl className="hr-send-facts">
-        <div><dt>Speed</dt><dd>{mode === 'hoardrun' ? 'Instant' : '1–3 business days'}</dd></div>
-        <div><dt>Fee</dt><dd>{fee}</dd></div>
-        <div><dt>Note</dt><dd className="truncate">{note.trim() || '—'}</dd></div>
-      </dl>
-    </aside>
+    <button type="button" onClick={onToggle} aria-expanded={open} aria-haspopup="dialog" className="hr-focus hr-party">
+      <span className="hr-party-label">{label}</span>
+      {name ? (icon ?? <Avatar name={name} size={26} />) : <span className="hr-party-ghost" aria-hidden="true"><Plus className="h-3.5 w-3.5" strokeWidth={2.4} /></span>}
+      <span className="min-w-0 text-left">
+        <span className={`block truncate text-[14px] ${name ? 'font-medium text-white' : 'text-[#c7c7cc]'}`}>{name ?? placeholder}</span>
+        {name && detail && <span className="block truncate text-[11.5px] text-[#8e8e93]">{detail}</span>}
+      </span>
+      <ChevronDown className={`h-4 w-4 flex-none text-[#8e8e93] transition-transform ${open ? 'rotate-180' : ''}`} strokeWidth={2} />
+    </button>
   )
 }
 
@@ -145,6 +97,7 @@ export function SendMoneyPage() {
   const [amount, setAmount] = useState('')
   const [note, setNote] = useState('')
   const [noteOpen, setNoteOpen] = useState(false)
+  const [picker, setPicker] = useState<Picker>(null)
   const [cash, setCash] = useState<number | null>(null)
   const [recent, setRecent] = useState<Recipient[]>([])
   const [query, setQuery] = useState('')
@@ -159,6 +112,9 @@ export function SendMoneyPage() {
   const [depositOpen, setDepositOpen] = useState(false)
   const [connectOpen, setConnectOpen] = useState(false)
   const [addRecipientOpen, setAddRecipientOpen] = useState(false)
+  const amountInput = useRef<HTMLInputElement>(null)
+  const closePicker = useCallback(() => setPicker(null), [])
+  const pickerRef = useDismiss(picker !== null, closePicker)
 
   const { accounts, fetchAccounts } = useBankAccounts()
   const { beneficiaries, fetchBeneficiaries } = useBeneficiaries()
@@ -213,12 +169,33 @@ export function SendMoneyPage() {
     return () => { cancelled = true; window.clearTimeout(timer) }
   }, [mode, value, sourceId, beneficiaryId])
 
+  const press = useCallback((key: string) => {
+    if (key === 'back') return setAmount((current) => current.slice(0, -1))
+    setAmount((current) => cleanAmount(current + key))
+  }, [])
+
+  // On a computer, typing digits anywhere fills the amount
+  useEffect(() => {
+    if (compact) return
+    const onKey = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement
+      if (target.closest('input, textarea, [role=dialog]')) return
+      if (/^[0-9.]$/.test(event.key)) {
+        event.preventDefault()
+        amountInput.current?.focus()
+        press(event.key)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [compact, press])
+
   const balance = mode === 'hoardrun' ? cash : source ? Number(source.balance) : null
-  const balanceLabel = mode === 'hoardrun' ? 'Hoardrun cash' : source ? `${source.name ?? 'Bank'} ••${source.mask ?? ''}` : 'No bank yet'
+  const balanceLabel = mode === 'hoardrun' ? 'Hoardrun cash' : source ? `${source.name ?? 'Bank'} ••${source.mask ?? ''}` : 'your bank'
   const over = balance !== null && value > balance
   const ready = value >= 1 && !over && (mode === 'hoardrun' ? !!recipient : !!source && !!payee)
   const toName = mode === 'hoardrun' ? recipient?.name : payee?.name
-  const fee = mode === 'hoardrun' ? 'Free' : quote ? usd(quote.fee) : '—'
+  const feeValue = mode === 'hoardrun' ? 0 : quote?.fee ?? null
   const cashEmpty = mode === 'hoardrun' && cash !== null && cash < 1
 
   const send = async () => {
@@ -250,160 +227,194 @@ export function SendMoneyPage() {
     }
   }
 
-  const pickRecent = (item: Recipient) => {
+  const choose = (item: Recipient) => {
     setRecipient(item)
     setQuery('')
+    setPicker(null)
   }
 
+  const switchMode = (next: Mode) => {
+    setMode(next)
+    setPicker(null)
+  }
+
+  const length = (amount || '0').replace('.', '').length
+  const amountSize = length > 6 ? 'text-[46px] sm:text-[54px]' : length > 4 ? 'text-[54px] sm:text-[62px]' : 'text-[60px] sm:text-[72px]'
+
   const cta = ready
-    ? `Send ${usd(value)}${toName ? ` to ${toName.split(' ')[0]}` : ''}`
-    : value < 1 ? 'Enter an amount' : over ? `More than your ${balanceLabel}` : mode === 'hoardrun' ? 'Choose who to pay' : 'Choose an account and recipient'
+    ? `Send ${usd(value)}`
+    : value < 1 ? 'Enter an amount' : over ? `More than ${balanceLabel}` : mode === 'hoardrun' ? 'Choose who to pay' : !source ? 'Connect a bank to send' : 'Choose a recipient'
 
   return (
-    <div className="mx-auto w-full max-w-[980px] space-y-4">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
+    <div className="mx-auto w-full max-w-[720px] space-y-3 sm:space-y-4">
+      <header className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2.5">
           <Link href="/home" aria-label="Back to Home" className="hr-focus hr-send-back"><ArrowLeft className="h-4 w-4" strokeWidth={2} /></Link>
-          <div>
-            <h1 className="text-[22px] font-semibold leading-tight sm:text-[26px]">Send money</h1>
-            <p className="text-[12.5px] text-[#8e8e93]">{mode === 'hoardrun' ? 'Instant and free to anyone on Hoardrun' : 'To any US bank account by ACH'}</p>
-          </div>
+          <h1 className="truncate whitespace-nowrap text-[20px] font-semibold tracking-[-0.01em] sm:text-[24px]">Send money</h1>
         </div>
         <div className="hr-choice hr-choice-sm" role="radiogroup" aria-label="How to send">
-          <button type="button" role="radio" aria-checked={mode === 'hoardrun'} onClick={() => setMode('hoardrun')} className="hr-focus inline-flex items-center justify-center gap-1.5"><Zap className="h-3.5 w-3.5" strokeWidth={2.2} />Hoardrun</button>
-          <button type="button" role="radio" aria-checked={mode === 'bank'} onClick={() => setMode('bank')} className="hr-focus inline-flex items-center justify-center gap-1.5"><Landmark className="h-3.5 w-3.5" strokeWidth={2.2} />Bank</button>
+          <button type="button" role="radio" aria-checked={mode === 'hoardrun'} onClick={() => switchMode('hoardrun')} className="hr-focus inline-flex items-center justify-center gap-1.5"><Zap className="h-3.5 w-3.5" strokeWidth={2.2} />Hoardrun</button>
+          <button type="button" role="radio" aria-checked={mode === 'bank'} onClick={() => switchMode('bank')} className="hr-focus inline-flex items-center justify-center gap-1.5"><Landmark className="h-3.5 w-3.5" strokeWidth={2.2} />Bank</button>
         </div>
       </header>
 
-      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_340px]">
-        <section className="hr-send-card" aria-label="Send">
-          {/* Who */}
-          {mode === 'hoardrun' ? (
-            <div className="hr-send-row">
-              <span className="hr-send-label">To</span>
-              {recipient ? (
-                <div className="flex min-w-0 flex-1 items-center gap-3">
-                  <Avatar name={recipient.name} size={36} />
-                  <div className="min-w-0 flex-1"><p className="truncate text-[14.5px] font-medium">{recipient.name}</p><p className="truncate text-[12px] text-[#8e8e93]">{recipient.email}</p></div>
-                  <button onClick={() => setRecipient(null)} aria-label="Change recipient" className="hr-focus hr-send-icon-btn"><X className="h-4 w-4" strokeWidth={2} /></button>
-                </div>
-              ) : (
-                <div className="min-w-0 flex-1">
-                  <label className="relative block">
-                    <span className="sr-only">Their email</span>
-                    <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8e8e93]" strokeWidth={2} />
-                    <input type="email" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Email of a Hoardrun member" className="hr-send-input !pl-10" autoComplete="off" />
-                  </label>
-                  <AnimatePresence initial={false}>
+      <section className={`hr-pay ${ready ? 'is-ready' : ''}`} aria-label="Send">
+        <span className="hr-pay-orb" aria-hidden="true" />
+
+        {/* Who: one pill per side, tap to choose */}
+        <div ref={pickerRef} className="relative z-20 flex flex-wrap items-center justify-center gap-2">
+          {mode === 'bank' && (
+            <PartyPill
+              label="From" name={source ? `${source.name ?? 'Bank'}` : undefined} detail={source ? `•• ${source.mask ?? '----'}` : undefined}
+              placeholder="Connect a bank" open={picker === 'from'}
+              onToggle={() => (banks.length ? setPicker(picker === 'from' ? null : 'from') : setConnectOpen(true))}
+              icon={<span className="hr-bank-chip !h-[26px] !w-[26px] !rounded-[8px]" aria-hidden="true"><Building2 className="h-3.5 w-3.5" strokeWidth={2.2} /></span>}
+            />
+          )}
+          <PartyPill
+            label="To" name={toName} detail={mode === 'hoardrun' ? recipient?.email : payee ? `${payee.bankName ?? 'Bank'} •• ${String(payee.accountNumber ?? '').slice(-4)}` : undefined}
+            placeholder={mode === 'hoardrun' ? 'Choose who to pay' : 'Choose a recipient'} open={picker === 'to'}
+            onToggle={() => (mode === 'bank' && !payees.length ? setAddRecipientOpen(true) : setPicker(picker === 'to' ? null : 'to'))}
+          />
+
+          <AnimatePresence>
+            {picker && (
+              <motion.div
+                initial={{ opacity: 0, y: -6, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6, scale: 0.98 }}
+                transition={{ duration: 0.16 }}
+                className="hr-picker" role="dialog" aria-label={picker === 'from' ? 'Send from' : 'Send to'}
+              >
+                {picker === 'to' && mode === 'hoardrun' && (
+                  <>
+                    <label className="relative block">
+                      <span className="sr-only">Their email</span>
+                      <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8e8e93]" strokeWidth={2} />
+                      <input autoFocus type="email" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search by email" className="hr-picker-search" autoComplete="off" />
+                    </label>
                     {lookup && lookup !== 'none' && (
-                      <motion.button
-                        initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                        onClick={() => pickRecent({ name: lookup.name, email: lookup.email })}
-                        className="hr-focus mt-2 flex w-full items-center gap-3 rounded-2xl border border-white/12 bg-white/[0.04] p-2.5 text-left hover:border-white/30"
-                      >
+                      <button onClick={() => choose({ name: lookup.name, email: lookup.email })} className="hr-focus hr-picker-row">
                         <Avatar name={lookup.name} size={34} />
-                        <span className="min-w-0 flex-1"><span className="block truncate text-[14px] font-medium">{lookup.name}</span><span className="block text-[12px] text-[#8e8e93]">On Hoardrun · tap to choose</span></span>
-                      </motion.button>
+                        <span className="min-w-0 flex-1"><span className="block truncate text-[14px] font-medium">{lookup.name}</span><span className="block truncate text-[12px] text-[#8e8e93]">On Hoardrun</span></span>
+                        <ArrowUpRight className="h-4 w-4 text-[#8e8e93]" strokeWidth={2} />
+                      </button>
                     )}
-                  </AnimatePresence>
-                  {lookup === 'none' && <p className="mt-2 text-[12.5px] text-[#8e8e93]">No one on Hoardrun uses that email. Check it, or switch to Bank.</p>}
-                  {recent.length > 0 && !query && (
-                    <div className="hr-send-chips mt-2.5" aria-label="Recent">
-                      {recent.map((item) => (
-                        <button key={item.email} onClick={() => pickRecent(item)} className="hr-focus hr-send-chip">
-                          <Avatar name={item.name} size={24} />
-                          <span>{item.name.split(' ')[0]}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          ) : (
-            <>
-              <div className="hr-send-row">
-                <span className="hr-send-label">From</span>
-                <div className="hr-send-chips min-w-0 flex-1" role="radiogroup" aria-label="Bank account to send from">
-                  {banks.map((account: any) => (
-                    <button key={account.id} type="button" role="radio" aria-checked={account.id === sourceId} onClick={() => setSourceId(account.id)} className="hr-focus hr-send-chip">
-                      <span className="hr-bank-chip !h-6 !w-6 !rounded-[7px]" aria-hidden="true"><Building2 className="h-3 w-3" strokeWidth={2.2} /></span>
-                      <span>{account.name ?? 'Bank'} ••{account.mask ?? ''}</span>
-                    </button>
-                  ))}
-                  <button type="button" onClick={() => setConnectOpen(true)} className="hr-focus hr-send-chip hr-send-chip-add"><Plus className="h-3.5 w-3.5" strokeWidth={2.2} />{banks.length ? 'Connect' : 'Connect your bank'}</button>
-                </div>
-              </div>
-              <div className="hr-send-row">
-                <span className="hr-send-label">To</span>
-                <div className="hr-send-chips min-w-0 flex-1" role="radiogroup" aria-label="Recipient">
-                  {payees.map((item) => (
-                    <button key={item.id} type="button" role="radio" aria-checked={item.id === beneficiaryId} onClick={() => setBeneficiaryId(item.id)} className="hr-focus hr-send-chip">
-                      <Avatar name={item.name} size={24} />
-                      <span>{item.name.split(' ')[0]} ••{String(item.accountNumber ?? '').slice(-4)}</span>
-                    </button>
-                  ))}
-                  <button type="button" onClick={() => setAddRecipientOpen(true)} className="hr-focus hr-send-chip hr-send-chip-add"><Plus className="h-3.5 w-3.5" strokeWidth={2.2} />{payees.length ? 'Add' : 'Add a recipient'}</button>
-                </div>
-              </div>
-            </>
-          )}
-
-          {/* How much */}
-          <div className="hr-send-money">
-            <AmountField amount={amount} setAmount={setAmount} over={over} compact={compact} />
-            <div className="mt-2 flex flex-wrap items-center justify-center gap-1.5">
-              <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] ${over ? 'bg-[#ff9f95]/10 text-[#ff9f95]' : 'bg-white/[0.05] text-[#a1a1a6]'}`}>
-                <Wallet className="h-3.5 w-3.5" strokeWidth={2} />
-                {balance === null ? balanceLabel : `${usd(balance)} available`}
-              </span>
-              {!compact && PRESETS.map((preset) => (
-                <button key={preset} type="button" onClick={() => setAmount(String(preset))} className="hr-focus hr-send-preset">${preset}</button>
-              ))}
-            </div>
-            {compact && (
-              <div className="mt-2 flex justify-center gap-1.5">
-                {PRESETS.map((preset) => (
-                  <button key={preset} type="button" onClick={() => setAmount(String(preset))} className="hr-focus hr-send-preset">${preset}</button>
-                ))}
-              </div>
+                    {lookup === 'none' && <p className="px-2 py-2 text-[12.5px] text-[#8e8e93]">No one on Hoardrun uses that email. Check it, or switch to Bank.</p>}
+                    {!query && (recent.length ? (
+                      <>
+                        <p className="hr-picker-head">Recent</p>
+                        {recent.slice(0, 5).map((item) => (
+                          <button key={item.email} onClick={() => choose(item)} className="hr-focus hr-picker-row">
+                            <Avatar name={item.name} size={34} />
+                            <span className="min-w-0 flex-1"><span className="block truncate text-[14px] font-medium">{item.name}</span><span className="block truncate text-[12px] text-[#8e8e93]">{item.email}</span></span>
+                          </button>
+                        ))}
+                      </>
+                    ) : <p className="px-2 py-2 text-[12.5px] text-[#8e8e93]">Type the email they use on Hoardrun.</p>)}
+                  </>
+                )}
+                {picker === 'to' && mode === 'bank' && (
+                  <>
+                    <p className="hr-picker-head">Recipients</p>
+                    {payees.map((item) => (
+                      <button key={item.id} onClick={() => { setBeneficiaryId(item.id); setPicker(null) }} className="hr-focus hr-picker-row" aria-current={item.id === beneficiaryId}>
+                        <Avatar name={item.name} size={34} />
+                        <span className="min-w-0 flex-1"><span className="block truncate text-[14px] font-medium">{item.name}</span><span className="block truncate text-[12px] text-[#8e8e93]">{item.bankName} •• {String(item.accountNumber ?? '').slice(-4)}</span></span>
+                        {item.id === beneficiaryId && <Check className="h-4 w-4" strokeWidth={2.4} />}
+                      </button>
+                    ))}
+                    <button onClick={() => { setPicker(null); setAddRecipientOpen(true) }} className="hr-focus hr-picker-row text-[#c7c7cc]"><span className="hr-party-ghost !h-[34px] !w-[34px]"><Plus className="h-4 w-4" strokeWidth={2.2} /></span>Add a recipient</button>
+                  </>
+                )}
+                {picker === 'from' && (
+                  <>
+                    <p className="hr-picker-head">Your banks</p>
+                    {banks.map((account: any) => (
+                      <button key={account.id} onClick={() => { setSourceId(account.id); setPicker(null) }} className="hr-focus hr-picker-row" aria-current={account.id === sourceId}>
+                        <span className="hr-bank-chip" aria-hidden="true"><Building2 className="h-4 w-4" strokeWidth={2} /></span>
+                        <span className="min-w-0 flex-1"><span className="block truncate text-[14px] font-medium">{account.name ?? 'Bank account'}</span><span className="block text-[12px] text-[#8e8e93]">•• {account.mask ?? '----'} · {usd(Number(account.balance) || 0)}</span></span>
+                        {account.id === sourceId && <Check className="h-4 w-4" strokeWidth={2.4} />}
+                      </button>
+                    ))}
+                    <button onClick={() => { setPicker(null); setConnectOpen(true) }} className="hr-focus hr-picker-row text-[#c7c7cc]"><span className="hr-party-ghost !h-[34px] !w-[34px]"><Plus className="h-4 w-4" strokeWidth={2.2} /></span>Connect another bank</button>
+                  </>
+                )}
+              </motion.div>
             )}
+          </AnimatePresence>
+        </div>
+
+        {/* How much: the hero */}
+        <div className="relative z-10 flex flex-col items-center">
+          <label className={`hr-pay-amount ${amountSize} ${over ? 'is-over' : amount ? 'is-set' : ''}`}>
+            <span className="sr-only">Amount in US dollars</span>
+            <span className="hr-pay-currency" aria-hidden="true">$</span>
+            <input
+              ref={amountInput}
+              value={amount}
+              onChange={(event) => setAmount(cleanAmount(event.target.value))}
+              inputMode={compact ? 'none' : 'decimal'}
+              readOnly={compact}
+              placeholder="0"
+              aria-invalid={over}
+              style={{ width: `${Math.max(1, (amount || '0').length) + 0.15}ch` }}
+            />
+          </label>
+          <p className={`mt-1 min-h-[18px] text-[12.5px] ${over ? 'text-[#ff9f95]' : 'text-[#a1a1a6]'}`}>
+            {over ? `You have ${usd(balance ?? 0)} in ${balanceLabel}` : balance === null ? (mode === 'bank' ? 'Connect a bank to see its balance' : '') : `${usd(balance)} available in ${balanceLabel}`}
+            {cashEmpty && (
+              <>
+                {' · '}
+                <button type="button" onClick={() => setDepositOpen(true)} className="hr-focus rounded font-medium text-[rgb(var(--sky))] hover:underline">Add money</button>
+              </>
+            )}
+          </p>
+          <div className="mt-3 flex flex-wrap justify-center gap-1.5">
+            {PRESETS.map((preset) => (
+              <button key={preset} type="button" onClick={() => setAmount(String(preset))} aria-pressed={amount === String(preset)} className="hr-focus hr-pay-preset">${preset}</button>
+            ))}
           </div>
+        </div>
 
-          {/* Note */}
-          {noteOpen || note ? (
-            <label className="hr-send-row !py-2.5">
-              <span className="hr-send-label">Note</span>
-              <input autoFocus={noteOpen && !note} value={note} onChange={(event) => setNote(event.target.value)} maxLength={140} placeholder="What's it for?" className="hr-send-input" />
+        {compact && (
+          <div className="hr-keypad relative z-10" role="group" aria-label="Amount keypad">
+            {['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'back'].map((key) => (
+              <button key={key} type="button" onClick={() => press(key)} className="hr-focus" aria-label={key === 'back' ? 'Delete' : key === '.' ? 'Decimal point' : key}>
+                {key === 'back' ? <Delete className="mx-auto h-5 w-5" strokeWidth={1.8} /> : key}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* What happens to the money */}
+        <dl className="hr-pay-facts relative z-10">
+          <div><dt>Fee</dt><dd>{feeValue === null ? '—' : feeValue === 0 ? 'Free' : usd(feeValue)}</dd></div>
+          <div><dt>Arrives</dt><dd>{mode === 'hoardrun' ? 'Instantly' : '1–3 days'}</dd></div>
+          <div>
+            <dt>Note</dt>
+            <dd>
+              <button type="button" onClick={() => setNoteOpen((open) => !open)} aria-expanded={noteOpen || !!note} className="hr-focus inline-flex max-w-full items-center gap-1 rounded-md text-white hover:text-[rgb(var(--sky))]">
+                <PenLine className="h-3.5 w-3.5 flex-none" strokeWidth={2} /><span className="truncate">{note.trim() || 'Add'}</span>
+              </button>
+            </dd>
+          </div>
+        </dl>
+
+        <div className="relative z-10 space-y-2.5">
+          {noteOpen && (
+            <label className="block">
+              <span className="sr-only">Note</span>
+              <input autoFocus value={note} onChange={(event) => setNote(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') setNoteOpen(false) }} maxLength={140} placeholder="What's it for?" className="hr-pay-note" />
             </label>
-          ) : (
-            <button type="button" onClick={() => setNoteOpen(true)} className="hr-focus mx-auto flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] text-[#a1a1a6] hover:text-white"><PenLine className="h-3.5 w-3.5" strokeWidth={2} />Add a note</button>
           )}
 
-          {mode === 'bank' && quote && <p className="text-center text-[12px] text-[#8e8e93]">Fee {usd(quote.fee)} · total {usd(quote.total)} · arrives in 1–3 business days</p>}
-
-          {cashEmpty && (
-            <p className="text-center text-[12.5px] text-[#a1a1a6]">
-              Your Hoardrun cash is empty.{' '}
-              <button type="button" onClick={() => setDepositOpen(true)} className="hr-focus rounded font-medium text-white underline underline-offset-2">Add money</button>
-            </p>
-          )}
-
-          <button onClick={() => setReviewing(true)} disabled={!ready} className="hr-focus hr-send-cta">
-            {ready && <ArrowUpRight className="h-4 w-4" strokeWidth={2.4} />}
-            {cta}
+          <button onClick={() => setReviewing(true)} disabled={!ready} className="hr-focus hr-pay-cta">
+            {ready && toName ? <Avatar name={toName} size={28} /> : null}
+            <span>{cta}{ready && toName ? ` to ${toName.split(' ')[0]}` : ''}</span>
+            {ready && <ArrowUpRight className="h-[18px] w-[18px]" strokeWidth={2.4} />}
           </button>
-        </section>
-
-        <TransferPreview
-          from={user?.name || 'You'}
-          to={toName}
-          amount={value}
-          mode={mode}
-          fee={fee}
-          note={note}
-        />
-      </div>
+          <p className="hr-pay-assure flex items-center justify-center gap-1.5 text-[11.5px] text-[#6e6e73]"><ShieldCheck className="h-3.5 w-3.5" strokeWidth={2} />You'll review before anything is sent</p>
+        </div>
+      </section>
 
       <Sheet open={reviewing} onClose={() => setReviewing(false)} label="Review">
         <SheetHeader title="Review" onClose={() => setReviewing(false)} />
@@ -417,7 +428,7 @@ export function SendMoneyPage() {
           <dl className="divide-y divide-white/[0.07] rounded-[20px] border border-white/[0.08] text-[14px]">
             <div className="flex justify-between px-4 py-3"><dt className="text-[#8e8e93]">From</dt><dd>{mode === 'hoardrun' ? 'Hoardrun cash' : `${source?.name ?? 'Bank'} ••${source?.mask ?? ''}`}</dd></div>
             <div className="flex justify-between px-4 py-3"><dt className="text-[#8e8e93]">Speed</dt><dd>{mode === 'hoardrun' ? 'Instant' : '1–3 business days'}</dd></div>
-            <div className="flex justify-between px-4 py-3"><dt className="text-[#8e8e93]">Fee</dt><dd>{fee}</dd></div>
+            <div className="flex justify-between px-4 py-3"><dt className="text-[#8e8e93]">Fee</dt><dd>{feeValue === null ? '—' : feeValue === 0 ? 'Free' : usd(feeValue)}</dd></div>
             {note.trim() && <div className="flex justify-between gap-4 px-4 py-3"><dt className="text-[#8e8e93]">Note</dt><dd className="truncate">{note.trim()}</dd></div>}
           </dl>
           <button onClick={send} disabled={sending} className="hr-focus h-14 w-full rounded-full bg-white text-[16px] font-medium text-black disabled:opacity-60">{sending ? 'Sending…' : `Send ${usd(value)}`}</button>

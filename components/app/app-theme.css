@@ -2810,3 +2810,65 @@ html.hr-app, .hr-app {
   [data-compact] .hr-identity .hr-hero-action { width: 100%; justify-content: center; }
   [data-compact] .hr-identity-chip { padding: 2px 8px; font-size: 11px; }
 }
+
+/* Circles v2: admin-approved joining and one-person-one-vote majorities */
+.hr-circle-card {
+  --tone: #4d94ff;
+  position: relative; overflow: hidden; height: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 22px;
+  background: radial-gradient(90% 70% at 100% 0%, color-mix(in srgb, var(--tone) 16%, transparent), transparent 60%), linear-gradient(170deg, #141416 0%, #0b0b0c 70%);
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+.hr-circle-card:hover { border-color: color-mix(in srgb, var(--tone) 45%, transparent); }
+.hr-asset-badge {
+  --tone: #4d94ff;
+  display: inline-flex; align-items: center; gap: 5px; border-radius: 999px;
+  background: color-mix(in srgb, var(--tone) 16%, transparent); padding: 2px 9px;
+  color: var(--tone); font-size: 11.5px; font-weight: 600; white-space: nowrap;
+}
+.hr-asset-badge.is-lg { height: 44px; width: 44px; flex: none; justify-content: center; padding: 0; border-radius: 14px; }
+.hr-role-chip {
+  display: inline-flex; align-items: center; gap: 4px; border-radius: 999px; background: rgba(255, 255, 255, 0.08);
+  padding: 2px 9px; color: #d1d1d6; font-size: 11.5px; font-weight: 600;
+}
+.hr-role-chip.is-admin { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+.hr-role-chip.is-pending { background: rgba(47, 107, 255, 0.16); color: #9fd0ff; }
+.hr-count-chip { display: inline-flex; min-width: 20px; height: 20px; align-items: center; justify-content: center; border-radius: 999px; background: #2f6bff; padding: 0 6px; color: #fff; font-size: 11.5px; font-weight: 700; vertical-align: middle; }
+.hr-count-pill { border-radius: 999px; background: rgba(255, 255, 255, 0.08); padding: 3px 10px; color: #d1d1d6; font-size: 12px; font-weight: 500; }
+.hr-count-pill.is-blue { background: rgba(47, 107, 255, 0.2); color: #9fd0ff; }
+.hr-count-pill.is-amber { background: rgba(251, 191, 36, 0.16); color: #fbbf24; }
+
+.hr-circle-steps { display: grid; gap: 8px; }
+.hr-circle-steps > li {
+  display: flex; align-items: center; gap: 10px; border: 1px solid rgba(255, 255, 255, 0.07); border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03); padding: 9px 12px; color: #d1d1d6; font-size: 13px;
+}
+.hr-circle-steps > li > svg { flex: none; color: #4d94ff; }
+.hr-circle-steps.is-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.hr-circle-steps.is-row > li { flex-direction: column; align-items: flex-start; gap: 6px; padding: 10px; font-size: 12px; line-height: 1.3; }
+@media (min-width: 640px) { .hr-circle-steps.is-row > li { flex-direction: row; align-items: center; font-size: 13px; } }
+
+.hr-circle-rule {
+  display: flex; align-items: flex-start; gap: 10px; border: 1px solid rgba(77, 148, 255, 0.28); border-radius: 16px;
+  background: rgba(47, 107, 255, 0.08); padding: 10px 12px; color: #c7c7cc; font-size: 12.5px; line-height: 1.45;
+}
+.hr-circle-rule strong { color: #fff; }
+
+.hr-asset-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.hr-asset-grid > button {
+  --tone: #4d94ff;
+  display: flex; align-items: center; gap: 6px; min-width: 0; height: 38px; border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 12px; background: rgba(255, 255, 255, 0.03); padding: 0 9px; color: #d1d1d6; font-size: 12.5px; font-weight: 500;
+  white-space: nowrap; overflow: hidden; transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.hr-asset-grid > button > svg { flex: none; color: var(--tone); }
+.hr-asset-grid > button:hover { border-color: rgba(255, 255, 255, 0.2); }
+.hr-asset-grid > button[aria-checked="true"] { border-color: var(--tone); background: color-mix(in srgb, var(--tone) 16%, transparent); color: #fff; }
+
+.hr-vote-dots { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.hr-vote-dots > span[data-state] { position: relative; height: 14px; width: 14px; border-radius: 999px; background: rgba(255, 255, 255, 0.1); }
+.hr-vote-dots > span[data-state="yes"] { background: #2f6bff; box-shadow: 0 0 10px -2px rgba(47, 107, 255, 0.9); }
+.hr-vote-dots > span[data-state="no"] { background: #e5484d; }
+.hr-vote-dots > span[data-line="true"]::after {
+  content: ""; position: absolute; right: -4px; top: -4px; bottom: -4px; width: 2px; border-radius: 2px; background: #fff; opacity: 0.7;
+}

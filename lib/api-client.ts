@@ -1029,19 +1029,33 @@ class ApiClient {
     return this.request(`/circles/${circleId}`)
   }
 
-  async createCircle(data: { name: string; purpose: string; min_contribution: number }): Promise<ApiResponse<any>> {
+  async createCircle(data: { name: string; purpose: string; min_contribution: number; focus?: string; max_members?: number }): Promise<ApiResponse<any>> {
     return this.request('/circles', { method: 'POST', body: JSON.stringify(data) })
   }
 
-  async joinCircle(circleId: string): Promise<ApiResponse<any>> {
-    return this.request(`/circles/${circleId}/join`, { method: 'POST' })
+  // Asks to join; the circle's admin accepts or declines
+  async joinCircle(circleId: string, note?: string): Promise<ApiResponse<any>> {
+    return this.request(`/circles/${circleId}/join`, { method: 'POST', body: JSON.stringify({ note: note || null }) })
+  }
+
+  async cancelCircleRequest(circleId: string): Promise<ApiResponse<any>> {
+    return this.request(`/circles/${circleId}/join`, { method: 'DELETE' })
+  }
+
+  async answerCircleRequest(circleId: string, requestId: string, decision: 'approve' | 'decline'): Promise<ApiResponse<any>> {
+    return this.request(`/circles/${circleId}/requests/${requestId}/${decision}`, { method: 'POST' })
   }
 
   async contributeToCircle(circleId: string, amount: number): Promise<ApiResponse<any>> {
     return this.request(`/circles/${circleId}/contribute`, { method: 'POST', body: JSON.stringify({ amount }) })
   }
 
-  async proposeCircleInvestment(circleId: string, data: { fund_id: string; shares: number; note?: string }): Promise<ApiResponse<any>> {
+  async proposeCircleInvestment(
+    circleId: string,
+    data:
+      | { kind?: 'fund'; fund_id: string; shares: number; note?: string }
+      | { kind: 'asset'; asset_type: string; title: string; amount_per_member: number; note?: string },
+  ): Promise<ApiResponse<any>> {
     return this.request(`/circles/${circleId}/proposals`, { method: 'POST', body: JSON.stringify(data) })
   }
 

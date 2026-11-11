@@ -989,6 +989,40 @@ class ApiClient {
     })
   }
 
+  async getOpportunity(id: string): Promise<ApiResponse<any>> {
+    return this.request(`/opportunities/${id}`)
+  }
+
+  // Invest from Hoardrun cash in an approved listing
+  async investInOpportunity(id: string, amount: number): Promise<ApiResponse<any>> {
+    return this.request(`/opportunities/${id}/invest`, { method: 'POST', body: JSON.stringify({ amount }) })
+  }
+
+  // Hoardrun admin area (platform admins only)
+  async getAdminStatus(): Promise<ApiResponse<any>> {
+    return this.request('/admin-panel/me')
+  }
+
+  async getAdminOverview(): Promise<ApiResponse<any>> {
+    return this.request('/admin-panel/overview')
+  }
+
+  async getAdminUsers(params: { q?: string; page?: number } = {}): Promise<ApiResponse<any>> {
+    const search = new URLSearchParams()
+    if (params.q) search.set('q', params.q)
+    if (params.page) search.set('page', String(params.page))
+    const suffix = search.toString()
+    return this.request(`/admin-panel/users${suffix ? `?${suffix}` : ''}`)
+  }
+
+  async getAdminListings(status: 'pending' | 'approved' | 'rejected' | 'all' = 'pending'): Promise<ApiResponse<any>> {
+    return this.request(`/admin-panel/listings?status=${status}`)
+  }
+
+  async reviewListing(id: string, decision: 'approve' | 'reject', note?: string): Promise<ApiResponse<any>> {
+    return this.request(`/admin-panel/listings/${id}/${decision}`, { method: 'POST', body: JSON.stringify({ note: note || null }) })
+  }
+
   async deleteOpportunity(id: string): Promise<ApiResponse<any>> {
     return this.request(`/opportunities/${id}`, {
       method: 'DELETE',

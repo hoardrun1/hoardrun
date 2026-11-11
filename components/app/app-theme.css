@@ -2872,3 +2872,25 @@ html.hr-app, .hr-app {
 .hr-vote-dots > span[data-line="true"]::after {
   content: ""; position: absolute; right: -4px; top: -4px; bottom: -4px; width: 2px; border-radius: 2px; background: #fff; opacity: 0.7;
 }
+
+/* Business listing review states and investing, and the admin area */
+.hr-review-chip { display: inline-flex; align-items: center; gap: 4px; border-radius: 999px; padding: 2px 9px; font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+.hr-review-chip[data-status="pending"] { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+.hr-review-chip[data-status="approved"] { background: rgba(52, 211, 153, 0.14); color: #34d399; }
+.hr-review-chip[data-status="rejected"] { background: rgba(229, 72, 77, 0.16); color: #ff9f95; }
+.hr-review-box { border: 1px solid rgba(251, 191, 36, 0.3); border-radius: 18px; background: rgba(251, 191, 36, 0.06); padding: 12px 14px; }
+.hr-review-box[data-status="rejected"] { border-color: rgba(229, 72, 77, 0.35); background: rgba(229, 72, 77, 0.07); }
+.hr-invest-panel { border: 1px solid rgba(77, 148, 255, 0.3); border-radius: 22px; background: radial-gradient(90% 80% at 100% 0%, rgba(47, 107, 255, 0.16), transparent 60%), #0d0e12; padding: 16px; }
+
+.hr-admin-card { border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 22px; background: linear-gradient(170deg, #141416 0%, #0b0b0c 70%); padding: 16px; }
+.hr-admin-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+@media (min-width: 768px) { .hr-admin-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.hr-admin-stat {
+  --tone: #4d94ff;
+  min-width: 0; border: 1px solid rgba(255, 255, 255, 0.07); border-radius: 18px;
+  background: radial-gradient(120% 120% at 0% 0%, color-mix(in srgb, var(--tone) 12%, transparent), transparent 60%), #0d0d0f; padding: 12px;
+}
+.hr-admin-stat-icon { display: inline-flex; height: 30px; width: 30px; align-items: center; justify-content: center; border-radius: 10px; background: color-mix(in srgb, var(--tone) 18%, transparent); color: var(--tone); }
+.hr-admin-filters { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+.hr-admin-filters > button { flex: none; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 999px; padding: 6px 13px; color: #c7c7cc; font-size: 13px; font-weight: 500; }
+.hr-admin-filters > button[aria-checked="true"] { border-color: #2f6bff; background: #2f6bff; color: #fff; }

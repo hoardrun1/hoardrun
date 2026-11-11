@@ -27,6 +27,7 @@ import {
   Crown,
   Circle,
   Sparkles,
+  ShieldCheck,
   type LucideIcon
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
@@ -34,6 +35,7 @@ import { useSidebar } from './sidebar-layout'
 import { useNotificationCount } from '@/hooks/useNotificationCount'
 import { useAppNavigation } from '@/hooks/useAppNavigation'
 import { LanguageSwitcher } from './language-switcher'
+import { apiClient } from '@/lib/api-client'
 
 interface SidebarContentProps {
   onAddMoney?: () => void
@@ -64,6 +66,17 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const [canScrollUp, setCanScrollUp] = useState(false)
   const [canScrollDown, setCanScrollDown] = useState(false)
+  // Hoardrun admins get a link to the admin area; the server decides who they are
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  useEffect(() => {
+    if (!user) return
+    let cancelled = false
+    apiClient.getAdminStatus().then((response) => {
+      if (!cancelled) setIsAdmin(!!response.data?.is_admin)
+    })
+    return () => { cancelled = true }
+  }, [user])
 
   const menuSections = {
     main: [
@@ -89,6 +102,7 @@ export function SidebarContent({ onAddMoney }: SidebarContentProps) {
     support: [
       { id: 'help', label: t('dashboard.sidebar.help'), icon: HelpCircle, href: '/help', description: t('dashboard.sidebar.help'), color: 'from-white to-gray-100' },
       { id: 'contact', label: t('dashboard.sidebar.contact'), icon: Phone, href: '/contact', description: t('dashboard.sidebar.contact'), color: 'from-white to-gray-100' },
+      ...(isAdmin ? [{ id: 'admin', label: 'Admin', icon: ShieldCheck, href: '/admin-panel', description: 'Run Hoardrun', color: 'from-white to-gray-100' }] : []),
     ]
   }
 

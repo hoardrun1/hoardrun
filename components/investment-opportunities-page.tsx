@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowLeft, ArrowUpRight, Globe, MapPin, Plus, Search, Trash2, X } from 'lucide-react'
+import { ArrowLeft, ArrowUpRight, BadgeCheck, Clock3, Globe, MapPin, Plus, Search, Trash2, Users, Wallet, X, XCircle } from 'lucide-react'
 import { BriefcaseGraphic, ShieldGraphic, TowerGraphic } from '@/components/app/home-graphics'
 import { useToast } from '@/components/ui/use-toast'
 import { apiClient } from '@/lib/api-client'
@@ -30,6 +30,20 @@ interface Company {
   risk_level: Risk
   created_at: string
   is_owner: boolean
+  review_status?: 'pending' | 'approved' | 'rejected'
+  review_note?: string | null
+  can_invest?: boolean
+  amount_left?: number
+  investor_count?: number
+  my_investment?: number
+  cash_available?: number
+}
+
+/** Where a listing stands with Hoardrun's review; only its owner ever sees anything but "approved". */
+function ReviewBadge({ status }: { status?: Company['review_status'] }) {
+  if (status === 'pending') return <span className="hr-review-chip" data-status="pending"><Clock3 className="h-3 w-3" strokeWidth={2.4} />Waiting for approval</span>
+  if (status === 'rejected') return <span className="hr-review-chip" data-status="rejected"><XCircle className="h-3 w-3" strokeWidth={2.4} />Not approved</span>
+  return <span className="hr-review-chip" data-status="approved"><BadgeCheck className="h-3 w-3" strokeWidth={2.4} />Approved</span>
 }
 
 const CATEGORIES: Record<Category, { title: string; tab: string; description: string; noun: string; Graphic: (props: { className?: string }) => JSX.Element }> = {
@@ -157,6 +171,7 @@ function CompanyCard({ company, onOpen }: { company: Company; onOpen: () => void
           <p className="mt-0.5 truncate text-[13px] text-[#8e8e93]">
             {[company.sector, company.location].filter(Boolean).join(' · ')}
           </p>
+          {(company.is_owner || company.review_status === 'approved') && <div className="mt-1.5"><ReviewBadge status={company.review_status} /></div>}
         </div>
       </div>
       <p className="relative mt-4 line-clamp-2 text-[15px] leading-snug text-[#d1d1d6]">{company.tagline}</p>
@@ -179,13 +194,70 @@ function CompanyCard({ company, onOpen }: { company: Company; onOpen: () => void
       </div>
       <div className="relative mt-4 flex items-center justify-between gap-2 border-t border-white/[0.07] pt-4">
         <RiskMeter risk={company.risk_level} />
-        <span className="text-[12px] text-[#8e8e93]">{listedAgo(company.created_at)}</span>
+        <span className="text-[12px] text-[#8e8e93]">{company.investor_count ? `${company.investor_count} ${company.investor_count === 1 ? 'investor' : 'investors'}` : listedAgo(company.created_at)}</span>
       </div>
     </button>
   )
 }
 
-function CompanyDetails({ company, onDelete, deleting }: { company: Company; onDelete: () => void; deleting: boolean }) {
+function InvestPanel({ company, onInvested }: { company: Company; onInvested: (next: Company) => void }) {
+  const { addToast } = useToast()
+  const [amount, setAmount] = useState('')
+  const [cash, setCash] = useState<number | null>(company.cash_available ?? null)
+  const [busy, setBusy] = useState(false)
+  const value = Number(amount) || 0
+  const left = company.amount_left ?? Math.max(company.funding_goal - company.amount_raised, 0)
+  const minimum = Math.min(company.min_investment, left)
+
+  useEffect(() => {
+    apiClient.getOpportunity(company.id).then((response) => {
+      const fresh = response.data?.data
+      if (fresh) setCash(Number(fresh.cash_available) || 0)
+    })
+  }, [company.id])
+
+  const problem = value <= 0 ? null : value < minimum ? `The smallest investment is ${money(minimum)}` : value > left ? `Only ${money(left)} is left to raise` : cash !== null && value > cash ? 'More than your Hoardrun cash' : null
+  const options = [minimum, minimum * 2, minimum * 5].filter((option, index, all) => option <= left && all.indexOf(option) === index)
+
+  const invest = async () => {
+    setBusy(true)
+    const response = await apiClient.investInOpportunity(company.id, value)
+    setBusy(false)
+    if (response.error || !response.data?.data) {
+      addToast({ title: "Couldn't invest", description: errorText(response.error), variant: 'destructive' })
+      return
+    }
+    const next = response.data.data as Company
+    setAmount('')
+    setCash(next.cash_available ?? null)
+    addToast({ title: `You invested in ${company.name}`, description: `${money(value)} came from your Hoardrun cash. It's in your investments now.` })
+    onInvested(next)
+  }
+
+  return (
+    <div className="hr-invest-panel mt-6">
+      <div className="flex items-center justify-between text-[13px] text-[#a1a1a6]">
+        <span>Invest in {company.name}</span>
+        <span className="inline-flex items-center gap-1.5"><Wallet className="h-3.5 w-3.5" strokeWidth={2} />{cash === null ? '…' : money(cash)}</span>
+      </div>
+      <div className="mt-2 flex items-center gap-2">
+        <span className="hr-figure text-[28px] text-[#8e8e93]">$</span>
+        <input type="number" inputMode="decimal" min={minimum} max={left} step="0.01" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder={String(minimum)} aria-label="Amount to invest" className="hr-figure hr-share-input min-w-0 flex-1 !text-left !text-[28px]" />
+      </div>
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        {options.map((option) => (
+          <button key={option} type="button" onClick={() => setAmount(String(option))} aria-pressed={value === option} className="hr-focus hr-sendx-chip !h-8 px-3 !text-[13px]">{money(option)}</button>
+        ))}
+      </div>
+      <p className={`mt-2 text-[12px] ${problem ? 'text-[#ff9f95]' : 'text-[#8e8e93]'}`}>{problem ?? `Minimum ${money(minimum)} · ${money(left)} left to raise`}</p>
+      <button onClick={invest} disabled={busy || value <= 0 || !!problem} className="hr-focus mt-3 h-12 w-full rounded-full bg-white text-[15px] font-medium text-black disabled:bg-white/10 disabled:text-[#8e8e93]">
+        {busy ? 'Investing…' : value > 0 ? `Invest ${money(value)}` : 'Enter an amount'}
+      </button>
+    </div>
+  )
+}
+
+function CompanyDetails({ company, onDelete, deleting, onInvested }: { company: Company; onDelete: () => void; deleting: boolean; onInvested: (next: Company) => void }) {
   const facts = [
     { label: 'Raising', value: money(company.funding_goal) },
     { label: 'Minimum investment', value: money(company.min_investment) },
@@ -214,12 +286,27 @@ function CompanyDetails({ company, onDelete, deleting }: { company: Company; onD
         </div>
       </div>
 
+      {company.is_owner && company.review_status !== 'approved' && (
+        <div className="hr-review-box mt-5" data-status={company.review_status}>
+          <ReviewBadge status={company.review_status} />
+          <p className="mt-2 text-[13px] leading-snug text-[#c7c7cc]">
+            {company.review_status === 'pending'
+              ? 'Hoardrun is checking this listing. Once it’s approved it appears on this page for everyone, and people can invest.'
+              : company.review_note || 'Hoardrun couldn’t approve this listing. Check the details and list it again.'}
+          </p>
+        </div>
+      )}
+
       <p className="mt-5 text-[16px] leading-snug text-white">{company.tagline}</p>
       {company.about && <p className="hr-sub mt-3 whitespace-pre-line !text-[#aeaeb2]">{company.about}</p>}
 
       <div className="hr-panel mt-6 p-4">
         <Progress raised={company.amount_raised} goal={company.funding_goal} />
-        <div className="mt-4"><RiskMeter risk={company.risk_level} /></div>
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
+          <RiskMeter risk={company.risk_level} />
+          <span className="inline-flex items-center gap-1.5 text-[12px] text-[#a1a1a6]"><Users className="h-3.5 w-3.5" strokeWidth={2} />{company.investor_count ?? 0} {company.investor_count === 1 ? 'investor' : 'investors'}</span>
+        </div>
+        {(company.my_investment ?? 0) > 0 && <p className="mt-3 text-[13px] text-white">You've invested {money(company.my_investment ?? 0)}</p>}
       </div>
 
       <dl className="mt-4 divide-y divide-white/[0.07] rounded-[20px] border border-white/[0.08]">
@@ -232,12 +319,14 @@ function CompanyDetails({ company, onDelete, deleting }: { company: Company; onD
       </dl>
 
       <p className="mt-4 text-[12px] leading-relaxed text-[#8e8e93]">
-        These details come from whoever listed the company and haven't been checked by Hoardrun. A target return is the company's own estimate, not a promise. Investing in private companies can lose you money.
+        These details come from whoever listed the company. Hoardrun reviews each listing before it appears, but that isn't a guarantee: a target return is the company's own estimate, not a promise, and investing in private companies can lose you money.
       </p>
 
-      <button disabled className="mt-6 h-12 w-full cursor-not-allowed rounded-full bg-white/10 text-[15px] font-medium text-[#8e8e93]">
-        Investing opens soon
-      </button>
+      {company.can_invest ? (
+        <InvestPanel company={company} onInvested={onInvested} />
+      ) : !company.is_owner && company.review_status === 'approved' ? (
+        <p className="mt-6 rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-center text-[13.5px] text-[#a1a1a6]">This business has raised all it was looking for.</p>
+      ) : null}
       {company.is_owner && (
         <button onClick={onDelete} disabled={deleting} className="hr-focus mt-3 inline-flex h-11 w-full items-center justify-center gap-2 rounded-full border border-white/15 text-[14px] text-[#c7c7cc] hover:border-white/30 hover:text-white disabled:opacity-50">
           <Trash2 className="h-4 w-4" strokeWidth={1.8} />
@@ -285,14 +374,14 @@ function ListCompanyForm({ initialCategory, onCreated }: { initialCategory: Cate
       setError(errorText(response.error))
       return
     }
-    addToast({ title: 'Company listed', description: `${response.data.data.name} is now on the ${CATEGORIES[category].title.toLowerCase()} page.` })
+    addToast({ title: 'Sent for approval', description: `Hoardrun will review ${response.data.data.name}. Once approved it appears on the ${CATEGORIES[category].title.toLowerCase()} page.` })
     onCreated(response.data.data)
   }
 
   return (
     <form onSubmit={submit} className="flex min-h-0 flex-1 flex-col">
       <div className="flex-1 space-y-5 overflow-y-auto px-5 pb-6">
-        <p className="hr-sub">Add a company that's raising money. It shows up for everyone on Hoardrun as soon as you save it.</p>
+        <p className="hr-sub">Add a company that's raising money. Hoardrun reviews it first; once approved it shows up for everyone and people can invest.</p>
 
         <div>
           <span className="mb-1.5 block text-[13px] font-medium text-[#c7c7cc]">Type</span>
@@ -485,7 +574,10 @@ export function InvestmentOpportunitiesPage() {
 
       <Sheet open={!!selected} onClose={() => setSelected(null)} label="Company details">
         <SheetHeader title="Company" onClose={() => setSelected(null)} />
-        {selected && <CompanyDetails company={selected} onDelete={removeSelected} deleting={deleting} />}
+        {selected && <CompanyDetails key={selected.id} company={selected} onDelete={removeSelected} deleting={deleting} onInvested={(next) => {
+          setSelected(next)
+          setCompanies((current) => current.map((company) => (company.id === next.id ? next : company)))
+        }} />}
       </Sheet>
 
       <Sheet open={creating} onClose={() => setCreating(false)} label="List a company">

@@ -249,7 +249,7 @@ export function StartupRegistrationPage() {
       addToast({ title: "Couldn't list your startup", description: typeof response.error === 'string' ? response.error : 'Please try again.', variant: 'destructive' })
       return
     }
-    addToast({ title: 'Startup listed', description: `${response.data.data.name} is now on the ${category === 'real-estate' ? 'real estate' : 'private equity'} page.` })
+    addToast({ title: 'Sent for approval', description: `Hoardrun will review ${response.data.data.name}. Once approved it appears on the ${category === 'real-estate' ? 'real estate' : 'private equity'} page and people can invest.` })
     router.push(`/investment-opportunities?category=${category}`)
   }
 

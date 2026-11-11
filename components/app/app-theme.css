@@ -1204,36 +1204,251 @@ a.hr-collection:hover .hr-collection-art { transform: translateY(-3px) scale(1.0
 .hr-market-row[aria-current="true"] { background: rgba(255, 255, 255, 0.07); }
 @media (prefers-reduced-motion: reduce) { .hr-live-badge .hr-live-dot::after { animation: none; } }
 
-/* Send money */
-.hr-send-stage {
-  display: flex;
-  min-height: 560px;
-  flex-direction: column;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 28px;
-  background:
-    radial-gradient(70% 45% at 50% 18%, rgba(255, 255, 255, 0.12), transparent 70%),
-    linear-gradient(180deg, #151517 0%, #0a0a0b 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  padding: 20px;
+/* Send money: one compact card, a live preview beside it on desktop */
+.hr-send-back {
+  display: inline-flex;
+  width: 36px;
+  height: 36px;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #d1d1d6;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
+.hr-send-back:hover { background: rgba(255, 255, 255, 0.12); color: #fff; }
+.hr-choice-sm { width: 220px; }
+.hr-choice-sm > button { min-height: 34px; }
+.hr-send-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 26px;
+  background:
+    radial-gradient(80% 50% at 50% 0%, rgb(var(--iris) / 0.16), transparent 70%),
+    linear-gradient(180deg, #141416 0%, #0b0b0c 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 24px 60px -30px rgba(0, 0, 0, 0.8);
+  padding: 14px;
+}
+.hr-send-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.035);
+  padding: 10px 12px;
+}
+.hr-send-label {
+  width: 40px;
+  flex: none;
+  padding-top: 9px;
+  color: #8e8e93;
+  font-size: 12.5px;
+  font-weight: 500;
+}
+.hr-send-input {
+  display: block;
+  width: 100%;
+  height: 38px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0 12px;
+  color: #fff;
+  font-size: 14.5px;
+  outline: none;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.hr-send-input::placeholder { color: #636366; }
+.hr-send-input:focus { border-color: rgba(255, 255, 255, 0.35); background: rgba(255, 255, 255, 0.07); }
+.hr-send-icon-btn {
+  display: inline-flex;
+  width: 30px;
+  height: 30px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  color: #c7c7cc;
+}
+.hr-send-icon-btn:hover { background: rgba(255, 255, 255, 0.14); color: #fff; }
+.hr-send-chips {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+.hr-send-chips::-webkit-scrollbar { display: none; }
+.hr-send-chip {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 4px 11px 4px 4px;
+  color: #e5e5ea;
+  font-size: 13px;
+  white-space: nowrap;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.hr-send-chip:hover { border-color: rgba(255, 255, 255, 0.28); }
+.hr-send-chip[aria-checked="true"] { border-color: #fff; background: rgba(255, 255, 255, 0.12); color: #fff; }
+.hr-send-chip-add { padding-left: 10px; border-style: dashed; color: #a1a1a6; }
+.hr-send-money {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 6px 0 2px;
+}
+.hr-send-amount {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 2px;
+  line-height: 1;
+  cursor: text;
+}
+.hr-send-amount > span:first-of-type { font-size: 0.55em; align-self: flex-start; padding-top: 0.35em; }
+.hr-send-amount input {
+  max-width: 100%;
+  appearance: none;
+  border: none !important;
+  border-radius: 0;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0;
+  text-align: left;
+  caret-color: rgb(var(--sky));
+  outline: none;
+  font-variant-numeric: tabular-nums;
+}
+.hr-send-amount input::placeholder { color: #48484a; }
+.hr-send-preset {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  padding: 3px 10px;
+  color: #d1d1d6;
+  font-size: 12px;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.hr-send-preset:hover { border-color: rgba(255, 255, 255, 0.32); color: #fff; }
+.hr-send-cta {
+  display: inline-flex;
+  height: 50px;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 999px;
+  background: #fff;
+  color: #000;
+  font-size: 15.5px;
+  font-weight: 600;
+  transition: transform 0.12s ease, opacity 0.15s ease;
+}
+.hr-send-cta:active:not(:disabled) { transform: scale(0.985); }
+.hr-send-cta:disabled { cursor: not-allowed; background: rgba(255, 255, 255, 0.08); color: #8e8e93; font-weight: 500; }
 .hr-keypad {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
+  gap: 2px;
+  margin-top: 8px;
 }
 .hr-keypad > button {
-  height: 60px;
-  border-radius: 18px;
+  height: 46px;
+  border-radius: 14px;
   color: #fff;
   font-family: var(--font-display), var(--font-text), system-ui, sans-serif;
-  font-size: 26px;
+  font-size: 22px;
   font-weight: 500;
   transition: background-color 0.12s ease, transform 0.12s ease;
 }
 .hr-keypad > button:hover { background: rgba(255, 255, 255, 0.06); }
 .hr-keypad > button:active { background: rgba(255, 255, 255, 0.12); transform: scale(0.96); }
+.hr-send-preview {
+  position: sticky;
+  top: 88px;
+  flex-direction: column;
+  gap: 18px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 26px;
+  background:
+    radial-gradient(90% 60% at 50% 35%, rgb(var(--sky) / 0.14), transparent 70%),
+    linear-gradient(180deg, #111113 0%, #0a0a0b 100%);
+  padding: 20px;
+}
+.hr-send-route {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 0 0;
+}
+.hr-send-node {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: #a1a1a6;
+  font-size: 12px;
+}
+.hr-send-ghost {
+  display: inline-flex;
+  width: 52px;
+  height: 52px;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+  color: #8e8e93;
+}
+.hr-send-path {
+  position: relative;
+  height: 2px;
+  flex: 1;
+  margin-bottom: 20px;
+  background-image: linear-gradient(90deg, rgba(255, 255, 255, 0.25) 50%, transparent 50%);
+  background-size: 8px 2px;
+}
+.hr-send-pulse {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: rgb(var(--sky));
+  box-shadow: 0 0 14px rgb(var(--sky) / 0.9);
+  transform: translate(-50%, -50%);
+  animation: hr-send-travel 2.2s cubic-bezier(0.6, 0, 0.4, 1) infinite;
+}
+@keyframes hr-send-travel {
+  0% { left: 0; opacity: 0; }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { left: 100%; opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .hr-send-pulse { animation: none; left: 50%; } }
+.hr-send-facts {
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  font-size: 13px;
+}
+.hr-send-facts > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  padding: 9px 0;
+}
+.hr-send-facts dt { color: #8e8e93; }
+.hr-send-facts dd { min-width: 0; color: #e5e5ea; }
 .hr-bank-option {
   display: flex;
   width: 100%;
@@ -1270,9 +1485,6 @@ a.hr-collection:hover .hr-collection-art { transform: translateY(-3px) scale(1.0
   background: radial-gradient(circle at 32% 26%, #ffffff 0%, #d1d1d6 40%, #8e8e93 80%, #aeaeb2 100%);
   color: #0b0b0c;
   box-shadow: inset 0 1px 0 #fff, 0 0 0 10px rgba(255, 255, 255, 0.05), 0 0 40px rgba(255, 255, 255, 0.25);
-}
-@media (max-width: 1023px) {
-  .hr-send-stage { min-height: 0; }
 }
 
 /* Square icon tile for shortcuts */
@@ -1375,7 +1587,6 @@ html.hr-app, .hr-app {
 .hr-vc-hero { background: radial-gradient(60% 120% at 100% 50%, rgb(var(--tone) / 0.3), transparent 60%), repeating-radial-gradient(circle at 85% 50%, transparent 0 38px, rgb(var(--tone) / 0.07) 38px 39px), #0b0b0c; }
 .hr-market-hero { background: radial-gradient(70% 60% at 85% 0%, rgb(var(--iris) / 0.22), transparent 60%), radial-gradient(60% 50% at 0% 100%, rgb(var(--sky) / 0.08), transparent 60%), linear-gradient(170deg, #161618 0%, #0a0a0b 70%); }
 .hr-circle-hero { background: radial-gradient(60% 90% at 0% 50%, rgb(var(--violet) / 0.28), transparent 65%), repeating-radial-gradient(circle at 20% 50%, transparent 0 30px, rgb(var(--violet) / 0.07) 30px 31px), #0b0b0c; }
-.hr-send-stage { background: radial-gradient(70% 45% at 50% 18%, rgb(var(--iris) / 0.26), transparent 70%), radial-gradient(60% 40% at 50% 100%, rgb(var(--sky) / 0.08), transparent 70%), linear-gradient(180deg, #151517 0%, #0a0a0b 100%); }
 .hr-certificate { border-color: rgb(var(--iris) / 0.35); background: radial-gradient(80% 60% at 100% 0%, rgb(var(--iris) / 0.28), transparent 60%), radial-gradient(60% 50% at 0% 100%, rgb(var(--mint) / 0.12), transparent 60%), repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.025) 0 2px, transparent 2px 8px), linear-gradient(160deg, #1c1c1e, #0b0b0c); }
 @media (min-width: 1024px) {
   .hr-balance { background: radial-gradient(110% 70% at 50% 0%, rgb(var(--iris) / 0.16), transparent 62%), radial-gradient(60% 50% at 100% 100%, rgb(var(--sky) / 0.07), transparent 60%), #0b0b0c; }

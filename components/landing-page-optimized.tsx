@@ -161,7 +161,7 @@ export function LandingPageOptimized() {
   return (
     <MotionConfig reducedMotion="user">
       <div className={`landing-page lp min-h-screen overflow-x-clip ${sans.className}`}>
-        <header className="fixed inset-x-0 top-3 z-50 px-3 sm:top-5 sm:px-6">
+        <header className="lp-site-header fixed inset-x-0 top-3 z-50 px-3 sm:top-5 sm:px-6">
           <nav
             className={`lp-nav mx-auto flex max-w-6xl items-center justify-between rounded-full py-2 pl-4 pr-2 text-white transition-shadow duration-300 md:grid md:grid-cols-[1fr_auto_1fr] ${isScrolled ? "shadow-[0_12px_40px_-8px_rgba(0,0,0,0.55)]" : ""}`}
           >

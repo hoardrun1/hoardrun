@@ -628,3 +628,51 @@
     --card-foreground: 0 0% 0%;
   }
 }
+
+/* ===================================================================================
+   Platform foundation: one codebase that behaves like an app on iPhone, Android and the web.
+   <html> carries data-platform (ios | android | web), data-os and data-display (see app/layout.tsx).
+   =================================================================================== */
+
+/* Every platform: no font inflation on rotate, no grey flash on tap, full-height screens that
+   follow the phone's moving browser bars (dvh), and a dark canvas behind any bounce */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; background-color: #000; }
+* { -webkit-tap-highlight-color: transparent; }
+@supports (height: 100dvh) {
+  .min-h-screen { min-height: 100dvh; }
+  .h-screen { height: 100dvh; }
+}
+
+/* Touch screens (phones and tablets, in the apps or a browser) */
+@media (pointer: coarse) {
+  /* iPhone and iPad zoom into any text box under 16px; keep them at 16px so the page stays put */
+  input:is(.text-xs, .text-sm, .md\:text-sm, .hr-field, .hr-sendx-note, .hr-sendx-search),
+  textarea:is(.text-xs, .text-sm, .md\:text-sm, .hr-field),
+  select:is(.text-xs, .text-sm, .md\:text-sm, .hr-field) { font-size: 16px; }
+
+  /* Comfortable finger targets (Apple asks for 44pt, Google 48dp): small buttons grow to 40px+ */
+  .hr-app button.h-8, .hr-app a.h-8, .hr-app button.h-7 { min-height: 40px; }
+  .hr-sendx-mode > button { min-height: 36px; }
+
+  /* No hover-only effects stuck on after a tap */
+  .hr-sendx-person:hover, .hr-quick-person:hover { transform: none; }
+}
+
+/* Inside the Hoardrun phone apps */
+html[data-display="standalone"] {
+  /* Press-and-hold shouldn't select app chrome or pop the link preview */
+  -webkit-touch-callout: none;
+}
+html[data-display="standalone"] :is(button, nav, [role="tab"], [role="radio"], .hr-tab, .hr-tab-add) {
+  -webkit-user-select: none;
+  user-select: none;
+}
+/* Android draws its own overscroll stretch; the page shouldn't also pull-to-refresh the app away */
+html[data-platform="android"] body { overscroll-behavior-y: none; }
+
+/* Installed apps and home-screen web apps run edge to edge: keep the website's floating header
+   clear of the notch / Dynamic Island */
+.lp-site-header { top: calc(0.75rem + env(safe-area-inset-top, 0px)); }
+@media (min-width: 640px) {
+  .lp-site-header { top: calc(1.25rem + env(safe-area-inset-top, 0px)); }
+}

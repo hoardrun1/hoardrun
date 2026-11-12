@@ -13,7 +13,7 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Switch } from '@/components/ui/switch'
 import { Fingerprint } from 'lucide-react'
-import { closeOutside, isNativeApp } from '@/lib/native'
+import { closeOutside, isNativeApp, nativePlatform } from '@/lib/native'
 
 const LOCK_PREF_KEY = 'hr_app_lock'
 const LOCK_AFTER_MS = 60 * 1000
@@ -92,6 +92,11 @@ export function NativeShell() {
     if (!isNativeApp()) return
     setActive(true)
     document.documentElement.dataset.nativeApp = 'true'
+    document.documentElement.dataset.platform = nativePlatform()
+    document.documentElement.dataset.display = 'standalone'
+    // Apps don't pinch-zoom their whole screen; the website still can
+    const viewportMeta = document.querySelector('meta[name="viewport"]')
+    viewportMeta?.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover')
     const removers: Array<() => void> = []
 
     ;(async () => {

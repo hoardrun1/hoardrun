@@ -135,7 +135,7 @@ function Section({ title, href, children, className = "" }: { title: string; hre
       <div className="mb-2 flex items-center justify-between gap-3">
         <h2 className="hr-section-title !text-[21px]">{title}</h2>
         {href && (
-          <Link href={href} className="hr-focus -mr-1 flex items-center rounded-full p-1 text-[#a1a1a6] transition-colors hover:text-white" aria-label={title}>
+          <Link href={href} className="hr-focus -mr-2 flex h-10 w-10 items-center justify-center rounded-full text-[#a1a1a6] transition-colors hover:text-white" aria-label={title}>
             <ChevronRight className="h-5 w-5" />
           </Link>
         )}

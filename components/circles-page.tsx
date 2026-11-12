@@ -615,7 +615,7 @@ export function CirclesPage() {
   return (
     <motion.div className="space-y-4 sm:space-y-5" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, ease: [0.2, 0.7, 0.2, 1] }}>
       <div>
-        <Link href="/investment" className="hr-focus -ml-1 inline-flex items-center gap-1.5 rounded-full px-1 py-1 text-[14px] text-[#a1a1a6] hover:text-white"><ArrowLeft className="h-4 w-4" strokeWidth={2} />Investments</Link>
+        <Link href="/investment" className="hr-focus -ml-1 inline-flex min-h-[40px] items-center gap-1.5 rounded-full px-1 py-1 text-[14px] text-[#a1a1a6] hover:text-white"><ArrowLeft className="h-4 w-4" strokeWidth={2} />Investments</Link>
         <div className="mt-1 flex items-end justify-between gap-4">
           <div className="min-w-0">
             <h1 className="hr-title">Circles</h1>

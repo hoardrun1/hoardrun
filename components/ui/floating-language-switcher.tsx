@@ -33,7 +33,7 @@ export function FloatingLanguageSwitcher() {
   }
 
   return (
-    <div className="hr-lang-fab fixed bottom-6 right-6 z-50">
+    <div className="hr-lang-fab fixed bottom-6 right-6 z-50" style={{ bottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))', right: 'calc(1.5rem + env(safe-area-inset-right, 0px))' }}>
       <div className="relative">
         <motion.div
           initial={{ scale: 0 }}

@@ -266,7 +266,7 @@ export function StartupRegistrationPage() {
     <div className="space-y-5">
       <div className="flex items-end justify-between gap-4">
         <div className="min-w-0">
-          <Link href="/investment" className="hr-focus -ml-1 inline-flex items-center gap-1.5 rounded-full px-1 py-1 text-[14px] text-[#a1a1a6] hover:text-white">
+          <Link href="/investment" className="hr-focus -ml-1 inline-flex min-h-[40px] items-center gap-1.5 rounded-full px-1 py-1 text-[14px] text-[#a1a1a6] hover:text-white">
             <ArrowLeft className="h-4 w-4" strokeWidth={2} />
             Investments
           </Link>
@@ -286,7 +286,7 @@ export function StartupRegistrationPage() {
         </div>
         <div className="mt-2 grid grid-cols-5 gap-1.5">
           {steps.map((item, index) => (
-            <button key={item.title} onClick={() => goTo(index)} className="hr-focus h-1.5 rounded-full transition-colors" style={{ background: index <= step ? '#fff' : 'rgba(255,255,255,0.12)' }} aria-label={`Go to ${item.title}`} />
+            <button key={item.title} onClick={() => goTo(index)} className="hr-focus flex h-8 items-center rounded-full" aria-label={`Go to ${item.title}`}><span className="block h-1.5 w-full rounded-full transition-colors" style={{ background: index <= step ? '#fff' : 'rgba(255,255,255,0.12)' }} /></button>
           ))}
         </div>
       </div>

@@ -208,3 +208,23 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Numbers strip: one slim row that slides left forever and pauses on hover */
+.lp-stats-marquee {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+          mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+.lp-stats-track { display: flex; width: max-content; animation: lp-stats-slide 28s linear infinite; }
+.lp-stats-marquee:hover .lp-stats-track { animation-play-state: paused; }
+.lp-stats-set { display: flex; flex: none; }
+.lp-stats-item {
+  display: flex; flex: none; align-items: baseline; gap: 12px;
+  border-right: 1px solid var(--lp-jade); padding: 20px 36px; white-space: nowrap;
+}
+@media (min-width: 1024px) { .lp-stats-item { padding: 26px 56px; } }
+@keyframes lp-stats-slide { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) {
+  .lp-stats-track { animation: none; }
+  .lp-stats-marquee { overflow-x: auto; }
+}

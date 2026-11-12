@@ -279,17 +279,21 @@ export function LandingPageOptimized() {
           </section>
 
           {/* Stats */}
-          <section className="relative z-10 border-y border-[var(--lp-jade)] bg-[var(--lp-canvas)]">
-            <div className="mx-auto grid max-w-7xl grid-cols-2 lg:grid-cols-4">
-              {stats.map((stat, index) => (
-                <Reveal
-                  key={stat.label}
-                  delay={index * 0.08}
-                  className={`px-5 py-10 sm:px-8 lg:py-14 ${index % 2 === 1 ? "border-l border-[var(--lp-jade)]" : ""} ${index === 2 ? "lg:border-l" : ""} ${index > 1 ? "border-t border-[var(--lp-jade)] lg:border-t-0" : ""}`}
-                >
-                  <div className={"lp-display text-[clamp(2.5rem,4.6vw,4.25rem)] leading-none tabular-nums"}>{stat.number}</div>
-                  <div className="mt-3 text-sm text-[var(--lp-muted)]">{stat.label}</div>
-                </Reveal>
+          {/* One slim row that slides past; the list is doubled so the loop has no seam */}
+          <section className="lp-stats-marquee relative z-10 border-y border-[var(--lp-jade)] bg-[var(--lp-canvas)]" aria-label="Hoardrun in numbers">
+            <ul className="sr-only">
+              {stats.map((stat) => <li key={stat.label}>{stat.number} {stat.label}</li>)}
+            </ul>
+            <div className="lp-stats-track" aria-hidden="true">
+              {[0, 1].map((copy) => (
+                <div key={copy} className="lp-stats-set">
+                  {stats.map((stat) => (
+                    <div key={stat.label} className="lp-stats-item">
+                      <span className="lp-display text-[clamp(1.5rem,2.4vw,2.25rem)] leading-none tabular-nums">{stat.number}</span>
+                      <span className="text-[13px] text-[var(--lp-muted)] sm:text-sm">{stat.label}</span>
+                    </div>
+                  ))}
+                </div>
               ))}
             </div>
           </section>

@@ -109,7 +109,7 @@ export function LandingPageOptimized() {
 
   const stats = [
     // Facts about the product, never invented user or asset figures
-    { number: "$1", label: t("landing.stats.activeUsers") },
+    { number: "$20", label: t("landing.stats.activeUsers") },
     { number: "$0", label: t("landing.stats.assetsUnderManagement") },
     { number: "24/7", label: t("landing.stats.uptimeGuarantee") },
     { number: "2 min", label: t("landing.stats.countriesSupported") },

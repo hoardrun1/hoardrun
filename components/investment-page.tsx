@@ -225,7 +225,7 @@ export function InvestmentPage() {
       {/* Investment options */}
       <section id="options" className="scroll-mt-32">
         <SectionHeading title="Investment options" description="Ways to grow your money, by risk." />
-        <ul className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3">
+        <ul className="hr-invest-options grid grid-cols-3 gap-2 sm:gap-4 xl:grid-cols-6">
           {categories.map(({ id, title, description, risk, Graphic, href }) => {
             const content = (
               <>
@@ -252,6 +252,7 @@ export function InvestmentPage() {
         </ul>
       </section>
 
+      <div className="grid gap-5 sm:gap-6 lg:grid-cols-2">
       {/* Startups */}
       <section id="startups" className="scroll-mt-32">
         <SectionHeading title="Startups" description="Early-stage companies raising money." />
@@ -283,6 +284,7 @@ export function InvestmentPage() {
           </div>
         </div>
       </section>
+      </div>
 
       <DepositModal open={isDepositModalOpen} onOpenChange={setIsDepositModalOpen} />
     </motion.div>

@@ -2937,3 +2937,27 @@ html.hr-app, .hr-app {
   [data-route="savings"] .hr-promo .hr-card-title { font-size: 19px; }
   [data-route="savings"] .hr-promo .mt-4, [data-route="savings"] .hr-promo .mt-5 { margin-top: 8px; }
 }
+
+/* Investments: less scrolling with nothing removed. Phones get 3 option tiles across and tighter
+   cards; computers get all 6 options in one row and Startups beside Circles (investment-page.tsx). */
+@media (max-width: 639px) {
+  [data-route="investment"] .hr-invest-options .hr-collection { padding: 10px; border-radius: 16px; }
+  [data-route="investment"] .hr-invest-options .hr-collection-art { width: 44px; height: 44px; margin: 0 0 6px -2px; }
+  [data-route="investment"] .hr-invest-options .hr-card-title { font-size: 14.5px; line-height: 1.15; }
+  [data-route="investment"] .hr-invest-options .hr-card-title + span { font-size: 11.5px; -webkit-line-clamp: 3; }
+  [data-route="investment"] .hr-invest-options .hr-collection > span:last-child { padding-top: 6px; }
+  [data-route="investment"] .hr-invest-options .hr-collection > span:last-child > span { font-size: 10.5px; }
+  [data-route="investment"] .hr-promo { min-height: 0; padding: 14px 16px; }
+  [data-route="investment"] .hr-promo-art { width: 116px; height: 116px; right: -38px; }
+  [data-route="investment"] .hr-promo .hr-card-title { font-size: 19px; }
+  [data-route="investment"] .hr-promo .hr-sub { font-size: 13px; }
+  [data-route="investment"] .hr-promo .mt-4 { margin-top: 10px; }
+  [data-route="investment"] section > .mb-4 { margin-bottom: 10px; }
+}
+@media (min-width: 1280px) {
+  [data-route="investment"] .hr-invest-options .hr-collection-art { width: 72px; height: 72px; }
+  [data-route="investment"] .hr-invest-options .hr-card-title { font-size: 17px; }
+}
+@media (min-width: 1024px) {
+  [data-route="investment"] .hr-promo { min-height: 170px; }
+}

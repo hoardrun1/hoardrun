@@ -2961,3 +2961,16 @@ html.hr-app, .hr-app {
 @media (min-width: 1024px) {
   [data-route="investment"] .hr-promo { min-height: 170px; }
 }
+
+/* Investments on phones: the 4 small boxes share one row and the portfolio area is tighter, so the
+   investment options are on the first screen. Every box and word stays. */
+@media (max-width: 767px) {
+  [data-route="investment"] .hr-invest-stats > li { gap: 4px; padding: 8px 8px 9px; border-radius: 14px; }
+  [data-route="investment"] .hr-invest-stats > li > span:first-child { font-size: 10.5px; line-height: 1.2; white-space: normal; overflow: visible; }
+  [data-route="investment"] .hr-invest-stats .hr-figure { font-size: 14.5px; }
+  [data-route="investment"] .hr-invest-stats .hr-figure + span { font-size: 10px; }
+  [data-route="investment"] .hr-balance .hr-figure { font-size: 40px; }
+  [data-route="investment"] .hr-balance > .relative.pb-4 { padding-top: 12px; padding-bottom: 6px; }
+  [data-route="investment"] #overview { gap: 10px; }
+  [data-route="investment"] .hr-title { font-size: 28px; }
+}

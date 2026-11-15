@@ -193,7 +193,7 @@ export function InvestmentPage() {
         </section>
 
         <div className="grid gap-4 sm:gap-5 lg:col-span-4">
-          <ul className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-2">
+          <ul className="hr-invest-stats grid grid-cols-4 gap-2 sm:gap-4 md:grid-cols-4 lg:grid-cols-2">
             {stats.map((stat) => (
               <li key={stat.label} className="hr-panel flex min-w-0 flex-col justify-between gap-1.5 p-3 sm:gap-3 sm:p-4">
                 <span className="truncate text-[13px] text-[#a1a1a6]">{stat.label}</span>

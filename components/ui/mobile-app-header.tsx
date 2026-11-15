@@ -95,10 +95,10 @@ export function MobileAppHeader({ onProfileClick, onNotificationClick }: MobileA
         data-scrolled={scrolled}
         style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
       >
-        <div className="flex h-14 items-center justify-between px-4">
+        <div className="hr-topbar-row flex items-center justify-between px-3">
           <div className="relative">
-            <button onClick={handleProfileClick} className="hr-focus relative flex items-center rounded-full" aria-label={!onHome && unreadCount > 0 ? `Open account menu, ${unreadCount} unread notifications` : "Open account menu"} aria-expanded={showProfileMenu}>
-              <Avatar size={38} name={user?.name} email={user?.email} picture={user?.profilePictureUrl} />
+            <button onClick={handleProfileClick} className="hr-topbar-me hr-focus relative flex items-center rounded-full" aria-label={!onHome && unreadCount > 0 ? `Open account menu, ${unreadCount} unread notifications` : "Open account menu"} aria-expanded={showProfileMenu}>
+              <Avatar size={32} name={user?.name} email={user?.email} picture={user?.profilePictureUrl} />
               {!onHome && unreadCount > 0 && <span className="hr-avatar-dot" aria-hidden="true" />}
             </button>
 
@@ -119,7 +119,7 @@ export function MobileAppHeader({ onProfileClick, onNotificationClick }: MobileA
                     exit={{ opacity: 0, scale: 0.96, y: -8 }}
                     transition={{ type: 'spring', stiffness: 500, damping: 34 }}
                     style={{ transformOrigin: 'top left' }}
-                    className="hr-menu absolute left-0 top-12 z-50 max-h-[calc(100dvh-5rem)] w-[min(18rem,calc(100vw-2rem))] !overflow-y-auto"
+                    className="hr-menu absolute left-0 top-11 z-50 max-h-[calc(100dvh-5rem)] w-[min(18rem,calc(100vw-2rem))] !overflow-y-auto"
                   >
                     <div className="flex items-center gap-3 p-4">
                       <Avatar size={44} name={user?.name} email={user?.email} picture={user?.profilePictureUrl} />
@@ -188,22 +188,24 @@ export function MobileAppHeader({ onProfileClick, onNotificationClick }: MobileA
           </div>
 
           {onHome && (
-          <div className="flex items-center gap-2">
+          <div className="hr-topbar-actions">
             <motion.button
-              whileTap={{ scale: 0.92 }}
+              whileTap={{ scale: 0.9 }}
               onClick={() => router.push('/assistant')}
-              className="hr-round hr-focus"
+              className="hr-topbar-btn hr-focus"
+              data-tone="ai"
               aria-label="Ask Hoardrun AI"
             >
-              <Sparkles className="h-[18px] w-[18px]" strokeWidth={1.8} />
+              <Sparkles className="h-[17px] w-[17px]" strokeWidth={2} />
             </motion.button>
+            <span className="hr-topbar-divider" aria-hidden="true" />
             <motion.button
-              whileTap={{ scale: 0.92 }}
+              whileTap={{ scale: 0.9 }}
               onClick={handleNotificationClick}
-              className="hr-round hr-focus"
+              className="hr-topbar-btn hr-focus"
               aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : 'Notifications'}
             >
-              <Bell className="h-[18px] w-[18px]" strokeWidth={1.8} />
+              <Bell className="h-[17px] w-[17px]" strokeWidth={2} />
               <AnimatePresence>
                 {unreadCount > 0 && (
                   <motion.span

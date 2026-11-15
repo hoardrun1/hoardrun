@@ -3025,3 +3025,24 @@ html.hr-app, .hr-app {
   [data-route="savings"] .hr-save-tile-art { width: 36px; height: 36px; }
   [data-route="savings"] .hr-save-tile > span:first-of-type { padding-right: 42px; font-size: 12.5px; }
 }
+
+/* Cards on phones: the whole page on one screen, nothing removed. A smaller card fan, tighter
+   spacing, and the three feature chips on one line. */
+@media (max-width: 767px) {
+  [data-route="cards"].hr-page { padding-bottom: calc(5.25rem + env(safe-area-inset-bottom, 0px)); }
+  [data-route="cards"] .space-y-5 > :not([hidden]) ~ :not([hidden]) { margin-top: 12px; }
+  [data-route="cards"] .hr-wallet-empty { gap: 12px; padding-top: 34px; padding-bottom: 18px; }
+  /* The fan is about 0.75x as tall as a card is wide; scaled to 0.78 that is ~0.59x, plus room to breathe */
+  [data-route="cards"] .hr-wallet-stack { height: calc(min(330px, 78vw) * 0.64); }
+  [data-route="cards"] .hr-wallet-stack-card { translate: -50% -50%; scale: 0.78; }
+  [data-route="cards"] .hr-wallet-empty .hr-card-title { font-size: 22px; }
+  [data-route="cards"] .hr-wallet-empty .hr-sub { margin-top: 6px; font-size: 13.5px; line-height: 1.4; }
+  [data-route="cards"] .hr-wallet-empty .mt-4 { margin-top: 10px; gap: 6px; }
+  [data-route="cards"] .hr-feature-chip { padding: 4px 9px; font-size: 11.5px; gap: 4px; }
+  [data-route="cards"] .hr-feature-chip svg { width: 13px; height: 13px; }
+  [data-route="cards"] .hr-wallet-empty .mt-5 { margin-top: 12px; }
+}
+@media (max-width: 767px) and (max-height: 760px) {
+  [data-route="cards"] .hr-wallet-stack { height: calc(min(330px, 78vw) * 0.56); }
+  [data-route="cards"] .hr-wallet-stack-card { scale: 0.68; }
+}

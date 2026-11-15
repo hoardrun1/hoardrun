@@ -98,7 +98,7 @@ export function MobileAppHeader({ onProfileClick, onNotificationClick }: MobileA
         <div className="hr-topbar-row flex items-center justify-between px-3">
           <div className="relative">
             <button onClick={handleProfileClick} className="hr-topbar-me hr-focus relative flex items-center rounded-full" aria-label={!onHome && unreadCount > 0 ? `Open account menu, ${unreadCount} unread notifications` : "Open account menu"} aria-expanded={showProfileMenu}>
-              <Avatar size={32} name={user?.name} email={user?.email} picture={user?.profilePictureUrl} />
+              <Avatar size={26} name={user?.name} email={user?.email} picture={user?.profilePictureUrl} />
               {!onHome && unreadCount > 0 && <span className="hr-avatar-dot" aria-hidden="true" />}
             </button>
 
@@ -196,7 +196,7 @@ export function MobileAppHeader({ onProfileClick, onNotificationClick }: MobileA
               data-tone="ai"
               aria-label="Ask Hoardrun AI"
             >
-              <Sparkles className="h-[17px] w-[17px]" strokeWidth={2} />
+              <Sparkles className="h-[15px] w-[15px]" strokeWidth={2} />
             </motion.button>
             <span className="hr-topbar-divider" aria-hidden="true" />
             <motion.button
@@ -205,7 +205,7 @@ export function MobileAppHeader({ onProfileClick, onNotificationClick }: MobileA
               className="hr-topbar-btn hr-focus"
               aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : 'Notifications'}
             >
-              <Bell className="h-[17px] w-[17px]" strokeWidth={2} />
+              <Bell className="h-[15px] w-[15px]" strokeWidth={2} />
               <AnimatePresence>
                 {unreadCount > 0 && (
                   <motion.span

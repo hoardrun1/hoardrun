@@ -3046,3 +3046,17 @@ html.hr-app, .hr-app {
   [data-route="cards"] .hr-wallet-stack { height: calc(min(330px, 78vw) * 0.56); }
   [data-route="cards"] .hr-wallet-stack-card { scale: 0.68; }
 }
+
+/* Phone top bar, smaller still: 26px avatar and a 32px pill. Each button keeps a 40px invisible
+   touch area, so it stays easy to tap on iPhone and Android. */
+.hr-topbar-row { height: 44px; }
+.hr-topbar-me { padding: 2px; }
+.hr-topbar-me::before { padding: 1.25px; }
+.hr-topbar-actions { padding: 1px; gap: 0; }
+.hr-topbar-btn { height: 30px; width: 30px; }
+.hr-topbar-btn::after, .hr-topbar-me::after { content: ""; position: absolute; inset: -5px; border-radius: 999px; }
+.hr-topbar-divider { height: 14px; }
+.hr-topbar-btn .hr-badge { top: 0; right: 0; min-width: 13px; height: 13px; font-size: 8px; }
+@media (max-width: 1023px) {
+  .hr-page { padding-top: calc(2.75rem + env(safe-area-inset-top, 0px)); }
+}

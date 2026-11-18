@@ -243,8 +243,8 @@ export default function HomePage() {
   return (
     <motion.div className="relative isolate space-y-4 sm:space-y-5" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, ease: [0.2, 0.7, 0.2, 1] }}>
       {/* Revolut-style wallpaper behind the balance on phones: the logo blue with sweeping light arcs */}
-      <div aria-hidden="true" className="hr-wallpaper lg:hidden"><span className="hr-wallpaper-blob" /><HomeWallpaperArt /></div>
-      <header className="flex items-center justify-between gap-4">
+      <div aria-hidden="true" className="hr-wallpaper lg:hidden"><span className="hr-wallpaper-blob" /><span className="hr-wallpaper-wave" /></div>
+      <header className="hidden items-center justify-between gap-4 lg:flex">
         <h1 className="hr-title">
           {firstName ? t("dashboard.home.welcomeName", { defaultValue: "Welcome, {{name}}", name: firstName }) : t("dashboard.home.welcome", "Welcome")}
         </h1>
@@ -267,9 +267,53 @@ export default function HomePage() {
         </div>
       )}
 
+      {/* Phones and tablets: welcome with art, a glass balance card, a savings nudge and the action tiles */}
+      <section className="hr-home-hero lg:hidden" aria-label={t("dashboard.home.totalBalance")}>
+        <div className="hr-home-hero-top">
+          <div className="relative z-[1] min-w-0">
+            <h1 className="hr-home-hero-title">
+              {firstName ? t("dashboard.home.welcomeName", { defaultValue: "Welcome, {{name}}", name: firstName }) : t("dashboard.home.welcome", "Welcome")}
+            </h1>
+            <p className="hr-home-hero-sub">{t("dashboard.home.tagline", "Manage your money with ease")}</p>
+          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/home/hero-3d.jpg" alt="" width={720} height={720} decoding="async" className="hr-home-hero-art hr-home-hero-photo" />
+        </div>
+
+        {/* Balance open on the blue, centred and large (Revolut-style), no card around it */}
+        <div className="hr-home-open">
+          <p className="hr-home-open-label">{t("dashboard.home.totalBalance")}</p>
+          {isLoading && !summary ? (
+            <div className="hr-skeleton mx-auto mt-2 h-14 w-44" />
+          ) : (
+            <p className="hr-home-open-amount">
+              {whole}
+              {fraction && <span>.{fraction}</span>}
+            </p>
+          )}
+          <Link href="/transactions" className="hr-home-open-spent hr-focus">
+            <ArrowUpRight className="h-4 w-4" strokeWidth={2.4} />
+            <span><b><Money value={spending} currency={currency} /></b> {t("dashboard.home.spentThisMonth", "spent this month")}</span>
+          </Link>
+        </div>
+
+        {/* Round glass actions; Add Money is the solid white one */}
+        <div className="hr-home-circles">
+          {actions.map((action, index) => {
+            const Icon = index === 0 ? ArrowUpRight : action.icon
+            return (
+              <button key={action.label} onClick={action.onClick} data-primary={action.primary ? "true" : undefined} className="hr-home-circle hr-focus">
+                <span className="hr-home-circle-icon"><Icon className="h-6 w-6" strokeWidth={2} /></span>
+                <span className="hr-home-circle-label">{action.label}</span>
+              </button>
+            )
+          })}
+        </div>
+      </section>
+
       <div className="grid gap-4 sm:gap-5 lg:grid-cols-12">
-        {/* Balance: open on the page on phones and tablets, a chart card on desktop */}
-        <section className="hr-balance lg:col-span-8">
+        {/* Balance: a chart card on computers */}
+        <section className="hr-balance hidden lg:col-span-8 lg:block">
           {/* Computers: the same blue scene as the phone wallpaper, inside the balance card */}
           <div aria-hidden="true" className="hr-balance-art hidden lg:block"><span className="hr-wallpaper-blob" /><HomeWallpaperArt fit="xMaxYMin slice" /></div>
           {!series && <div aria-hidden="true" className="lp-eclipse hr-eclipse lg:hidden" />}

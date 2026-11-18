@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Bell, Check, ChevronRight, CreditCard, Home, Languages, LogOut, Settings, Sparkles, User } from 'lucide-react'
+import { Bell, Check, ChevronDown, ChevronRight, CreditCard, Home, Languages, LogOut, Settings, Sparkles, User } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useNotifications } from '@/contexts/NotificationContext'
 import { Notifications } from './notifications'
@@ -96,11 +96,17 @@ export function MobileAppHeader({ onProfileClick, onNotificationClick }: MobileA
         style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
       >
         <div className="hr-topbar-row flex items-center justify-between px-3">
-          <div className="relative">
+          <div className="relative flex items-center">
             <button onClick={handleProfileClick} className="hr-topbar-me hr-focus relative flex items-center rounded-full" aria-label={!onHome && unreadCount > 0 ? `Open account menu, ${unreadCount} unread notifications` : "Open account menu"} aria-expanded={showProfileMenu}>
               <Avatar size={26} name={user?.name} email={user?.email} picture={user?.profilePictureUrl} />
               {!onHome && unreadCount > 0 && <span className="hr-avatar-dot" aria-hidden="true" />}
             </button>
+            {onHome && user?.name && (
+              <button onClick={handleProfileClick} className="hr-topbar-name hr-focus" aria-hidden="true" tabIndex={-1}>
+                {user.name.split(' ')[0]}
+                <ChevronDown className="h-3.5 w-3.5 opacity-80" strokeWidth={2.4} />
+              </button>
+            )}
 
             <AnimatePresence>
               {showProfileMenu && (

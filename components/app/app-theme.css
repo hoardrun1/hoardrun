@@ -3154,3 +3154,406 @@ html.hr-app, .hr-app {
   .hr-balance .hr-balance-label + p { margin-top: 10px; text-shadow: 0 6px 30px rgba(124, 192, 255, 0.55); }
   .hr-balance-meta > span { border-radius: 999px; background: rgba(0, 0, 0, 0.2); padding: 4px 11px; }
 }
+
+/* Home on phones v3 (after the user's mockup + Revolut): welcome with 3D-style art, a glass balance
+   card with bars, a savings nudge, and five glass action tiles. Computers keep the card layout. */
+.hr-wallpaper-wave {
+  position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(120% 60% at 110% 38%, transparent 58%, rgba(124, 192, 255, 0.22) 59%, rgba(124, 192, 255, 0.06) 66%, transparent 67%),
+    radial-gradient(90% 40% at -10% 52%, transparent 60%, rgba(255, 255, 255, 0.12) 61%, transparent 68%);
+}
+.hr-topbar-name {
+  display: inline-flex; align-items: center; gap: 3px; margin-left: 6px; border-radius: 999px; padding: 4px 6px;
+  color: #fff; font-size: 15px; font-weight: 600; letter-spacing: -0.01em;
+}
+.hr-home-hero { display: flex; flex-direction: column; gap: 12px; }
+.hr-home-hero-top { position: relative; display: flex; align-items: center; gap: 6px; min-height: 118px; }
+.hr-home-hero-title {
+  font-family: var(--font-display), var(--font-text), system-ui, sans-serif;
+  font-size: 30px; font-weight: 700; line-height: 1.05; letter-spacing: -0.035em; color: #fff; text-wrap: balance;
+}
+.hr-home-hero-sub { margin-top: 6px; color: rgba(255, 255, 255, 0.78); font-size: 14.5px; }
+.hr-home-hero-art {
+  position: absolute; right: -14px; top: 50%; width: 168px; height: auto; translate: 0 -50%;
+  filter: drop-shadow(0 18px 26px rgba(4, 18, 70, 0.55));
+  animation: hr-hero-float 6s ease-in-out infinite;
+}
+@keyframes hr-hero-float { 50% { transform: translateY(-5px); } }
+.hr-home-hero-top > div { max-width: calc(100% - 132px); }
+
+.hr-home-balance {
+  position: relative; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.24); border-radius: 24px;
+  background:
+    radial-gradient(80% 120% at 100% 0%, rgba(124, 192, 255, 0.35), transparent 60%),
+    linear-gradient(150deg, rgba(59, 130, 246, 0.85), rgba(29, 78, 216, 0.9) 55%, rgba(17, 41, 140, 0.95));
+  box-shadow: 0 24px 50px -24px rgba(4, 18, 70, 0.95), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  padding: 16px;
+  -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+}
+.hr-home-balance-icon {
+  display: inline-flex; height: 52px; width: 52px; flex: none; align-items: center; justify-content: center; border-radius: 999px;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0.1));
+  border: 1px solid rgba(255, 255, 255, 0.3); color: #fff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 8px 18px -8px rgba(0, 0, 0, 0.5);
+}
+.hr-home-balance-amount {
+  margin-top: 2px; color: #fff; font-family: var(--font-display), var(--font-text), system-ui, sans-serif;
+  font-size: 38px; font-weight: 700; line-height: 1; letter-spacing: -0.04em; font-variant-numeric: tabular-nums;
+  text-shadow: 0 6px 24px rgba(124, 192, 255, 0.5);
+}
+.hr-home-balance-amount > span { font-size: 0.5em; color: rgba(255, 255, 255, 0.75); }
+.hr-home-balance-bars { position: absolute; right: 16px; top: 16px; display: flex; align-items: flex-end; gap: 6px; height: 64px; }
+.hr-home-balance-bars > span { width: 12px; border-radius: 4px 4px 2px 2px; background: linear-gradient(180deg, rgba(191, 225, 255, 0.85), rgba(124, 192, 255, 0.15)); }
+.hr-home-balance-bars > span:nth-child(1) { height: 30%; }
+.hr-home-balance-bars > span:nth-child(2) { height: 52%; }
+.hr-home-balance-bars > span:nth-child(3) { height: 74%; }
+.hr-home-balance-bars > span:nth-child(4) { height: 100%; }
+.hr-home-spent {
+  position: relative; margin-top: 14px; display: flex; align-items: center; gap: 8px; border-radius: 999px;
+  background: rgba(4, 18, 70, 0.45); border: 1px solid rgba(255, 255, 255, 0.14); padding: 9px 12px;
+  color: rgba(255, 255, 255, 0.85); font-size: 13.5px;
+}
+.hr-home-promo {
+  display: flex; align-items: center; gap: 10px; border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 20px;
+  background: linear-gradient(120deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04));
+  -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+  padding: 10px 12px 10px 8px;
+}
+.hr-home-promo-art { width: 56px; height: 46px; flex: none; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.35)); }
+.hr-home-promo-btn {
+  display: inline-flex; flex: none; align-items: center; gap: 4px; border-radius: 999px; padding: 8px 12px;
+  background: linear-gradient(135deg, #3d86ff, #1d4ed8); color: #fff; font-size: 13px; font-weight: 600;
+  box-shadow: 0 8px 20px -8px rgba(47, 107, 255, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+.hr-home-tiles { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.hr-home-tile {
+  --tone: 77 148 255;
+  display: flex; min-width: 0; flex-direction: column; align-items: center; gap: 7px; border-radius: 18px; padding: 12px 4px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04));
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  color: #fff; font-size: 12px; font-weight: 500;
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+.hr-home-tile:active { transform: scale(0.95); }
+.hr-home-tile[data-tone="sky"] { --tone: 56 189 248; }
+.hr-home-tile[data-tone="iris"] { --tone: 77 148 255; }
+.hr-home-tile[data-tone="violet"] { --tone: 167 139 250; }
+.hr-home-tile[data-tone="mint"] { --tone: 52 211 153; }
+.hr-home-tile[data-tone="amber"] { --tone: 251 191 36; }
+.hr-home-tile-icon {
+  display: inline-flex; height: 40px; width: 40px; align-items: center; justify-content: center; border-radius: 14px;
+  background: radial-gradient(circle at 30% 25%, rgb(var(--tone) / 0.55), rgb(var(--tone) / 0.18));
+  color: #fff; box-shadow: 0 8px 18px -8px rgb(var(--tone) / 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.hr-home-tile[data-primary="true"] .hr-home-tile-icon { border-radius: 999px; background: #fff; color: #1d4ed8; box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.14), 0 10px 22px -8px rgba(255, 255, 255, 0.6); }
+@media (max-width: 370px) {
+  .hr-home-hero-title { font-size: 27px; }
+  .hr-home-hero-art { width: 148px; }
+  .hr-home-balance-amount { font-size: 34px; }
+  .hr-home-tile { font-size: 11px; }
+}
+@media (prefers-reduced-motion: reduce) { .hr-home-hero-art { animation: none; } }
+/* Full words, never "Add M…": tile labels and the banner line wrap to two lines instead */
+.hr-home-tile > span:last-child { white-space: normal; overflow: visible; text-overflow: clip; line-height: 1.15; }
+.hr-home-promo .truncate { white-space: normal; overflow: visible; text-overflow: clip; line-height: 1.3; }
+/* The phone hero is phones and tablets only; computers keep the balance card layout */
+@media (min-width: 1024px) { .hr-home-hero { display: none; } }
+/* Top bar at rest: no dark band and no edge, so the blue runs straight up behind it (the band's
+   bottom read as a line under the bar). Once the page scrolls it frosts as before. */
+.hr-topbar:not([data-scrolled="true"]) { background: none; border-bottom: 0; }
+
+/* Home on phones v4: matched to the user's mockup. Deep royal blue with brighter blue waves on
+   top, a light (white / pale blue) lower area, the balance card straddling the two, a white
+   savings banner and white tiles with blue icons. */
+@media (max-width: 1023px) {
+  [data-route="home"] .hr-wallpaper {
+    height: 560px;
+    -webkit-mask-image: none; mask-image: none;
+    background:
+      radial-gradient(70% 55% at 108% 6%, #2f6bff 0 58%, transparent 58.6%),
+      radial-gradient(95% 60% at 118% 62%, #1f55ea 0 52%, transparent 52.6%),
+      radial-gradient(60% 40% at 92% 46%, rgba(147, 197, 253, 0.35), transparent 70%),
+      linear-gradient(165deg, #0b2aa0 0%, #0c32bf 45%, #1340d6 100%);
+  }
+  [data-route="home"] .hr-wallpaper::after,
+  [data-route="home"] .hr-wallpaper-blob,
+  [data-route="home"] .hr-wallpaper-wave { display: none; }
+
+  [data-route="home"] .hr-home-hero-sub { color: #dbe6ff; font-size: 15px; }
+  [data-route="home"] .hr-home-hero-title { font-size: 31px; font-weight: 800; }
+
+  /* Balance card: royal blue glass, sitting across the blue and light areas */
+  [data-route="home"] .hr-home-balance {
+    z-index: 2;
+    border: 1px solid rgba(147, 197, 253, 0.55);
+    background:
+      radial-gradient(70% 120% at 100% 100%, rgba(96, 165, 250, 0.55), transparent 60%),
+      linear-gradient(150deg, #2f6bff 0%, #1d4ed8 45%, #1238b8 100%);
+    box-shadow: 0 22px 40px -18px rgba(15, 42, 140, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  }
+  [data-route="home"] .hr-home-balance-icon {
+    background: radial-gradient(circle at 35% 30%, #60a5fa, #2563eb);
+    border-color: rgba(255, 255, 255, 0.35);
+  }
+  [data-route="home"] .hr-home-balance-amount { text-shadow: none; }
+  [data-route="home"] .hr-home-balance-bars > span { background: linear-gradient(180deg, rgba(147, 197, 253, 0.95), rgba(96, 165, 250, 0.25)); border-radius: 6px 6px 2px 2px; width: 13px; }
+  [data-route="home"] .hr-home-spent { background: rgba(11, 30, 110, 0.55); border-color: rgba(147, 197, 253, 0.2); }
+  [data-route="home"] .hr-home-spent svg:first-child { color: #22c55e !important; }
+
+  /* The light lower area, starting half way behind the balance card */
+  [data-route="home"] .hr-home-light {
+    position: relative; z-index: 1;
+    display: flex; flex-direction: column; gap: 12px;
+    margin: -64px -16px 0; padding: 78px 16px 18px;
+    background: linear-gradient(180deg, #eef3ff 0%, #f6f8ff 100%);
+    border-top-left-radius: 55% 42px; border-top-right-radius: 45% 22px;
+    border-bottom-left-radius: 28px; border-bottom-right-radius: 28px;
+  }
+  @media (min-width: 768px) { [data-route="home"] .hr-home-light { margin-left: -28px; margin-right: -28px; padding-left: 28px; padding-right: 28px; } }
+
+  /* White savings banner with navy text and a solid blue button */
+  [data-route="home"] .hr-home-promo {
+    border: 1px solid #e2e8fb; background: #f9fbff;
+    box-shadow: 0 10px 24px -16px rgba(30, 64, 175, 0.35);
+    -webkit-backdrop-filter: none; backdrop-filter: none;
+  }
+  [data-route="home"] .hr-home-promo .text-white { color: #0b1b4d !important; font-size: 16px; font-weight: 800; }
+  [data-route="home"] .hr-home-promo .text-white\/65 { color: #5b6785 !important; }
+  [data-route="home"] .hr-home-promo-btn { background: linear-gradient(135deg, #1d4ed8, #1e3a8a); padding: 10px 14px; font-size: 13.5px; }
+
+  /* White tiles with blue icons and navy labels */
+  [data-route="home"] .hr-home-tile {
+    border: 1px solid #e4eafb; background: #ffffff; color: #0b1b4d; font-weight: 600;
+    box-shadow: 0 10px 22px -16px rgba(30, 64, 175, 0.4);
+    -webkit-backdrop-filter: none; backdrop-filter: none;
+  }
+  [data-route="home"] .hr-home-tile-icon { background: none; box-shadow: none; color: #1d4ed8; height: 36px; width: 36px; }
+  [data-route="home"] .hr-home-tile-icon svg { width: 28px; height: 28px; stroke-width: 2.4; }
+  [data-route="home"] .hr-home-tile[data-primary="true"] .hr-home-tile-icon {
+    background: radial-gradient(circle at 35% 30%, #3b82f6, #1d4ed8); color: #fff;
+    box-shadow: 0 6px 14px -6px rgba(29, 78, 216, 0.8);
+  }
+  [data-route="home"] .hr-home-tile[data-primary="true"] .hr-home-tile-icon svg { width: 20px; height: 20px; }
+  [data-route="home"] .hr-home-tile[data-tone] .hr-home-tile-icon { color: #1d4ed8; }
+}
+/* Header on Home (phones): white avatar circle and dark navy buttons, as in the mockup */
+@media (max-width: 1023px) {
+  html:has([data-route="home"]) .hr-topbar-me::before { display: none; }
+  html:has([data-route="home"]) .hr-topbar-me .hr-avatar { background: #ffffff; color: #0b1b4d; box-shadow: 0 4px 12px rgba(4, 18, 70, 0.45); }
+  html:has([data-route="home"]) .hr-topbar:not([data-scrolled="true"]) .hr-topbar-actions {
+    border-color: rgba(147, 197, 253, 0.18); background: #0a1f6e;
+    -webkit-backdrop-filter: none; backdrop-filter: none;
+  }
+}
+
+/* Home on phones v5: the user's mockup refined with Stripe, Revolut and Wise (from their DESIGN.md
+   write-ups). Stripe: a flowing gradient mesh across the top, navy ink, tabular figures, hairline
+   white cards. Revolut: a bold colour band over a clean light band, pill buttons, 20px cards.
+   Wise: a heavy tight headline, white cards on a tinted canvas, icons in soft tinted circles. */
+@media (max-width: 1023px) {
+  /* Stripe-style mesh in Hoardrun blues: navy base, an electric ribbon sweeping down-right, cyan and
+     indigo light caught in it */
+  [data-route="home"] .hr-wallpaper {
+    background:
+      radial-gradient(40% 30% at 18% 22%, rgba(99, 102, 241, 0.55), transparent 70%),
+      radial-gradient(45% 35% at 88% 12%, rgba(56, 189, 248, 0.55), transparent 70%),
+      radial-gradient(60% 40% at 70% 48%, rgba(47, 107, 255, 0.85), transparent 72%),
+      linear-gradient(168deg, #0a1a5c 0%, #0f2a9a 38%, #1638c8 70%, #1e4fe6 100%);
+  }
+  [data-route="home"] .hr-wallpaper-wave {
+    display: block;
+    background:
+      linear-gradient(115deg, transparent 30%, rgba(124, 192, 255, 0.0) 36%, rgba(124, 192, 255, 0.35) 46%, rgba(167, 139, 250, 0.28) 54%, rgba(124, 192, 255, 0) 64%, transparent 70%);
+    filter: blur(14px);
+    transform: translateY(-6%) skewY(-8deg);
+    animation: hr-mesh-flow 12s ease-in-out infinite alternate;
+  }
+  @keyframes hr-mesh-flow { from { background-position: 0% 0%; } to { background-position: 100% 0%; } }
+  [data-route="home"] .hr-wallpaper-wave { background-size: 180% 100%; }
+
+  /* Wise: heavy, tight headline; Revolut: muted on-dark subline */
+  [data-route="home"] .hr-home-hero-title { font-size: 32px; font-weight: 900; letter-spacing: -0.045em; line-height: 1.02; }
+  [data-route="home"] .hr-home-hero-sub { color: rgba(255, 255, 255, 0.72); font-size: 15px; font-weight: 500; }
+  [data-route="home"] .hr-home-hero-art { filter: drop-shadow(0 22px 28px rgba(5, 14, 60, 0.6)); }
+
+  /* Balance card: Revolut featured card in the brand blue, 20px corners, Stripe hairline + tabular digits */
+  [data-route="home"] .hr-home-balance {
+    border-radius: 20px;
+    border: 1px solid rgba(191, 219, 254, 0.45);
+    background:
+      radial-gradient(90% 140% at 100% 0%, rgba(124, 192, 255, 0.45), transparent 55%),
+      radial-gradient(70% 120% at 0% 100%, rgba(99, 102, 241, 0.45), transparent 60%),
+      linear-gradient(150deg, #2563eb 0%, #1d4ed8 50%, #1e3a8a 100%);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.4) inset, 0 28px 48px -24px rgba(13, 37, 61, 0.7);
+  }
+  [data-route="home"] .hr-home-balance-amount { font-weight: 800; font-feature-settings: "tnum" 1; letter-spacing: -0.035em; }
+  [data-route="home"] .hr-home-balance-icon { background: rgba(255, 255, 255, 0.16); border: 1px solid rgba(255, 255, 255, 0.3); }
+  [data-route="home"] .hr-home-spent { background: rgba(13, 27, 77, 0.5); border-color: rgba(191, 219, 254, 0.18); }
+
+  /* The light band: Wise's softly tinted canvas, separated cleanly from the blue */
+  [data-route="home"] .hr-home-light {
+    background: #f4f6fb;
+    border-top-left-radius: 28px; border-top-right-radius: 28px;
+    box-shadow: 0 -1px 0 rgba(255, 255, 255, 0.6) inset;
+  }
+
+  /* Banner: Stripe hairline white card, navy ink; Revolut pill CTA in the brand blue */
+  [data-route="home"] .hr-home-promo {
+    border: 1px solid #e3e8ee; border-radius: 20px; background: #ffffff;
+    box-shadow: 0 1px 2px rgba(13, 37, 61, 0.06);
+    padding: 12px 12px 12px 8px;
+  }
+  [data-route="home"] .hr-home-promo .text-white { color: #0d253d !important; font-weight: 800; letter-spacing: -0.01em; }
+  [data-route="home"] .hr-home-promo .text-white\/65 { color: #64748d !important; }
+  [data-route="home"] .hr-home-promo-btn {
+    height: 38px; padding: 0 16px; border-radius: 999px;
+    background: #1d4ed8; box-shadow: none; font-size: 13.5px; font-weight: 600;
+  }
+
+  /* Tiles: white hairline cards, icons in soft tinted circles (Wise), navy labels */
+  [data-route="home"] .hr-home-tile {
+    border: 1px solid #e3e8ee; border-radius: 20px; background: #ffffff; color: #0d253d;
+    box-shadow: 0 1px 2px rgba(13, 37, 61, 0.06);
+    padding: 12px 4px 11px; gap: 8px; font-size: 12.5px; font-weight: 600;
+  }
+  [data-route="home"] .hr-home-tile-icon {
+    height: 42px; width: 42px; border-radius: 999px;
+    background: #eaf0ff; color: #1d4ed8; box-shadow: none;
+  }
+  [data-route="home"] .hr-home-tile-icon svg { width: 22px; height: 22px; stroke-width: 2.2; }
+  [data-route="home"] .hr-home-tile[data-primary="true"] .hr-home-tile-icon {
+    background: #1d4ed8; color: #ffffff; box-shadow: 0 6px 14px -6px rgba(29, 78, 216, 0.7);
+  }
+  [data-route="home"] .hr-home-tile[data-primary="true"] .hr-home-tile-icon svg { width: 22px; height: 22px; }
+}
+@media (max-width: 1023px) and (prefers-reduced-motion: reduce) {
+  [data-route="home"] .hr-wallpaper-wave { animation: none; }
+}
+
+/* The hero picture: a photo-real 3D render (Canva AI) of a phone, card and coins. Its own blue
+   backdrop fades out at the edges so it melts into the hero instead of showing as a square. */
+.hr-home-hero-photo {
+  width: 188px; height: 188px; right: -22px; object-fit: cover; border-radius: 0;
+  filter: saturate(1.05) contrast(1.03);
+  -webkit-mask-image: radial-gradient(closest-side, #000 62%, rgba(0, 0, 0, 0.6) 80%, transparent 100%);
+          mask-image: radial-gradient(closest-side, #000 62%, rgba(0, 0, 0, 0.6) 80%, transparent 100%);
+}
+@media (max-width: 370px) { .hr-home-hero-photo { width: 164px; height: 164px; right: -20px; } }
+.hr-home-hero-photo { margin-top: 12px; }
+
+/* Home v6 (phones): a balance card whose parts stand out, and action tiles that each have their
+   own colour. Left: a glossy white chip with a blue wallet (it no longer melts into the blue card).
+   Right: a small rising chart with a green trend line. Tiles: gradient icon circles per action, and
+   Add Money in green with a halo so it is clearly the main action. */
+@media (max-width: 1023px) {
+  [data-route="home"] .hr-home-balance-icon {
+    display: grid; place-items: center; flex: none;
+    height: 46px; width: 46px; border-radius: 15px; border: 0;
+    background: linear-gradient(160deg, #ffffff 0%, #e6eeff 100%); color: #1d4ed8;
+    box-shadow: 0 10px 22px -10px rgba(4, 12, 48, 0.75), inset 0 -2px 0 rgba(29, 78, 216, 0.12), inset 0 1px 0 #ffffff;
+  }
+  [data-route="home"] .hr-home-balance-label {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 13px; font-weight: 600; letter-spacing: 0.01em; color: rgba(255, 255, 255, 0.82);
+  }
+  [data-route="home"] .hr-home-balance-label > span {
+    padding: 1px 7px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.28);
+    background: rgba(255, 255, 255, 0.1); font-size: 10px; font-weight: 700; letter-spacing: 0.06em; color: #ffffff;
+  }
+  [data-route="home"] .hr-home-balance-amount {
+    font-size: 32px; font-weight: 800; letter-spacing: -0.035em; line-height: 1.1; color: #ffffff;
+    font-variant-numeric: tabular-nums; text-shadow: 0 2px 14px rgba(4, 12, 48, 0.35);
+  }
+  [data-route="home"] .hr-home-balance-amount > span { font-size: 0.62em; font-weight: 700; color: rgba(255, 255, 255, 0.7); letter-spacing: -0.01em; }
+  [data-route="home"] .hr-home-balance-chart {
+    position: absolute; right: 12px; top: 12px; width: 100px; height: 60px; pointer-events: none;
+    filter: drop-shadow(0 6px 14px rgba(4, 12, 48, 0.35));
+  }
+  [data-route="home"] .hr-home-spent { margin-top: 16px; font-size: 13px; color: rgba(255, 255, 255, 0.8); }
+  [data-route="home"] .hr-home-spent-icon {
+    display: grid; place-items: center; flex: none; height: 22px; width: 22px; border-radius: 999px;
+    background: linear-gradient(160deg, #34d399, #059669); color: #ffffff;
+    box-shadow: 0 4px 10px -4px rgba(16, 185, 129, 0.8);
+  }
+
+  /* Tiles: each action gets its own colour; white icons on glossy gradient circles */
+  [data-route="home"] .hr-home-tile { font-size: 12px; font-weight: 650; color: #0d253d; letter-spacing: -0.005em; }
+  [data-route="home"] .hr-home-tile .hr-home-tile-icon {
+    height: 44px; width: 44px; border-radius: 15px; color: #ffffff;
+    background: linear-gradient(155deg, var(--t1), var(--t2));
+    box-shadow: 0 8px 16px -8px var(--t2), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  }
+  [data-route="home"] .hr-home-tile[data-tone="sky"] { --t1: #60a5fa; --t2: #1d4ed8; }
+  [data-route="home"] .hr-home-tile[data-tone="violet"] { --t1: #a78bfa; --t2: #6d28d9; }
+  [data-route="home"] .hr-home-tile[data-tone="mint"] { --t1: #22d3ee; --t2: #0e7490; }
+  [data-route="home"] .hr-home-tile[data-tone="amber"] { --t1: #fbbf24; --t2: #ea580c; }
+  /* Add Money: the main action. Green, round, with a soft halo, so it never looks like the others */
+  [data-route="home"] .hr-home-tile[data-primary="true"] { --t1: #34d399; --t2: #047857; border-color: #bbf7d0; background: linear-gradient(180deg, #f0fdf4, #ffffff 70%); }
+  [data-route="home"] .hr-home-tile[data-primary="true"] .hr-home-tile-icon {
+    border-radius: 999px; color: #ffffff;
+    background: linear-gradient(155deg, var(--t1), var(--t2));
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.16), 0 8px 16px -6px rgba(4, 120, 87, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  }
+  [data-route="home"] .hr-home-tile[data-primary="true"] .hr-home-tile-icon svg { width: 24px; height: 24px; stroke-width: 2.8; }
+}
+@media (max-width: 1023px) {
+  [data-route="home"] .hr-home-spent .hr-home-spent-icon svg { color: #ffffff !important; }
+}
+
+/* Home v7 (phones): the balance sits open on the blue, centred and large, with round glass action
+   buttons underneath (Revolut-style, as in the user's reference). The white band, the card and the
+   square tiles of v4-v6 are gone. Type: heavy, tight display numerals with lighter cents. */
+@media (max-width: 1023px) {
+  [data-route="home"] .hr-home-light { display: none; }
+  [data-route="home"] .hr-home-hero-title { font-size: 34px; font-weight: 800; letter-spacing: -0.04em; line-height: 1.04; text-wrap: balance; }
+  [data-route="home"] .hr-home-hero-sub { margin-top: 6px; font-size: 15px; font-weight: 500; color: rgba(255, 255, 255, 0.72); }
+
+  .hr-home-open { position: relative; z-index: 2; margin-top: 18px; text-align: center; color: #fff; }
+  .hr-home-open-label { font-size: 15px; font-weight: 500; letter-spacing: 0.005em; color: rgba(255, 255, 255, 0.78); }
+  .hr-home-open-amount {
+    margin-top: 2px; font-size: 64px; font-weight: 800; line-height: 1; letter-spacing: -0.055em;
+    font-variant-numeric: tabular-nums; color: #fff; text-shadow: 0 6px 30px rgba(6, 18, 80, 0.35);
+  }
+  .hr-home-open-amount > span { margin-left: 2px; font-size: 0.5em; font-weight: 600; letter-spacing: -0.02em; color: rgba(255, 255, 255, 0.72); }
+  .hr-home-open-spent {
+    display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; padding: 4px 10px; border-radius: 999px;
+    font-size: 15px; font-weight: 500; color: rgba(255, 255, 255, 0.82); transition: background 0.2s;
+  }
+  .hr-home-open-spent:active { background: rgba(255, 255, 255, 0.12); }
+  .hr-home-open-spent b { font-weight: 700; color: #fff; }
+
+  .hr-home-circles { position: relative; z-index: 2; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; margin-top: 30px; }
+  .hr-home-circle { display: flex; flex-direction: column; align-items: center; gap: 9px; min-width: 0; color: #fff; -webkit-tap-highlight-color: transparent; }
+  .hr-home-circle-icon {
+    display: grid; place-items: center; height: 54px; width: 54px; border-radius: 999px;
+    background: rgba(255, 255, 255, 0.16); border: 1px solid rgba(255, 255, 255, 0.22);
+    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 8px 20px -10px rgba(6, 18, 80, 0.6);
+    transition: transform 0.15s ease, background 0.2s;
+  }
+  .hr-home-circle:active .hr-home-circle-icon { transform: scale(0.93); background: rgba(255, 255, 255, 0.24); }
+  .hr-home-circle[data-primary="true"] .hr-home-circle-icon {
+    background: #fff; border-color: #fff; color: #1d4ed8;
+    box-shadow: 0 10px 24px -8px rgba(6, 18, 80, 0.55), 0 0 0 5px rgba(255, 255, 255, 0.12);
+  }
+  .hr-home-circle-label { width: 100%; font-size: 13px; font-weight: 600; letter-spacing: -0.005em; line-height: 1.15; text-align: center; color: rgba(255, 255, 255, 0.95); }
+}
+@media (max-width: 370px) {
+  [data-route="home"] .hr-home-hero-title { font-size: 30px; }
+  .hr-home-open-amount { font-size: 56px; }
+  .hr-home-circle-icon { height: 50px; width: 50px; }
+  .hr-home-circle-label { font-size: 12px; }
+}
+@media (max-width: 1023px) {
+  /* Give the buttons room and let the blue fade softly into the page instead of ending in a hard line */
+  [data-route="home"] .hr-home-hero { padding-bottom: 26px; }
+  [data-route="home"] .hr-wallpaper {
+    height: 620px;
+    -webkit-mask-image: linear-gradient(180deg, #000 72%, transparent 100%);
+    mask-image: linear-gradient(180deg, #000 72%, transparent 100%);
+  }
+  .hr-home-circle-label { white-space: nowrap; font-size: 12.5px; }
+}
+@media (max-width: 370px) { .hr-home-circle-label { font-size: 11.5px; } }

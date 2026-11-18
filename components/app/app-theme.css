@@ -3123,3 +3123,34 @@ html.hr-app, .hr-app {
 @media (prefers-reduced-motion: reduce) {
   .hr-wallpaper-blob, .hr-wallpaper-orbit, .hr-wallpaper-glints { animation: none; }
 }
+
+/* Home on computers: the balance card gets the same blue scene as the phone wallpaper */
+@media (min-width: 1024px) {
+  .hr-balance {
+    isolation: isolate;
+    border-color: rgba(124, 192, 255, 0.28);
+    background:
+      radial-gradient(55% 70% at 92% 10%, rgba(167, 139, 250, 0.5), transparent 70%),
+      radial-gradient(45% 60% at 0% 40%, rgba(56, 189, 248, 0.35), transparent 70%),
+      radial-gradient(70% 60% at 50% 0%, rgba(124, 192, 255, 0.4), transparent 70%),
+      linear-gradient(160deg, #3a7bff 0%, #2459f0 35%, #1638b8 65%, #0b1d6b 100%);
+    box-shadow: 0 30px 70px -30px rgba(47, 107, 255, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  }
+  .hr-balance-art { position: absolute; inset: 0; z-index: 0; overflow: hidden; border-radius: inherit; pointer-events: none; }
+  .hr-balance-art::after {
+    content: ""; position: absolute; inset: 0; opacity: 0.16; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.9 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+  .hr-balance-art .hr-wallpaper-blob { top: 45%; left: 40%; }
+  .hr-balance > .relative, .hr-balance > div:not(.hr-balance-art) { position: relative; z-index: 1; }
+  .hr-balance .text-\[\#a1a1a6\] { color: rgba(255, 255, 255, 0.8); }
+  .hr-balance .hr-balance-label {
+    display: inline-flex; align-items: center; gap: 6px; border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 999px; background: rgba(255, 255, 255, 0.1); padding: 4px 12px;
+    -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+    color: rgba(255, 255, 255, 0.9) !important; font-size: 12.5px; font-weight: 500;
+  }
+  .hr-balance .hr-balance-label::before { content: ""; height: 6px; width: 6px; border-radius: 50%; background: #6ee7b7; box-shadow: 0 0 8px #6ee7b7; }
+  .hr-balance .hr-balance-label + p { margin-top: 10px; text-shadow: 0 6px 30px rgba(124, 192, 255, 0.55); }
+  .hr-balance-meta > span { border-radius: 999px; background: rgba(0, 0, 0, 0.2); padding: 4px 11px; }
+}

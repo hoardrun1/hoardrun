@@ -270,6 +270,8 @@ export default function HomePage() {
       <div className="grid gap-4 sm:gap-5 lg:grid-cols-12">
         {/* Balance: open on the page on phones and tablets, a chart card on desktop */}
         <section className="hr-balance lg:col-span-8">
+          {/* Computers: the same blue scene as the phone wallpaper, inside the balance card */}
+          <div aria-hidden="true" className="hr-balance-art hidden lg:block"><span className="hr-wallpaper-blob" /><HomeWallpaperArt fit="xMaxYMin slice" /></div>
           {!series && <div aria-hidden="true" className="lp-eclipse hr-eclipse lg:hidden" />}
           <div className="relative px-5 pt-8 text-center lg:p-6 lg:pb-3 lg:text-left">
             <p className="hr-balance-label text-sm text-[#a1a1a6]">{t("dashboard.home.totalBalance")}</p>

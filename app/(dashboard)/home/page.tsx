@@ -277,7 +277,7 @@ export default function HomePage() {
             <p className="hr-home-hero-sub">{t("dashboard.home.tagline", "Manage your money with ease")}</p>
           </div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/home/hero-3d.jpg" alt="" width={720} height={720} decoding="async" className="hr-home-hero-art hr-home-hero-photo" />
+          <img src="/art/home-hero-3d.jpg" alt="" width={720} height={720} decoding="async" className="hr-home-hero-art hr-home-hero-photo" />
         </div>
 
         {/* Balance open on the blue, centred and large (Revolut-style), no card around it */}

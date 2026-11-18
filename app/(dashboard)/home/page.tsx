@@ -6,6 +6,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useTranslation } from "react-i18next"
 import { motion } from "framer-motion"
+import { HomeWallpaperArt } from "@/components/app/home-wallpaper"
 import {
   Activity,
   ArrowDownLeft,
@@ -242,7 +243,7 @@ export default function HomePage() {
   return (
     <motion.div className="relative isolate space-y-4 sm:space-y-5" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, ease: [0.2, 0.7, 0.2, 1] }}>
       {/* Revolut-style wallpaper behind the balance on phones: the logo blue with sweeping light arcs */}
-      <div aria-hidden="true" className="hr-wallpaper lg:hidden" />
+      <div aria-hidden="true" className="hr-wallpaper lg:hidden"><span className="hr-wallpaper-blob" /><HomeWallpaperArt /></div>
       <header className="flex items-center justify-between gap-4">
         <h1 className="hr-title">
           {firstName ? t("dashboard.home.welcomeName", { defaultValue: "Welcome, {{name}}", name: firstName }) : t("dashboard.home.welcome", "Welcome")}
@@ -271,7 +272,7 @@ export default function HomePage() {
         <section className="hr-balance lg:col-span-8">
           {!series && <div aria-hidden="true" className="lp-eclipse hr-eclipse lg:hidden" />}
           <div className="relative px-5 pt-8 text-center lg:p-6 lg:pb-3 lg:text-left">
-            <p className="text-sm text-[#a1a1a6]">{t("dashboard.home.totalBalance")}</p>
+            <p className="hr-balance-label text-sm text-[#a1a1a6]">{t("dashboard.home.totalBalance")}</p>
             {isLoading && !summary ? (
               <div className="hr-skeleton mx-auto mt-2 h-14 w-56 lg:mx-0" />
             ) : (
@@ -280,7 +281,7 @@ export default function HomePage() {
                 {fraction && <span className="text-[0.46em] text-[#a1a1a6]">.{fraction}</span>}
               </p>
             )}
-            <div className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[13px] text-[#a1a1a6] lg:justify-start">
+            <div className="hr-balance-meta mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[13px] text-[#a1a1a6] lg:justify-start">
               <span className="inline-flex items-center gap-1">
                 <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={2} />
                 <span className="text-white"><Money value={spending} currency={currency} /></span>

@@ -274,7 +274,6 @@ export default function HomePage() {
             <h1 className="hr-home-hero-title">
               {firstName ? t("dashboard.home.welcomeName", { defaultValue: "Welcome, {{name}}", name: firstName }) : t("dashboard.home.welcome", "Welcome")}
             </h1>
-            <p className="hr-home-hero-sub">{t("dashboard.home.tagline", "Manage your money with ease")}</p>
           </div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/art/home-hero-3d.jpg" alt="" width={720} height={720} decoding="async" className="hr-home-hero-art hr-home-hero-photo" />

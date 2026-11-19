@@ -197,7 +197,7 @@ export function SendMoneyPage() {
         <section className="hr-sendx-hero" aria-label="About sending">
           <div className="relative z-10 max-w-[300px] lg:max-w-none">
             <span className="hr-sendx-badge"><Zap className="h-3.5 w-3.5" strokeWidth={2.4} fill="currentColor" />Fast • Secure • Reliable</span>
-            <h2 className="hr-sendx-title">Send money<br />with <span className="hr-sendx-ease">ease<svg viewBox="0 0 120 12" aria-hidden="true"><path d="M2 9 C 30 2, 80 2, 118 7" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" /></svg></span></h2>
+            <h2 className="hr-sendx-title">Send money{" "}<br />with <span className="hr-sendx-ease">ease<svg viewBox="0 0 120 12" aria-hidden="true"><path d="M2 9 C 30 2, 80 2, 118 7" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" /></svg></span></h2>
             <p className="hr-sendx-lede">Transfer money anytime, anywhere with confidence.</p>
           </div>
           <SendHeroArt className="hr-sendx-art" />

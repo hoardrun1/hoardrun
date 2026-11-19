@@ -3588,3 +3588,72 @@ html.hr-app, .hr-app {
 @media (max-width: 370px) {
   [data-route="home"] .hr-home-hero-title { font-size: 22px; }
 }
+
+/* Send page on phones: everything stays, packed to fit one screen. Smaller hero, tighter cards,
+   smaller avatars, amount field and button; gaps shrink. Computers keep the roomy layout. */
+@media (max-width: 1023px) {
+  [data-route="send-money"] .hr-sendx > div:first-child { min-height: 0; }
+  [data-route="send-money"] .hr-sendx-grid { gap: 8px; margin-top: -4px; }
+  [data-route="send-money"] .hr-sendx-hero { grid-template-columns: minmax(0, 1fr) 84px; padding: 10px 6px 10px 14px; border-radius: 20px; }
+  [data-route="send-money"] .hr-sendx-badge { padding: 2px 8px; font-size: 10.5px; }
+  [data-route="send-money"] .hr-sendx-title { margin-top: 5px; font-size: 21px; }
+  [data-route="send-money"] .hr-sendx-title br { display: none; }
+  [data-route="send-money"] .hr-sendx-lede { margin-top: 4px; font-size: 12px; line-height: 1.35; }
+  [data-route="send-money"] .hr-sendx-art { max-height: 78px; }
+  [data-route="send-money"] .hr-sendx-stack { gap: 8px; }
+  [data-route="send-money"] .hr-sendx-card { padding: 12px 14px; border-radius: 18px; }
+  [data-route="send-money"] .hr-sendx-card-sm { padding: 10px 14px; }
+  [data-route="send-money"] .hr-sendx-card .relative.mt-3 { margin-top: 8px; }
+  [data-route="send-money"] .hr-sendx-card input[type="email"],
+  [data-route="send-money"] .hr-sendx-card input[type="search"],
+  [data-route="send-money"] .hr-sendx-card input[type="text"]:not(.hr-sendx-note) { height: 40px; }
+  [data-route="send-money"] .hr-sendx-people { margin-top: 8px; gap: 4px; }
+  [data-route="send-money"] .hr-sendx-person { gap: 4px; padding: 2px; }
+  [data-route="send-money"] .hr-sendx-person .hr-avatar,
+  [data-route="send-money"] .hr-sendx-add { width: 42px !important; height: 42px !important; min-width: 42px; }
+  [data-route="send-money"] .hr-sendx-person-name { font-size: 11px; }
+  [data-route="send-money"] .hr-sendx-card > p.mt-1 { margin-top: 2px; font-size: 11.5px; }
+  [data-route="send-money"] .hr-sendx-amount { margin-top: 8px; padding: 6px 14px; border-radius: 14px; }
+  [data-route="send-money"] .hr-sendx-amount input { font-size: 28px; }
+  [data-route="send-money"] .hr-sendx-amount-sep { height: 24px; }
+  [data-route="send-money"] .hr-sendx-presets { margin-top: 8px; gap: 6px; }
+  [data-route="send-money"] .hr-sendx-chip { height: 32px; font-size: 13px; border-radius: 10px; }
+  [data-route="send-money"] .hr-sendx-card .mt-2\.5 { margin-top: 6px; }
+  [data-route="send-money"] .hr-sendx-card .relative.mt-2\.5 { margin-top: 6px; }
+  [data-route="send-money"] .hr-sendx-note { height: 38px; border-radius: 12px; }
+  [data-route="send-money"] .hr-sendx-cta { height: 50px; font-size: 15.5px; }
+  [data-route="send-money"] .hr-sendx-cta + p { margin-top: 4px; font-size: 11px; }
+}
+@media (max-width: 1023px) {
+  [data-route="send-money"] .hr-sendx-person { padding: 2px 0; }
+  [data-route="send-money"] .hr-sendx-person-name { font-size: 10.5px; letter-spacing: -0.01em; text-overflow: clip; }
+  [data-route="send-money"] .hr-sendx-hero { padding-top: 8px; padding-bottom: 8px; }
+  [data-route="send-money"] .hr-sendx-card-title, [data-route="send-money"] .hr-sendx-card > div:first-child { min-height: 0; }
+  [data-route="send-money"] .hr-sendx-card .hr-sendx-card-title { font-size: 14.5px; }
+  [data-route="send-money"] .hr-sendx-card > div:first-child button { padding-top: 5px; padding-bottom: 5px; }
+}
+@media (max-width: 1023px) and (max-height: 780px) {
+  [data-route="send-money"] .hr-sendx-grid, [data-route="send-money"] .hr-sendx-stack { gap: 6px; }
+  [data-route="send-money"] .hr-sendx-hero { grid-template-columns: minmax(0, 1fr) 64px; padding: 6px 4px 6px 12px; }
+  [data-route="send-money"] .hr-sendx-title { margin-top: 3px; font-size: 18px; }
+  [data-route="send-money"] .hr-sendx-lede { margin-top: 2px; font-size: 11px; line-height: 1.3; }
+  [data-route="send-money"] .hr-sendx-art { max-height: 60px; }
+  [data-route="send-money"] .hr-sendx-card { padding: 9px 12px; }
+  [data-route="send-money"] .hr-sendx-card-sm { padding: 8px 12px; }
+  [data-route="send-money"] .hr-sendx-card .relative.mt-3 { margin-top: 6px; }
+  [data-route="send-money"] .hr-sendx-card input[type="email"],
+  [data-route="send-money"] .hr-sendx-card input[type="search"],
+  [data-route="send-money"] .hr-sendx-card input[type="text"]:not(.hr-sendx-note) { height: 36px; }
+  [data-route="send-money"] .hr-sendx-people { margin-top: 6px; }
+  [data-route="send-money"] .hr-sendx-person .hr-avatar,
+  [data-route="send-money"] .hr-sendx-add { width: 36px !important; height: 36px !important; min-width: 36px; }
+  [data-route="send-money"] .hr-sendx-card > p.mt-1 { font-size: 11px; }
+  [data-route="send-money"] .hr-sendx-amount { margin-top: 6px; padding: 3px 12px; }
+  [data-route="send-money"] .hr-sendx-amount input { font-size: 24px; }
+  [data-route="send-money"] .hr-sendx-presets { margin-top: 6px; }
+  [data-route="send-money"] .hr-sendx-chip { height: 30px; }
+  [data-route="send-money"] .hr-sendx-card .mt-2\.5 { margin-top: 4px; }
+  [data-route="send-money"] .hr-sendx-note { height: 34px; }
+  [data-route="send-money"] .hr-sendx-cta { height: 46px; }
+  [data-route="send-money"] .hr-sendx > div:first-child button { height: 38px; width: 38px; }
+}

@@ -3580,3 +3580,11 @@ html.hr-app, .hr-app {
   .hr-home-circles { margin-top: 12px; }
   .hr-home-circle-icon { height: 46px; width: 46px; }
 }
+
+/* Home (phones): a smaller welcome line, so it reads as a greeting and the balance leads */
+@media (max-width: 1023px) {
+  [data-route="home"] .hr-home-hero-title { font-size: 24px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.15; }
+}
+@media (max-width: 370px) {
+  [data-route="home"] .hr-home-hero-title { font-size: 22px; }
+}

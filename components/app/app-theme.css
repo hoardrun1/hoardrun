@@ -3657,3 +3657,63 @@ html.hr-app, .hr-app {
   [data-route="send-money"] .hr-sendx-cta { height: 46px; }
   [data-route="send-money"] .hr-sendx > div:first-child button { height: 38px; width: 38px; }
 }
+
+/* Send page, Revolut-style finish (same parts, same order): flat charcoal surfaces with no
+   outlines, everything a pill, a white segmented toggle, bold left-aligned amount, and a solid
+   white primary pill that turns on when the transfer is ready. Blue stays the accent only. */
+[data-route="send-money"] .hr-sendx-hero {
+  border: 0; border-radius: 24px;
+  background: radial-gradient(70% 120% at 92% 50%, rgba(10, 108, 255, 0.45), transparent 70%), #121722;
+}
+[data-route="send-money"] .hr-sendx-badge { border: 0; background: rgba(10, 108, 255, 0.2); color: #8fc2ff; }
+[data-route="send-money"] .hr-sendx-lede { color: #9a9ca3; }
+[data-route="send-money"] .hr-sendx-card {
+  border: 0; border-radius: 24px; background: #17181c; box-shadow: none;
+}
+[data-route="send-money"] .hr-sendx-card.is-over { box-shadow: inset 0 0 0 1px rgba(255, 105, 97, 0.55); }
+[data-route="send-money"] .hr-sendx-card-title { font-weight: 700; letter-spacing: -0.02em; }
+[data-route="send-money"] .hr-sendx-card-title > svg {
+  box-sizing: content-box; padding: 6px; border-radius: 999px; background: rgba(10, 108, 255, 0.16); color: #5aa2ff !important;
+  height: 16px !important; width: 16px !important;
+}
+/* Segmented toggle: white pill on charcoal, like Revolut's tabs */
+[data-route="send-money"] .hr-sendx-mode { background: #26272c; padding: 3px; }
+[data-route="send-money"] .hr-sendx-mode > button { color: #9a9ca3; font-weight: 600; }
+[data-route="send-money"] .hr-sendx-mode > button[aria-checked="true"] { background: #ffffff; color: #0b0c0f; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35); }
+/* Inputs: borderless filled pills */
+[data-route="send-money"] .hr-sendx-search,
+[data-route="send-money"] .hr-sendx-note { border: 0; border-radius: 999px; background: #26272c; }
+[data-route="send-money"] .hr-sendx-note { padding-left: 18px; }
+[data-route="send-money"] .hr-sendx-search:focus,
+[data-route="send-money"] .hr-sendx-note:focus { box-shadow: 0 0 0 2px rgba(10, 108, 255, 0.7); }
+[data-route="send-money"] .hr-sendx-add { border: 0; background: #26272c; color: #ffffff; }
+[data-route="send-money"] .hr-sendx-person-name { color: #c7c8cd; }
+[data-route="send-money"] .hr-sendx-currency { border: 0; background: #26272c; }
+/* Amount: big and bold on its own, no box; a thin line under it */
+[data-route="send-money"] .hr-sendx-amount {
+  border: 0; border-radius: 0; background: transparent; padding-left: 2px; padding-right: 2px;
+  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.1);
+}
+[data-route="send-money"] .hr-sendx-amount:focus-within { box-shadow: inset 0 -2px 0 #0a6cff; }
+[data-route="send-money"] .is-over .hr-sendx-amount { box-shadow: inset 0 -2px 0 #ff6961; }
+[data-route="send-money"] .hr-sendx-amount-sep { display: none; }
+[data-route="send-money"] .hr-sendx-amount-code { color: #9a9ca3; font-weight: 700; }
+[data-route="send-money"] .hr-sendx-amount input { font-weight: 800; letter-spacing: -0.04em; }
+[data-route="send-money"] .hr-sendx-amount input::placeholder { color: #3a3b40; -webkit-text-fill-color: #3a3b40; }
+/* Quick amounts: charcoal pills; the picked one goes white */
+[data-route="send-money"] .hr-sendx-chip { border: 0; border-radius: 999px; background: #26272c; color: #f2f2f7; box-shadow: none; }
+[data-route="send-money"] .hr-sendx-chip[aria-pressed="true"] { background: #ffffff; color: #0b0c0f; box-shadow: none; }
+/* Primary: a solid pill. Grey until ready, then white with black text (Revolut's main button) */
+[data-route="send-money"] .hr-sendx-cta { background: #ffffff; color: #0b0c0f; box-shadow: 0 10px 30px -12px rgba(255, 255, 255, 0.35); font-weight: 700; }
+[data-route="send-money"] .hr-sendx-cta:hover:not(:disabled) { box-shadow: 0 12px 34px -12px rgba(255, 255, 255, 0.5); }
+[data-route="send-money"] .hr-sendx-cta:disabled { opacity: 1; background: #26272c; color: #6e7077; box-shadow: none; }
+[data-route="send-money"] .hr-sendx-cta-arrow { background: #0a6cff; color: #ffffff; }
+[data-route="send-money"] .hr-sendx-cta:disabled .hr-sendx-cta-arrow { background: #33343a; color: #6e7077; }
+[data-route="send-money"] .hr-sendx-card input.hr-sendx-search,
+[data-route="send-money"] .hr-sendx-card input.hr-sendx-note {
+  border: 0 !important; border-radius: 999px !important; background: #26272c !important; box-shadow: none;
+}
+[data-route="send-money"] .hr-sendx-card input.hr-sendx-search:focus,
+[data-route="send-money"] .hr-sendx-card input.hr-sendx-note:focus { box-shadow: 0 0 0 2px rgba(10, 108, 255, 0.7) !important; }
+[data-route="send-money"] .hr-sendx-card input.hr-sendx-note { padding-right: 60px; }
+[data-route="send-money"] .hr-sendx-card label:has(> .hr-sendx-note) > span:last-child { bottom: 50%; transform: translateY(50%); right: 16px; }

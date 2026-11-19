@@ -13,7 +13,6 @@ import { DepositModal } from '@/components/deposit-modal'
 import { ConnectBankAccountModal } from '@/components/send-money/ConnectBankAccountModal'
 import { AddBeneficiaryModal } from '@/components/send-money/AddBeneficiaryModal'
 import { Sheet, SheetHeader } from '@/components/investment-opportunities-page'
-import { SendHeroArt } from '@/components/send/send-hero-art'
 
 type Mode = 'hoardrun' | 'bank'
 interface Recipient { name: string; email: string }
@@ -200,7 +199,8 @@ export function SendMoneyPage() {
             <h2 className="hr-sendx-title">Send money{" "}<br />with <span className="hr-sendx-ease">ease<svg viewBox="0 0 120 12" aria-hidden="true"><path d="M2 9 C 30 2, 80 2, 118 7" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" /></svg></span></h2>
             <p className="hr-sendx-lede">Transfer money anytime, anywhere with confidence.</p>
           </div>
-          <SendHeroArt className="hr-sendx-art" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/art/home-hero-3d.jpg" alt="" width={720} height={720} decoding="async" className="hr-sendx-art hr-sendx-photo" />
         </section>
 
         <div className="hr-sendx-stack">
